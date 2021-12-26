@@ -1,0 +1,414 @@
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "rf_persci.h"
+
+/* DRIVES */
+
+const char * filenames[] = { 0, 0, 0, 0 };
+
+void rf_persci_insert(int drive, char *filename)
+{
+  if (drive < 0 || drive > 3) {
+    fprintf(stderr, "invalid drive number %d\n", drive);
+    exit(1);
+  }
+  filenames[drive] = filename;
+}
+
+/* STATE */
+
+#define RF_PERSCI_STATE_IDLE 0
+#define RF_PERSCI_STATE_WRITING 1
+
+char rf_persci_state = RF_PERSCI_STATE_IDLE;
+
+/* BUFFER */
+
+/* read buffer */
+char rf_persci_r_buf[131];
+unsigned int rf_persci_r_idx = 0;
+unsigned int rf_persci_r_len = 0;
+
+/* write buffer */
+char rf_persci_w_buf[131];
+unsigned int rf_persci_w_idx = 0;
+unsigned int rf_persci_w_len = 0;
+
+/* empty buffers */
+void rf_persci_reset()
+{
+  rf_persci_r_idx = 0;
+  rf_persci_r_len = 0;
+  rf_persci_w_idx = 0;
+  rf_persci_w_len = 0;
+}
+
+/* write a char to write buffer */
+void rf_persci_w(char c)
+{
+  rf_persci_w_buf[rf_persci_w_len++] = c;
+}
+
+/* write a string to write buffer */
+void rf_persci_ws(const char *s)
+{
+  const char *i;
+  for (i = s; *i; i++) {
+    rf_persci_w(*i);
+  }
+}
+
+/* write a two place decimal int to write buffer */
+void rf_persci_wi(unsigned char i)
+{
+  rf_persci_w(48 + (i / 10));
+  rf_persci_w(48 + (i % 10));
+}
+
+/* ERROR HANDLING */
+
+/* write error message */
+void rf_persci_error(const char *message)
+{
+  rf_persci_w(RF_ASCII_NAK);
+  rf_persci_ws(message);
+  rf_persci_ws(" ERROR\r\n\004");
+}
+
+/* write error message with drive number */
+void rf_persci_error_on_drive(const char *message, unsigned char drive)
+{
+  rf_persci_w(RF_ASCII_NAK);
+  rf_persci_ws(message);
+  rf_persci_ws(" ERROR ON DRIVE #");
+  rf_persci_wi(drive);
+  rf_persci_ws("\r\n\004");
+}
+
+/* READING AND WRITING */
+
+/* validate drive track and sector are within ranges */
+char rf_persci_validate(unsigned char track, unsigned char sector, unsigned char drive)
+{
+  /* validate drive number */
+  if (drive > 3) {
+    rf_persci_error("COMMAND");
+    return 0;
+  }
+
+  /* validate track and sector numbers */
+  if (track > 76 || sector < 1 || sector > 26) {
+    rf_persci_error_on_drive("COMMAND", drive);
+    return 0;
+  }
+
+  return 1;
+}
+
+FILE *rf_persci_files[4];
+
+FILE *rf_persci_open_file(unsigned char drive)
+{
+  FILE *ptr;
+
+  ptr = rf_persci_files[drive];
+  if (!ptr) {
+    rf_persci_files[drive] = ptr = fopen(filenames[drive], "r+b");
+  }
+  return ptr;
+}
+
+/* I (Input) */
+void rf_persci_input(unsigned char track, unsigned char sector, unsigned char drive)
+{
+  FILE *ptr;
+  unsigned char i;
+
+  /* reset buffer */
+  rf_persci_reset();
+
+  /* validate args */
+  if (!rf_persci_validate(track, sector, drive)) {
+    return;
+  }
+
+  /* open drive file */
+  ptr = rf_persci_open_file(drive);
+
+  /* handle error */
+  if (!ptr && errno != ENOENT) {
+    rf_persci_error_on_drive("HARD DISK", drive);
+    return;
+  }
+
+  /* move to track and sector */
+  fseek(ptr, ((track * 26) + (sector - 1)) * 128, SEEK_SET);
+
+  /* start response */
+  rf_persci_w(RF_ASCII_SOH);
+
+  /* read file and write max 128 bytes to buffer */
+  i = 128;
+  if (ptr) {
+    for (; i; i--) {
+      int c = fgetc(ptr);
+      if (c == -1) {
+        break;
+      }
+      rf_persci_w(c);
+    }
+
+    /* fclose(ptr); */
+  }
+
+  /* write 128 bytes regardless of how many bytes read */
+  for (; i; i--) {
+    rf_persci_w('\0');
+  }
+
+  /* ACK EOT */
+  rf_persci_w(RF_ASCII_ACK);
+  rf_persci_w(RF_ASCII_EOT);
+}
+
+unsigned char rf_persci_drive = 0;
+unsigned char rf_persci_track = 0;
+unsigned char rf_persci_sector = 0;
+
+/* O (Output) */
+void rf_persci_output(unsigned char track, unsigned char sector, unsigned char drive)
+{
+  /* reset buffer */
+  rf_persci_reset();
+
+  /* validate args */
+  if (!rf_persci_validate(track, sector, drive)) {
+    return;
+  }
+
+  /* set state */
+  rf_persci_state = RF_PERSCI_STATE_WRITING;
+
+  /* set desired track/sector/drive */
+  rf_persci_track = track;
+  rf_persci_sector = sector;
+  rf_persci_drive = drive;
+
+  /* ENQ EOT */
+  rf_persci_w(RF_ASCII_ENQ);
+  rf_persci_w(RF_ASCII_EOT);
+}
+
+/* write data after O */
+void rf_persci_write()
+{
+  FILE *ptr;
+  size_t s;
+
+  /* get size of data */
+  for (; rf_persci_r_buf[rf_persci_r_idx] != RF_ASCII_EOT; rf_persci_r_idx++) {
+  }
+
+  /* open file */
+  ptr = rf_persci_open_file(rf_persci_drive);
+
+  /* handle error */
+  if (!ptr) {
+    perror("fopen failed");
+    rf_persci_reset();
+    rf_persci_error_on_drive("READY", rf_persci_drive);
+    return;
+  }
+
+  /* move to track and sector */
+  if (fseek(ptr, ((rf_persci_track * 26) + (rf_persci_sector - 1)) * 128, SEEK_SET)) {
+    perror("fseek failed");
+    /* fclose(ptr); */
+    rf_persci_reset();
+    rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
+    return;
+  }
+
+  /* write data */
+  s = fwrite(rf_persci_r_buf, 1, rf_persci_r_idx > 128 ? 128 : rf_persci_r_idx, ptr);
+  fflush(ptr);
+
+  /* handle write failure */
+  if (s != rf_persci_r_idx) {
+    perror("fseek failed");
+    rf_persci_reset();
+    rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
+    return;
+  }
+
+  /* ACK EOT */
+  rf_persci_reset();
+  rf_persci_w(RF_ASCII_ACK);
+  rf_persci_w(RF_ASCII_EOT);
+
+  /* set state */
+  rf_persci_state = RF_PERSCI_STATE_IDLE;
+}
+
+/* READ */
+
+/* read char from read buffer */
+char rf_persci_r()
+{
+  char c;
+
+  /* validate buffer */
+  if (rf_persci_r_idx >= rf_persci_r_len) {
+    fprintf(stderr, "read buffer empty\n");
+    exit(1);
+  }
+
+  /* read char from buffer */
+  c = rf_persci_r_buf[rf_persci_r_idx++];
+
+  /* reset buffer if empty */
+  if (rf_persci_r_idx >= rf_persci_r_len) {
+    rf_persci_r_idx = 0;
+    rf_persci_r_len = 0;
+  }
+
+  return c;
+}
+
+/* COMMAND PARSING */
+
+/* skip whitespace in read buffer */
+void rf_persci_read_ws()
+{
+  /* validate buffer */
+  if (rf_persci_r_idx >= rf_persci_r_len) {
+    fprintf(stderr, "read buffer empty\n");
+    exit(1);
+  }
+
+  while (rf_persci_r_buf[rf_persci_r_idx] == ' ') {
+    /* skip whitespace */
+    rf_persci_r_idx++;
+
+    /* reset buffer if empty */
+    if (rf_persci_r_idx >= rf_persci_r_len) {
+      rf_persci_r_idx = 0;
+      rf_persci_r_len = 0;
+    }
+  }
+}
+
+/* read decimal int from read buffer */
+char rf_persci_read_int()
+{
+  char i;
+  char c;
+
+  rf_persci_read_ws();
+
+  i = 0;
+  while ((c = rf_persci_r_buf[rf_persci_r_idx]) >= '0' && c <= '9') {
+    i *= 10;
+    i += (c - 48);
+    rf_persci_r_idx++;
+  }
+
+  return i;
+}
+
+/* read char and check it is as expected */
+char rf_persci_expect(char c)
+{
+  rf_persci_read_ws();
+  if (rf_persci_r_buf[rf_persci_r_idx] == c) {
+    rf_persci_r_idx++;
+    return 1;
+  }
+  return 0;
+}
+
+/* read command and execute it */
+void rf_persci_command()
+{
+  char ch = rf_persci_r();
+  switch (ch) {
+    case 'I':
+    case 'O':
+    {
+      int track, sector, drive;
+
+      /* track */
+      track = rf_persci_read_int();
+
+      /* sector */
+      sector = rf_persci_read_int();
+
+      /* drive */
+      if (!rf_persci_expect('/')) {
+        break;
+      }
+      drive = rf_persci_read_int();
+
+      /* EOT */
+      if (!rf_persci_expect(RF_ASCII_EOT)) {
+        break;
+      }
+
+      switch (ch) {
+        case 'I':
+          rf_persci_input(track, sector, drive);
+          return;
+        case 'O':
+          rf_persci_output(track, sector, drive);
+          return;
+      }
+
+      /* should not get here */
+      break;
+    }
+  }
+  rf_persci_error("COMMAND");
+}
+
+/* HANDLE COMMS */
+
+/* handle next operation */
+void rf_persci_serve()
+{
+  if (rf_persci_state == RF_PERSCI_STATE_WRITING) {
+    rf_persci_write();
+  } else {
+    rf_persci_command();
+  }
+}
+
+/* read next char from write buffer */
+char rf_persci_getc()
+{
+  char c;
+
+  if (rf_persci_w_idx >= rf_persci_w_len) {
+    fprintf(stderr, "write buffer empty");
+    exit(1);
+  }
+
+  c = rf_persci_w_buf[rf_persci_w_idx++];
+  if (rf_persci_w_idx >= rf_persci_w_len) {
+    rf_persci_w_idx = 0;
+    rf_persci_w_len = 0;
+  }
+
+  return c;
+}
+
+/* write next char to read buffer and handle if EOT */
+void rf_persci_putc(char c)
+{
+  rf_persci_r_buf[rf_persci_r_len++] = c;
+  if (c == RF_ASCII_EOT) {
+    rf_persci_serve();
+  }
+}

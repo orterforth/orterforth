@@ -1,0 +1,1021 @@
+/* ORTERFORTH */
+
+#include "rf.h"
+
+/* FORTH MACHINE */
+
+/* parameter stack pointer */
+rf_word_t *rf_sp = 0;
+
+/* return stack pointer */
+rf_word_t *rf_rp = 0;
+
+/* Interpretive Pointer */
+rf_word_t *rf_ip = 0;
+
+/* code field pointer */
+rf_code_t *rf_w = 0;
+
+/* user area pointer */
+rf_word_t *rf_up = 0;
+
+/* TRAMPOLINE */
+
+rf_code_t rf_trampoline_fp = 0;
+
+#ifndef RF_TARGET_TRAMPOLINE
+void rf_trampoline(void)
+{
+  /* repeatedly execute function pointers */
+  while (rf_trampoline_fp) {
+    /* target implementations can switch machine state into registers */
+    /* default implementation does nothing */
+
+    rf_trampoline_fp();
+    /* C-based code returns here and the loop repeats */
+  }
+}
+
+void rf_start(void)
+{
+  /* called at start of C-based code */
+  /* target implementations can switch machine state out of registers */
+  /* default implementation does nothing */
+}
+#endif
+
+/* CODE */
+
+#ifndef RF_TARGET_CODE_LIT
+void rf_code_lit(void)
+{
+  RF_START;
+  {
+    rf_word_t a;
+
+    a = *(RF_IP_GET);
+    RF_SP_PUSH(a);
+    RF_IP_INC;
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_NEXT
+void rf_next(void)
+{
+  RF_START;
+  rf_w = (rf_code_t *) *(RF_IP_GET);
+  RF_IP_INC;
+  RF_JUMP(*rf_w);
+}
+#endif
+
+#ifndef RF_TARGET_CODE_EXEC
+void rf_code_exec()
+{
+  RF_START;
+  rf_w = (rf_code_t *) RF_SP_POP;
+  RF_JUMP(*rf_w);
+}
+#endif
+
+void rf_branch()
+{
+  /* TODO spectrum build with pure C */
+  /* TODO rf_word_t should always work */
+  intptr_t offset;
+  
+  offset = (intptr_t) *(RF_IP_GET);
+  RF_IP_SET((rf_word_t *) (((char *) RF_IP_GET) + offset));
+}
+
+#ifndef RF_TARGET_CODE_BRAN
+void rf_code_bran()
+{
+  RF_START;
+  rf_branch();
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_ZBRAN
+void rf_code_zbran()
+{
+  RF_START;
+  if (RF_SP_POP) {
+    RF_IP_INC;
+  } else {
+    rf_branch();
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_XLOOP
+void rf_code_xloop()
+{
+  RF_START;
+  {
+    intptr_t index;
+    intptr_t limit;
+
+    index = (intptr_t) RF_RP_POP;
+    limit = (intptr_t) RF_RP_POP;
+    ++index;
+    if (limit > index) {
+      RF_RP_PUSH(limit);
+      RF_RP_PUSH(index);
+      rf_branch();
+    } else {
+      RF_IP_INC;
+    }
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_XPLOO
+void rf_code_xploo()
+{
+  RF_START;
+  {
+    intptr_t n;
+    rf_word_t index;
+    rf_word_t limit;
+
+    n = (intptr_t) RF_SP_POP;
+    index = RF_RP_POP;
+    limit = RF_RP_POP;
+    index += n;
+    /* TODO seems like index, limit need to be signed */
+    if (limit > index) {
+      RF_RP_PUSH(limit);
+      RF_RP_PUSH(index);
+      rf_branch();
+    } else {
+      RF_IP_INC;
+    }
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_XDO
+void rf_code_xdo()
+{
+  RF_START;
+  {
+    rf_word_t n1;
+    rf_word_t n2;
+
+    n2 = RF_SP_POP;
+    n1 = RF_SP_POP;
+    RF_RP_PUSH(n1);
+    RF_RP_PUSH(n2);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+rf_word_t __FASTCALL__ *rf_lfa(char *nfa)
+{
+  while (!(*(++nfa) & 0x80)) {
+  }
+  return (rf_word_t *) ++nfa;
+}
+
+rf_code_t __FASTCALL__ *rf_cfa(char *nfa)
+{
+  rf_word_t *lfa = rf_lfa(nfa);
+  rf_word_t *cfa = lfa + 1;
+  return (rf_code_t *) cfa;
+}
+
+rf_word_t __FASTCALL__ *rf_pfa(char *nfa)
+{
+  rf_word_t *lfa = rf_lfa(nfa);
+  rf_word_t *pfa = lfa + 2;
+  return pfa;
+}
+
+#ifndef RF_TARGET_CODE_DODOE
+void rf_code_dodoe()
+{
+  RF_START;
+  {
+    rf_word_t *p1;
+    rf_word_t *p2;
+
+    /* execute the words after DOES> (addr in the PFA): */
+
+    /* push IP onto RP */
+    RF_RP_PUSH((rf_word_t) RF_IP_GET);
+
+    /* fetch first param *(W + 1) as new IP */
+    p1 = (rf_word_t *) rf_w + 1;
+    RF_IP_SET((rf_word_t *) (*p1));
+
+    /* push second param addr (W + 2) onto SP */
+    p2 = (rf_word_t *) rf_w + 2;
+    RF_SP_PUSH((rf_word_t) p2);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_RR
+void rf_code_rr()
+{
+  RF_START;
+  {
+    rf_word_t i;
+
+    i = (rf_word_t) *(RF_RP_GET);
+    RF_SP_PUSH(i);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+unsigned char rf_digit(char base, char c)
+{
+  c -= 0x30;
+  if (c >= 0) {
+    if (c >= 10) {
+      c -= 7;
+    }
+    if (c < base) {
+      return c;
+    }
+  }
+  return 0xFF;
+}
+
+#ifndef RF_TARGET_CODE_DIGIT
+void rf_code_digit()
+{
+  RF_START;
+  {
+    unsigned char b, c, d;
+
+    b = RF_SP_POP;
+    c = RF_SP_POP;
+    d = rf_digit(b, c);
+    if (d == 255) {
+      RF_SP_PUSH(0);
+    } else {
+      RF_SP_PUSH(d);
+      RF_SP_PUSH(1);
+    }
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+char *rf_find(char *t, char length, char *nfa)
+{
+  char l;
+  unsigned char i;
+
+  while (nfa) {
+    /* length from name field incl smudge bit */
+    l = nfa[0] & 0x3F;
+
+    /* try and match the name */
+    if (l == length) {
+      for (i = 0; i < l; i++) {
+        if (t[i] != (nfa[i + 1] & 0x7F)) {
+          l = 0;
+          break;
+        }
+      }
+
+      if (l) {
+        return nfa;
+      }
+    }
+
+    /* if no match, follow link */
+    nfa = (char *) *(rf_lfa(nfa));
+  }
+
+  /* not found */
+  return 0;
+}
+
+#ifndef RF_TARGET_CODE_PFIND
+rf_word_t rf_pfind(char *addr1, char *addr2)
+{
+  char length;
+  char *f;
+
+  length = *addr1;
+  f = rf_find(addr1 + 1, length, (char *) addr2);
+  if (f) {
+    RF_SP_PUSH((rf_word_t) rf_pfa(f));
+    RF_SP_PUSH(*((unsigned char *) f));
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+void rf_code_pfind()
+{
+  RF_START;
+  {
+    char *addr2;
+    char *addr1;
+    rf_word_t f;
+
+    addr2 = (char *) RF_SP_POP; /* nfa */
+    addr1 = (char *) RF_SP_POP; /* text to find */
+    f = rf_pfind(addr1, addr2);
+    RF_SP_PUSH(f);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+void rf_enclose(char c, char *addr1, unsigned char *s3, unsigned char *s2, unsigned char *s1)
+{
+  char *hl = addr1;
+  unsigned char e = 0xFF;
+
+  /* skip leading delimiters */
+  hl--;
+  do {
+    ++hl;
+	  ++e;
+	} while (*hl == c);
+	*s3 = e;
+
+  /* return if null */
+	if (!*hl) {
+	  *s1 = e;
+	  ++e;
+	  *s2 = e;
+	  return;
+  }
+
+  /* traverse word */
+  do {
+	  ++hl;
+	  ++e;
+    /* return if delim */
+	  if (*hl == c) {
+      *s2 = e;
+      ++e;
+      *s1 = e;
+      return;
+    }
+	} while (*hl);
+
+  /* return if null */
+	*s2 = e;
+	*s1 = e;
+}
+
+#ifndef RF_TARGET_CODE_ENCL
+void rf_code_encl()
+{
+  RF_START;
+  {
+    char c;
+    char *addr1;
+    unsigned char n1, n2, n3;
+
+    c = (char) RF_SP_POP;
+    addr1 = (char *) RF_SP_POP;
+    rf_enclose(c, addr1, &n1, &n2, &n3);
+    RF_SP_PUSH((rf_word_t) addr1);
+    RF_SP_PUSH(n1);
+    RF_SP_PUSH(n2);
+    RF_SP_PUSH(n3);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_CMOVE
+void rf_code_cmove()
+{
+  RF_START;
+  {
+    rf_word_t count;
+    char *to;
+    char *from;
+    rf_word_t i;
+
+    count = RF_SP_POP;
+    to = (char *) RF_SP_POP;
+    from = (char *) RF_SP_POP;
+    for (i = 0; i < count; ++i) {
+      to[i] = from[i];
+    }
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+void __FASTCALL__ rf_dpush(rf_double_t a)
+{
+  rf_word_t b = a;
+  rf_word_t c = a >> RF_WORD_SIZE_BITS;
+  RF_SP_PUSH(b);
+  RF_SP_PUSH(c);
+}
+
+#ifndef RF_TARGET_CODE_USTAR
+void rf_code_ustar()
+{
+  RF_START;
+  {
+    rf_word_t a;
+    rf_word_t b;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    rf_dpush((rf_double_t) a * b);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+rf_double_t rf_dpop()
+{
+  rf_word_t a = RF_SP_POP;
+  rf_word_t b = RF_SP_POP;
+  rf_double_t c = (rf_double_t) a << RF_WORD_SIZE_BITS;
+  rf_double_t d = (rf_double_t) b;
+  return c | d;
+}
+
+#ifndef RF_TARGET_CODE_USLAS
+void rf_code_uslas()
+{
+  RF_START;
+  {
+    rf_double_t b;
+    rf_double_t a;
+
+    b = (rf_double_t) RF_SP_POP;
+    a = rf_dpop();
+    RF_SP_PUSH((rf_word_t) (a % b));
+    RF_SP_PUSH((rf_word_t) (a / b));
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_ANDD
+void rf_code_andd()
+{
+  RF_START;
+  {
+    rf_word_t a;
+    rf_word_t b;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    RF_SP_PUSH(a & b);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_ORR
+void rf_code_orr()
+{
+  RF_START;
+  {
+    rf_word_t a;
+    rf_word_t b;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    RF_SP_PUSH(a | b);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_XORR
+void rf_code_xorr()
+{
+  RF_START;
+  {
+    rf_word_t a;
+    rf_word_t b;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    RF_SP_PUSH(a ^ b);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_SPAT
+void rf_code_spat()
+{
+  RF_START;
+  {
+    rf_word_t sp;
+
+    sp = (rf_word_t) RF_SP_GET;
+    RF_SP_PUSH(sp);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_SPSTO
+void rf_code_spsto()
+{
+  RF_START;
+  RF_SP_SET((rf_word_t *) RF_USER_S0);
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_RPSTO
+void rf_code_rpsto()
+{
+  RF_START;
+  RF_RP_SET((rf_word_t *) RF_USER_R0);
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_SEMIS
+void rf_code_semis()
+{
+  RF_START;
+  RF_IP_SET((rf_word_t *) RF_RP_POP);
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_LEAVE
+void rf_code_leave()
+{
+  RF_START;
+  {
+    rf_word_t index;
+
+    index = (rf_word_t) RF_RP_POP;
+    (void) RF_RP_POP;
+    RF_RP_PUSH(index);
+    RF_RP_PUSH(index);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_TOR
+void rf_code_tor()
+{
+  RF_START;
+  RF_RP_PUSH(RF_SP_POP);
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_FROMR
+void rf_code_fromr()
+{
+  RF_START;
+  RF_SP_PUSH((rf_word_t) RF_RP_POP);
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_ZEQU
+void rf_code_zequ()
+{
+  RF_START;
+  {
+    rf_word_t a;
+
+    a = (RF_SP_POP == 0);
+    RF_SP_PUSH(a);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_ZLESS
+void rf_code_zless()
+{
+  RF_START;
+  {
+    rf_word_t a;
+    
+    a = (((intptr_t) RF_SP_POP) < 0);
+    RF_SP_PUSH(a);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_PLUS
+void rf_code_plus()
+{
+  RF_START;
+  {
+    intptr_t a;
+    intptr_t b;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    RF_SP_PUSH(a + b);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DPLUS
+void rf_code_dplus()
+{
+  RF_START;
+  {
+    rf_double_t a, b, c;
+
+    a = rf_dpop();
+    b = rf_dpop();
+    c = a + b;
+    rf_dpush(c);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_MINUS
+void rf_code_minus()
+{
+  RF_START;
+  {
+    rf_word_t a;
+
+    a = (~RF_SP_POP) + 1;
+    RF_SP_PUSH(a);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DMINU
+void rf_code_dminu()
+{
+  RF_START;
+  rf_dpush(-rf_dpop());
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_OVER
+void rf_code_over()
+{
+  RF_START;
+  {
+    rf_word_t a;
+    rf_word_t b;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    RF_SP_PUSH(b);
+    RF_SP_PUSH(a);
+    RF_SP_PUSH(b);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DROP
+void rf_code_drop()
+{
+  RF_START;
+  (void) RF_SP_POP;
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_SWAP
+void rf_code_swap()
+{
+  RF_START;
+  {
+    rf_word_t a;
+    rf_word_t b;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    RF_SP_PUSH(a);
+    RF_SP_PUSH(b);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DUP
+void rf_code_dup()
+{
+  RF_START;
+  {
+    rf_word_t a;
+
+    a = RF_SP_POP;
+    RF_SP_PUSH(a);
+    RF_SP_PUSH(a);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_PSTOR
+void rf_code_pstor()
+{
+  RF_START;
+  {
+    rf_word_t *addr;
+    intptr_t n;
+
+    addr = (rf_word_t *) RF_SP_POP;
+    n = (intptr_t) RF_SP_POP;
+    *addr += n;
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_TOGGL
+void rf_code_toggl()
+{
+  RF_START;
+  {
+    char bits;
+    char *addr;
+
+    bits = (char) RF_SP_POP;
+    addr = (char *) RF_SP_POP;
+    *addr ^= bits;
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_AT
+void rf_code_at()
+{
+  RF_START;
+  {
+    rf_word_t *addr;
+    rf_word_t word;
+
+    addr = (rf_word_t *) RF_SP_POP;
+    word = *addr;
+    RF_SP_PUSH(word);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_CAT
+void rf_code_cat()
+{
+  RF_START;
+  {
+    unsigned char *addr;
+    
+    addr = (unsigned char *) RF_SP_POP;
+    RF_SP_PUSH((rf_word_t) *addr);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_STORE
+void rf_code_store()
+{
+  RF_START;
+  {
+    rf_word_t *addr;
+    rf_word_t p;
+
+    addr = (rf_word_t *) RF_SP_POP;
+    p = RF_SP_POP;
+    *addr = p;
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_CSTOR
+void rf_code_cstor()
+{
+  RF_START;
+  {
+    unsigned char *addr;
+    unsigned char c;
+
+    addr = (unsigned char *) RF_SP_POP;
+    c = (unsigned char) RF_SP_POP;
+    *addr = c;
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DOCOL
+void rf_code_docol()
+{
+  RF_START;
+  RF_RP_PUSH((rf_word_t) RF_IP_GET);
+  RF_IP_SET((rf_word_t *) rf_w + 1);
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DOCON
+void rf_code_docon()
+{
+  RF_START;
+  RF_SP_PUSH(*((rf_word_t *) rf_w + 1));
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DOVAR
+void rf_code_dovar()
+{
+  RF_START;
+  RF_SP_PUSH((rf_word_t) (rf_w + 1));
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_DOUSE
+void rf_code_douse()
+{
+  RF_START;
+  {
+    rf_word_t idx;
+
+    idx = *((rf_word_t *) (rf_w + 1));
+    RF_SP_PUSH((rf_word_t) (((char *) rf_up) + idx));
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_STOD
+void rf_code_stod()
+{
+  RF_START;
+  {
+    intptr_t a;
+
+    a = RF_SP_POP;
+    RF_SP_PUSH(a);
+    RF_SP_PUSH(a < 0 ? -1 : 0);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_COLD
+/* non-zero so not allocated in BSS and not zeroed on entry */
+rf_word_t *rf_cold_forth = (rf_word_t *) 1;
+rf_word_t *rf_cold_abort = (rf_word_t *) 1;
+
+void rf_code_cold(void)
+{
+  RF_START;
+  {
+    /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
+    rf_word_t *origin = (rf_word_t *) RF_ORIGIN;
+
+    /* FORTH vocabulary */
+    /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
+    /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
+    *(rf_cold_forth + 2) = origin[6];
+
+    /* UP and USER vars */
+
+    /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
+    /* 11 +ORIGIN LDA, UP 1+ STA, */
+    rf_up = (rf_word_t *) origin[8];
+
+    /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
+    /* UP )Y STA, ( TO USER AREA ) */
+    /* DEY, 0< END, */
+    RF_USER_S0 = origin[9];
+    RF_USER_R0 = origin[10];
+    RF_USER_TIB = origin[11];
+    RF_USER_WIDTH = origin[12];
+    RF_USER_WARNING = origin[13];
+
+    RF_USER_FENCE = origin[14];
+    RF_USER_DP = origin[15];
+    RF_USER_VOCLINK = origin[16];
+
+    /* jump to RP! then to ABORT */
+    /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
+    /* # LDA, IP STA, */
+    RF_IP_SET(rf_cold_abort);
+    /* 6C # LDA, W 1 - STA,  */
+    /* 'T RP! JMP, ( RUN )  */
+    RF_RP_SET((rf_word_t *) RF_USER_R0);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+void rf_code_dchar(void)
+{
+  RF_START;
+  {
+    char a, c;
+
+    a = RF_SP_POP;
+    rf_disc_read(&c, 1);
+    RF_SP_PUSH(c == a);
+    RF_SP_PUSH(c);
+  }
+  RF_JUMP_NEXT;
+}
+
+void rf_code_bread(void)
+{
+  RF_START;
+  rf_disc_read((char *) RF_SP_POP, RF_BBLK);
+  RF_JUMP_NEXT;
+}
+
+static char eot = 0x04;
+
+void rf_code_bwrit(void)
+{
+  RF_START;
+  {
+    unsigned char a = RF_SP_POP;
+    char *b = (char *) RF_SP_POP;
+
+    rf_disc_write(b, a);
+    rf_disc_write(&eot, 1);
+    rf_disc_flush();
+  }
+  RF_JUMP_NEXT;
+}
+
+void rf_code_code(void)
+{
+  RF_START;
+  {
+    rf_code_t *cfa;
+
+    cfa = rf_cfa(*((char **) RF_USER_CURRENT));
+    *cfa = (rf_code_t) RF_SP_POP;
+  }
+  RF_JUMP_NEXT;
+}
+
+void rf_code_exit(void)
+{
+  RF_START;
+  rf_trampoline_fp = 0;
+}
+
+#ifndef RF_TARGET_CODE_CELL
+void rf_code_cell(void)
+{
+  RF_START;
+  RF_SP_PUSH(RF_WORD_SIZE);
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_CELLS
+void rf_code_cells(void)
+{
+  RF_START;
+  {
+    rf_word_t a;
+
+    a = RF_SP_POP;
+    RF_SP_PUSH(RF_WORD_SIZE * a);
+  }
+  RF_JUMP_NEXT;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_TARGET
+void rf_code_target(void)
+{
+  RF_START;
+  rf_dpush(RF_TARGET);
+  RF_JUMP_NEXT;
+}
+#endif
