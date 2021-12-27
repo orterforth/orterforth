@@ -34,15 +34,26 @@ To build and run the local system build call:
 
 # Building orterforth for a target platform #
 
-To target a historical platform, call:
+To target a historical platform (e.g, ZX Spectrum 48K), call:
 
- make TARGET=spectrum (ZX Spectrum 48K)
+ make TARGET=spectrum
 
 You will need prerequisites for each platform, such as a C 
 compiler for the target platform, system ROM files in the roms 
 directory, system emulator source files and/or emulator 
 installations.
 
+The target executable will be built in the respective named
+directory, e.g.:
+
+ spectrum/orterforth.bin (the pure binary)
+ spectrum/orterforth.ser (with Interface 1 serial header for 
+                         loading over RS232 or ZX Net) 
+ spectrum/orterforth.tap (TAP file with loader)
+
+To run in an installed emulator, call:
+
+ make run TARGET=spectrum
 
 # Running orterforth #
 
@@ -144,6 +155,6 @@ system-independent:
                        instead of inline assembler definitions.
  rf-exit   ( -- )      Exits orterforth (and returns to the 
                        shell, BASIC prompt or equivalent).
- rf-target ( -- d )    Returns a base-64 representation of
+ rf-target ( -- d )    Returns a base-36 representation of
                        the target system (e.g., one of:
                        CYGWIN. DARWIN. LINUX. SPECTR. etc).
