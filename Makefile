@@ -93,9 +93,9 @@ $(SYSTEM)-clean :
 
 # run local build
 .PHONY : $(SYSTEM)-run
-$(SYSTEM)-run : $(ORTERFORTH) orterforth.f.disc
+$(SYSTEM)-run : $(ORTERFORTH) orterforth.disc
 
-	@cp -p orterforth.f.disc 0.disc
+	@cp -p orterforth.disc 0.disc
 	@$(ORTERFORTH)
 
 # local system libs
@@ -132,7 +132,7 @@ $(SYSTEM)/z80.o : z80.c z80.h
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
 # disc images from %.f files including orterforth.f
-%.f.disc : %.f | $(DISC)
+%.disc : %.f | $(DISC)
 
 	$(DISC) create <$< >$@
 
@@ -432,10 +432,10 @@ ifeq ($(SPECTRUMIMPL),real)
 SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.ser $(DISC) $(ORTER)
 endif
 
-spectrum/orterforth.bin.hex : orterforth.f.disc $(SPECTRUMINSTDEPS)
+spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
 
 	# inst disc in drive 0
-	cp -p orterforth.f.disc 0.disc
+	cp -p orterforth.disc 0.disc
 
 	# empty disc in drive 1 for hex installed file
 	rm -f 1.disc
