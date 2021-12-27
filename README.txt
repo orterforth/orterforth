@@ -34,26 +34,40 @@ To build and run the local system build call:
 
 # Building orterforth for a target platform #
 
-To target a historical platform (e.g, ZX Spectrum 48K), call:
+To target a historical platform, you will need prerequisites 
+for each platform, such as a C compiler/assembler for the 
+target platform, system ROM files in the roms directory, system
+emulator source files and/or emulator installations.
 
- make TARGET=spectrum
+For example, for the ZX Spectrum 48K, you will need:
 
-You will need prerequisites for each platform, such as a C 
-compiler for the target platform, system ROM files in the roms 
-directory, system emulator source files and/or emulator 
-installations.
+* z88dk https://z88dk.org/
+* Fuse emulator http://fuse-emulator.sourceforge.net
+* Interface 1 ROM file (place in roms/spectrum )
+* Z80 emulator https://github.com/superzazu/z80
 
-The target executable will be built in the respective named
+To build, call:
+
+ make TARGET=spectrum (to build using superzazu's emulator)
+ make TARGET=spectrum SPECTRUMIMPL=fuse (to build in Fuse)
+
+The target files will be built in the respective named 
 directory, e.g.:
 
  spectrum/orterforth.bin (the pure binary)
  spectrum/orterforth.ser (with Interface 1 serial header for 
-                         loading over RS232 or ZX Net) 
+                         loading over RS-232 or ZX Net) 
  spectrum/orterforth.tap (TAP file with loader)
 
-To run in an installed emulator, call:
+To run in Fuse, call:
 
  make run TARGET=spectrum
+
+To load and run on a physical machine, connect the Interface 1
+to your host system via RS-232 and call:
+
+ make spectrum-load-serial
+
 
 # Running orterforth #
 
@@ -81,7 +95,7 @@ familiar to modern users).
 # orterforth is implemented in C #
 
 A typical Forth implementation rests on a number of base words 
-implemented in native machine code. Higher-level worlds are 
+implemented in native machine code. Higher-level words are 
 implemented with reference to other words, and "threaded" 
 together to build complex programs.
 
@@ -103,17 +117,23 @@ properly allow such jumps, orterforth emulates them using a
 trampoline (a loop that successively calls function pointers).
 
 
-# The retro disc controller is replicated #
+# The retro disc controller is emulated #
 
 orterforth interfaces with the emulated disc drive using the 
 method found in the Installation Manual. The protocol used by 
-the PerSci 1070 Intelligent Diskette Controller is implemented 
-in Forth and used to read and write disc sectors directly.
+the PerSci 1070 Intelligent Diskette Controller is partially 
+implemented in Forth and used to read and write disc sectors 
+directly.
 
 Unlike in the Installation Manual, though, orterforth uses a 
 serial interface to communicate with the disc drive. These are 
 widely available on many historical platforms and can be 
 generalised about in code.
+
+Local system builds implement this interface in-process and 
+access the disc files locally, but other target builds use the 
+target's serial port capability and a server executable 
+provides the interface over a serial link.
 
 An RS-232 serial port can be added to a modern machine that 
 doesn't have one, using a USB to RS-232 converter.
@@ -137,7 +157,7 @@ the C code. This allows you to benefit from performance
 improvement but keep the practical advantages of C interop.
 
 
-# Language extensions
+# Language extensions #
 
 To support different platforms, while making the minimum of 
 changes to the fig-Forth language itself, there are a small 
