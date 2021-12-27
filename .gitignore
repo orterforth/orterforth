@@ -1,6 +1,5 @@
+*.disc
 darwin-x86_64
-disc.d
 linux-x86_64
-orterforth.f.disc
 roms
 spectrum

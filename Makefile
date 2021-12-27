@@ -95,8 +95,7 @@ $(SYSTEM)-clean :
 .PHONY : $(SYSTEM)-run
 $(SYSTEM)-run : $(ORTERFORTH) orterforth.f.disc
 
-	@mkdir -p disc.d
-	@cp -p orterforth.f.disc disc.d/00
+	@cp -p orterforth.f.disc 0.disc
 	@$(ORTERFORTH)
 
 # local system libs
@@ -157,11 +156,7 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 .PHONY : disc
 disc : $(DISC)
 
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) disc.d/00 disc.d/01
-
-disc.d :
-
-	mkdir $@
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
 
 # run local build
 .PHONY : run
@@ -188,7 +183,7 @@ spectrum-fuse-disc : | $(DISC) $(ORTER) spectrum/fuse-rs232-rx spectrum/fuse-rs2
 
 	$(ORTER) fuse serial read \
 		< spectrum/fuse-rs232-tx \
-		| $(DISC) standard disc.d/00 disc.d/01 \
+		| $(DISC) standard 0.disc 1.disc \
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
@@ -232,7 +227,7 @@ spectrum-load-serial : spectrum/orterforth.ser spectrum-load-serial.bas
 	@$(ORTER) serial write -w 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 
 	@echo "* Starting disc..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) disc.d/00 disc.d/01
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
 
 # config option
 SPECTRUMCONFIG := a
@@ -440,17 +435,17 @@ endif
 spectrum/orterforth.bin.hex : orterforth.f.disc $(SPECTRUMINSTDEPS)
 
 	# inst disc in drive 0
-	cp -p orterforth.f.disc disc.d/00
+	cp -p orterforth.f.disc 0.disc
 
 	# empty disc in drive 1 for hex installed file
-	rm -f disc.d/01
-	touch disc.d/01
+	rm -f 1.disc
+	touch 1.disc
 
 ifeq ($(SPECTRUMIMPL),fuse)
 	# start disc
 	$(ORTER) fuse serial read \
 		< spectrum/fuse-rs232-tx \
-		| $(DISC) standard disc.d/00 disc.d/01 \
+		| $(DISC) standard 0.disc 1.disc \
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
@@ -484,13 +479,13 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial write -w 22 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth-inst-2.ser
 
 	@echo "* Starting disc and waiting for completion..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) disc.d/00 disc.d/01 & pid=$$! ; \
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc & pid=$$! ; \
 		./waitforhex ; \
 		kill -9 $$pid
 endif
 
 	# read hex from disc 1 blocks and write to file
-	cp disc.d/01 $@
+	cp 1.disc $@
 
 # make serial load file from bin
 spectrum/orterforth.ser : spectrum/orterforth.bin | $(ORTER)

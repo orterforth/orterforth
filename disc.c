@@ -148,8 +148,8 @@ static int serve(void)
   unsigned int len = 0;
   int result = 1;
 
-  rf_persci_insert(0, "disc.d/00");
-  rf_persci_insert(1, "disc.d/01");
+  rf_persci_insert(0, "0.disc");
+  rf_persci_insert(1, "1.disc");
 
   /* open serial */
   serial_open(serial_name, serial_baud);

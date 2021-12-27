@@ -366,8 +366,8 @@ static void init(void)
   tape_load("spectrum/orterforth-inst-2.tap");
 
   /* disc */
-  rf_persci_insert(0, "disc.d/00");
-  rf_persci_insert(1, "disc.d/01");
+  rf_persci_insert(0, "0.disc");
+  rf_persci_insert(1, "1.disc");
 }
 
 static void run(void)

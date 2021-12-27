@@ -28,8 +28,8 @@ void rf_init(void)
   }
 
   /* init disc */
-  rf_persci_insert(0, "disc.d/00");
-  rf_persci_insert(1, "disc.d/01");
+  rf_persci_insert(0, "0.disc");
+  rf_persci_insert(1, "1.disc");
 
 #ifdef RF_SYSTEM_POSIX
   /* make sure any output is written before a seg fault */
