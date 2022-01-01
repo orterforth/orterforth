@@ -5,7 +5,7 @@
 /* save CTS status received from Fuse */
 static char cts = 0;
 
-static void log(char *message)
+static void fuse_log(char *message)
 {
   fprintf(stderr, "fuse: %s\n", message);
 }
@@ -21,26 +21,26 @@ int orter_fuse_serial_getc(FILE *ptr)
     c = fgetc(ptr);
     switch (c) {
       case 0:
-        log("DTR low");
+        fuse_log("DTR low");
         break;
       case 1:
-        log("DTR high");
+        fuse_log("DTR high");
         break;
       case 2:
-        log("CTS low");
+        fuse_log("CTS low");
         cts = 1;
         break;
       case 3:
-        log("CTS high");
+        fuse_log("CTS high");
         cts = 0;
         break;
       case 42:
         return 0;
       case 63:
-        log("lost");
+        fuse_log("lost");
         break;
       default:
-        log("invalid escape");
+        fuse_log("invalid escape");
         break;
     }
   }

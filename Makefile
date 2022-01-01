@@ -3,7 +3,7 @@ CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic
 
 # determine local system OS and architecture
 UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),CYGWIN)
+ifneq ($(filter CYGWIN%,$(UNAME_S)),)
 	OPER := cygwin
 endif
 ifeq ($(UNAME_S),Darwin)
@@ -188,7 +188,7 @@ spectrum-fuse-disc : | $(DISC) $(ORTER) spectrum/fuse-rs232-rx spectrum/fuse-rs2
 		> spectrum/fuse-rs232-rx &
 
 # locate Fuse Emulator
-ifeq ($(OPER),windows)
+ifeq ($(OPER),cygwin)
 FUSE := "/cygdrive/c/Program Files/Fuse/fuse.exe"
 else
 FUSE := $(shell which fuse)
@@ -501,7 +501,7 @@ spectrum/orterforth.tap : spectrum/orterforth.bin
 		-o spectrum/orterforth.tap
 
 # base orterforth code
-spectrum/rf.lib : rf.c | spectrum
+spectrum/rf.lib : rf.c rf.h | spectrum
 
 	zcc +zx \
 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
@@ -509,7 +509,7 @@ spectrum/rf.lib : rf.c | spectrum
 		$<
 
 # inst code, which is located to be overwritten when complete
-spectrum/rf_inst.lib : rf_inst.c | spectrum
+spectrum/rf_inst.lib : rf_inst.c rf.h | spectrum
 
 	zcc +zx \
 		-DRF_ORG=$(SPECTRUMORG) \
