@@ -103,7 +103,27 @@ $(SYSTEM)-run : $(ORTERFORTH) orterforth.disc
 	@cp -p orterforth.disc 0.disc
 	@$(ORTERFORTH)
 
-# local system libs
+# main lib
+$(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# inst lib
+$(SYSTEM)/rf_inst.o : rf_inst.c rf.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# disc impl lib
+$(SYSTEM)/rf_persci.o : rf_persci.c rf_persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# local system lib
+$(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# other libs
 $(SYSTEM)/%.o : %.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
