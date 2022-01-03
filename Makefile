@@ -78,6 +78,11 @@ $(ORTERFORTH) : \
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
 
+# local system build dir
+$(SYSTEM) :
+
+	mkdir $@
+
 # all local system executables
 .PHONY : $(SYSTEM)-build
 $(SYSTEM)-build : \
@@ -99,9 +104,8 @@ $(SYSTEM)-run : $(ORTERFORTH) orterforth.disc
 	@$(ORTERFORTH)
 
 # local system libs
-$(SYSTEM)/%.o : %.c
+$(SYSTEM)/%.o : %.c | $(SYSTEM)
 
-	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # emulator to build fast
@@ -113,7 +117,7 @@ $(SYSTEM)/spectrum : \
 	$(CC) -o $@ $^
 
 # spectrum emulator
-$(SYSTEM)/spectrum.o : spectrum.c rf_persci.h z80.h
+$(SYSTEM)/spectrum.o : spectrum.c rf_persci.h z80.h | $(SYSTEM)
 
 	mkdir -p $(@D)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
@@ -126,7 +130,7 @@ $(SYSTEM)/test : \
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
 
 # https://github.com/superzazu/z80.git
-$(SYSTEM)/z80.o : z80.c z80.h
+$(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
 
 	mkdir -p $(@D)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
