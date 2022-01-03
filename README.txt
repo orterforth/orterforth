@@ -24,8 +24,8 @@ The target executable is built at the location:
  <os>-<arch>/orterforth.exe (on Cygwin)
  <os>-<arch>/orterforth     (on others)
 
-where <os>   is one of: cygwin, darwin, linux
-      <arch> is one of: i386, armv7l, x86_64
+where <os>   is e.g.: cygwin, darwin, linux
+      <arch> is e.g.: armv6l, armv7l, i686, x86_64
 
 To build and run the local system build call:
 
@@ -166,15 +166,19 @@ system-independent:
 
  rf-cell   ( -- n )    Returns the word size in bytes. (CELL is
                        not part of this version of fig-Forth.)
+
  rf-cells  ( n -- n )  Multiplies the value on the stack by the
                        word size. (CELLS is not part of this 
                        version of fig-Forth.)
+
  rf-code   ( addr -- ) Sets the code field of the most recent 
                        definition. Used by defining words 
                        instead of ;CODE and during installation
                        instead of inline assembler definitions.
+
  rf-exit   ( -- )      Exits orterforth (and returns to the 
                        shell, BASIC prompt or equivalent).
+
  rf-target ( -- d )    Returns a base-36 representation of
                        the target system (e.g., one of:
                        CYGWIN. DARWIN. LINUX. SPECTR. etc).
