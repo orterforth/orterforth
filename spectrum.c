@@ -392,7 +392,6 @@ static void run(void)
 
 static void fin(void)
 {
-  /* TODO cpu */
   free(ram);
   free(rom);
   free(if1rom);

@@ -21,13 +21,13 @@ static void __FASTCALL__ rf_inst_error(char *string)
 }
 
 /* return an ASCII hex digit */
-static char __FASTCALL__ rf_inst_hex(unsigned char b)
+static char __FASTCALL__ rf_inst_hex(uint8_t b)
 {
   return b + (b < 10 ? 48 : 55);
 }
 
 /* write a byte in hex */
-static void __FASTCALL__ rf_inst_print_hex(char c)
+static void __FASTCALL__ rf_inst_print_hex(uint8_t c)
 {
   rf_out(rf_inst_hex(c >> 4));
   rf_out(rf_inst_hex(c & 15));
@@ -911,7 +911,6 @@ static void rf_inst_code_hex(void)
   RF_JUMP_NEXT;
 }
 
-/*#include <stdio.h> TODO*/
 /* , */
 static void rf_inst_code_comma(void)
 {

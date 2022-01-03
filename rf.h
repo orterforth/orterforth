@@ -102,14 +102,43 @@ typedef uint32_t rf_double_t;
 #define RF_DOUBLE_SIZE_BITS 128
 #endif
 
-/* ARCHITECTURE ENDIANNESS */
+/* TARGET ARCHITECTURE */
+
+/* cc65 */
 
 #ifdef __CC65__
 #define RF_LE
+#ifdef __BBC__
+#define RF_TARGET 0x00003948 /* BBC */
+#ifndef RF_TARGET_H
+#define RF_TARGET_H "target/bbc.h"
 #endif
+#endif
+#endif
+
+/* z88dk */
+
 #ifdef __SCCZ80
 #define RF_LE
+#ifdef SPECTRUM
+#define RF_TARGET 0x6774e16f /* SPECTR */
+#ifndef RF_TARGET_H
+#define RF_TARGET_H "target/spectrum.h"
 #endif
+#endif
+#endif
+
+/* C68 */
+
+#ifdef __C68__
+#ifdef QDOS
+#define RF_BE
+#define RF_TARGET 0x000003bd /* QL */
+#endif
+#endif
+
+/* modern platforms */
+
 #ifdef __i386__
 #define RF_LE
 #endif
@@ -118,21 +147,6 @@ typedef uint32_t rf_double_t;
 #endif
 #ifdef __arm__
 #define RF_LE
-#endif
-
-#ifdef QDOS
-#define RF_BE
-#endif
-
-/* TARGET MEMORY MAP */
-
-#ifndef RF_TARGET_H
-#ifdef __SCCZ80
-#ifdef SPECTRUM
-#define RF_TARGET 0x6774e16f /* SPECTR */
-#define RF_TARGET_H "target/spectrum.h"
-#endif
-#endif
 #endif
 
 #ifdef __CYGWIN__
