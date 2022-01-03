@@ -82,11 +82,9 @@ void rf_code_exec()
 
 void rf_branch()
 {
-  /* TODO spectrum build with pure C */
-  /* TODO rf_word_t should always work */
-  intptr_t offset;
+  rf_word_t offset;
   
-  offset = (intptr_t) *(RF_IP_GET);
+  offset = (rf_word_t) *(RF_IP_GET);
   RF_IP_SET((rf_word_t *) (((char *) RF_IP_GET) + offset));
 }
 
