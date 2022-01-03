@@ -1,38 +1,26 @@
 #ifndef RF_H_
 #define RF_H_
 
-/* GENERAL C COMPILER SETTINGS */
+/* C COMPILER SETTINGS */
 
 #ifndef __SCCZ80
 #define __FASTCALL__
 #endif
 
-/* WORD AND DOUBLE WORD SIZE */
-
-/* Z80 */
-
-#ifdef __SCCZ80
-#include <stdint.h>
-typedef u16_t rf_word_t;
-#define RF_WORD_SIZE 2
-typedef u32_t rf_double_t;
-#endif
-
-/* MacOS */
+/* Clang */
 
 #ifdef __clang__
 #include <stdint.h>
+typedef uintptr_t rf_word_t;
 #if (__WORDSIZE == 32)
 
 /* 32 bit */
-typedef uintptr_t rf_word_t;
 #define RF_WORD_SIZE 4
 typedef uint64_t rf_double_t;
 
 #elif (__WORDSIZE == 64)
 
 /* 64 bit */
-typedef uintptr_t rf_word_t;
 #define RF_WORD_SIZE 8
 typedef __uint128_t rf_double_t;
 
@@ -44,31 +32,22 @@ typedef __uint128_t rf_double_t;
 
 #ifdef __GNUC__
 
-#ifdef QDOS
-
-/* 68008 (QL) */
-#define RF_WORD_SIZE 4
-typedef long intptr_t;
-typedef unsigned long rf_word_t;
-typedef unsigned long long rf_double_t;
-
-#else
+#ifndef QDOS
 
 /* Linux */
 
 #include <stdint.h>
+typedef uintptr_t rf_word_t;
 #if __SIZEOF_POINTER__ == 4
 
 /* 32 bit */
 #define RF_WORD_SIZE 4
-typedef uintptr_t rf_word_t;
 typedef uint64_t rf_double_t;
 
 #elif __SIZEOF_POINTER__ == 8
 
 /* 64 bit */
 #define RF_WORD_SIZE 8
-typedef uintptr_t rf_word_t;
 typedef __uint128_t rf_double_t;
 
 #endif
@@ -79,34 +58,15 @@ typedef __uint128_t rf_double_t;
 
 #endif
 
-#ifdef __CC65__
-#include <stdint.h>
-typedef uintptr_t rf_word_t;
-#define RF_WORD_SIZE 2
-typedef uint32_t rf_double_t;
-#endif
-
-/* DERIVED WORD AND DOUBLE SIZE */
-
-#if (RF_WORD_SIZE == 2)
-#define RF_WORD_SIZE_BITS 16
-#define RF_DOUBLE_SIZE 4
-#define RF_DOUBLE_SIZE_BITS 32
-#elif (RF_WORD_SIZE == 4)
-#define RF_WORD_SIZE_BITS 32
-#define RF_DOUBLE_SIZE 8
-#define RF_DOUBLE_SIZE_BITS 64
-#elif (RF_WORD_SIZE == 8)
-#define RF_WORD_SIZE_BITS 64
-#define RF_DOUBLE_SIZE 16
-#define RF_DOUBLE_SIZE_BITS 128
-#endif
-
 /* TARGET ARCHITECTURE */
 
 /* cc65 */
 
 #ifdef __CC65__
+#include <stdint.h>
+typedef uintptr_t rf_word_t;
+#define RF_WORD_SIZE 2
+typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __BBC__
 #define RF_TARGET 0x00003948 /* BBC */
@@ -119,6 +79,10 @@ typedef uint32_t rf_double_t;
 /* z88dk */
 
 #ifdef __SCCZ80
+#include <stdint.h>
+typedef uintptr_t rf_word_t;
+#define RF_WORD_SIZE 2
+typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef SPECTRUM
 #define RF_TARGET 0x6774e16f /* SPECTR */
@@ -131,8 +95,12 @@ typedef uint32_t rf_double_t;
 /* C68 */
 
 #ifdef __C68__
-#ifdef QDOS
+#define RF_WORD_SIZE 4
 #define RF_BE
+typedef long intptr_t;
+typedef unsigned long rf_word_t;
+typedef unsigned long long rf_double_t;
+#ifdef QDOS
 #define RF_TARGET 0x000003bd /* QL */
 #endif
 #endif
@@ -167,6 +135,22 @@ typedef uint32_t rf_double_t;
 
 #ifdef _WIN32
 #define RF_TARGET 0x75327710 /* WINDOW */
+#endif
+
+/* DERIVED WORD AND DOUBLE SIZE */
+
+#if (RF_WORD_SIZE == 2)
+#define RF_WORD_SIZE_BITS 16
+#define RF_DOUBLE_SIZE 4
+#define RF_DOUBLE_SIZE_BITS 32
+#elif (RF_WORD_SIZE == 4)
+#define RF_WORD_SIZE_BITS 32
+#define RF_DOUBLE_SIZE 8
+#define RF_DOUBLE_SIZE_BITS 64
+#elif (RF_WORD_SIZE == 8)
+#define RF_WORD_SIZE_BITS 64
+#define RF_DOUBLE_SIZE 16
+#define RF_DOUBLE_SIZE_BITS 128
 #endif
 
 #ifdef RF_TARGET_H
