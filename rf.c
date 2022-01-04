@@ -7,8 +7,32 @@
 /* parameter stack pointer */
 rf_word_t *rf_sp = 0;
 
+#ifndef RF_INLINE_SP
+rf_word_t rf_sp_pop(void)
+{
+  return *(rf_sp++);
+}
+
+void __FASTCALL__ rf_sp_push(rf_word_t a)
+{
+  *(--rf_sp) = (a);
+}
+#endif
+
 /* return stack pointer */
 rf_word_t *rf_rp = 0;
+
+#ifndef RF_INLINE_RP
+rf_word_t rf_rp_pop(void)
+{
+  return *(rf_rp++);
+}
+
+void __FASTCALL__ rf_rp_push(rf_word_t a)
+{
+  *(--rf_rp) = ((rf_word_t) a);
+}
+#endif
 
 /* Interpretive Pointer */
 rf_word_t *rf_ip = 0;
@@ -21,6 +45,7 @@ rf_word_t *rf_up = 0;
 
 /* TRAMPOLINE */
 
+/* trampoline function pointer pointer */
 rf_code_t rf_trampoline_fp = 0;
 
 #ifndef RF_TARGET_TRAMPOLINE
@@ -899,6 +924,7 @@ void rf_code_cold(void)
     /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
     /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
     *(rf_cold_forth + 2) = origin[6];
+    /* TODO vhead to 2 bytes */
 
     /* UP and USER vars */
 

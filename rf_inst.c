@@ -1595,6 +1595,7 @@ void rf_inst(void)
   /* mark as installed; fail if inst time code called */
   rf_installed = 1;
 
+  /* TODO RF_INST_SAVE to define and call this */
   /* save the result to disc */
   rf_inst_save();
 }

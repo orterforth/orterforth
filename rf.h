@@ -34,8 +34,6 @@ typedef __uint128_t rf_double_t;
 
 #ifndef QDOS
 
-/* Linux */
-
 #include <stdint.h>
 typedef uintptr_t rf_word_t;
 #if __SIZEOF_POINTER__ == 4
@@ -153,13 +151,19 @@ typedef unsigned long long rf_double_t;
 #define RF_DOUBLE_SIZE_BITS 128
 #endif
 
+/* TARGET SPECIFIC INCLUDE FILE */
+
 #ifdef RF_TARGET_H
 #include RF_TARGET_H
 #endif
 
-/* DEFAULT TARGET = HOST PLATFORM */
+/* OTHERWISE DEFAULT TARGET = HOST PLATFORM */
 
 #ifndef RF_TARGET_H
+
+/* RP and SP operations inline, code is larger but faster */
+#define RF_INLINE_RP
+#define RF_INLINE_SP
 
 /* uncouple inst time code */
 #define RF_INST_OVERWRITE
@@ -240,8 +244,17 @@ extern rf_word_t *rf_sp;
 #define RF_SP_GET rf_sp
 #define RF_SP_SET(a) { rf_sp = (a); }
 
+#ifdef RF_INLINE_SP
 #define RF_SP_POP (*(rf_sp++))
 #define RF_SP_PUSH(a) { *(--rf_sp) = (a); }
+#else
+rf_word_t rf_sp_pop(void);
+
+void __FASTCALL__ rf_sp_push(rf_word_t a);
+
+#define RF_SP_POP rf_sp_pop()
+#define RF_SP_PUSH(a) rf_sp_push(a)
+#endif
 
 /* return stack pointer */
 extern rf_word_t *rf_rp;
@@ -249,8 +262,17 @@ extern rf_word_t *rf_rp;
 #define RF_RP_GET rf_rp
 #define RF_RP_SET(a) { rf_rp = (a); }
 
+#ifdef RF_INLINE_RP
 #define RF_RP_POP (*(rf_rp++))
-#define RF_RP_PUSH(a) { *(--rf_rp) = ((rf_word_t) a); }
+#define RF_RP_PUSH(a) { *(--rf_rp) = ((rf_word_t) (a)); }
+#else
+rf_word_t rf_rp_pop(void);
+
+void __FASTCALL__ rf_rp_push(rf_word_t a);
+
+#define RF_RP_POP rf_rp_pop()
+#define RF_RP_PUSH(a) { rf_rp_push((rf_word_t) (a)); }
+#endif
 
 /* interpretive pointer */
 extern rf_word_t *rf_ip;

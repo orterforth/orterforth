@@ -136,14 +136,14 @@ void rf_code_cr(void)
 
 void rf_disc_read(char *p, unsigned char len)
 {
-  for (; len; len--) {
+  for (; len; --len) {
     *(p++) = rf_persci_getc();
   }
 }
 
 void rf_disc_write(char *p, unsigned char len)
 {
-  for (; len; len--) {
+  for (; len; --len) {
     rf_persci_putc(*(p++));
   }
 }
