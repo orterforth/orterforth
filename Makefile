@@ -218,10 +218,6 @@ else
 FUSE := $(shell which fuse)
 endif
 
-# run Fuse emulator, load TAP, connect disc
-.PHONY : spectrum-fuse-run
-spectrum-fuse-run : spectrum-fuse-tap | spectrum-fuse-disc
-
 # run Fuse emulator and load TAP
 .PHONY : spectrum-fuse-tap
 spectrum-fuse-tap : spectrum/orterforth.tap | roms/spectrum/if1-2.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
@@ -324,10 +320,28 @@ SPECTRUMINSTOFFSET := 18432
 SPECTRUMIMPL := fuse
 endif
 
-.PHONY: spectrum-mame-run
-spectrum-mame-run : spectrum/orterforth.tap
+# run Spectrum build
+.PHONY : spectrum-run
+ifeq ($(SPECTRUMIMPL),fuse)
+spectrum-run : spectrum-run-fuse
+endif
+ifeq ($(SPECTRUMIMPL),mame)
+spectrum-run : spectrum-run-mame
+endif
+ifeq ($(SPECTRUMIMPL),superzazu)
+# default is to use fast build but run in Fuse
+spectrum-run : spectrum-run-fuse
+endif
 
-	@echo '1. Press Enter to skip the disclaimer'
+# run Fuse emulator, load TAP, connect disc
+.PHONY : spectrum-run-fuse
+spectrum-run-fuse : spectrum-fuse-tap | spectrum-fuse-disc
+
+# run Mame emulator, load TAP
+.PHONY: spectrum-run-mame
+spectrum-run-mame : spectrum/orterforth.tap
+
+	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
 	@mame spectrum \
 		-exp intf1 \
@@ -335,18 +349,6 @@ spectrum-mame-run : spectrum/orterforth.tap
 		-autoboot_delay 5 \
 		-autoboot_command 'j""\n' \
 		-cassette $<
-
-# run Spectrum build
-.PHONY : spectrum-run
-ifeq ($(SPECTRUMIMPL),fuse)
-spectrum-run : spectrum-fuse-run
-endif
-ifeq ($(SPECTRUMIMPL),mame)
-spectrum-run : spectrum-mame-run
-endif
-ifeq ($(SPECTRUMIMPL),superzazu)
-spectrum-run : spectrum-fuse-run
-endif
 
 .PHONY : spectrum-test
 spectrum-test : spectrum/test.tap | roms/spectrum/if1-2.rom
