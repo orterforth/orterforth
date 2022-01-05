@@ -57,8 +57,6 @@ $(DISC) : \
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
 
-# === LOCAL SYSTEM ===
-
 # orter - retrocomputing multitool
 $(ORTER) : \
 	$(SYSTEM)/orter_fuse.o \
@@ -67,6 +65,9 @@ $(ORTER) : \
 	orter.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
+
+
+# === LOCAL SYSTEM ===
 
 # local orterforth executable
 $(ORTERFORTH) : \
@@ -160,6 +161,137 @@ $(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
 
 	$(DISC) create <$< >$@
 
+
+# === BBC Micro ===
+
+BBCSTARTADDRESS := 1300
+BBCROMS := \
+	roms/bbcb/os12.rom \
+	roms/bbcb/basic2.rom \
+	roms/bbcb/phroma.bin \
+	roms/bbcb/saa5050 \
+	roms/bbcb/dnfs120.rom
+
+bbc :
+
+	mkdir $@
+
+.PHONY : bbc-clean
+bbc-clean : 
+
+	rm -f bbc/*
+
+.PHONY : bbc-help
+bbc-help :
+
+	@echo "bbc target build requires:"
+	@echo " * cc65 fork with BBC support at https://github.com/dominicbeesley/cc65"
+	@echo "   NB currently requires that this repo is cloned into a sibling dir i.e., ../cc65"
+	@echo " * bbcim for more details see http://wouter.bbcmicro.net/bbc/pc-software-whs.html"
+	@echo " * MAME emulator"
+	@echo " * BBC ROM files at: $(BBCROMS)"
+
+# load from disc and run
+.PHONY : bbc-run
+bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC)
+
+	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+
+	@mame bbcb \
+    -rs423 null_modem \
+    -bitb socket.localhost:5705 \
+    -skip_gameinfo -nomax -window \
+    -autoboot_delay 2 \
+    -autoboot_command '*DISK\r*EXEC !BOOT\r' \
+    -flop1 bbc/orterforth.ssd
+
+# general assemble rule
+bbc/%.o : bbc/%.s
+
+	ca65 -t bbc -o $@ $<
+
+# general compile rule
+bbc/%.s : %.c | bbc
+
+	cc65 -O '-DRF_TARGET_H="target/bbc.h"' --signed-chars -t bbc -o $@ $<
+
+# boot script
+bbc/boot : | bbc
+
+	printf '*RUN "ORTERFO"\r' > $@
+
+# boot disc inf
+bbc/boot.inf : | bbc
+
+	mkdir -p bbc
+	echo "$$.!BOOT     0000   0000  CRC=0" > $@
+
+# final binary from the hex
+bbc/orterforth : bbc/orterforth.hex | $(ORTER)
+
+	$(ORTER) hex read < $< > $@
+
+# final binary hex
+bbc/orterforth.hex : bbc/orterforth-inst.ssd $(BBCROMS) | $(DISC)
+
+	@rm -f 1.disc
+	@touch 1.disc
+
+	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+
+	@echo "Press <enter> to skip warning screen"
+
+	@mame bbcb \
+    -rs423 null_modem \
+    -bitb socket.localhost:5705 \
+    -skip_gameinfo -nothrottle -nomax -window \
+    -autoboot_delay 2 \
+    -autoboot_command '*DISK\r*EXEC !BOOT\r' \
+    -flop1 bbc/orterforth-inst.ssd & pid=$$! ; \
+		scripts/waitforhex ; \
+		kill -9 $$pid
+
+	@cp 1.disc $@
+
+# final disc inf
+bbc/orterforth.inf : | bbc
+
+	echo "$$.ORTERFO  $(BBCSTARTADDRESS)   $(BBCSTARTADDRESS)  CRC=0" > $@
+
+# final disc image
+bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
+
+	rm -f $@
+	bbcim -a $@ bbc/boot
+	bbcim -a $@ bbc/orterforth
+
+# inst binary
+bbc/orterforth-inst : bbc/rf.o bbc/rf_inst.o bbc/rf_system.o bbc/sys.o orterforth.c
+
+	cl65 -O -t bbc --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^ ../cc65/libsrc/bbc/oslib/os.s 
+
+# inst disc inf
+bbc/orterforth-inst.inf : | bbc
+
+	echo "$$.ORTERFO  $(BBCSTARTADDRESS)   $(BBCSTARTADDRESS)  CRC=0" > $@
+
+# inst disc image
+bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterforth-inst.inf
+
+	rm -f $@
+	bbcim -a $@ bbc/boot
+	bbcim -a $@ bbc/orterforth-inst
+
+# C system lib
+bbc/rf_system.s : target/bbc.c | bbc
+
+	cc65 -O '-DRF_TARGET_H="target/bbc.h"' --signed-chars -t bbc -o $@ $<
+
+# asm bbc system lib
+bbc/sys.o : target/sys.s | bbc
+
+	ca65 -t bbc -o $@ $<
+
 # build
 .PHONY : build
 build : $(TARGET)-build
@@ -181,6 +313,21 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 disc : $(DISC)
 
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
+
+# ROM file dir
+roms : 
+
+	mkdir $@
+
+# BBC Micro ROM files dir
+roms/bbcb : | roms
+
+	mkdir $@
+
+# BBC Micro ROM files
+roms/bbcb/% : | roms/bbcb
+
+	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
 
 # run local build
 .PHONY : run
@@ -341,11 +488,16 @@ spectrum-run-fuse : spectrum-fuse-tap | spectrum-fuse-disc
 .PHONY: spectrum-run-mame
 spectrum-run-mame : spectrum/orterforth.tap
 
+	# start disc
+	SYSTEM=$(SYSTEM) scripts/disc-tcp &
+
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
 	@mame spectrum \
 		-exp intf1 \
-		-window -nomaximize -skip_gameinfo \
+		-exp:intf1:rs232 null_modem \
+		-bitb socket.localhost:5705 \
+		-window -skip_gameinfo \
 		-autoboot_delay 5 \
 		-autoboot_command 'j""\n' \
 		-cassette $<

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# wait for Mame serial over TCP
+while ! exec 3<>/dev/tcp/127.0.0.1/5705 ; do
+  sleep 1
+done >/dev/null 2>&1
+
+# serve disc over it
+$SYSTEM/disc standard <&3 1>&3

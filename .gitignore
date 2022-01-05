@@ -1,8 +1,13 @@
 *.disc
+bbc
+cfg
 cygwin-*
 darwin-*
 linux-*
+mame.ini
 mingw-*
 roms
 spectrum
 windows-*
+z80.c
+z80.h
