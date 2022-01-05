@@ -2,9 +2,13 @@
 
 set -eu
 
+# wait for disc file to appear
+while ! [ -f 1.disc ]; do
+  sleep 1
+done
+
 # wait for the terminating block to be written to the disc
 while ! grep ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ 1.disc; do
-  # echo "waiting for Zs"
   sleep 1
 done
 

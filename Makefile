@@ -484,7 +484,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
 		spectrum/orterforth-inst-2.tap & pid=$$! ; \
-		./waitforhex ; \
+		scripts/waitforhex ; \
 		kill -9 $$pid
 endif
 
@@ -506,7 +506,7 @@ ifeq ($(SPECTRUMIMPL),real)
 
 	@echo "* Starting disc and waiting for completion..."
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc & pid=$$! ; \
-		./waitforhex ; \
+		scripts/waitforhex ; \
 		kill -9 $$pid
 endif
 
