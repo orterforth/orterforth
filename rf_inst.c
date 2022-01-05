@@ -135,7 +135,7 @@ static void rf_inst_disc_r(char *b, rf_word_t blk)
 }
 
 /* write block */
-#ifdef SPECTRUM
+#ifdef RF_INST_SAVE
 static void rf_inst_disc_w(char *b, rf_word_t blk)
 {
   static char eot = RF_ASCII_EOT;
@@ -1507,9 +1507,9 @@ static void __FASTCALL__ rf_inst_load(rf_word_t screen)
   rf_trampoline();
 }
 
+#ifdef RF_INST_SAVE
 static void rf_inst_save(void)
 {
-#ifdef SPECTRUM
   /* write to DR1 */
   unsigned int blk = 2000;
   /* start from ORG */
@@ -1517,7 +1517,7 @@ static void rf_inst_save(void)
   /* write blocks to disc until HERE */
   char buf[128];
   unsigned char j;
-  while (i < RF_USER_DP) {
+  while (i < (char *) RF_USER_DP) {
     for (j = 0; j < 128;) {
       unsigned char b = *i++;
       buf[j++] = rf_inst_hex(b >> 4);
@@ -1595,7 +1595,8 @@ void rf_inst(void)
   /* mark as installed; fail if inst time code called */
   rf_installed = 1;
 
-  /* TODO RF_INST_SAVE to define and call this */
   /* save the result to disc */
+#ifdef RF_INST_SAVE
   rf_inst_save();
+#endif
 }

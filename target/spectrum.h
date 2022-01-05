@@ -8,6 +8,9 @@
 /* Unlink inst time dictionary entries and leave them to be overwritten */
 #define RF_INST_OVERWRITE
 
+/* Save result to disc 1 after inst */
+#define RF_INST_SAVE
+
 /* RF_ORIGIN is defined at command line */
 
 /* disc buffers occupy high memory and finish at 0xFFFF */
