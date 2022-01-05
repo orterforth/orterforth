@@ -1528,8 +1528,8 @@ static void rf_inst_save(void)
   /* write a block of 'Z's as a signal to terminate */
   rf_inst_memset(buf, 'Z', 128);
   rf_inst_disc_w(buf, blk);
-#endif
 }
+#endif
 
 void rf_inst(void)
 {
