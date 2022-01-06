@@ -16,14 +16,6 @@ ifeq ($(UNAME_S),MINGW)
 	OPER := mingw
 endif
 UNAME_M := $(shell uname -m)
-ifeq ($(UNAME_M),x86_64)
-endif
-ifneq ($(filter %86,$(UNAME_M)),)
-endif
-ifneq ($(filter arm%,$(UNAME_M)),)
-endif
-# do not use ARCH
-# https://stackoverflow.com/questions/12763296/os-x-arch-command-incorrect
 PROC := $(UNAME_M)
 
 SYSTEM := $(OPER)-$(PROC)
@@ -213,7 +205,7 @@ bbc/%.o : bbc/%.s
 # general compile rule
 bbc/%.s : %.c | bbc
 
-	cc65 -O '-DRF_TARGET_H="target/bbc.h"' --signed-chars -t bbc -o $@ $<
+	cc65 -O --signed-chars -t bbc -o $@ $<
 
 # boot script
 bbc/boot : | bbc
@@ -223,7 +215,6 @@ bbc/boot : | bbc
 # boot disc inf
 bbc/boot.inf : | bbc
 
-	mkdir -p bbc
 	echo "$$.!BOOT     0000   0000  CRC=0" > $@
 
 # final binary from the hex
@@ -457,7 +448,7 @@ SPECTRUMLIBS := \
 	-lspectrum/rf_system
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 32768
-# ORIGIN higher, 0x9500, C code is larger as uses z88dk libs
+# ORIGIN higher, 0x9EFC, C code is larger as uses z88dk libs and pure C impl
 SPECTRUMORIGIN := 40700
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum.c
