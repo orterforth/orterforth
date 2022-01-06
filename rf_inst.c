@@ -1194,10 +1194,18 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "inst-digit", rf_code_digit },
   { "inst-pfind", rf_code_pfind },
   { "inst-encl", rf_code_encl },
+#ifdef RF_INST_SILENT
+  { "inst-emit", rf_code_drop },
+#else
   { "inst-emit", rf_code_emit },
+#endif
   { "inst-key", rf_code_key },
   { "inst-qterm", rf_code_qterm },
+#ifdef RF_INST_SILENT
+  { "inst-cr", rf_inst_code_noop },
+#else
   { "inst-cr", rf_code_cr },
+#endif
   { "inst-cmove", rf_code_cmove },
   { "inst-ustar", rf_code_ustar },
   { "inst-uslas", rf_code_uslas },
@@ -1514,8 +1522,6 @@ void rf_inst(void)
   /* fail if called after installed */
   RF_INST_ONLY;
 
-  rf_inst_print("orterforth inst\n");
-
 #ifdef SPECTRUM
   /* wait for disc server to init */
   /* TODO Fix the underlying issue with spectrum serial */
@@ -1567,11 +1573,17 @@ void rf_inst(void)
   rf_cold_abort = rf_pfa(rf_inst_find_string("ABORT"));
   assert(rf_cold_abort);
 
+#ifdef RF_INST_SILENT
+  /* enable CR, EMIT after silent install */
+  *(rf_cfa(rf_inst_find_string("CR"))) = rf_code_cr;
+  *(rf_cfa(rf_inst_find_string("EMIT"))) = rf_code_emit;
+#endif
+
   /* mark as installed; fail if inst time code called */
   rf_installed = 1;
 
-  /* save the result to disc */
 #ifdef RF_INST_SAVE
+  /* save the result to disc */
   rf_inst_save();
 #endif
 }

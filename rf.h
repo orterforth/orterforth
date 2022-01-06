@@ -165,6 +165,9 @@ typedef unsigned long long rf_double_t;
 #define RF_INLINE_RP
 #define RF_INLINE_SP
 
+/* hide output during inst time */
+#define RF_INST_SILENT
+
 /* uncouple inst time code */
 #define RF_INST_OVERWRITE
 

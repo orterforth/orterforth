@@ -44,10 +44,7 @@ extern char rf_installed;
 
 void rf_out(char c)
 {
-  /* quiet during install */
-  if (rf_installed) {
-    putchar(c);
-  }
+  putchar(c);
 }
 
 void rf_code_emit(void)
@@ -56,10 +53,7 @@ void rf_code_emit(void)
   {
     unsigned char c = RF_SP_POP & 0x7F;
 
-    /* quiet during install */
-    if (rf_installed) {
-      putchar(c);
-    }
+    putchar(c);
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
