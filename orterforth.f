@@ -851,9 +851,9 @@ inst-s0  SP@  <  1  ?ERROR   SP@  inst-s1  <  7  ?ERROR ;
          LATEST  40  TOGGLE  ;
 
 : VOCABULARY  ( CREATE VOCAB WITH 'V-HEAD' AT VOC INTERSECT. *) 
-       <BUILDS  inst-vhead ,  CURRENT  @  CFA  ,
+       <BUILDS  81 C, A0 C,  CURRENT  @  CFA  ,
        HERE  VOC-LINK  @  ,  VOC-LINK  !
-       DOES>  rf-cell +  CONTEXT  !  ;
+       DOES>  2+  CONTEXT  !  ;
 
 VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *) 
 
@@ -1277,4 +1277,4 @@ HERE FENCE !
 HERE 14 rf-cells +ORIGIN ! ( COLD START FENCE )
 HERE 15 rf-cells +ORIGIN ! ( COLD START DP )
 LATEST 6 rf-cells +ORIGIN ! ( TOPMOST WORD )
-' FORTH 3 rf-cells + 16 rf-cells +ORIGIN ! ( VOC-LINK ) ;S    
+' FORTH 2+ 2 rf-cells + 16 rf-cells +ORIGIN ! ( VOC-LINK ) ;S

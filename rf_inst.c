@@ -1240,28 +1240,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "inst-bread", rf_code_bread }
 };
 
-/* For VOCABULARY */
-
-#ifdef RF_LE
-#if (RF_WORD_SIZE == 8)
-#define RF_VHEAD 0xA020202020202087
-#elif (RF_WORD_SIZE == 4)
-#define RF_VHEAD 0xA0202083
-#elif (RF_WORD_SIZE == 2)
-#define RF_VHEAD 0xA081
-#endif
-#endif
-
-#ifdef RF_BE
-#if (RF_WORD_SIZE == 8)
-#define RF_VHEAD 0x87202020202020A0
-#elif (RF_WORD_SIZE == 4)
-#define RF_VHEAD 0x832020A0
-#elif (RF_WORD_SIZE == 2)
-#define RF_VHEAD 0x81A0
-#endif
-#endif
-
 /* list of forward declared words that will fail until replaced later */
 
 #define RF_INST_NOTIMPL_LIST_SIZE 7
@@ -1468,9 +1446,6 @@ static void rf_inst_forward(void)
   /* stack limit literals */
   rf_inst_def_literal("inst-s0", (rf_word_t) RF_S0);
   rf_inst_def_literal("inst-s1", (rf_word_t) ((rf_word_t *) RF_S0 - RF_STACK_SIZE));
-
-  /* vocabulary dummy name (originally this is A081, 16 bit little-endian) */
-  rf_inst_def_literal("inst-vhead", RF_VHEAD);
 
   /* inst-load */
   rf_inst_colon("inst-load");
