@@ -1,10 +1,15 @@
-// SYSTEM BINDINGS
+/* SYSTEM BINDINGS */
 
 #include <bbc.h>
+#include <stdint.h>
 
-void osbyte(char a, char x);
-void oswrch(char a);
-char osrdch(void);
+void osbyte(uint8_t a, uint8_t x);
+
+void osnewl(void);
+
+uint8_t osrdch(void);
+
+void oswrch(uint8_t a);
 
 #include "../rf.h"
 
@@ -29,7 +34,7 @@ void rf_code_emit(void)
 {
   RF_START;
   {
-    unsigned char c;
+    uint8_t c;
 
     c = RF_SP_POP & 0x7F;
     oswrch(c);
@@ -50,11 +55,11 @@ void rf_code_key(void)
       rs423_read = 0;
     }
 
-    // get key
+    /* get key */
     // TODO cursor on and off, off by default
     c = osrdch();
 
-    // return key
+    /* return key */
     RF_SP_PUSH(c & 0x7F);
   }
   RF_JUMP_NEXT;
@@ -63,7 +68,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  // TODO test for escape
+  /* TODO test for escape */
   RF_SP_PUSH(0);
   RF_JUMP_NEXT;
 }
@@ -71,16 +76,14 @@ void rf_code_qterm(void)
 void rf_code_cr()
 {
   RF_START;
-  // TODO OSNEWL $FFE7
-  oswrch('\r');
-  oswrch('\n');
+  osnewl();
   RF_JUMP_NEXT;
 }
 
 void rf_disc_read(char *p, unsigned char len)
 {
   int i;
-  char c;
+  uint8_t c;
 
   /* switch from keyboard to RS423 */
   if (!rs423_read) {
@@ -88,6 +91,7 @@ void rf_disc_read(char *p, unsigned char len)
     rs423_read = 1;
   }
 
+  /* read into the buffer */
   for (; len; --len) {
     c = osrdch();
     *(p++) = c;
@@ -102,10 +106,12 @@ void rf_disc_write(char *p, unsigned char len)
     rs423_write = 1;
   }
 
-  for (; len; len--) {
+  /* write from the buffer */
+  for (; len; --len) {
     oswrch(*(p++));
   }
 
+  /* switch from RS423 to screen */
   if (rs423_write) {
     osbyte(3, 4);
     rs423_write = 0;
@@ -118,7 +124,7 @@ void rf_disc_flush(void)
 
 void rf_fin(void)
 {
-  // switch back to screen and keyboard
+  /* switch back to screen and keyboard */
   osbyte(2, 0);
   osbyte(3, 4);
 }

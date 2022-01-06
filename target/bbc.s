@@ -11,6 +11,11 @@ _osbyte:
 	jsr incsp1
 	rts
 
+.export	_osnewl
+
+_osnewl:
+	jmp $FFE7
+
 .export _osrdch
 
 _osrdch:

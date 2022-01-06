@@ -1,8 +1,6 @@
 /* RP and SP operations not inline, code is smaller */
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
-// #define RF_INLINE_RP
-// #define RF_INLINE_SP
 
 /* Unlink inst time dictionary entries and leave them to be overwritten */
 #define RF_INST_OVERWRITE
@@ -18,3 +16,6 @@
 
 /* disc buffers end before HIMEM, in CC65 this is 0x7200 behind stack and MODE 7 screen memory */
 #define RF_LIMIT 0x7200
+
+/* TODO RP/TIB at 0500-05FF or 0700-07FF */
+/* TODO SP at 0400-04FF or 0600-06FF */
