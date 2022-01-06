@@ -164,15 +164,15 @@ void rf_code_xploo()
   RF_START;
   {
     intptr_t n;
-    rf_word_t index;
-    rf_word_t limit;
+    intptr_t index;
+    intptr_t limit;
 
     n = (intptr_t) RF_SP_POP;
     index = RF_RP_POP;
     limit = RF_RP_POP;
     index += n;
-    /* TODO seems like index, limit need to be signed */
-    if (limit > index) {
+
+    if (n > 0 ? (limit > index) : (index > limit)) {
       RF_RP_PUSH(limit);
       RF_RP_PUSH(index);
       rf_branch();
