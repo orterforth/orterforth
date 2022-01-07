@@ -225,23 +225,28 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # final binary hex
 bbc/orterforth.hex : bbc/orterforth-inst.ssd $(BBCROMS) | $(DISC)
 
+	@# empty disc
 	@rm -f 1.disc
 	@touch 1.disc
 
+	@# serve disc
 	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
 
-	@echo "Press <enter> to skip warning screen"
-
+	@# run emulator, wait for result
 	@mame bbcb \
+		-video none -sound none \
+ 		-speed 20 -frameskip 10 -nothrottle \
+		-seconds_to_run 420 \
     -rs423 null_modem \
     -bitb socket.localhost:5705 \
-    -skip_gameinfo -nothrottle -nomax -window \
+    -skip_gameinfo -nomax -window \
     -autoboot_delay 2 \
     -autoboot_command '*DISK\r*EXEC !BOOT\r' \
     -flop1 bbc/orterforth-inst.ssd & pid=$$! ; \
 		scripts/waitforhex ; \
 		kill -9 $$pid
 
+	@# copy result
 	@cp 1.disc $@
 
 # final disc inf
