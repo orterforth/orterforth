@@ -262,7 +262,7 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 	bbcim -a $@ bbc/orterforth
 
 # inst binary
-bbc/orterforth-inst : bbc/rf.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.o orterforth.c
+bbc/orterforth-inst : bbc/bbc.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system.o
 
 	cl65 -O -t bbc --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^ ../cc65/libsrc/bbc/oslib/os.s 
 
