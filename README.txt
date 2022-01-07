@@ -182,3 +182,16 @@ system-independent:
  rf-target ( -- d )    Returns a base-36 representation of
                        the target system (e.g., one of:
                        CYGWIN. DARWIN. LINUX. SPECTR. etc).
+
+# Acknowledgements #
+
+orterforth builds upon the work of many, most obviously the 
+Forth Interest Group and those involved in putting together the
+Installation Manual. Some other code has been adapted from works
+believed to be in the public domain.
+
+Dependencies (compilers, emulators, system ROMs, utilities) have
+their own licence terms of course.
+
+If any attribution has been missed I am happy to add it in here 
+or in the appropriate place in the source code.
