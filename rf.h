@@ -196,11 +196,17 @@ extern char *rf_memory;
 
 #define RF_FIRST (RF_LIMIT - RF_DISC_BUFFERS_SIZE)
 #define RF_USER ((char *) (RF_FIRST - (32 * RF_WORD_SIZE)))
+#ifndef RF_R0
 #define RF_R0 (RF_USER - RF_WORD_SIZE) 
+#endif
 #define RF_RETURN_STACK_SIZE 128
 #define RF_TIB (RF_USER - (RF_RETURN_STACK_SIZE * RF_WORD_SIZE))
+#ifndef RF_S0
 #define RF_S0 RF_TIB
+#endif
+#ifndef RF_STACK_SIZE
 #define RF_STACK_SIZE 128
+#endif
 
 /* USER VARIABLES */
 

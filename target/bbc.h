@@ -8,6 +8,13 @@
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
 
+/* stack in 0-page, assembly code will use X as SP */
+#define RF_S0 0x0070
+#define RF_STACK_SIZE 0x0037
+
+/* return stack at 0x0600, BBC BASIC uses this page for FOR, GOSUB, REPEAT */
+#define RF_R0 0x0600
+
 /* start address */
 #define RF_ORG 0x1300
 
@@ -16,6 +23,3 @@
 
 /* disc buffers end before HIMEM, in CC65 this is 0x7200 behind stack and MODE 7 screen memory */
 #define RF_LIMIT 0x7200
-
-/* TODO RP/TIB at 0500-05FF or 0700-07FF */
-/* TODO SP at 0400-04FF or 0600-06FF */
