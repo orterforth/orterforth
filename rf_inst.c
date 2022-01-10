@@ -27,7 +27,7 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
 }
 
 /* write a byte in hex */
-static void __FASTCALL__ rf_inst_print_hex(uint8_t c)
+void __FASTCALL__ rf_inst_print_hex(uint8_t c)
 {
   rf_out(rf_inst_hex(c >> 4));
   rf_out(rf_inst_hex(c & 15));
@@ -163,6 +163,7 @@ static void rf_inst_disc_w(char *b, rf_word_t blk)
 /* fails with "notimpl" if called */
 static void rf_inst_code_notimpl(void)
 {
+  RF_START;
   rf_inst_error("notimpl");
 }
 
@@ -368,6 +369,7 @@ static void rf_inst_create(unsigned char length, char *address)
 
   /* TIB HERE 0A0 + < 2 ?ERROR */
   assert(RF_USER_TIB - (rf_word_t) here >= 0xA0);
+  /* TODO address of TIB not value; instead use a portable dictionary limit */
 
   /* -FIND IF DROP NFA ID. 4 MESSAGE SPACE ENDIF  */
   /* not important at inst time */
@@ -417,7 +419,6 @@ static void rf_inst_code_create(void)
 /* -FIND */
 static char *rf_inst_hfind(void)
 {
-  RF_START;
   RF_INST_ONLY;
   {
     char *here;
