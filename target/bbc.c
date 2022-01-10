@@ -1,7 +1,8 @@
 /* SYSTEM BINDINGS */
 
-#include <bbc.h>
 #include <stdint.h>
+
+#include "../rf.h"
 
 void osbyte(uint8_t a, uint8_t x);
 
@@ -11,16 +12,21 @@ uint8_t osrdch(void);
 
 void oswrch(uint8_t a);
 
-#include "../rf.h"
-
 static uint8_t rs423_write = 0;
 static uint8_t rs423_read = 0;
 
 void rf_init(void)
 {
+  /* TODO do this only if using the vector */
+  /* W vector, set JMP ind */
+  // *(((uint8_t *) &rf_w) + 1) = 0x6c;
+  *((uint8_t *) 0x0088) = 0x6c;
+
+  /* RS423 baud rate */
   osbyte(7, 7);
   osbyte(8, 7);
 
+  /* flags for keyboard/screen vs RS423 */
   rs423_read = 0;
   rs423_write = 0;
 }
@@ -56,7 +62,6 @@ void rf_code_key(void)
     }
 
     /* get key */
-    // TODO cursor on and off, off by default
     c = osrdch();
 
     /* return key */
