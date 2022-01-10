@@ -12,8 +12,12 @@
 #define RF_S0 0x0070
 #define RF_STACK_SIZE 0x0037
 
-/* return stack at 0x0600, BBC BASIC uses this page for FOR, GOSUB, REPEAT */
-#define RF_R0 0x0600
+/* return stack uses reserved half of page 0x0100 */
+#define RF_R0 0x0180
+#define RF_RETURN_STACK_SIZE 0x003F
+
+/* use the BASIC text input buffer area at 0x0700 */
+#define RF_TIB 0x0700
 
 /* start address */
 #define RF_ORG 0x1300
