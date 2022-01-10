@@ -199,8 +199,12 @@ extern char *rf_memory;
 #ifndef RF_R0
 #define RF_R0 (RF_USER - RF_WORD_SIZE) 
 #endif
+#ifndef RF_RETURN_STACK_SIZE
 #define RF_RETURN_STACK_SIZE 128
+#endif
+#ifndef RF_TIB
 #define RF_TIB (RF_USER - (RF_RETURN_STACK_SIZE * RF_WORD_SIZE))
+#endif
 #ifndef RF_S0
 #define RF_S0 RF_TIB
 #endif
