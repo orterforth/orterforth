@@ -215,26 +215,26 @@ static int serve(void)
 
 int main(int argc, char *argv[])
 {
+  /* Console */
+  if (argc == 1) {
+    serial_init_standard();
+    return serve();
+  }
+
   /* Text file to Forth block disc image */
   if (argc == 2 && !strcmp("create", argv[1])) {
     return create_disc();
   }
 
   /* Physical serial port */
-  if (argc >= 4 && !strcmp("serial", argv[1])) {
+  if (argc == 4 && !strcmp("serial", argv[1])) {
     serial_init_physical(argv[2], atoi(argv[3]));
     return serve();
   }
 
-  /* Console */
-  if (argc >= 2 && !strcmp("standard", argv[1])) {
-    serial_init_standard();
-    return serve();
-  }
-
   /* Usage */
-  fputs("Usage: disc create                Convert text file (stdin) into Forth block format (stdout)\n", stderr);
+  fputs("Usage: disc                       Run disc controller over stdin/stdout\n", stderr);
+  fputs("       disc create                Convert text file (stdin) into Forth block format (stdout)\n", stderr);
   fputs("       disc serial <name> <baud>  Run disc controller over physical serial port\n", stderr);
-  fputs("       disc standard              Run disc controller over stdin/stdout\n", stderr);
   return 1;
 }

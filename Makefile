@@ -278,6 +278,11 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 	bbcim -a $@ bbc/boot
 	bbcim -a $@ bbc/orterforth-inst
 
+# asm bbc system lib
+bbc/rf_6502.o : rf_6502.s | bbc
+
+	ca65 -t bbc -o $@ $<
+
 # C system lib
 bbc/rf_system.s : target/bbc.c | bbc
 
@@ -308,7 +313,7 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 .PHONY : disc
 disc : $(DISC)
 
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
 
 # ROM file dir
 roms : 
@@ -350,7 +355,7 @@ spectrum-fuse-disc : | $(DISC) $(ORTER) spectrum/fuse-rs232-rx spectrum/fuse-rs2
 
 	$(ORTER) fuse serial read \
 		< spectrum/fuse-rs232-tx \
-		| $(DISC) standard 0.disc 1.disc \
+		| $(DISC) \
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
@@ -390,7 +395,7 @@ spectrum-load-serial : spectrum/orterforth.ser spectrum-load-serial.bas
 	@$(ORTER) serial write -w 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 
 	@echo "* Starting disc..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
 
 # config option
 SPECTRUMCONFIG := a
@@ -619,7 +624,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 	# start disc
 	$(ORTER) fuse serial read \
 		< spectrum/fuse-rs232-tx \
-		| $(DISC) standard 0.disc 1.disc \
+		| $(DISC) \
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
@@ -653,7 +658,7 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial write -w 22 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth-inst-2.ser
 
 	@echo "* Starting disc and waiting for completion..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc & pid=$$! ; \
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) & pid=$$! ; \
 		scripts/waitforhex ; \
 		kill -9 $$pid
 endif
