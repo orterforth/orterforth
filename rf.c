@@ -97,7 +97,7 @@ void rf_next(void)
 #endif
 
 #ifndef RF_TARGET_CODE_EXEC
-void rf_code_exec()
+void rf_code_exec(void)
 {
   RF_START;
   rf_w = (rf_code_t *) RF_SP_POP;
@@ -105,7 +105,7 @@ void rf_code_exec()
 }
 #endif
 
-void rf_branch()
+void rf_branch(void)
 {
   rf_word_t offset;
   
@@ -114,7 +114,7 @@ void rf_branch()
 }
 
 #ifndef RF_TARGET_CODE_BRAN
-void rf_code_bran()
+void rf_code_bran(void)
 {
   RF_START;
   rf_branch();
@@ -123,7 +123,7 @@ void rf_code_bran()
 #endif
 
 #ifndef RF_TARGET_CODE_ZBRAN
-void rf_code_zbran()
+void rf_code_zbran(void)
 {
   RF_START;
   if (RF_SP_POP) {
@@ -136,7 +136,7 @@ void rf_code_zbran()
 #endif
 
 #ifndef RF_TARGET_CODE_XLOOP
-void rf_code_xloop()
+void rf_code_xloop(void)
 {
   RF_START;
   {
@@ -159,7 +159,7 @@ void rf_code_xloop()
 #endif
 
 #ifndef RF_TARGET_CODE_XPLOO
-void rf_code_xploo()
+void rf_code_xploo(void)
 {
   RF_START;
   {
@@ -185,7 +185,7 @@ void rf_code_xploo()
 #endif
 
 #ifndef RF_TARGET_CODE_XDO
-void rf_code_xdo()
+void rf_code_xdo(void)
 {
   RF_START;
   {
@@ -223,7 +223,7 @@ rf_word_t __FASTCALL__ *rf_pfa(char *nfa)
 }
 
 #ifndef RF_TARGET_CODE_DODOE
-void rf_code_dodoe()
+void rf_code_dodoe(void)
 {
   RF_START;
   {
@@ -248,7 +248,7 @@ void rf_code_dodoe()
 #endif
 
 #ifndef RF_TARGET_CODE_RR
-void rf_code_rr()
+void rf_code_rr(void)
 {
   RF_START;
   {
@@ -276,7 +276,7 @@ unsigned char rf_digit(char base, char c)
 }
 
 #ifndef RF_TARGET_CODE_DIGIT
-void rf_code_digit()
+void rf_code_digit(void)
 {
   RF_START;
   {
@@ -344,7 +344,7 @@ rf_word_t rf_pfind(char *addr1, char *addr2)
   }
 }
 
-void rf_code_pfind()
+void rf_code_pfind(void)
 {
   RF_START;
   {
@@ -401,7 +401,7 @@ void rf_enclose(char c, char *addr1, unsigned char *s3, unsigned char *s2, unsig
 }
 
 #ifndef RF_TARGET_CODE_ENCL
-void rf_code_encl()
+void rf_code_encl(void)
 {
   RF_START;
   {
@@ -422,7 +422,7 @@ void rf_code_encl()
 #endif
 
 #ifndef RF_TARGET_CODE_CMOVE
-void rf_code_cmove()
+void rf_code_cmove(void)
 {
   RF_START;
   {
@@ -451,7 +451,7 @@ void __FASTCALL__ rf_dpush(rf_double_t a)
 }
 
 #ifndef RF_TARGET_CODE_USTAR
-void rf_code_ustar()
+void rf_code_ustar(void)
 {
   RF_START;
   {
@@ -466,7 +466,7 @@ void rf_code_ustar()
 }
 #endif
 
-rf_double_t rf_dpop()
+rf_double_t rf_dpop(void)
 {
   rf_word_t a = RF_SP_POP;
   rf_word_t b = RF_SP_POP;
@@ -476,7 +476,7 @@ rf_double_t rf_dpop()
 }
 
 #ifndef RF_TARGET_CODE_USLAS
-void rf_code_uslas()
+void rf_code_uslas(void)
 {
   RF_START;
   {
@@ -493,7 +493,7 @@ void rf_code_uslas()
 #endif
 
 #ifndef RF_TARGET_CODE_ANDD
-void rf_code_andd()
+void rf_code_andd(void)
 {
   RF_START;
   {
@@ -509,7 +509,7 @@ void rf_code_andd()
 #endif
 
 #ifndef RF_TARGET_CODE_ORR
-void rf_code_orr()
+void rf_code_orr(void)
 {
   RF_START;
   {
@@ -525,7 +525,7 @@ void rf_code_orr()
 #endif
 
 #ifndef RF_TARGET_CODE_XORR
-void rf_code_xorr()
+void rf_code_xorr(void)
 {
   RF_START;
   {
@@ -541,7 +541,7 @@ void rf_code_xorr()
 #endif
 
 #ifndef RF_TARGET_CODE_SPAT
-void rf_code_spat()
+void rf_code_spat(void)
 {
   RF_START;
   {
@@ -555,7 +555,7 @@ void rf_code_spat()
 #endif
 
 #ifndef RF_TARGET_CODE_SPSTO
-void rf_code_spsto()
+void rf_code_spsto(void)
 {
   RF_START;
   RF_SP_SET((rf_word_t *) RF_USER_S0);
@@ -564,7 +564,7 @@ void rf_code_spsto()
 #endif
 
 #ifndef RF_TARGET_CODE_RPSTO
-void rf_code_rpsto()
+void rf_code_rpsto(void)
 {
   RF_START;
   RF_RP_SET((rf_word_t *) RF_USER_R0);
@@ -573,7 +573,7 @@ void rf_code_rpsto()
 #endif
 
 #ifndef RF_TARGET_CODE_SEMIS
-void rf_code_semis()
+void rf_code_semis(void)
 {
   RF_START;
   RF_IP_SET((rf_word_t *) RF_RP_POP);
@@ -582,7 +582,7 @@ void rf_code_semis()
 #endif
 
 #ifndef RF_TARGET_CODE_LEAVE
-void rf_code_leave()
+void rf_code_leave(void)
 {
   RF_START;
   {
@@ -598,7 +598,7 @@ void rf_code_leave()
 #endif
 
 #ifndef RF_TARGET_CODE_TOR
-void rf_code_tor()
+void rf_code_tor(void)
 {
   RF_START;
   RF_RP_PUSH(RF_SP_POP);
@@ -607,7 +607,7 @@ void rf_code_tor()
 #endif
 
 #ifndef RF_TARGET_CODE_FROMR
-void rf_code_fromr()
+void rf_code_fromr(void)
 {
   RF_START;
   RF_SP_PUSH((rf_word_t) RF_RP_POP);
@@ -616,7 +616,7 @@ void rf_code_fromr()
 #endif
 
 #ifndef RF_TARGET_CODE_ZEQU
-void rf_code_zequ()
+void rf_code_zequ(void)
 {
   RF_START;
   {
@@ -630,7 +630,7 @@ void rf_code_zequ()
 #endif
 
 #ifndef RF_TARGET_CODE_ZLESS
-void rf_code_zless()
+void rf_code_zless(void)
 {
   RF_START;
   {
@@ -644,7 +644,7 @@ void rf_code_zless()
 #endif
 
 #ifndef RF_TARGET_CODE_PLUS
-void rf_code_plus()
+void rf_code_plus(void)
 {
   RF_START;
   {
@@ -660,7 +660,7 @@ void rf_code_plus()
 #endif
 
 #ifndef RF_TARGET_CODE_DPLUS
-void rf_code_dplus()
+void rf_code_dplus(void)
 {
   RF_START;
   {
@@ -676,7 +676,7 @@ void rf_code_dplus()
 #endif
 
 #ifndef RF_TARGET_CODE_MINUS
-void rf_code_minus()
+void rf_code_minus(void)
 {
   RF_START;
   {
@@ -690,7 +690,7 @@ void rf_code_minus()
 #endif
 
 #ifndef RF_TARGET_CODE_DMINU
-void rf_code_dminu()
+void rf_code_dminu(void)
 {
   RF_START;
   rf_dpush(-rf_dpop());
@@ -699,7 +699,7 @@ void rf_code_dminu()
 #endif
 
 #ifndef RF_TARGET_CODE_OVER
-void rf_code_over()
+void rf_code_over(void)
 {
   RF_START;
   {
@@ -717,7 +717,7 @@ void rf_code_over()
 #endif
 
 #ifndef RF_TARGET_CODE_DROP
-void rf_code_drop()
+void rf_code_drop(void)
 {
   RF_START;
   (void) RF_SP_POP;
@@ -726,7 +726,7 @@ void rf_code_drop()
 #endif
 
 #ifndef RF_TARGET_CODE_SWAP
-void rf_code_swap()
+void rf_code_swap(void)
 {
   RF_START;
   {
@@ -743,7 +743,7 @@ void rf_code_swap()
 #endif
 
 #ifndef RF_TARGET_CODE_DUP
-void rf_code_dup()
+void rf_code_dup(void)
 {
   RF_START;
   {
@@ -758,7 +758,7 @@ void rf_code_dup()
 #endif
 
 #ifndef RF_TARGET_CODE_PSTOR
-void rf_code_pstor()
+void rf_code_pstor(void)
 {
   RF_START;
   {
@@ -774,7 +774,7 @@ void rf_code_pstor()
 #endif
 
 #ifndef RF_TARGET_CODE_TOGGL
-void rf_code_toggl()
+void rf_code_toggl(void)
 {
   RF_START;
   {
@@ -790,7 +790,7 @@ void rf_code_toggl()
 #endif
 
 #ifndef RF_TARGET_CODE_AT
-void rf_code_at()
+void rf_code_at(void)
 {
   RF_START;
   {
@@ -806,7 +806,7 @@ void rf_code_at()
 #endif
 
 #ifndef RF_TARGET_CODE_CAT
-void rf_code_cat()
+void rf_code_cat(void)
 {
   RF_START;
   {
@@ -820,7 +820,7 @@ void rf_code_cat()
 #endif
 
 #ifndef RF_TARGET_CODE_STORE
-void rf_code_store()
+void rf_code_store(void)
 {
   RF_START;
   {
@@ -836,7 +836,7 @@ void rf_code_store()
 #endif
 
 #ifndef RF_TARGET_CODE_CSTOR
-void rf_code_cstor()
+void rf_code_cstor(void)
 {
   RF_START;
   {
@@ -852,7 +852,7 @@ void rf_code_cstor()
 #endif
 
 #ifndef RF_TARGET_CODE_DOCOL
-void rf_code_docol()
+void rf_code_docol(void)
 {
   RF_START;
   RF_RP_PUSH((rf_word_t) RF_IP_GET);
@@ -862,7 +862,7 @@ void rf_code_docol()
 #endif
 
 #ifndef RF_TARGET_CODE_DOCON
-void rf_code_docon()
+void rf_code_docon(void)
 {
   RF_START;
   RF_SP_PUSH(*((rf_word_t *) rf_w + 1));
@@ -871,7 +871,7 @@ void rf_code_docon()
 #endif
 
 #ifndef RF_TARGET_CODE_DOVAR
-void rf_code_dovar()
+void rf_code_dovar(void)
 {
   RF_START;
   RF_SP_PUSH((rf_word_t) (rf_w + 1));
@@ -880,7 +880,7 @@ void rf_code_dovar()
 #endif
 
 #ifndef RF_TARGET_CODE_DOUSE
-void rf_code_douse()
+void rf_code_douse(void)
 {
   RF_START;
   {
@@ -894,7 +894,7 @@ void rf_code_douse()
 #endif
 
 #ifndef RF_TARGET_CODE_STOD
-void rf_code_stod()
+void rf_code_stod(void)
 {
   RF_START;
   {
