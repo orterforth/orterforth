@@ -34,14 +34,20 @@ void __FASTCALL__ rf_rp_push(rf_word_t a)
 }
 #endif
 
+#ifndef RF_TARGET_IP
 /* Interpretive Pointer */
 rf_word_t *rf_ip = 0;
+#endif
 
 /* code field pointer */
+#ifndef RF_TARGET_W
 rf_code_t *rf_w = 0;
+#endif
 
 /* user area pointer */
+#ifndef RF_TARGET_UP
 rf_word_t *rf_up = 0;
+#endif
 
 /* TRAMPOLINE */
 

@@ -262,7 +262,7 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 	bbcim -a $@ bbc/orterforth
 
 # inst binary
-bbc/orterforth-inst : bbc/bbc.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system.o
+bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
 
 	cl65 -O -t bbc --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^ ../cc65/libsrc/bbc/oslib/os.s 
 
@@ -284,14 +284,19 @@ bbc/rf_6502.o : rf_6502.s | bbc
 	ca65 -t bbc -o $@ $<
 
 # C system lib
-bbc/rf_system.s : target/bbc.c | bbc
+# bbc/rf_system.s : target/bbc.c | bbc
 
-	cc65 -O '-DRF_TARGET_H="target/bbc.h"' --signed-chars -t bbc -o $@ $<
+# 	cc65 -O '-DRF_TARGET_H="target/bbc.h"' --signed-chars -t bbc -o $@ $<
 
 # asm bbc system lib
-bbc/bbc.o : target/bbc.s | bbc
+bbc/rf_system.o : target/bbc.s | bbc
 
 	ca65 -t bbc -o $@ $<
+
+# asm bbc system lib
+# bbc/bbc.o : target/bbc.s | bbc
+
+# 	ca65 -t bbc -o $@ $<
 
 # build
 .PHONY : build
