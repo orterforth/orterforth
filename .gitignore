@@ -3,9 +3,11 @@
 /cfg/
 /cygwin-*/
 /darwin-*/
+/snap/
 /linux-*/
 /mame.ini
 /mingw-*/
+/rc2014/
 /roms/
 /spectrum/
 /todo.txt
