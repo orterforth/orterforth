@@ -200,7 +200,7 @@ bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC)
 # general assemble rule
 bbc/%.o : bbc/%.s
 
-	ca65 -t bbc -o $@ $<
+	ca65 -o $@ $<
 
 # general compile rule
 bbc/%.s : %.c | bbc
@@ -216,6 +216,11 @@ bbc/boot : | bbc
 bbc/boot.inf : | bbc
 
 	echo "$$.!BOOT     0000   0000  CRC=0" > $@
+
+# MOS bindings
+bbc/mos.o : target/bbc/mos.s | bbc
+
+	ca65 -o $@ $<
 
 # final binary from the hex
 bbc/orterforth : bbc/orterforth.hex | $(ORTER)
@@ -263,6 +268,7 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 
 # inst binary
 bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
+# bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
 
 	cl65 -O -t bbc --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^ ../cc65/libsrc/bbc/oslib/os.s 
 
@@ -281,22 +287,17 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 # asm bbc system lib
 bbc/rf_6502.o : rf_6502.s | bbc
 
-	ca65 -t bbc -o $@ $<
+	ca65 -o $@ $<
 
 # C system lib
 # bbc/rf_system.s : target/bbc.c | bbc
 
 # 	cc65 -O '-DRF_TARGET_H="target/bbc.h"' --signed-chars -t bbc -o $@ $<
 
-# asm bbc system lib
+# asm system lib
 bbc/rf_system.o : target/bbc.s | bbc
 
-	ca65 -t bbc -o $@ $<
-
-# asm bbc system lib
-# bbc/bbc.o : target/bbc.s | bbc
-
-# 	ca65 -t bbc -o $@ $<
+	ca65 -o $@ $<
 
 # build
 .PHONY : build

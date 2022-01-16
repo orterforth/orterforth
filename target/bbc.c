@@ -12,23 +12,20 @@ uint8_t osrdch(void);
 
 void oswrch(uint8_t a);
 
-static uint8_t rs423_write = 0;
-static uint8_t rs423_read = 0;
-
 void rf_init(void)
 {
-  /* TODO do this only if using the vector */
+ #ifdef RF_TARGET_W
   /* W vector, set JMP ind */
-  // *(((uint8_t *) &rf_w) + 1) = 0x6c;
-  *((uint8_t *) 0x0088) = 0x6c;
+  *(((uint8_t *) &rf_w) - 1) = 0x6c;
+#endif
 
   /* RS423 baud rate */
   osbyte(7, 7);
   osbyte(8, 7);
 
-  /* flags for keyboard/screen vs RS423 */
-  rs423_read = 0;
-  rs423_write = 0;
+  /* enable RS423 but start with keyboard/screen */
+  osbyte(2, 2);
+  osbyte(3, 4);
 }
 
 void rf_out(char c)
@@ -54,12 +51,6 @@ void rf_code_key(void)
   RF_START;
   {
     int c;
-
-    /* switch from RS423 to keyboard */
-    if (rs423_read) {
-      osbyte(2, 0);
-      rs423_read = 0;
-    }
 
     /* get key */
     c = osrdch();
@@ -87,29 +78,25 @@ void rf_code_cr()
 
 void rf_disc_read(char *p, unsigned char len)
 {
-  int i;
   uint8_t c;
 
   /* switch from keyboard to RS423 */
-  if (!rs423_read) {
-    osbyte(2, 1);
-    rs423_read = 1;
-  }
+  osbyte(2, 1);
 
   /* read into the buffer */
   for (; len; --len) {
     c = osrdch();
     *(p++) = c;
   }
+
+  /* switch from RS423 to keyboard */
+  osbyte(2, 2);
 }
 
 void rf_disc_write(char *p, unsigned char len)
 {
   /* switch from screen to RS423 */
-  if (!rs423_write) {
-    osbyte(3, 7);
-    rs423_write = 1;
-  }
+  osbyte(3, 7);
 
   /* write from the buffer */
   for (; len; --len) {
@@ -117,10 +104,7 @@ void rf_disc_write(char *p, unsigned char len)
   }
 
   /* switch from RS423 to screen */
-  if (rs423_write) {
-    osbyte(3, 4);
-    rs423_write = 0;
-  }
+  osbyte(3, 4);
 }
 
 void rf_disc_flush(void)

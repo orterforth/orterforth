@@ -9,32 +9,6 @@
 .importzp	sp
 .import staxysp
 
-.export	_osbyte
-
-_osbyte:
-	tax
-	ldy #0
-	lda (sp),y
-	jsr $FFF4
-	jsr incsp1
-	rts
-
-.export	_osnewl
-
-_osnewl:
-	jmp $FFE7
-
-.export _osrdch
-
-_osrdch:
-	ldx	#0
-	jmp	$FFE0
-
-.export _oswrch
-
-_oswrch:
-	jmp	$FFEE
-
 .importzp _rf_up
 .importzp _rf_w
 .import pop
@@ -66,7 +40,7 @@ _rf_out:
 	jsr     pusha
 	ldy     #$00
 	lda     (sp),y
-	jsr     _oswrch
+	jsr     $FFEE ; OSWRCH
 	jmp     incsp1
 
 .export _rf_code_emit
@@ -141,14 +115,19 @@ _rf_fin:
 
 	jsr     pusha
 	jsr     decsp3
-	lda     #$02
-	jsr     pusha
-	lda     #$01
-	jsr     _osbyte
+	; lda     #$02
+	; jsr     pusha
+	; lda     #$01
+	; jsr     _osbyte
+	lda #$02                      ; *FX 2,1 (read from RS423)
+	ldx #$01
+	jsr $FFF4 ; OSBYTE
 	ldy     #$03
 L0025:	lda     (sp),y
 	beq     L0006
-	jsr     _osrdch
+	; jsr     _osrdch
+	; ldx	#0  ; not necessary?
+	jsr	$FFE0 ; OSRDCH
 	ldy     #$02
 	sta     (sp),y
 	ldy     #$05
@@ -169,8 +148,10 @@ L0025:	lda     (sp),y
 	sta     (sp),y
 	jmp     L0025
 L0006:	lda     #$02
-	jsr     pusha
-	jsr     _osbyte
+	; jsr     pusha
+	; jsr     _osbyte
+	tax                           ; *FX 2,2 (read from keyboard)
+	jsr $FFF4 ; OSBYTE
 	jmp     incsp6
 
 .endproc
@@ -188,10 +169,13 @@ L0006:	lda     #$02
 .segment	"CODE"
 
 	jsr     pusha
-	lda     #$03
-	jsr     pusha
-	lda     #$07
-	jsr     _osbyte
+	; lda     #$03
+	; jsr     pusha
+	; lda     #$07
+	; jsr     _osbyte
+	lda #$03                      ; *FX 3,7 (write to RS423)
+	ldx #$07
+	jsr $FFF4 ; OSBYTE
 	ldy     #$00
 L0026:	lda     (sp),y
 	beq     L0019
@@ -204,17 +188,20 @@ L0026:	lda     (sp),y
 	jsr     staxysp
 	ldy     #$00
 	lda     (regsave),y
-	jsr     _oswrch
+	; jsr     _oswrch
+	jsr $FFEE ; OSWRCH
 	ldy     #$00
 	lda     (sp),y
 	sec
 	sbc     #$01
 	sta     (sp),y
 	jmp     L0026
-L0019:	lda     #$03
-	jsr     pusha
-	lda     #$04
-	jsr     _osbyte
+L0019:	lda     #$03            ; *FX 3,4 (write to screen)
+	; jsr     pusha
+	; lda     #$04
+	; jsr     _osbyte
+	ldx #$04
+	jsr $FFF4 ; OSBYTE
 	jmp     incsp3
 
 .endproc
