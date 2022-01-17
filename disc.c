@@ -45,22 +45,20 @@ static char *line_to_block(char *line, int *lineno, FILE *stream, char *block)
 
 static int create_disc(void)
 {
-  /* start reading lines and writing to blocks */
   int lineno = 0;
 	char line[82]; 
   char block[RF_BBLK];
+  char *read;
 
   /* read from stdin */
   FILE *stream = stdin;
 
-  while (1) {
-
-    char *read;
+  for (;;) {
 
     /* clear buffer with spaces */
     memset(&block, ' ', RF_BBLK);
 
-    /* read first line into block */
+    /* read first line into block, finish if no more */
     if (!line_to_block(line, &lineno, stream, block)) {
       break;
     }
@@ -74,7 +72,7 @@ static int create_disc(void)
       exit(1);
     }
 
-    /* if first line was final line */
+    /* finish if first line was final line */
     if (!read) {
       break;
     }
