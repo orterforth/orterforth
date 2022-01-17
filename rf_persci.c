@@ -155,13 +155,11 @@ void rf_persci_input(unsigned char track, unsigned char sector, unsigned char dr
   if (ptr) {
     for (; i; i--) {
       int c = fgetc(ptr);
-      if (c == -1) {
+      if (c == EOF) {
         break;
       }
       rf_persci_w(c);
     }
-
-    /* fclose(ptr); */
   }
 
   /* write 128 bytes regardless of how many bytes read */
@@ -214,8 +212,6 @@ void rf_persci_write()
 
   /* open file */
   ptr = rf_persci_open_file(rf_persci_drive);
-
-  /* handle error */
   if (!ptr) {
     perror("fopen failed");
     rf_persci_reset();
@@ -226,7 +222,6 @@ void rf_persci_write()
   /* move to track and sector */
   if (fseek(ptr, ((rf_persci_track * 26) + (rf_persci_sector - 1)) * 128, SEEK_SET)) {
     perror("fseek failed");
-    /* fclose(ptr); */
     rf_persci_reset();
     rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
     return;
@@ -238,7 +233,7 @@ void rf_persci_write()
 
   /* handle write failure */
   if (s != rf_persci_r_idx) {
-    perror("fseek failed");
+    perror("fwrite failed");
     rf_persci_reset();
     rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
     return;
@@ -357,6 +352,7 @@ void rf_persci_command()
         break;
       }
 
+      /* handle command */
       switch (ch) {
         case 'I':
           rf_persci_input(track, sector, drive);
@@ -370,6 +366,8 @@ void rf_persci_command()
       break;
     }
   }
+
+  /* parse failed */
   rf_persci_error("COMMAND");
 }
 
@@ -390,11 +388,13 @@ char rf_persci_getc()
 {
   char c;
 
+  /* validate not empty */
   if (rf_persci_w_idx >= rf_persci_w_len) {
     fprintf(stderr, "write buffer empty");
     exit(1);
   }
 
+  /* get char and reset empty buffer */
   c = rf_persci_w_buf[rf_persci_w_idx++];
   if (rf_persci_w_idx >= rf_persci_w_len) {
     rf_persci_w_idx = 0;
