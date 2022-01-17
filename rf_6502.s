@@ -7,15 +7,15 @@ temps := $06
 
 n := $8A                        ; TODO $78 in docs
 
-.export _rf_ip
+.export _rf_ip: near
 
 _rf_ip := $F8                   ; TODO $80 in docs $70 to $90 reserved in cc65 cfg
 
-.export _rf_w
+.export _rf_w: near
 
 _rf_w := $87                    ; TODO $83 in docs
 
-.export _rf_up
+.export _rf_up: near
 
 _rf_up := $02                   ; TODO $85
 
@@ -31,26 +31,19 @@ _rf_trampoline:
 	ora     _rf_trampoline_fp+1
 	bne     trampoline1
 	rts
-
 trampoline1:
 	lda     #>(_rf_trampoline-1)  ; put return addr on stack
 	pha
 	lda     #<(_rf_trampoline-1)
 	pha
-
 	tsx                           ; save S to temp
-	stx temps                     ; TODO can share xsave?
-
+	stx temps
 	ldx _rf_rp                    ; set S to RP-- (high byte is 1)
 	dex
 	txs
-
 	ldx _rf_sp                    ; set X to SP (high byte is 0)
-
-	ldy #$00                      ; expected value of Y
-
+	ldy #$00                      ; set Y to 0, this is expected
 	inc flag                      ; set flag
-
 	jmp (_rf_trampoline_fp)       ; jump to FP and return to trampoline
 
 .export _rf_start
@@ -58,26 +51,19 @@ trampoline1:
 _rf_start:
 
 	stx _rf_sp                    ; restore SP from X
-
 	pla                           ; save return address (from jsr rf_start)
 	tay
 	pla
-
 	tsx                           ; restore RP from S++
 	inx
 	stx _rf_rp
-
 	ldx temps                     ; restore S from temp
-	txs                           ; TODO can share xsave?
-
+	txs
 	pha                           ; restore return address on stack
 	tya
 	pha
-
 	dec flag                      ; reset flag
-
 start1:
-
 	rts                           ; return to C
 
 .export _rf_code_lit
@@ -533,7 +519,7 @@ _rf_code_spsto:
 
 	ldy #$06
 	lda (_rf_up),y
-;	clc                     ; TODO reconcile
+;	clc                           ; TODO reconcile
 ;	adc #$02
 	tax
 	jmp _rf_next
