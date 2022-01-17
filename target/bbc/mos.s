@@ -8,8 +8,7 @@ _osbyte:
 	ldy #0
 	lda (sp),y
 	jsr $FFF4
-	jsr incsp1   ; TODO tail call
-	rts
+	jmp incsp1
 
 .export	_osnewl
 
@@ -22,7 +21,8 @@ _osrdch:
 	ldx	#0
 	jmp	$FFE0
 
-.export _oswrch
+.export _oswrch: near
 
-_oswrch:
-	jmp	$FFEE
+_oswrch = $FFEE
+; _oswrch:
+; 	jmp	$FFEE

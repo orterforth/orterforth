@@ -292,7 +292,7 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # C system lib
 # bbc/rf_system.s : target/bbc.c | bbc
 
-# 	cc65 -O '-DRF_TARGET_H="target/bbc.h"' --signed-chars -t bbc -o $@ $<
+# 	cc65 -O --signed-chars -t bbc -o $@ $<
 
 # asm system lib
 bbc/rf_system.o : target/bbc.s | bbc

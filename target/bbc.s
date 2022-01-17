@@ -16,29 +16,29 @@
 .importzp xsave
 .import push0a
 
+osrdch := $FFE0
+oswrch := $FFEE
+osnewl := $FFE7
+osbyte := $FFF4
+
 .export _rf_init
 
 _rf_init:
 
 	lda #$6C                      ; jsr (W)
 	sta _rf_w-1
-
 	lda #$07                      ; *FX 7,7 (9600 baud receive)
 	tax
-	jsr $FFF4 ; OSBYTE
-
+	jsr osbyte
 	lda #$08                      ; *FX 8,7 (9600 baud transmit)
 	ldx #$07
-	jsr $FFF4 ; OSBYTE
-
+	jsr osbyte
 	lda #$02                      ; *FX 2,2 (enable RS423, input from keyboard)
 	tax
-	jsr $FFF4 ; OSBYTE
-
+	jsr osbyte
 	lda #$03                      ; *FX 3,4 (output to screen only)
 	ldx #$04
-	jsr $FFF4 ; OSBYTE
-
+	jsr osbyte
 	rts
 
 .export _rf_out
@@ -48,7 +48,7 @@ _rf_out:
 	jsr     pusha
 	ldy     #$00
 	lda     (sp),y
-	jsr     $FFEE ; OSWRCH
+	jsr     oswrch
 	jmp     incsp1
 
 .export _rf_code_emit
@@ -67,7 +67,7 @@ _rf_code_emit:
 	lda $00,x
 	and #$7F
 	stx xsave
-	jsr $FFEE ; OSWRCH
+	jsr oswrch
 	ldx xsave
 	jmp pop
 
@@ -76,7 +76,7 @@ _rf_code_emit:
 _rf_code_key:
 
 	stx xsave
-	jsr $FFE0 ; OSRDCH
+	jsr osrdch
 	; TODO handle ESC
 	ldx xsave
 	jmp push0a
@@ -86,7 +86,7 @@ _rf_code_key:
 _rf_code_cr:
 
 	stx xsave
-	jsr $FFE7 ; OSNEWL
+	jsr osnewl
 	ldx xsave
 	jmp _rf_next
 
@@ -103,39 +103,25 @@ _rf_fin:
 
 	lda #$02                      ; *FX 2,0 (use keyboard, disable RS423)
 	ldx #$00
-	jsr $FFF4 ; OSBYTE
-
+	jsr osbyte
 	lda #$03                      ; *FX 3,4 (output to screen only)
 	ldx #$04
-	jsr $FFF4 ; OSBYTE
+	jmp osbyte
 
 .export _rf_disc_read
 
-; ---------------------------------------------------------------
-; void __near__ rf_disc_read (__near__ signed char *, unsigned char)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_rf_disc_read: near
-
-.segment	"CODE"
+_rf_disc_read:
 
 	jsr     pusha
 	jsr     decsp3
-	; lda     #$02
-	; jsr     pusha
-	; lda     #$01
-	; jsr     _osbyte
 	lda #$02                      ; *FX 2,1 (read from RS423)
 	ldx #$01
-	jsr $FFF4 ; OSBYTE
+	jsr osbyte
 	ldy     #$03
-L0025:	lda     (sp),y
+L0025:
+	lda     (sp),y
 	beq     L0006
-	; jsr     _osrdch
-	; ldx	#0  ; not necessary?
-	jsr	$FFE0 ; OSRDCH
+	jsr	osrdch
 	ldy     #$02
 	sta     (sp),y
 	ldy     #$05
@@ -155,37 +141,23 @@ L0025:	lda     (sp),y
 	sbc     #$01
 	sta     (sp),y
 	jmp     L0025
-L0006:	lda     #$02
-	; jsr     pusha
-	; jsr     _osbyte
+L0006:
+	lda     #$02
 	tax                           ; *FX 2,2 (read from keyboard)
-	jsr $FFF4 ; OSBYTE
+	jsr osbyte
 	jmp     incsp6
-
-.endproc
 
 .export _rf_disc_write
 
-; ---------------------------------------------------------------
-; void __near__ rf_disc_write (__near__ signed char *, unsigned char)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_rf_disc_write: near
-
-.segment	"CODE"
+_rf_disc_write:
 
 	jsr     pusha
-	; lda     #$03
-	; jsr     pusha
-	; lda     #$07
-	; jsr     _osbyte
 	lda #$03                      ; *FX 3,7 (write to RS423)
 	ldx #$07
-	jsr $FFF4 ; OSBYTE
+	jsr osbyte
 	ldy     #$00
-L0026:	lda     (sp),y
+L0026:
+	lda     (sp),y
 	beq     L0019
 	ldy     #$02
 	jsr     ldaxysp
@@ -196,36 +168,21 @@ L0026:	lda     (sp),y
 	jsr     staxysp
 	ldy     #$00
 	lda     (regsave),y
-	; jsr     _oswrch
-	jsr $FFEE ; OSWRCH
+	jsr oswrch
 	ldy     #$00
 	lda     (sp),y
 	sec
 	sbc     #$01
 	sta     (sp),y
 	jmp     L0026
-L0019:	lda     #$03            ; *FX 3,4 (write to screen)
-	; jsr     pusha
-	; lda     #$04
-	; jsr     _osbyte
+L0019:
+	lda     #$03                  ; *FX 3,4 (write to screen)
 	ldx #$04
-	jsr $FFF4 ; OSBYTE
+	jsr osbyte
 	jmp     incsp3
-
-.endproc
 
 .export _rf_disc_flush
 
-; ---------------------------------------------------------------
-; void __near__ rf_disc_flush (void)
-; ---------------------------------------------------------------
-
-.segment	"CODE"
-
-.proc	_rf_disc_flush: near
-
-.segment	"CODE"
+_rf_disc_flush:
 
 	rts
-
-.endproc
