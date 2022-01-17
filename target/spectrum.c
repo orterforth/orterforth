@@ -1,7 +1,6 @@
 /* SYSTEM BINDINGS */
 
 #include <rs232.h>
-#include <spectrum.h>
 
 #include "rf.h"
 

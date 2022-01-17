@@ -68,8 +68,8 @@ typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __BBC__
 #define RF_TARGET 0x00003948 /* BBC */
-#ifndef RF_TARGET_H
-#define RF_TARGET_H "target/bbc.h"
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/bbc.inc"
 #endif
 #endif
 #endif
@@ -84,8 +84,8 @@ typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef SPECTRUM
 #define RF_TARGET 0x6774e16f /* SPECTR */
-#ifndef RF_TARGET_H
-#define RF_TARGET_H "target/spectrum.h"
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/spectrum.inc"
 #endif
 #endif
 #endif
@@ -153,13 +153,13 @@ typedef unsigned long long rf_double_t;
 
 /* TARGET SPECIFIC INCLUDE FILE */
 
-#ifdef RF_TARGET_H
-#include RF_TARGET_H
+#ifdef RF_TARGET_INC
+#include RF_TARGET_INC
 #endif
 
 /* OTHERWISE DEFAULT TARGET = HOST PLATFORM */
 
-#ifndef RF_TARGET_H
+#ifndef RF_TARGET_INC
 
 /* RP and SP operations inline, code is larger but faster */
 #define RF_INLINE_RP
