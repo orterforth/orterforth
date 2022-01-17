@@ -14,6 +14,7 @@ static void __FASTCALL__ rf_inst_print(char *string)
   }
 }
 
+#ifndef RF_INST_SMALLER
 /* write an error message and stop */
 static void __FASTCALL__ rf_inst_error(char *string)
 {
@@ -21,6 +22,7 @@ static void __FASTCALL__ rf_inst_error(char *string)
   rf_out('\n');
   exit(1);
 }
+#endif
 
 /* return an ASCII hex digit */
 static char __FASTCALL__ rf_inst_hex(uint8_t b)
