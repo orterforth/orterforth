@@ -2,6 +2,8 @@
 
 #include "rf.h"
 
+#define RF_INST_SMALLER
+
 /* ERROR REPORTING */
 
 /* write a string to output */
@@ -160,12 +162,16 @@ static void rf_inst_disc_w(char *b, rf_word_t blk)
 
 /* INST TIME CODE */
 
+#ifndef RF_INST_SMALLER
 /* fails with "notimpl" if called */
 static void rf_inst_code_notimpl(void)
 {
   RF_START;
   rf_inst_error("notimpl");
 }
+#else
+#define rf_inst_code_notimpl 0
+#endif
 
 /* flag to indicate completion of install */
 extern char rf_installed;
@@ -199,6 +205,7 @@ static rf_word_t *rf_inst_use;
 /* PREV */
 static rf_word_t *rf_inst_prev;
 
+#ifndef RF_INST_SMALLER
 /* +BUF */
 static rf_word_t __FASTCALL__ *rf_inst_pbuf(rf_word_t *p)
 {
@@ -238,10 +245,18 @@ static char __FASTCALL__ *rf_inst_buffer(rf_word_t block)
   /* R> 2+ ( MOVE TO STORAGE LOCATION ) */
   return ((char *) p) + RF_WORD_SIZE;
 }
+#endif
 
 /* BLOCK */
 static char __FASTCALL__ *rf_inst_block(rf_word_t block)
 {
+#ifdef RF_INST_SMALLER
+  if (block != *rf_inst_prev) {
+    rf_inst_disc_r(((char *) rf_inst_prev) + RF_WORD_SIZE, block);
+    *rf_inst_prev = block;
+  }
+  return ((char *) rf_inst_prev) + RF_WORD_SIZE;
+#else
   rf_word_t *p;
 
   /* OFFSET @ + >R   ( RETAIN BLOCK # ON RETURN STACK ) */
@@ -271,6 +286,7 @@ static char __FASTCALL__ *rf_inst_block(rf_word_t block)
   }
   /* R> DROP 2+ */
   return ((char *) rf_inst_prev) + RF_WORD_SIZE;
+#endif
 }
 
 /* replaces memcpy */
@@ -299,7 +315,11 @@ static void __FASTCALL__ rf_inst_word(unsigned char c)
 
   /* BLK @ IF BLK @ BLOCK ELSE TIB @ ENDIF */
   /* IN @ + */
+#ifdef RF_INST_SMALLER
+  addr1 = rf_inst_block(RF_USER_BLK) + RF_USER_IN;
+#else
   addr1 = (RF_USER_BLK ? rf_inst_block(RF_USER_BLK) : ((char *) RF_USER_TIB)) + RF_USER_IN;
+#endif
 
   /* SWAP ENCLOSE */
   rf_enclose(c, addr1, &n1, &n2, &n3);
@@ -377,12 +397,14 @@ static void rf_inst_create(unsigned char length, char *address)
   /* HERE DUP C@ WIDTH @ MIN 1+ ALLOT make space */
   p = here;
   p += length + 1;
+#ifdef __CC65__
   /* 6502 bug workaround */
   /* DP C@ 0FD = ALLOT */
   if (((rf_word_t) p & 0xFF) == 0xFD) {
     /* *p = 0; */
     ++p;
   }
+#endif
   RF_USER_DP = (rf_word_t) p;
 
   /* DUP A0 TOGGLE  */
@@ -466,35 +488,36 @@ static void rf_inst_code_bcompile(void)
 }
 
 /* NUMBER */
-static long __FASTCALL__ rf_inst_number(char *t) {
+static intptr_t __FASTCALL__ rf_inst_number(char *t) {
 
-  long sign;
-  long l;
-  int c;
-  unsigned char d;
+  intptr_t l;
+  uint8_t sign;
+  uint8_t c;
+  uint8_t d;
+  uint8_t b = RF_USER_BASE;
 
   RF_INST_ONLY;
-  sign = 1;
+  sign = 0;
   l = 0;
-  while (1) {
+  for (;;) {
     c = *(t++);
 
     /* sign */
     if (c == '-') {
-      sign = -sign;
+      ++sign;
       continue;
     }
 
     /* digit */
-    if ((d = rf_digit(RF_USER_BASE, c)) == 255) {
+    if ((d = rf_digit(b, c)) == 255) {
       break;
     }
 
-    l *= RF_USER_BASE;
+    l *= b;
     l += d;
   }
 
-  return l * sign;
+  return sign ? -l : l;
 }
 
 /* X */
@@ -502,8 +525,10 @@ static void rf_inst_code_x(void)
 {
   RF_START;
   RF_INST_ONLY;
+#ifndef RF_INST_SMALLER
   /* BLK @ IF */
-  if (RF_USER_BLK) {
+  /* if (RF_USER_BLK) { */
+#endif
     /* 1 BLK +! */
     RF_USER_BLK++;
     /* 0 IN ! */
@@ -515,12 +540,14 @@ static void rf_inst_code_x(void)
       RF_IP_SET((rf_word_t *) RF_RP_POP);
     /* ENDIF */
     }
+#ifndef RF_INST_SMALLER
   /* ELSE */
-  } else {
+  /* } else { */
     /* R> DROP */
-    RF_IP_SET((rf_word_t *) RF_RP_POP);
+    /* RF_IP_SET((rf_word_t *) RF_RP_POP); */
   /* ENDIF */
-  }
+  /* } */
+#endif
   RF_JUMP_NEXT;
 }
 
@@ -556,6 +583,7 @@ static void rf_inst_code_code(void)
 }
 
 /* ?PAIRS */
+#ifndef RF_INST_SMALLER
 static void __FASTCALL__ rf_inst_qpairs(rf_word_t a)
 {
   rf_word_t b;
@@ -566,6 +594,9 @@ static void __FASTCALL__ rf_inst_qpairs(rf_word_t a)
     rf_inst_error("?PAIRS failed");
   }
 }
+#else
+#define rf_inst_qpairs(a) RF_SP_POP
+#endif
 
 /* ENDIF */
 static void rf_inst_endif(void)
@@ -833,6 +864,7 @@ static void rf_inst_code_immediate(void)
   RF_JUMP_NEXT;
 }
 
+#ifndef RF_INST_SMALLER
 /* ?STACK */
 static void rf_inst_qstack(void)
 {
@@ -840,6 +872,9 @@ static void rf_inst_qstack(void)
     rf_inst_error("stack out of bounds");
   }
 }
+#else
+#define rf_inst_qstack()
+#endif
 
 /* INTERPRET */
 static void rf_inst_code_interpret_word(void)
@@ -848,7 +883,7 @@ static void rf_inst_code_interpret_word(void)
   RF_INST_ONLY;
   {
     char *nfa;
-    rf_word_t number;
+    intptr_t number;
 
     /* BEGIN (outside this in inst time version of INTERPRET) */
     
@@ -880,7 +915,7 @@ static void rf_inst_code_interpret_word(void)
       /* ELSE  */
       /* DROP [COMPILE] LITERAL  */
       if (RF_USER_STATE) {
-        rf_inst_compile(("LIT"));
+        rf_inst_compile("LIT");
         rf_inst_comma((rf_word_t) number);
       } else {
         RF_SP_PUSH(number); 
@@ -1319,6 +1354,21 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "rf-exit", rf_code_exit }
 };
 
+#define RF_INST_CODE_IMMEDIATE_LIST_SIZE 10
+
+static rf_inst_code_t rf_inst_code_immediate_list[] = {
+  { "ENDIF", rf_inst_code_endif },
+  { "IF", rf_inst_code_if },
+  { "ELSE", rf_inst_code_else },
+  { "BEGIN", rf_inst_code_begin },
+  { "WHILE", rf_inst_code_while },
+  { "REPEAT", rf_inst_code_repeat },
+  { "UNTIL", rf_inst_code_until },
+  { "AGAIN", rf_inst_code_again },
+  { "DO", rf_inst_code_do },
+  { "LOOP", rf_inst_code_loop }
+};
+
 static void rf_inst_code_ext(void)
 {
   RF_START;
@@ -1373,16 +1423,10 @@ static void rf_inst_forward(void)
   rf_inst_immediate();
 
   /* control structures, compile time */
-  rf_inst_def_code_immediate("ENDIF", rf_inst_code_endif);
-  rf_inst_def_code_immediate("IF", rf_inst_code_if);
-  rf_inst_def_code_immediate("ELSE", rf_inst_code_else);
-  rf_inst_def_code_immediate("BEGIN", rf_inst_code_begin);
-  rf_inst_def_code_immediate("WHILE", rf_inst_code_while);
-  rf_inst_def_code_immediate("REPEAT", rf_inst_code_repeat);
-  rf_inst_def_code_immediate("UNTIL", rf_inst_code_until);
-  rf_inst_def_code_immediate("AGAIN", rf_inst_code_again);
-  rf_inst_def_code_immediate("DO", rf_inst_code_do);
-  rf_inst_def_code_immediate("LOOP", rf_inst_code_loop);
+  for (i = 0; i < RF_INST_CODE_IMMEDIATE_LIST_SIZE; ++i) {
+    rf_inst_code_t *code = &rf_inst_code_immediate_list[i];
+    rf_inst_def_code_immediate(code->name, code->value);
+  }
 
   /* forward declarations not yet implemented */
   for (i = 0; i < RF_INST_NOTIMPL_LIST_SIZE; ++i) {
