@@ -180,9 +180,3 @@ L0019:
 	ldx #$04
 	jsr osbyte
 	jmp     incsp3
-
-.export _rf_disc_flush
-
-_rf_disc_flush:
-
-	rts

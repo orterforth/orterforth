@@ -463,8 +463,6 @@ void rf_disc_read(char *c, unsigned char len);
 
 void rf_disc_write(char *p, unsigned char len);
 
-void rf_disc_flush(void);
-
 void rf_code_bread(void);
 
 void rf_code_bwrit(void);

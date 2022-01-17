@@ -227,11 +227,6 @@ writ0:
   inc hl                                ; advance addr
   jp writ0                              ; loop back for more bytes
 
-PUBLIC _rf_disc_flush
-
-_rf_disc_flush:
-  ret                                   ; no flush available
-
 PUBLIC _rf_fin
 
 _rf_fin:

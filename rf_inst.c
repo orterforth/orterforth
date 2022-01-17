@@ -122,7 +122,6 @@ static void rf_inst_disc_cmd(char c, rf_word_t blk)
   rf_inst_disc_puts(" /");
   rf_inst_disc_puti(drive);
   rf_disc_write(&eot, 1);
-  rf_disc_flush();
 }
 
 /* read block */
@@ -154,7 +153,6 @@ static void rf_inst_disc_w(char *b, rf_word_t blk)
   /* send data */
   rf_disc_write(b, RF_BBLK);
   rf_disc_write(&eot, 1);
-  rf_disc_flush();
 
   /* get response */
   rf_inst_disc_expect(RF_ASCII_ACK);

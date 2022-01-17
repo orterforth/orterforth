@@ -142,10 +142,6 @@ void rf_disc_write(char *p, unsigned char len)
   }
 }
 
-void rf_disc_flush(void)
-{
-}
-
 void rf_fin(void)
 {
   /* free memory */

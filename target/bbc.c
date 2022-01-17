@@ -107,10 +107,6 @@ void rf_disc_write(char *p, unsigned char len)
   osbyte(3, 4);
 }
 
-void rf_disc_flush(void)
-{
-}
-
 void rf_fin(void)
 {
   /* switch back to screen and keyboard */

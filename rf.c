@@ -994,7 +994,6 @@ void rf_code_bwrit(void)
 
     rf_disc_write(b, a);
     rf_disc_write(&eot, 1);
-    rf_disc_flush();
   }
   RF_JUMP_NEXT;
 }

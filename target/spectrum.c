@@ -108,10 +108,6 @@ void rf_disc_write(char *p, unsigned char len)
   }
 }
 
-void rf_disc_flush(void)
-{
-}
-
 void rf_fin(void)
 {
   if (rs232_close() != RS_ERR_OK) {
