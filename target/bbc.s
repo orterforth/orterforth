@@ -31,6 +31,14 @@ _rf_init:
 	ldx #$07
 	jsr $FFF4 ; OSBYTE
 
+	lda #$02                      ; *FX 2,2 (enable RS423, input from keyboard)
+	tax
+	jsr $FFF4 ; OSBYTE
+
+	lda #$03                      ; *FX 3,4 (output to screen only)
+	ldx #$04
+	jsr $FFF4 ; OSBYTE
+
 	rts
 
 .export _rf_out

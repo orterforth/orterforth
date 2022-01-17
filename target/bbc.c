@@ -14,7 +14,7 @@ void oswrch(uint8_t a);
 
 void rf_init(void)
 {
- #ifdef RF_TARGET_W
+#ifdef RF_TARGET_W
   /* W vector, set JMP ind */
   *(((uint8_t *) &rf_w) - 1) = 0x6c;
 #endif
