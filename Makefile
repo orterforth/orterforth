@@ -207,6 +207,18 @@ bbc/%.s : %.c | bbc
 
 	cc65 -O --signed-chars -t bbc -o $@ $<
 
+# custom target lib
+bbc/bbc.lib : bbc/crt0.o ../cc65/lib/bbc.lib
+
+	cp ../cc65/lib/bbc.lib $@.io
+	ar65 a $@.io bbc/crt0.o
+	mv $@.io $@
+# bbc/bbc.lib : bbc/crt0.o bbc/supervision.lib
+
+# 	cp bbc/supervision.lib $@.io
+# 	ar65 a $@.io bbc/crt0.o
+# 	mv $@.io $@
+
 # boot script
 bbc/boot : | bbc
 
@@ -216,6 +228,11 @@ bbc/boot : | bbc
 bbc/boot.inf : | bbc
 
 	echo "$$.!BOOT     0000   0000  CRC=0" > $@
+
+# custom target crt
+bbc/crt0.o : target/bbc/crt0.s
+
+	ca65 -o $@ $<
 
 # MOS bindings
 bbc/mos.o : target/bbc/mos.s | bbc
@@ -267,9 +284,11 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 	bbcim -a $@ bbc/orterforth
 
 # inst binary
-bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
+# bbc/orterforth-inst : bbc/crt0.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
 # bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
+bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
 
+	# cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^
 	cl65 -O -t bbc --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^ ../cc65/libsrc/bbc/oslib/os.s 
 
 # inst disc inf
@@ -298,6 +317,11 @@ bbc/rf_6502.o : rf_6502.s | bbc
 bbc/rf_system.o : target/bbc.s | bbc
 
 	ca65 -o $@ $<
+
+# find cc65 install dir and copy lib file
+bbc/supervision.lib : $(shell readlink $(shell which ld65))
+
+	cp -p $(<D)/../lib/supervision.lib $@
 
 # build
 .PHONY : build
