@@ -4,7 +4,7 @@
 
 #include "../rf.h"
 
-void osbyte(uint8_t a, uint8_t x);
+uint8_t osbyte(uint8_t a, uint8_t x);
 
 void osnewl(void);
 
@@ -64,8 +64,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  /* TODO test for escape */
-  RF_SP_PUSH(0);
+  RF_SP_PUSH(osbyte(0x79, 0xF0) & 0x80 ? 1 : 0);
   RF_JUMP_NEXT;
 }
 

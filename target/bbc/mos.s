@@ -8,6 +8,7 @@ _osbyte:
 	ldy #0
 	lda (sp),y
 	jsr $FFF4
+	txa
 	jmp incsp1
 
 .export	_osnewl
