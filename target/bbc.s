@@ -77,7 +77,6 @@ _rf_code_key:
 
 	stx xsave
 	jsr osrdch
-	; TODO handle ESC
 	ldx xsave
 	jmp push0a
 
@@ -94,7 +93,16 @@ _rf_code_cr:
 
 _rf_code_qterm:
 
-	lda #$00                      ; TODO link to ESC
+	stx xsave
+	lda #$79                      ; *FX 121,240 (scan for escape key)
+	ldx #$F0
+	jsr osbyte
+	lda #$00                      ; return 1 if pressed
+	cpx #$00
+	bpl qterm1
+	lda #01
+qterm1:
+	ldx xsave
 	jmp push0a
 
 .export _rf_fin
