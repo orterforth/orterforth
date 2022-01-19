@@ -205,19 +205,20 @@ bbc/%.o : bbc/%.s
 # general compile rule
 bbc/%.s : %.c | bbc
 
-	cc65 -O --signed-chars -t bbc -o $@ $<
+	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+
+# find cc65 install dir and copy lib file
+bbc/apple2.lib : $(shell readlink $(shell which ld65))
+
+	readlink $$(which ld65)
+	cp -p $(<D)/../lib/apple2.lib $@
 
 # custom target lib
-bbc/bbc.lib : bbc/crt0.o ../cc65/lib/bbc.lib
+bbc/bbc.lib : bbc/crt0.o bbc/apple2.lib
 
-	cp ../cc65/lib/bbc.lib $@.io
+	cp bbc/apple2.lib $@.io
 	ar65 a $@.io bbc/crt0.o
 	mv $@.io $@
-# bbc/bbc.lib : bbc/crt0.o bbc/supervision.lib
-
-# 	cp bbc/supervision.lib $@.io
-# 	ar65 a $@.io bbc/crt0.o
-# 	mv $@.io $@
 
 # boot script
 bbc/boot : | bbc
@@ -284,12 +285,10 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 	bbcim -a $@ bbc/orterforth
 
 # inst binary
-# bbc/orterforth-inst : bbc/crt0.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
-# bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
-bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o
+bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
+# bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
 
-	# cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^
-	cl65 -O -t bbc --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^ ../cc65/libsrc/bbc/oslib/os.s 
+	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^
 
 # inst disc inf
 bbc/orterforth-inst.inf : | bbc
@@ -303,25 +302,30 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 	bbcim -a $@ bbc/boot
 	bbcim -a $@ bbc/orterforth-inst
 
+# main lib
+bbc/rf.s : rf.c rf.h target/bbc.inc | bbc
+
+	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+
 # asm bbc system lib
 bbc/rf_6502.o : rf_6502.s | bbc
 
 	ca65 -o $@ $<
 
-# C system lib
+# main lib
+bbc/rf_inst.s : rf_inst.c rf.h target/bbc.inc | bbc
+
+	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+
+# # C system lib
 # bbc/rf_system.s : target/bbc.c | bbc
 
-# 	cc65 -O --signed-chars -t bbc -o $@ $<
+# 	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
 
 # asm system lib
 bbc/rf_system.o : target/bbc.s | bbc
 
 	ca65 -o $@ $<
-
-# find cc65 install dir and copy lib file
-bbc/supervision.lib : $(shell readlink $(shell which ld65))
-
-	cp -p $(<D)/../lib/supervision.lib $@
 
 # build
 .PHONY : build
