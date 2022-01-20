@@ -156,7 +156,7 @@ $(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
 
 # === BBC Micro ===
 
-BBCSTARTADDRESS := 1300
+BBCSTARTADDRESS := 17C0
 BBCROMS := \
 	roms/bbcb/os12.rom \
 	roms/bbcb/basic2.rom \
@@ -246,18 +246,21 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # final binary hex
-bbc/orterforth.hex : bbc/orterforth-inst.ssd $(BBCROMS) | $(DISC)
+bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC)
 
-	@# empty disc
-	@rm -f 1.disc
-	@touch 1.disc
+	# inst disc
+	cp -p orterforth.disc 0.disc
 
-	@# serve disc
-	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	# empty disc
+	rm -f 1.disc
+	touch 1.disc
 
-	@# run emulator, wait for result
-	@mame bbcb \
-		-video none -sound none \
+	# serve disc
+	SYSTEM=$(SYSTEM) scripts/disc-tcp &
+
+	# run emulator, wait for result
+	mame bbcb \
+		-sound none \
  		-speed 20 -frameskip 10 -nothrottle \
 		-seconds_to_run 420 \
     -rs423 null_modem \
@@ -265,12 +268,12 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd $(BBCROMS) | $(DISC)
     -skip_gameinfo -nomax -window \
     -autoboot_delay 2 \
     -autoboot_command '*DISK\r*EXEC !BOOT\r' \
-    -flop1 bbc/orterforth-inst.ssd & pid=$$! ; \
+    -flop1 $< & pid=$$! ; \
 		scripts/waitforhex ; \
 		kill -9 $$pid
 
-	@# copy result
-	@cp 1.disc $@
+	# copy result
+	cp 1.disc $@
 
 # final disc inf
 bbc/orterforth.inf : | bbc
@@ -315,7 +318,7 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # main lib
 bbc/rf_inst.s : rf_inst.c rf.h target/bbc.inc | bbc
 
-	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+	cc65 -O --signed-chars -t none -D__BBC__ --bss-name INST --code-name INST --rodata-name INST -o $@ $<
 
 # # C system lib
 # bbc/rf_system.s : target/bbc.c | bbc

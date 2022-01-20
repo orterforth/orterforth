@@ -1516,6 +1516,7 @@ rf_code_t *rf_inst_load_cfa = 0;
 
 static void rf_inst_emptybuffers(void)
 {
+  /* TODO disc buffers size */
   rf_inst_memset(RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
 }
 

@@ -14,19 +14,22 @@
 
 /* return stack uses reserved area of page 0x0100 */
 #define RF_R0 0x01C0
-#define RF_RETURN_STACK_SIZE 0x003F
+#define RF_RETURN_STACK_SIZE 0x0060
 
 /* use the BASIC text input buffer area at 0x0700 */
 #define RF_TIB 0x0700
 
+/* #define RF_LIMIT 0x7C00 */
+/* USER and buffers before native code and dictionary */ 
+/* screen mode can be changed freely if sufficient memory */ 
+#define RF_LIMIT 0x1760
+
 /* start address */
-#define RF_ORG 0x1300
+/* #define RF_ORG 0x1300 */
+#define RF_ORG 0x17C0
 
 /* follows the C code */
-#define RF_ORIGIN 0x4000
-
-/* disc buffers end before HIMEM, in CC65 this is 0x7200 behind stack and MODE 7 screen memory */
-#define RF_LIMIT 0x7C00
+#define RF_ORIGIN 0x2900
 
 /* assembler definitions */
 #define RF_TARGET_IP

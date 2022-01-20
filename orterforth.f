@@ -802,7 +802,7 @@ inst-dodoe rf-code ;
 
 : CREATE              ( A SMUDGED CODE HEADER TO PARAM FIELD *)
                      ( WARNING IF DUPLICATING A CURRENT NAME *)
-      TIB  HERE  0A0  +  <  2  ?ERROR  ( FREE SPACE ? )
+      TIB  HERE  0A0  +  =  2  ?ERROR  ( FREE SPACE ? )
       -FIND    ( CHECK IF UNIQUE IN CURRENT AND CONTEXT )
       IF ( WARN USER )  DROP  NFA  ID.
                         4         MESSAGE    SPACE  ENDIF
