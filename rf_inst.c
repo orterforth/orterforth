@@ -595,7 +595,7 @@ static void __FASTCALL__ rf_inst_qpairs(rf_word_t a)
   }
 }
 #else
-#define rf_inst_qpairs(a) RF_SP_POP
+#define rf_inst_qpairs(a) (void) RF_SP_POP
 #endif
 
 /* ENDIF */
