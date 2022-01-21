@@ -246,7 +246,9 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # final binary hex
-bbc/orterforth.hex : bbc/orterforth-inst.ssd $(BBCROMS) | $(DISC)
+bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC)
+
+	cp -p orterforth.disc 0.disc
 
 	@# empty disc
 	@rm -f 1.disc
