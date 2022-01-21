@@ -12,12 +12,16 @@ n := $8A                        ; TODO $78 in docs
 _rf_ip := $F8                   ; TODO $80 in docs $70 to $90 reserved in cc65 cfg
 
 .export _rf_w: near
+.exportzp _rf_6502_w_zp
 
 _rf_w := $87                    ; TODO $83 in docs
+_rf_6502_w_zp := $87            ; as zp
 
 .export _rf_up: near
+.exportzp _rf_6502_up_zp
 
 _rf_up := $02                   ; TODO $85
+_rf_6502_up_zp := $02           ; as zp
 
 .exportzp xsave
 

@@ -9,8 +9,8 @@
 .importzp	sp
 .import staxysp
 
-.importzp _rf_up
-.importzp _rf_w
+.importzp _rf_6502_up_zp
+.importzp _rf_6502_w_zp
 .import pop
 .import _rf_next
 .importzp xsave
@@ -26,7 +26,7 @@ osbyte := $FFF4
 _rf_init:
 
 	lda #$6C                      ; jsr (W)
-	sta _rf_w-1
+	sta _rf_6502_w_zp-1
 	lda #$07                      ; *FX 7,7 (9600 baud receive)
 	tax
 	jsr osbyte
@@ -58,12 +58,12 @@ _rf_code_emit:
 	tya
 	sec
 	ldy #$1A
-	adc (_rf_up),y
-	sta (_rf_up),y
+	adc (_rf_6502_up_zp),y
+	sta (_rf_6502_up_zp),y
 	iny
 	lda #$00
-	adc (_rf_up),y
-	sta (_rf_up),y
+	adc (_rf_6502_up_zp),y
+	sta (_rf_6502_up_zp),y
 	lda $00,x
 	and #$7F
 	stx xsave

@@ -1516,7 +1516,7 @@ rf_code_t *rf_inst_load_cfa = 0;
 
 static void rf_inst_emptybuffers(void)
 {
-  rf_inst_memset(RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
+  rf_inst_memset((char *) RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
 }
 
 static void __FASTCALL__ rf_inst_load(rf_word_t screen)
