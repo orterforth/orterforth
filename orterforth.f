@@ -851,7 +851,7 @@ inst-s0  SP@  <  1  ?ERROR   SP@  inst-s1  <  7  ?ERROR ;
          LATEST  40  TOGGLE  ;
 
 : VOCABULARY  ( CREATE VOCAB WITH 'V-HEAD' AT VOC INTERSECT. *) 
-       <BUILDS  81 C, A0 C,  CURRENT  @  CFA  ,
+       <BUILDS  81 C, A0 C,  CURRENT  @  2 -  ,
        HERE  VOC-LINK  @  ,  VOC-LINK  !
        DOES>  2+  CONTEXT  !  ;
 
