@@ -190,6 +190,7 @@ bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC)
 	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
 
 	@mame bbcb \
+    -video opengl \
     -rs423 null_modem \
     -bitb socket.localhost:5705 \
     -skip_gameinfo -nomax -window \
