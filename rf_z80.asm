@@ -118,9 +118,9 @@ _rf_start:                      ; C code calls this to switch from registers to 
   ret z
 
   pop hl                        ; save C return address
-
-  ld iy, $5C3A                  ; restore IY and enable interrupts (Spectrum requires this)
-  ei
+IFDEF SPECTRUM                  ; TODO ensure this is defined
+  ld iy, $5C3A                  ; restore IY (ZX Spectrum)
+ENDIF
   ld (_rf_sp), sp               ; switch SP
   ld sp, (_rf_z80_sp)
   dec de                        ; switch W
@@ -150,7 +150,6 @@ _rf_trampoline:                 ; C code calls this to iterate over function poi
   ld (_rf_z80_sp), sp           ; switch SP
   ld sp, (_rf_sp)
   ld ix, next                   ; set IX
-  di                            ; disable interrupts as we use IY (Spectrum requires this)
   ld iy, hpush                  ; set IY
 
   ld a, $01                     ; set flag to nz
