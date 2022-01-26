@@ -232,7 +232,6 @@ _rf_code_xdo:
   exx                                   ; save IP
   pop de                                ; pop index and limit
   pop bc
-  push hl                               ; save hl' TODO ZX Spectrum only
   ld hl, (_rf_rp)                       ; push limit and index to RP
   dec hl
   ld (hl), b
@@ -243,7 +242,6 @@ _rf_code_xdo:
   dec hl
   ld (hl), e
   ld (_rf_rp), hl
-  pop hl                                ; restore hl'
   exx                                   ; restore IP
   jp (ix)                               ; next
 
