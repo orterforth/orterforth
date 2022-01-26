@@ -4,8 +4,15 @@
 
 #define RF_INST_SMALLER
 
+/* return an ASCII hex digit */
+static char __FASTCALL__ rf_inst_hex(uint8_t b)
+{
+  return b + (b < 10 ? 48 : 55);
+}
+
 /* ERROR REPORTING */
 
+#ifndef RF_INST_SMALLER
 /* write a string to output */
 static void __FASTCALL__ rf_inst_print(char *string)
 {
@@ -14,20 +21,12 @@ static void __FASTCALL__ rf_inst_print(char *string)
   }
 }
 
-#ifndef RF_INST_SMALLER
 /* write an error message and stop */
 static void __FASTCALL__ rf_inst_error(char *string)
 {
   rf_inst_print(string);
   rf_out('\n');
   exit(1);
-}
-#endif
-
-/* return an ASCII hex digit */
-static char __FASTCALL__ rf_inst_hex(uint8_t b)
-{
-  return b + (b < 10 ? 48 : 55);
 }
 
 /* write a byte in hex */
@@ -36,6 +35,7 @@ void __FASTCALL__ rf_inst_print_hex(uint8_t c)
   rf_out(rf_inst_hex(c >> 4));
   rf_out(rf_inst_hex(c & 15));
 }
+#endif
 
 /* INST TIME DISC OPERATIONS */
 
@@ -46,11 +46,13 @@ static void __FASTCALL__ rf_inst_disc_expect(char e)
 
   rf_disc_read(&c, 1);
   if (c != e) {
+#ifndef RF_INST_SMALLER
     rf_inst_print("rf_inst_disc_expect failed exp=");
     rf_inst_print_hex(e);
     rf_inst_print(" act=");
     rf_inst_print_hex(c);
     rf_out('\n');
+#endif
     exit(1);
   }
 }
@@ -200,7 +202,9 @@ static void rf_inst_code_storecsp(void)
 }
 
 /* USE */
+#ifndef RF_INST_SMALLER
 static rf_word_t *rf_inst_use;
+#endif
 
 /* PREV */
 static rf_word_t *rf_inst_prev;
@@ -1594,7 +1598,9 @@ void rf_inst(void)
   /* load */
   rf_inst_emptybuffers();
 
+#ifndef RF_INST_SMALLER
   rf_inst_use = (rf_word_t *) RF_FIRST;
+#endif
   rf_inst_prev = (rf_word_t *) RF_FIRST;
   rf_inst_load(12);
   rf_inst_load(33);
