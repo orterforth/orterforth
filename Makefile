@@ -177,11 +177,10 @@ bbc-clean :
 bbc-help :
 
 	@echo "bbc target build requires:"
-	@echo " * cc65 fork with BBC support at https://github.com/dominicbeesley/cc65"
-	@echo "   NB currently requires that this repo is cloned into a sibling dir i.e., ../cc65"
-	@echo " * bbcim for more details see http://wouter.bbcmicro.net/bbc/pc-software-whs.html"
-	@echo " * MAME emulator"
-	@echo " * BBC ROM files at: $(BBCROMS)"
+	@echo " * cc65 compiler    : https://cc65.github.io"
+	@echo " * bbcim            : http://wouter.bbcmicro.net/bbc/pc-software-whs.html"
+	@echo " * MAME emulator    :"
+	@echo " * BBC ROM files at : $(BBCROMS)"
 
 # load from disc and run
 .PHONY : bbc-run
