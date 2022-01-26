@@ -42,11 +42,11 @@ trampoline1:
 	pha
 	tsx                           ; save S to temp
 	stx temps
-	ldx _rf_rp                    ; set S to RP-- (high byte is 1)
+	ldx _rf_rp                    ; set S to RP-1 (high byte is $01)
 	dex
 	txs
-	ldx _rf_sp                    ; set X to SP (high byte is 0)
-	ldy #$00                      ; set Y to 0, this is expected
+	ldx _rf_sp                    ; set X to SP (high byte is $00)
+	ldy #$00                      ; set Y to $00, this is expected
 	inc flag                      ; set flag
 	jmp (_rf_trampoline_fp)       ; jump to FP and return to trampoline
 
@@ -55,10 +55,10 @@ trampoline1:
 _rf_start:
 
 	stx _rf_sp                    ; restore SP from X
-	pla                           ; save return address (from jsr rf_start)
+	pla                           ; save return address (from jsr _rf_start)
 	tay
 	pla
-	tsx                           ; restore RP from S++
+	tsx                           ; restore RP from S+1
 	inx
 	stx _rf_rp
 	ldx temps                     ; restore S from temp
@@ -308,14 +308,14 @@ pfind2:
 	adc #$05
 	adc n
 	sta $02,x
-	ldy #00
+	ldy #$00
 	tya
 	adc n+1
 	sta $03,x
 	sty $01,x
 	lda (n),y
 	sta $00,x
-	lda #01
+	lda #$01
 	pha
 	jmp push
 pfind3:
@@ -408,7 +408,7 @@ _rf_code_ustar:
 	lda $03,x
 	sta n+1
 	sty $03,x
-	ldy #16
+	ldy #$10
 ustar1:
 	asl $02,x
 	rol $03,x
@@ -445,7 +445,7 @@ _rf_code_uslas:
 	sty $05,x
 	rol
 	sta $03,x
-	lda #16
+	lda #$10
 	sta n
 uslas1:
 	rol $04,x
@@ -796,7 +796,7 @@ _rf_code_docol:
 	pha
 	clc
 	lda _rf_w
-	adc #02
+	adc #$02
 	sta _rf_ip
 	tya
 	adc _rf_w+1
