@@ -10,7 +10,7 @@
 
 /* stack in 0-page, assembly code will use X as SP */
 #define RF_S0 0x0070
-#define RF_STACK_SIZE 0x0030
+#define RF_STACK_SIZE 0x0027
 
 /* return stack uses reserved area of page 0x0100 */
 #define RF_R0 0x01C0

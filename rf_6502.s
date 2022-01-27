@@ -2,30 +2,34 @@
 .import _rf_sp
 .import _rf_trampoline_fp
 
-flag := $05
-temps := $06
+flag := $75
+temps := $76
 
-n := $8A                        ; TODO $78 in docs
+n := $78                        ; n-1 must be reserved for the length of n in words
 
 .export _rf_ip: near
 
-_rf_ip := $F8                   ; TODO $80 in docs $70 to $90 reserved in cc65 cfg
+_rf_ip := $80
 
 .export _rf_w: near
-.exportzp _rf_6502_w_zp
 
-_rf_w := $87                    ; TODO $83 in docs
-_rf_6502_w_zp := $87            ; as zp
+_rf_w := $83
+
+.exportzp _rf_6502_w
+
+_rf_6502_w := $83               ; also as zp for use by other asm
 
 .export _rf_up: near
-.exportzp _rf_6502_up_zp
 
-_rf_up := $02                   ; TODO $85
-_rf_6502_up_zp := $02           ; as zp
+_rf_up := $85
+
+.exportzp _rf_6502_up
+
+_rf_6502_up := $85              ; also as zp for use by other asm
 
 .exportzp xsave
 
-xsave := $04                    ; TODO $87 in docs
+xsave := $87
 
 .export _rf_trampoline
 
