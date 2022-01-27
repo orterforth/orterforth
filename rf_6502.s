@@ -2,7 +2,6 @@
 .import _rf_sp
 .import _rf_trampoline_fp
 
-flag := $75
 temps := $76
 
 n := $78                        ; n-1 must be reserved for the length of n in words
@@ -51,7 +50,6 @@ trampoline1:
 	txs
 	ldx _rf_sp                    ; set X to SP (high byte is $00)
 	ldy #$00                      ; set Y to $00, this is expected
-	inc flag                      ; set flag
 	jmp (_rf_trampoline_fp)       ; jump to FP and return to trampoline
 
 .export _rf_start
@@ -70,7 +68,6 @@ _rf_start:
 	pha                           ; restore return address on stack
 	tya
 	pha
-	dec flag                      ; reset flag
 start1:
 	rts                           ; return to C
 
