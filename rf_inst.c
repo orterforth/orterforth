@@ -4,11 +4,13 @@
 
 #define RF_INST_SMALLER
 
+#ifdef RF_INST_SAVE
 /* return an ASCII hex digit */
 static char __FASTCALL__ rf_inst_hex(uint8_t b)
 {
   return b + (b < 10 ? 48 : 55);
 }
+#endif
 
 /* ERROR REPORTING */
 
