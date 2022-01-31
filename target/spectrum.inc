@@ -1,6 +1,3 @@
-#ifndef RF_SPECTRUM_H_
-#define RF_SPECTRUM_H_
-
 /* RP and SP operations not inline, code is smaller but slower */
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
@@ -69,5 +66,3 @@
 #define RF_TARGET_CODE_CELLS
 #define RF_TARGET_CODE_STOD
 #define RF_TARGET_CODE_COLD
-
-#endif /* RF_SPECTRUM_H_ */
