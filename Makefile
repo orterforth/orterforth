@@ -122,15 +122,15 @@ $(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # emulator to build fast
-$(SYSTEM)/spectrum : \
-	$(SYSTEM)/spectrum.o \
+$(SYSTEM)/emulate_spectrum : \
+	$(SYSTEM)/emulate_spectrum.o \
 	$(SYSTEM)/z80.o \
 	$(SYSTEM)/rf_persci.o
 
 	$(CC) -o $@ $^
 
 # spectrum emulator
-$(SYSTEM)/spectrum.o : spectrum.c rf_persci.h z80.h | $(SYSTEM)
+$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h z80.h | $(SYSTEM)
 
 	mkdir -p $(@D)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
@@ -642,7 +642,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(DISC) $(ORTER) $(FUSE) roms/spectrum/if1-2.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
 endif
 ifeq ($(SPECTRUMIMPL),superzazu)
-SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(SYSTEM)/spectrum roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom
+SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(SYSTEM)/emulate_spectrum roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom
 endif
 ifeq ($(SPECTRUMIMPL),real)
 SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.ser $(DISC) $(ORTER)
@@ -680,7 +680,7 @@ endif
 
 ifeq ($(SPECTRUMIMPL),superzazu)
 	# run emulator with hooks to handle I/O and to terminate when finished
-	./$(SYSTEM)/spectrum
+	./$(SYSTEM)/emulate_spectrum
 endif
 
 ifeq ($(SPECTRUMIMPL),real)
