@@ -247,15 +247,15 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC
 
 	cp -p orterforth.disc 0.disc
 
-	@# empty disc
-	@rm -f 1.disc
-	@touch 1.disc
+	# empty disc
+	rm -f 1.disc
+	touch 1.disc
 
-	@# serve disc
-	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	# serve disc
+	SYSTEM=$(SYSTEM) scripts/disc-tcp &
 
-	@# run emulator, wait for result
-	@mame bbcb \
+	# run emulator, wait for result
+	mame bbcb \
 		-video none -sound none \
  		-speed 20 -frameskip 10 -nothrottle \
 		-seconds_to_run 420 \
@@ -268,8 +268,8 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC
 		scripts/waitforhex ; \
 		kill -9 $$pid
 
-	@# copy result
-	@cp 1.disc $@
+	# copy result
+	cp 1.disc $@
 
 # final disc inf
 bbc/orterforth.inf : | bbc
