@@ -861,3 +861,20 @@ _rf_code_dodoe:
 	lda _rf_w+1
 	adc #$00
 	jmp push
+
+.export _rf_code_cell
+
+_rf_code_cell:
+
+	lda #$02
+	pha
+	lda #$00
+	jmp push
+
+.export _rf_code_cells
+
+_rf_code_cells:
+
+	asl $00,x
+	rol $01,x
+	jmp _rf_next
