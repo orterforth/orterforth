@@ -419,14 +419,14 @@ spectrum-fuse-tap : spectrum/orterforth.tap | roms/spectrum/if1-2.rom spectrum/f
 
 # load from serial
 .PHONY : spectrum-load-serial
-spectrum-load-serial : spectrum/orterforth.ser spectrum-load-serial.bas
+spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 
 	@echo "On the Spectrum type: FORMAT \"b\";$(SERIALBAUD)"
 	@echo "                      LOAD *\"b\""
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial write -w 2 $(SERIALPORT) $(SERIALBAUD) < spectrum-load-serial.bas
+	@$(ORTER) serial write -w 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
 	@echo "* Loading orterforth..."
 	@$(ORTER) serial write -w 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
@@ -689,7 +689,7 @@ ifeq ($(SPECTRUMIMPL),real)
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial write -w 2 $(SERIALPORT) $(SERIALBAUD) < spectrum-load-serial.bas
+	@$(ORTER) serial write -w 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
 	@echo "* Loading inst..."
 	@$(ORTER) serial write -w 22 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth-inst-2.ser
