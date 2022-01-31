@@ -45,11 +45,11 @@ _rf_init:
 
 _rf_out:
 
-	jsr     pusha
-	ldy     #$00
-	lda     (sp),y
-	jsr     oswrch
-	jmp     incsp1
+	jsr pusha
+	ldy #$00
+	lda (sp),y
+	jsr oswrch
+	jmp incsp1
 
 .export _rf_code_emit
 
@@ -120,71 +120,71 @@ _rf_fin:
 
 _rf_disc_read:
 
-	jsr     pusha
-	jsr     decsp3
+	jsr pusha
+	jsr decsp3
 	lda #$02                      ; *FX 2,1 (read from RS423)
 	ldx #$01
 	jsr osbyte
-	ldy     #$03
-L0025:
-	lda     (sp),y
-	beq     L0006
+	ldy #$03
+read1:
+	lda (sp),y
+	beq read2
 	jsr	osrdch
-	ldy     #$02
-	sta     (sp),y
-	ldy     #$05
-	jsr     ldaxysp
-	sta     regsave
-	stx     regsave+1
-	jsr     incax1
-	ldy     #$04
-	jsr     staxysp
-	ldy     #$02
-	lda     (sp),y
-	ldy     #$00
-	sta     (regsave),y
-	ldy     #$03
-	lda     (sp),y
+	ldy #$02
+	sta (sp),y
+	ldy #$05
+	jsr ldaxysp
+	sta regsave
+	stx regsave+1
+	jsr incax1
+	ldy #$04
+	jsr staxysp
+	ldy #$02
+	lda (sp),y
+	ldy #$00
+	sta (regsave),y
+	ldy #$03
+	lda (sp),y
 	sec
-	sbc     #$01
-	sta     (sp),y
-	jmp     L0025
-L0006:
-	lda     #$02
+	sbc #$01
+	sta (sp),y
+	jmp read1
+read2:
+	lda #$02
 	tax                           ; *FX 2,2 (read from keyboard)
 	jsr osbyte
-	jmp     incsp6
+	jmp incsp6
 
 .export _rf_disc_write
 
 _rf_disc_write:
 
-	jsr     pusha
+	jsr pusha
 	lda #$03                      ; *FX 3,7 (write to RS423)
 	ldx #$07
 	jsr osbyte
-	ldy     #$00
-L0026:
-	lda     (sp),y
-	beq     L0019
-	ldy     #$02
-	jsr     ldaxysp
-	sta     regsave
-	stx     regsave+1
-	jsr     incax1
-	ldy     #$01
-	jsr     staxysp
-	ldy     #$00
-	lda     (regsave),y
+	ldy #$00
+write1:
+	lda (sp),y
+	beq write2
+	ldy #$02
+	jsr ldaxysp
+	sta regsave
+	stx regsave+1
+	jsr incax1
+	ldy #$01
+	jsr staxysp
+	ldy #$00
+	lda (regsave),y
 	jsr oswrch
-	ldy     #$00
-	lda     (sp),y
+	ldy #$00
+	lda (sp),y
 	sec
-	sbc     #$01
-	sta     (sp),y
-	jmp     L0026
-L0019:
-	lda     #$03                  ; *FX 3,4 (write to screen)
+	sbc #$01
+	sta (sp),y
+	jmp write1
+write2:
+	lda #$03                      ; *FX 3,4 (write to screen)
 	ldx #$04
 	jsr osbyte
-	jmp     incsp3
+	jmp incsp3
