@@ -148,6 +148,12 @@ $(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
 	mkdir -p $(@D)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
+# help
+.PHONY : $(TARGET)-help
+$(TARGET)-help :
+
+	more help/$(TARGET).txt
+
 # disc images from %.f files including orterforth.f
 %.disc : %.f | $(DISC)
 
@@ -172,15 +178,6 @@ bbc :
 bbc-clean : 
 
 	rm -f bbc/*
-
-.PHONY : bbc-help
-bbc-help :
-
-	@echo "bbc target build requires:"
-	@echo " * cc65 compiler    : https://cc65.github.io"
-	@echo " * bbcim            : http://wouter.bbcmicro.net/bbc/pc-software-whs.html"
-	@echo " * MAME emulator    :"
-	@echo " * BBC ROM files at : $(BBCROMS)"
 
 # load from disc and run
 .PHONY : bbc-run
@@ -350,6 +347,10 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 disc : $(DISC)
 
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
+
+# help
+.PHONY : help
+help : $(TARGET)-help
 
 # ROM file dir
 roms : 

@@ -39,34 +39,11 @@ for each platform, such as a C compiler/assembler for the
 target platform, system ROM files in the roms directory, system
 emulator source files and/or emulator installations.
 
-For example, for the ZX Spectrum 48K, you will need:
+For more details on a target, call:
 
-* z88dk https://z88dk.org/
-* Fuse emulator http://fuse-emulator.sourceforge.net
-* Interface 1 ROM file (place in roms/spectrum )
-* Z80 emulator https://github.com/superzazu/z80
+ make help TARGET=<target>
 
-To build, call:
-
- make TARGET=spectrum (to build using superzazu's emulator)
- make TARGET=spectrum SPECTRUMIMPL=fuse (to build in Fuse)
-
-The target files will be built in the respective named 
-directory, e.g.:
-
- spectrum/orterforth.bin (the pure binary)
- spectrum/orterforth.ser (with Interface 1 serial header for 
-                         loading over RS-232 or ZX Net) 
- spectrum/orterforth.tap (TAP file with loader)
-
-To run in Fuse, call:
-
- make run TARGET=spectrum
-
-To load and run on a physical machine, connect the Interface 1
-to your host system via RS-232 and call:
-
- make spectrum-load-serial
+where <target> is e.g.: bbc, spectrum
 
 
 # Running orterforth #
@@ -86,7 +63,7 @@ architectures, word sizes, I/O, and so on.
 When installation is complete, the user is placed at Forth's 
 interactive prompt.
 
-The user can also use the emulated disc drive to load programs 
+The user can also use the emulated disc drive to load programs
 in the same way - with fig-Forth commands to load and 
 manipulate "screens" of text (rather than a file system more 
 familiar to modern users).
@@ -94,14 +71,14 @@ familiar to modern users).
 
 # orterforth is implemented in C #
 
-A typical Forth implementation rests on a number of base words 
+A typical Forth implementation rests on a number of base words
 implemented in native machine code. Higher-level words are 
 implemented with reference to other words, and "threaded" 
 together to build complex programs.
 
-In the Installation Manual, 6502 native code is assembled 
-immediately following each word in memory (using an assembler 
-implemented in Forth). The word's code field address (CFA) is 
+In the Installation Manual, 6502 native code is assembled
+immediately following each word in memory (using an assembler
+implemented in Forth). The word's code field address (CFA) is
 pointed at this code.
 
 By contrast, orterforth has platform-independent 
@@ -182,6 +159,7 @@ system-independent:
  rf-target ( -- d )    Returns a base-36 representation of
                        the target system (e.g., one of:
                        CYGWIN. DARWIN. LINUX. SPECTR. etc).
+
 
 # Acknowledgements #
 

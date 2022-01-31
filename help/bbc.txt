@@ -1,0 +1,12 @@
+Building for the BBC Micro Model B
+
+You will need:
+
+ * cc65 compiler    : https://cc65.github.io
+ * bbcim            : http://wouter.bbcmicro.net/bbc/pc-software-whs.html
+ * MAME emulator    :
+ * BBC ROM files at : roms/bbcb/os12.rom 
+                      roms/bbcb/basic2.rom 
+                      roms/bbcb/phroma.bin 
+                      roms/bbcb/saa5050 
+                      roms/bbcb/dnfs120.rom

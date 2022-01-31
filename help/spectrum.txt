@@ -1,0 +1,31 @@
+Building for the ZX Spectrum 48K
+================================
+
+You will need:
+
+* z88dk https://z88dk.org/
+* Fuse emulator http://fuse-emulator.sourceforge.net
+* Interface 1 ROM file (place in roms/spectrum )
+* Z80 emulator https://github.com/superzazu/z80
+
+To build, call:
+
+ make TARGET=spectrum (to build using superzazu's emulator)
+ make TARGET=spectrum SPECTRUMIMPL=fuse (to build in Fuse)
+
+The target files will be built in the respective named 
+directory, e.g.:
+
+ spectrum/orterforth.bin (the pure binary)
+ spectrum/orterforth.ser (with Interface 1 serial header for 
+                         loading over RS-232 or ZX Net) 
+ spectrum/orterforth.tap (TAP file with loader)
+
+To run in Fuse, call:
+
+ make run TARGET=spectrum
+
+To load and run on a physical machine, connect the Interface 1
+to your host system via RS-232 and call:
+
+ make spectrum-load-serial
