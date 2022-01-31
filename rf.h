@@ -88,6 +88,12 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/spectrum.inc"
 #endif
 #endif
+#ifdef ZX81
+#define RF_TARGET 0x001992f1 /* ZX81 */
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/zx81.inc"
+#endif
+#endif
 #endif
 
 /* C68 */
