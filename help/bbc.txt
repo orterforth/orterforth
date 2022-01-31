@@ -4,9 +4,22 @@ You will need:
 
  * cc65 compiler    : https://cc65.github.io
  * bbcim            : http://wouter.bbcmicro.net/bbc/pc-software-whs.html
- * MAME emulator    :
+ * MAME emulator    : https://www.mamedev.org
  * BBC ROM files at : roms/bbcb/os12.rom 
                       roms/bbcb/basic2.rom 
                       roms/bbcb/phroma.bin 
                       roms/bbcb/saa5050 
                       roms/bbcb/dnfs120.rom
+
+To build, call:
+
+ make TARGET=bbc (to build in MAME)
+
+Target files are:
+
+ bbc/orterforth     (pure binary)
+ bbc/orterforth.ssd (disc image)
+
+To run in MAME, call:
+
+ make run TARGET=bbc
