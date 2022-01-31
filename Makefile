@@ -579,7 +579,7 @@ spectrum/orterforth-inst.bin : \
 	spectrum/rf_inst.lib \
 	spectrum/rf_system.lib \
 	spectrum/rf_z80.lib \
-	rf_memory.asm \
+	rf_z80_memory.asm \
 	orterforth.c
 
 	zcc +zx \
@@ -591,7 +591,7 @@ spectrum/orterforth-inst.bin : \
 		-pragma-define:CRT_INITIALIZE_BSS=0 \
 		-m \
 		-o $@ \
-		rf_memory.asm orterforth.c
+		rf_z80_memory.asm orterforth.c
 
 # start with an empty bin file to build the multi segment bin
 spectrum/orterforth-inst-0.bin : | spectrum
