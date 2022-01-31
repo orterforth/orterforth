@@ -154,6 +154,13 @@ $(TARGET)-help :
 
 	more help/$(TARGET).txt
 
+.PHONY : $(SYSTEM)-help
+$(SYSTEM)-help :
+
+	@echo "For help on specific targets, run:\n"
+	@echo " make help TARGET=<target>\n"
+	@echo "where <target> is one of: bbc, spectrum\n"
+
 # disc images from %.f files including orterforth.f
 %.disc : %.f | $(DISC)
 
@@ -162,7 +169,7 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
-BBCSTARTADDRESS := 1760
+BBCORG := 1760
 BBCROMS := \
 	roms/bbcb/os12.rom \
 	roms/bbcb/basic2.rom \
@@ -274,7 +281,7 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC
 # final disc inf
 bbc/orterforth.inf : | bbc
 
-	echo "$$.ORTERFO  $(BBCSTARTADDRESS)   $(BBCSTARTADDRESS)  CRC=0" > $@
+	echo "$$.ORTERFO  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
 # final disc image
 bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
@@ -287,12 +294,12 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
 # bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
 
-	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCSTARTADDRESS) -o $@ -m bbc/orterforth-inst.map $^
+	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/orterforth-inst.map $^
 
 # inst disc inf
 bbc/orterforth-inst.inf : | bbc
 
-	echo "$$.ORTERFO  $(BBCSTARTADDRESS)   $(BBCSTARTADDRESS)  CRC=0" > $@
+	echo "$$.ORTERFO  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
 # inst disc image
 bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterforth-inst.inf
