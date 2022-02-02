@@ -152,14 +152,7 @@ $(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
 .PHONY : $(TARGET)-help
 $(TARGET)-help :
 
-	more help/$(TARGET).txt
-
-.PHONY : $(SYSTEM)-help
-$(SYSTEM)-help :
-
-	@echo "For help on specific targets, run:\n"
-	@echo " make help TARGET=<target>\n"
-	@echo "where <target> is one of: bbc, spectrum\n"
+	@if [ "$(TARGET)" == "$(SYSTEM)" ] ; then cat help/system.txt ; else more help/$(TARGET).txt ; fi
 
 # disc images from %.f files including orterforth.f
 %.disc : %.f | $(DISC)
