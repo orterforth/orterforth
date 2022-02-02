@@ -524,8 +524,6 @@ _rf_code_spsto:
 
 	ldy #$06
 	lda (_rf_up),y
-;	clc                           ; TODO reconcile
-;	adc #$02
 	tax
 	jmp _rf_next
 
