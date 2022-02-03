@@ -103,8 +103,7 @@ EXTERN _rf_w                    ; W
 
 ; orterforth interop with C code definitions
 
-_rf_z80_flag:
-  defb $00                      ; z when machine is using C variables, nz when it is using registers
+DEFINE USEIY                    ; to hold HPUSH
 
 _rf_z80_sp:
   defw $0000                    ; register SP saved here 
@@ -113,12 +112,8 @@ PUBLIC _rf_start
 
 _rf_start:                      ; C code calls this to switch from registers to C variables
 
-  ld a, (_rf_z80_flag)          ; if flag is z, nothing to do, so return to C
-  or a
-  ret z
-
   pop hl                        ; save C return address
-IFDEF SPECTRUM                  ; TODO ensure this is defined
+IFDEF USEIY
   ld iy, $5C3A                  ; restore IY (ZX Spectrum)
 ENDIF
   ld (_rf_sp), sp               ; switch SP
@@ -126,9 +121,6 @@ ENDIF
   dec de                        ; switch W
   ld (_rf_w), de
   ld (_rf_ip), bc               ; switch IP
-
-  xor a                         ; set flag to z
-  ld (_rf_z80_flag), a
 
   jp (hl)                       ; return to C
 
@@ -150,11 +142,9 @@ _rf_trampoline:                 ; C code calls this to iterate over function poi
   ld (_rf_z80_sp), sp           ; switch SP
   ld sp, (_rf_sp)
   ld ix, next                   ; set IX
+IFDEF USEIY
   ld iy, hpush                  ; set IY
-
-  ld a, $01                     ; set flag to nz
-  ld (_rf_z80_flag), a
-
+ENDIF
   jp (hl)                       ; jump to fp, will return to start of trampoline
 
 ;	FORTH ADDRESS INTERPRETER
@@ -192,7 +182,11 @@ _rf_code_lit:                   ;(S1)<--((IP))
   ld a, (bc)                    ;HB
   inc bc
   ld h, a
+IFDEF USEIY
   jp (iy)                       ;(S1)<--(HL)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_exec
 
@@ -338,7 +332,12 @@ digi1:
   jp dpush
 digi2:
   ld l, h                       ;(HL)<--FALSE
+IFDEF USEIY
   jp (iy)                       ;(S1)<--FALSE
+ELSE
+  jp hpush
+ENDIF
+
 
 PUBLIC _rf_code_pfind
 
@@ -392,7 +391,11 @@ pfin5:
   jp nz, pfin1                  ;NO, TRY PREVIOUS DEFINITION
   pop hl                        ;DROP STRING ADDR
   ld hl, $0000                  ;(HL)<--FALSE
+IFDEF USEIY
   jp (iy)                       ;NO MATCH FOUND, RETURN
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_encl
 
@@ -487,7 +490,11 @@ _rf_code_ustar:
   ld h, a                       ;(HLDE)<--MPLIER*MPCAND
   pop bc                        ;RESTORE IP
   push de                       ;(S2)<--PRODUCT.LW
+IFDEF USEIY
   jp (iy)                       ;(S1)<--PRODUCT.HW
+ELSE
+  jp hpush
+ENDIF
 ;
 ; MULTIPLY PRIMITIVE
 ;   (AHL)<--(A)*(DE)
@@ -571,7 +578,11 @@ _rf_code_andd:                  ;(S1)<--(S1) AND (S2)
   ld a, d
   and h
   ld h, a
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_orr
 
@@ -584,7 +595,11 @@ _rf_code_orr:                   ;(S1)<--(S1) OR (S2)
   ld a, d
   or h
   ld h, a
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_xorr
 
@@ -597,14 +612,22 @@ _rf_code_xorr:                  ;(S1)<--(S1) XOR (S2)
   ld a, d
   xor h
   ld h, a
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_spat
 
 _rf_code_spat:                  ;(S1)<--(SP)
   ld hl, $0000
   add hl, sp                    ;(HL)<--(SP)
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_spsto
 
@@ -686,10 +709,14 @@ _rf_code_zequ:
   ld a, l
   or h
   ld hl, $0000
-  jp nz, hpush                  ; TODO faster than jr nz, zequ1?
+  jp nz, hpush
   inc l                         ;(HL)<--TRUE
 zequ1:
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_zless
 
@@ -697,18 +724,26 @@ _rf_code_zless:
   pop af                        ;/ (A)<--(S1)H
   rla                           ;/ (CARRY)<--BIT 7
   ld hl, $0000                  ;  (HL)<--FALSE
-  jp nc, hpush                  ; TODO faster than jr nc, zles1?
+  jp nc, hpush
   inc l                         ;  (HL)<--TRUE
 zles1:
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_plus
 
 _rf_code_plus:
   pop de
   pop hl
-  add hl, de                    ; add
-  jp (iy)                       ; hpush
+  add hl, de
+IFDEF USEIY
+  jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_dplus
 
@@ -745,7 +780,11 @@ _rf_code_minus:
   sub h                   ;  4t
   ld h, a                 ;  4t
                           ; 34t total http://z80-heaven.wikidot.com/optimization#toc18
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_dminu
 
@@ -785,14 +824,22 @@ PUBLIC _rf_code_swap
 _rf_code_swap:
   pop hl
   ex (sp), hl
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_dup
 
 _rf_code_dup:
   pop hl
   push hl
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_pstor
 
@@ -834,7 +881,11 @@ _rf_code_cat:
   pop hl
   ld l, (hl)
   ld h, $00
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_store
 
@@ -895,7 +946,11 @@ _rf_code_douse:
   ld d, $00
   ld hl, (_rf_up)
   add hl, de
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_stod
 
@@ -903,7 +958,7 @@ _rf_code_stod:
   pop de
   ld hl, $0000
   bit 7, d                      ;/ # NEGATIVE?
-  jp z, dpush                   ;  NO ; TODO faster than jr z, stod1?
+  jp z, dpush                   ;  NO
   dec hl                        ;  YES, EXTEND SIGN
 stod1:
   jp dpush                      ;  ( n1--d1L d1H)
@@ -923,7 +978,11 @@ _rf_code_dodoe:
   inc hl
   ld b, (hl)
   inc hl
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_cold_abort
 
@@ -974,11 +1033,19 @@ PUBLIC _rf_code_cell
 
 _rf_code_cell:
   ld hl, $0002                  ; push 2
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF
 
 PUBLIC _rf_code_cells
 
 _rf_code_cells:
   pop hl                        ; push hl * 2
   add hl, hl
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp hpush
+ENDIF

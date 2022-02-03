@@ -2,33 +2,45 @@
 
 SECTION code_user
 
-EXTERN _rf_next                         ; NEXT, when jp (ix) not available
-EXTERN _rf_up                           ; UP, for incrementing OUT
-EXTERN _rf_z80_hpush                    ; HPUSH, for restoring into iy
+EXTERN _rf_next                 ; NEXT, when jp (ix) not available
+EXTERN _rf_up                   ; UP, for incrementing OUT
+EXTERN _rf_z80_hpush            ; HPUSH, for restoring into iy
+
+DEFINE USEIY                    ; to hold HPUSH
 
 PUBLIC _rf_init
 
 _rf_init:
+IFDEF USEIY
   di                            ; use of IY means we need interrupts disabled
+ENDIF
 
   ld hl, $5C6B                  ; DF-SZ
   ld (hl), $00                  ; use all 24 rows on screen
 
+IFDEF USEIY
   push iy                       ; clear screen
   ld iy, $5C3A
+ENDIF
   call $0DAF                    ; CL_ALL
+IFDEF USEIY
   pop iy
+ENDIF
 
   ld hl, $5CC3                  ; BAUD
   ld (hl), $0C                  ; $000C = 9600 ; $0005 = 19200
   inc hl
   ld (hl), $00
 
+IFDEF USEIY
   push iy                       ; open RS-232
   ld iy, $5C3A
+ENDIF
   rst $0008
   defb $34                      ; OP-B-CHAN
+IFDEF USEIY
   pop iy
+ENDIF
 
   ld hl, $5CC6                  ; IOBORD
   ld (hl), $06                  ; yellow, less disturbing than black
@@ -41,9 +53,13 @@ _rf_out:
   xor a                         ; reset scroll
   ld ($5C8C), a                 ; SCR-CT
   ld a, l                       ; print character in l
+IFDEF USEIY
   ld iy, $5C3A
+ENDIF
   rst $0010                     ; PRINT_A_1
+IFDEF USEIY
   ld iy, _rf_z80_hpush
+ENDIF
   ret                           ; return to C
 
 PUBLIC _rf_code_emit
@@ -53,9 +69,13 @@ _rf_code_emit:
   ld a, $7F                     ; reset scroll
   ld ($5C8C), a                 ; SCR-CT
   and l                         ; use low 7 bits
+IFDEF USEIY
   ld iy, $5C3A                  ; print character in l
+ENDIF
   rst $0010                     ; PRINT_A_1
+IFDEF USEIY
   ld iy, _rf_z80_hpush
+ENDIF
   ld hl, (_rf_up)               ; increment OUT
   ld de, $001A
   add hl, de
@@ -76,7 +96,9 @@ PUBLIC _rf_code_key
 
 _rf_code_key:
   push bc                       ; save IP
+IFDEF USEIY
   ld iy, $5C3A
+ENDIF
 key0:
   ld a, (key_cursor)            ; get cursor value 'L' or 'C'
   ld e, a                       ; save for later test
@@ -86,7 +108,9 @@ key0:
 
 	xor	a                         ; set LAST-K to 0
 	ld ($5C08), a
+IFDEF USEIY
   ei                            ; enable interrupts to scan keyboard
+ENDIF
 key1:
 	ld a, ($5C08)                 ; loop until LAST-K set
 	and	a
@@ -153,20 +177,30 @@ key10:
   ld a, $08                     ; back up
   rst $0010                     ; PRINT_A_1
 
+IFDEF USEIY
   di                            ; restore regs IP, hpush
   ld iy, _rf_z80_hpush
+ENDIF
   pop bc
 
+IFDEF USEIY
   jp (iy)                       ; hpush
+ELSE
+  jp _rf_z80_hpush
+ENDIF
 
 PUBLIC _rf_code_cr
 
 _rf_code_cr:
   ld a, $0D                     ; \r
   ld ($5C8C), a                 ; reset SCR-CT
+IFDEF USEIY
   ld iy, $5C3A
+ENDIF
   rst $0010                     ; PRINT_A_1
+IFDEF USEIY
   ld iy, _rf_z80_hpush
+ENDIF
   jp (ix)                       ; next
 
 PUBLIC _rf_code_qterm
@@ -176,7 +210,11 @@ _rf_code_qterm:
   call $1F54                    ; BREAK-KEY
   jp c, _rf_z80_hpush           ; hpush 0 if not pressed
   inc hl                        ; hpush 1 if pressed
+IFDEF USEIY
   jp (iy)
+ELSE
+  jp _rf_z80_hpush
+ENDIF
 
 PUBLIC _rf_disc_read
 
@@ -187,7 +225,9 @@ _rf_disc_read:
   push hl
   push bc
   push af
+IFDEF USEIY
   ld iy, $5C3A
+ENDIF
   inc c
 read0:
   dec c                         ; advance len
@@ -213,7 +253,9 @@ _rf_disc_write:
   push hl
   push bc
   push af
+IFDEF USEIY
   ld iy, $5C3A
+ENDIF
   inc c
 writ0:
   dec c                         ; advance len
@@ -233,7 +275,9 @@ PUBLIC _rf_fin
 _rf_fin:
   ld hl, $5C6B                  ; DF-SZ
   ld (hl), $02                  ; restore lower screen area for BASIC
+IFDEF USEIY
   ei                            ; re-enable interrupts
+ENDIF
   ret                           ; return to C
 
 SECTION data_user
