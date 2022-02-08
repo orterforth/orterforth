@@ -83,8 +83,6 @@ static int create_disc(void)
 
 /* DISPATCH SERIAL READ/WRITE TO FUNCTION POINTERS */
 
-static void (*serial_open)(char *name, unsigned int baud);
-
 static int (*serial_getc)(void);
 
 static int (*serial_putc)(int c);
@@ -93,33 +91,14 @@ static void (*serial_flush)(void);
 
 static void (*serial_close)(void);
 
-static char *serial_name = 0;
-
-static unsigned int serial_baud = 0;
-
 /* Real serial port to connect to physical machine */
 static void serial_init_physical(char *name, unsigned int baud)
 {
-  serial_name = name;
-  serial_baud = baud;
-  serial_open = orter_serial_open;
+  orter_serial_open(name, baud);
   serial_getc = orter_serial_getc;
   serial_putc = orter_serial_putc;
   serial_flush = orter_serial_flush;
   serial_close = orter_serial_close;
-}
-
-static void serial_standard_open(char *name, unsigned int baud)
-{
-  /* no buffering */
-  if (setvbuf(stdin, NULL, _IONBF, 0)) {
-    perror("setvbuf stdin failed");
-    exit(1);
-  }
-  if (setvbuf(stdout, NULL, _IONBF, 0)) {
-    perror("setvbuf stdin failed");
-    exit(1);
-  }
 }
 
 static void serial_standard_flush(void)
@@ -133,7 +112,16 @@ static void serial_standard_flush(void)
 /* Stdin and stdout */
 static void serial_init_standard(void)
 {
-  serial_open = serial_standard_open;
+  /* no buffering */
+  if (setvbuf(stdin, NULL, _IONBF, 0)) {
+    perror("setvbuf stdin failed");
+    exit(1);
+  }
+  if (setvbuf(stdout, NULL, _IONBF, 0)) {
+    perror("setvbuf stdout failed");
+    exit(1);
+  }
+
   serial_getc = getchar;
   serial_putc = putchar;
   serial_flush = serial_standard_flush;
@@ -148,9 +136,6 @@ static int serve(void)
 
   rf_persci_insert(0, "0.disc");
   rf_persci_insert(1, "1.disc");
-
-  /* open serial */
-  serial_open(serial_name, serial_baud);
 
   for (;;) {
     int c;
