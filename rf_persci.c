@@ -20,10 +20,10 @@ void rf_persci_insert(int drive, char *filename)
 
 /* STATE */
 
-#define RF_PERSCI_STATE_IDLE 0
+#define RF_PERSCI_STATE_COMMAND 0
 #define RF_PERSCI_STATE_WRITING 1
 
-char rf_persci_state = RF_PERSCI_STATE_IDLE;
+char rf_persci_state = RF_PERSCI_STATE_COMMAND;
 
 /* BUFFER */
 
@@ -38,7 +38,7 @@ unsigned int rf_persci_w_idx = 0;
 unsigned int rf_persci_w_len = 0;
 
 /* empty buffers */
-void rf_persci_reset()
+void rf_persci_reset(void)
 {
   rf_persci_r_idx = 0;
   rf_persci_r_len = 0;
@@ -56,6 +56,7 @@ void rf_persci_w(char c)
 void rf_persci_ws(const char *s)
 {
   const char *i;
+
   for (i = s; *i; i++) {
     rf_persci_w(*i);
   }
@@ -121,6 +122,19 @@ FILE *rf_persci_open_file(unsigned char drive)
   return ptr;
 }
 
+/* move to track and sector */
+int seek(FILE *ptr, unsigned char track, unsigned char sector, unsigned char drive)
+{
+  if (fseek(ptr, ((track * 26) + (sector - 1)) * 128, SEEK_SET)) {
+    perror("fseek failed");
+    rf_persci_reset();
+    rf_persci_error_on_drive("HARD DISK", drive);
+    return 1;
+  }
+
+  return 0;
+}
+
 /* I (Input) */
 void rf_persci_input(unsigned char track, unsigned char sector, unsigned char drive)
 {
@@ -145,7 +159,9 @@ void rf_persci_input(unsigned char track, unsigned char sector, unsigned char dr
   }
 
   /* move to track and sector */
-  fseek(ptr, ((track * 26) + (sector - 1)) * 128, SEEK_SET);
+  if (seek(ptr, track, sector, drive)) {
+    return;
+  }
 
   /* start response */
   rf_persci_w(RF_ASCII_SOH);
@@ -220,10 +236,7 @@ void rf_persci_write()
   }
 
   /* move to track and sector */
-  if (fseek(ptr, ((rf_persci_track * 26) + (rf_persci_sector - 1)) * 128, SEEK_SET)) {
-    perror("fseek failed");
-    rf_persci_reset();
-    rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
+  if (seek(ptr, rf_persci_track, rf_persci_sector, rf_persci_drive)) {
     return;
   }
 
@@ -245,13 +258,13 @@ void rf_persci_write()
   rf_persci_w(RF_ASCII_EOT);
 
   /* set state */
-  rf_persci_state = RF_PERSCI_STATE_IDLE;
+  rf_persci_state = RF_PERSCI_STATE_COMMAND;
 }
 
 /* READ */
 
 /* read char from read buffer */
-char rf_persci_r()
+char rf_persci_r(void)
 {
   char c;
 
@@ -276,7 +289,7 @@ char rf_persci_r()
 /* COMMAND PARSING */
 
 /* skip whitespace in read buffer */
-void rf_persci_read_ws()
+void rf_persci_read_ws(void)
 {
   /* validate buffer */
   if (rf_persci_r_idx >= rf_persci_r_len) {
@@ -297,7 +310,7 @@ void rf_persci_read_ws()
 }
 
 /* read decimal int from read buffer */
-char rf_persci_read_int()
+char rf_persci_read_int(void)
 {
   char i;
   char c;
@@ -326,7 +339,7 @@ char rf_persci_expect(char c)
 }
 
 /* read command and execute it */
-void rf_persci_command()
+void rf_persci_command(void)
 {
   char ch = rf_persci_r();
   switch (ch) {
@@ -374,17 +387,23 @@ void rf_persci_command()
 /* HANDLE COMMS */
 
 /* handle next operation */
-void rf_persci_serve()
+void rf_persci_serve(void)
 {
-  if (rf_persci_state == RF_PERSCI_STATE_WRITING) {
-    rf_persci_write();
-  } else {
-    rf_persci_command();
+  switch (rf_persci_state) {
+    case RF_PERSCI_STATE_COMMAND:
+      rf_persci_command();
+      break;
+    case RF_PERSCI_STATE_WRITING:
+      rf_persci_write();
+      break;
+    default:
+      fprintf(stderr, "invalid state\n");
+      exit(1);
   }
 }
 
 /* read next char from write buffer */
-char rf_persci_getc()
+char rf_persci_getc(void)
 {
   char c;
 
