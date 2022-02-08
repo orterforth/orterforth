@@ -458,11 +458,13 @@ static char *rf_inst_hfind(void)
     here = (char *) RF_USER_DP;
     /* CONTEXT @ @ (FIND) */
     nfa = rf_find(here + 1, here[0], *((char **) RF_USER_CONTEXT));
+#ifndef RF_INST_SMALLER
     /* DUP 0= IF */
     if (!nfa) {
       /* DROP HERE LATEST (FIND) */
       nfa = rf_find(here + 1, here[0], rf_inst_latest());
     }
+#endif
     /* ENDIF */
     return nfa;
   }
