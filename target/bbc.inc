@@ -16,17 +16,20 @@
 #define RF_R0 0x01C0
 #define RF_RETURN_STACK_SIZE 0x003F
 
+/* use the BASIC workspace for user space */
+#define RF_USER 0x0480
+
 /* use the BASIC text input buffer area at 0x0700 */
 #define RF_TIB 0x0700
 
+/* place disc buffers before origin */
+#define RF_LIMIT 0x1720
+
 /* start address */
-#define RF_ORG 0x1760
+#define RF_ORG 0x1720
 
 /* follows the C code */
 #define RF_ORIGIN 0x2900
-
-/* disc buffers end before HIMEM, in CC65 this is 0x7200 behind stack and MODE 7 screen memory */
-#define RF_LIMIT 0x1760
 
 /* assembler definitions */
 #define RF_TARGET_IP

@@ -162,7 +162,7 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
-BBCORG := 1760
+BBCORG := 1720
 BBCROMS := \
 	roms/bbcb/os12.rom \
 	roms/bbcb/basic2.rom \
@@ -284,8 +284,8 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 	bbcim -a $@ bbc/orterforth
 
 # inst binary
-bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
-# bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system.o bbc/bbc.lib
+bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+# bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
 
 	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/orterforth-inst.map $^
 
@@ -317,12 +317,12 @@ bbc/rf_inst.s : rf_inst.c rf.h target/bbc.inc | bbc
 	cc65 -O --signed-chars -t none -D__BBC__ --bss-name INST --code-name INST --rodata-name INST -o $@ $<
 
 # # C system lib
-# bbc/rf_system.s : target/bbc.c | bbc
+bbc/rf_system_c.s : target/bbc.c | bbc
 
-# 	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
 
 # asm system lib
-bbc/rf_system.o : target/bbc.s | bbc
+bbc/rf_system_asm.o : target/bbc.s | bbc
 
 	ca65 -o $@ $<
 

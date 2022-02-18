@@ -76,12 +76,16 @@ typedef uint32_t rf_double_t;
 
 /* z88dk */
 
-#ifdef __SCCZ80
+#ifdef __Z80
 #include <stdint.h>
 typedef uintptr_t rf_word_t;
 #define RF_WORD_SIZE 2
 typedef uint32_t rf_double_t;
 #define RF_LE
+#ifdef __RC2014
+#define RF_TARGET 0x628444a8 /* RC2014 */
+#define RF_TARGET_INC "target/rc2014.inc"
+#endif
 #ifdef SPECTRUM
 #define RF_TARGET 0x6774e16f /* SPECTR */
 #ifndef RF_TARGET_INC
@@ -201,7 +205,9 @@ extern char *rf_memory;
 /* S0, TIB, R0, USER, FIRST defined in relation to LIMIT */
 
 #define RF_FIRST (RF_LIMIT - RF_DISC_BUFFERS_SIZE)
+#ifndef RF_USER
 #define RF_USER ((char *) (RF_FIRST - (32 * RF_WORD_SIZE)))
+#endif
 #ifndef RF_R0
 #define RF_R0 (RF_USER - RF_WORD_SIZE) 
 #endif
