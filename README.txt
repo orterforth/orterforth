@@ -13,9 +13,10 @@ platforms. It is closely based on the fig-FORTH Installation
 Manual, Glossary, Model, Editor (1980).
 
 
-# Building orterforth for the local system #
+# Building it #
 
-To target the local system (Linux, macOS, Cygwin), call:
+To build orterforth for the local system (Linux, macOS, 
+Cygwin), call:
 
  make
 
@@ -27,49 +28,44 @@ The target executable is built at the location:
 where <os>   is e.g.: cygwin, darwin, linux
       <arch> is e.g.: armv6l, armv7l, i686, x86_64
 
+
+# Running it #
+
 To build and run the local system build call:
 
  make run
 
 
-# Building orterforth for a target platform #
+# Building it for another platform #
 
-To target a historical platform, you will need prerequisites 
-for each platform, such as a C compiler/assembler for the 
-target platform, system ROM files in the roms directory, system
-emulator source files and/or emulator installations.
+To build orterforth for a historical platform, you will need 
+prerequisites such as:
 
-For more details on a target, call:
+* a C compiler/assembler for the target platform,
+* system ROM files in the roms directory,
+* system emulator source files, and/or 
+* emulator installations.
+
+For more details of what is needed for a target, call:
 
  make help TARGET=<target>
 
 where <target> is e.g.: bbc, spectrum
 
+Then to build call:
 
-# Running orterforth #
-
-First, bootstrap code reads and interprets Forth source code 
-from an emulated disc drive, in the manner described in the 
-Installation Manual. This compiles and builds up a complete 
-Forth installation.
-
-The fig-Forth source code comes from the Installation Manual, 
-but is modified to allow for different platforms' processor 
-architectures, word sizes, I/O, and so on.
+ make TARGET=<target>
 
 
-# Using orterforth #
+# Running it on another platform #
 
-When installation is complete, the user is placed at Forth's 
-interactive prompt.
+orterforth can be built and run in an emulator (if installed)
+by calling:
 
-The user can also use the emulated disc drive to load programs
-in the same way - with fig-Forth commands to load and 
-manipulate "screens" of text (rather than a file system more 
-familiar to modern users).
+ make run TARGET=<target>
 
 
-# orterforth is implemented in C #
+# It is implemented in C #
 
 A typical Forth implementation rests on a number of base words
 implemented in native machine code. Higher-level words are 
@@ -86,7 +82,7 @@ implementations of the base words in ANSI C. In the place of
 the 6502 assembly code, the CFA is set to point to this C code.
 
 
-# Threaded jumps are implemented with a trampoline #
+# It uses a trampoline #
 
 Forth implementations normally rely on jumps from successive 
 native code, rather than subroutine calls. Because C does not 
@@ -94,7 +90,7 @@ properly allow such jumps, orterforth emulates them using a
 trampoline (a loop that successively calls function pointers).
 
 
-# The retro disc controller is emulated #
+# It uses a retro disc controller (emulated) #
 
 orterforth interfaces with the emulated disc drive using the 
 method found in the Installation Manual. The protocol used by 
@@ -107,6 +103,9 @@ serial interface to communicate with the disc drive. These are
 widely available on many historical platforms and can be 
 generalised about in code.
 
+The emulated disc drive uses files as disc images and reads or
+writes to to them as necessary.
+
 Local system builds implement this interface in-process and 
 access the disc files locally, but other target builds use the 
 target's serial port capability and a server executable 
@@ -116,7 +115,7 @@ An RS-232 serial port can be added to a modern machine that
 doesn't have one, using a USB to RS-232 converter.
 
 
-# Native machine code implementations can be integrated #
+# It can integrate with native machine code #
 
 orterforth will usually be substantially slower than other 
 Forth implementations written in assembly code, because many 
@@ -134,7 +133,7 @@ the C code. This allows you to benefit from performance
 improvement but keep the practical advantages of C interop.
 
 
-# Language extensions #
+# It has a few additional words #
 
 To support different platforms, while making the minimum of 
 changes to the fig-Forth language itself, there are a small 
@@ -161,12 +160,48 @@ system-independent:
                        CYGWIN. DARWIN. LINUX. SPECTR. etc).
 
 
+# It starts by installing from Forth source code #
+
+First, "inst" code written in C reads and interprets Forth 
+source code from the emulated disc drive, in the manner 
+described in the Installation Manual. This compiles and builds 
+up a complete Forth installation.
+
+The fig-Forth source code comes from the Installation Manual, 
+but is modified to allow for different platforms' processor 
+architectures, word sizes, I/O, and so on.
+
+
+# It saves the completed Forth installation to disc #
+
+On historical platforms, when "inst" is complete, the memory 
+map containing the installation and the required native code 
+is saved to the emulated disc drive in a hex format (to avoid
+issues with control characters used by the disc controller).
+
+This is used to create completed installation binaries.
+
+To save space, the original "inst" code is loaded into a 
+memory location outside this area and does not form part of 
+the final binary.
+
+
+# Now Forth is started #
+
+When installation is complete, or when the final binary is 
+loaded, the user is placed at Forth's interactive prompt.
+
+The user can use the emulated disc drive to load programs
+in the same way it was used for "inst" - with Forth commands 
+to load and manipulate "screens" of text (rather than a file 
+system more familiar to modern users).
+
+
 # Acknowledgements #
 
 orterforth builds upon the work of many, most obviously the 
 Forth Interest Group and those involved in putting together the
-Installation Manual. Some other code has been adapted from works
-believed to be in the public domain.
+Installation Manual and their other public domain works.
 
 Dependencies (compilers, emulators, system ROMs, utilities) have
 their own licence terms of course.
