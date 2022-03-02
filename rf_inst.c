@@ -395,7 +395,7 @@ static void rf_inst_create(unsigned char length, char *address)
 
   /* TIB HERE 0A0 + < 2 ?ERROR */
   assert(RF_USER_TIB - (rf_word_t) here >= 0xA0);
-  /* TODO address of TIB not value; instead use a portable dictionary limit */
+  /* NB address of TIB not value; instead use a portable dictionary limit */
 
   /* -FIND IF DROP NFA ID. 4 MESSAGE SPACE ENDIF  */
   /* not important at inst time */
@@ -1314,7 +1314,7 @@ static char *rf_inst_notimpl_list[] = {
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 27
+#define RF_INST_CODE_LIST_SIZE 24
 
 static rf_inst_code_t rf_inst_code_list[] = {
   /* used from the start */
@@ -1333,9 +1333,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { ".", rf_code_drop },
   /* used in WORD */
   { "BLOCK", rf_inst_code_block },
-  /* interpret loop */
-  { "inst-interpret-word", rf_inst_code_interpret_word },
-  { "BRANCH", rf_code_bran },
   /* used in CONSTANT, : */
   { "CREATE", rf_inst_code_create },  
   /* : */
@@ -1357,9 +1354,7 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "+ORIGIN", rf_inst_code_plusorigin },
   /* resolving forward declarations */
   { "BYTE.IN", rf_inst_code_bytein },
-  { "REPLACED.BY", rf_inst_code_replacedby },
-  /* inst-load */
-  { "rf-exit", rf_code_exit }
+  { "REPLACED.BY", rf_inst_code_replacedby }
 };
 
 #define RF_INST_CODE_IMMEDIATE_LIST_SIZE 10
@@ -1399,6 +1394,18 @@ static void rf_inst_forward(void)
 {
   int i;
   unsigned char *here;
+
+  /* outer interpreter */
+  rf_inst_def_code("inst-interpret-word", rf_inst_code_interpret_word);
+  rf_inst_def_code("BRANCH", rf_code_bran);
+  rf_inst_colon("inst-interpret");
+  rf_inst_compile("inst-interpret-word");
+	rf_inst_compile("BRANCH");
+	rf_inst_comma(-2 * RF_WORD_SIZE);
+  rf_inst_def_code("rf-exit", rf_code_exit);
+  rf_inst_colon("inst-load");
+  rf_inst_compile("inst-interpret");
+  rf_inst_compile("rf-exit");
 
   /* boot time literals */
   rf_inst_def_literal("inst-relrev", (rf_word_t) (RF_FIGREL | (RF_FIGREV << 8)));
@@ -1444,39 +1451,22 @@ static void rf_inst_forward(void)
   /* used in ;CODE */
   rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
 
-  rf_inst_colon("inst-interpret");
-  rf_inst_compile("inst-interpret-word");
-	rf_inst_compile("BRANCH");
-	rf_inst_comma((intptr_t) -2 * RF_WORD_SIZE);
-
   /* : */
   rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
   rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
+  rf_inst_def_user("DP", RF_USER_DP_IDX);
 
   rf_inst_colon(":");
-/*
-  rf_inst_compile("?EXEC");
-*/
-/*
-  rf_inst_compile("!CSP");
-*/
-/*
-  rf_inst_compile("CURRENT");
-  rf_inst_compile("@");
-  rf_inst_compile("CONTEXT");
-  rf_inst_compile("!");
-*/
   rf_inst_compile("CREATE");
   rf_inst_compile("]");
-  /* write docol to CFA... */
+  /* write docol to CFA */
   rf_inst_compile_lit((rf_word_t) rf_code_docol);
-  /* user vars won't move at inst time so below is ok */
-  rf_inst_compile_lit((rf_word_t) &RF_USER_DP);
+  rf_inst_compile("DP");
   rf_inst_compile("@");
   rf_inst_compile_lit((rf_word_t) -RF_WORD_SIZE);
-  rf_inst_compile(("+"));
-  rf_inst_compile(("!"));
-  rf_inst_compile((";S"));
+  rf_inst_compile("+");
+  rf_inst_compile("!");
+  rf_inst_compile(";S");
   rf_inst_immediate();
 
   /* ; */
@@ -1484,9 +1474,6 @@ static void rf_inst_forward(void)
   rf_inst_immediate();
 
   rf_inst_colon(";");
-/*
-  rf_inst_compile("?CSP");
-*/
   rf_inst_compile("COMPILE");
   rf_inst_compile(";S");
   rf_inst_compile("SMUDGE");
@@ -1507,11 +1494,6 @@ static void rf_inst_forward(void)
   /* stack limit literals */
   rf_inst_def_literal("inst-s0", (rf_word_t) RF_S0);
   rf_inst_def_literal("inst-s1", (rf_word_t) ((rf_word_t *) RF_S0 - RF_STACK_SIZE));
-
-  /* inst-load */
-  rf_inst_colon("inst-load");
-  rf_inst_compile("inst-interpret");
-  rf_inst_compile("rf-exit");
 
   /* define code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
