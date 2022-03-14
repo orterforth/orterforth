@@ -1,3 +1,7 @@
+/* TODO consistent representation of config options */
+#define RF_PUREC
+#undef RF_PUREC
+
 /* RP and SP operations not inline, code is smaller */
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
@@ -9,18 +13,34 @@
 #define RF_INST_SAVE
 
 /* stack in 0-page, assembly code will use X as SP */
+#ifdef RF_PUREC
+#define RF_S0 0x7B00
+#else
 #define RF_S0 0x0070
 #define RF_STACK_SIZE 0x0027
+#endif
 
 /* return stack uses reserved area of page 0x0100 */
+#ifdef RF_PUREC
+#define RF_R0 0x7C00
+#else
 #define RF_R0 0x01C0
 #define RF_RETURN_STACK_SIZE 0x003F
+#endif
 
 /* use the BASIC workspace for user space */
+#ifdef RF_PUREC
+#define RF_USER 0x7900
+#else
 #define RF_USER 0x0480
+#endif
 
 /* use the BASIC text input buffer area at 0x0700 */
+#ifdef RF_PUREC
+#define RF_TIB 0x7800
+#else
 #define RF_TIB 0x0700
+#endif
 
 /* place disc buffers before origin */
 #define RF_LIMIT 0x1720
@@ -29,9 +49,14 @@
 #define RF_ORG 0x1720
 
 /* follows the C code */
+#ifndef RF_PUREC
 #define RF_ORIGIN 0x2900
+#else
+#define RF_ORIGIN 0x3000
+#endif
 
 /* assembler definitions */
+#ifndef RF_PUREC
 #define RF_TARGET_IP
 #define RF_TARGET_UP
 #define RF_TARGET_W
@@ -84,3 +109,4 @@
 #define RF_TARGET_CODE_DODOE
 #define RF_TARGET_CODE_CELL
 #define RF_TARGET_CODE_CELLS
+#endif

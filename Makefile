@@ -162,6 +162,8 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
+BBCOPTION := asm
+
 BBCORG := 1720
 BBCROMS := \
 	roms/bbcb/os12.rom \
@@ -169,6 +171,13 @@ BBCROMS := \
 	roms/bbcb/phroma.bin \
 	roms/bbcb/saa5050 \
 	roms/bbcb/dnfs120.rom
+
+ifeq ($(BBCOPTION),default)
+	BBCDEPS := bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
+endif
+ifeq ($(BBCOPTION),asm)
+	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+endif
 
 bbc :
 
@@ -257,7 +266,7 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC
 	# run emulator, wait for result
 	mame bbcb \
 		-video none -sound none \
- 		-speed 20 -frameskip 10 -nothrottle \
+		-speed 20 -frameskip 10 -nothrottle \
 		-seconds_to_run 420 \
     -rs423 null_modem \
     -bitb socket.localhost:5705 \
@@ -284,8 +293,7 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 	bbcim -a $@ bbc/orterforth
 
 # inst binary
-bbc/orterforth-inst : bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
-# bbc/orterforth-inst : bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
+bbc/orterforth-inst : $(BBCDEPS)
 
 	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/orterforth-inst.map $^
 
