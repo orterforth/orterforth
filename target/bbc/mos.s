@@ -11,10 +11,11 @@ _osbyte:
 	txa
 	jmp incsp1
 
-.export	_osnewl
+.export	_osnewl: near
 
-_osnewl:
-	jmp $FFE7
+_osnewl = $FFE7
+; _osnewl:
+; 	jmp $FFE7
 
 .export _osrdch
 
