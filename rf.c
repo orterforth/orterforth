@@ -52,17 +52,17 @@ rf_word_t *rf_up = 0;
 /* TRAMPOLINE */
 
 /* trampoline function pointer pointer */
-rf_code_t rf_trampoline_fp = 0;
+rf_code_t rf_fp = 0;
 
 #ifndef RF_TARGET_TRAMPOLINE
 void rf_trampoline(void)
 {
   /* repeatedly execute function pointers */
-  while (rf_trampoline_fp) {
+  while (rf_fp) {
     /* target implementations can switch machine state into registers */
     /* default implementation does nothing */
 
-    rf_trampoline_fp();
+    rf_fp();
     /* C-based code returns here and the loop repeats */
   }
 }
@@ -1013,7 +1013,7 @@ void rf_code_code(void)
 void rf_code_exit(void)
 {
   RF_START;
-  rf_trampoline_fp = 0;
+  rf_fp = 0;
 }
 
 #ifndef RF_TARGET_CODE_CELL

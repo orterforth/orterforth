@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
   }
 
   /* run COLD */
-  rf_trampoline_fp = rf_code_cold;
+  rf_fp = rf_code_cold;
   rf_trampoline();
 
   /* finalise */

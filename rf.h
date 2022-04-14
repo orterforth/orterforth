@@ -316,18 +316,18 @@ extern rf_word_t *rf_up;
 /* TRAMPOLINE */
 
 /* function pointer */
-extern rf_code_t rf_trampoline_fp;
+extern rf_code_t rf_fp;
 
 /* start trampoline */
 void rf_trampoline(void);
 
-#define RF_JUMP(a) { rf_trampoline_fp = (a); }
+#define RF_JUMP(a) { rf_fp = (a); }
 
 /* NEXT */
 
 void rf_next(void);
 
-#define RF_JUMP_NEXT { rf_trampoline_fp = rf_next; }
+#define RF_JUMP_NEXT { rf_fp = rf_next; }
 
 /* C CODE START - save registers */
 

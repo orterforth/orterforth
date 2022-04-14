@@ -1,6 +1,6 @@
 .import _rf_rp
 .import _rf_sp
-.import _rf_trampoline_fp
+.import _rf_fp
 
 temps := $76
 
@@ -34,8 +34,8 @@ xsave := $87
 
 _rf_trampoline:
 
-	lda     _rf_trampoline_fp     ; return if FP is null
-	ora     _rf_trampoline_fp+1
+	lda     _rf_fp                ; return if FP is null
+	ora     _rf_fp+1
 	bne     trampoline1
 	rts
 trampoline1:
@@ -50,7 +50,7 @@ trampoline1:
 	txs
 	ldx _rf_sp                    ; set X to SP (high byte is $00)
 	ldy #$00                      ; set Y to $00, this is expected
-	jmp (_rf_trampoline_fp)       ; jump to FP and return to trampoline
+	jmp (_rf_fp)                  ; jump to FP and return to trampoline
 
 .export _rf_start
 

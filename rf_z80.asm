@@ -71,7 +71,7 @@ SECTION code_user
 EXTERN _rf_ip                   ; integrates with C based IP,
 EXTERN _rf_rp                   ; RP,
 EXTERN _rf_sp                   ; SP,
-EXTERN _rf_trampoline_fp        ; trampoline function pointer,
+EXTERN _rf_fp                   ; trampoline function pointer,
 EXTERN _rf_up                   ; UP,
 EXTERN _rf_w                    ; W
 ;
@@ -128,7 +128,7 @@ PUBLIC _rf_trampoline
 
 _rf_trampoline:                 ; C code calls this to iterate over function pointers - assumes a switch into assembler
 
-  ld hl, (_rf_trampoline_fp)    ; returns if fp is null
+  ld hl, (_rf_fp)               ; returns if fp is null
   ld a, h
   or l
   ret z
