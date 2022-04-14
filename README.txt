@@ -140,8 +140,8 @@ changes to the fig-Forth language itself, there are a small
 number of words added to the Forth dictionary to help make code
 system-independent:
 
- rf-cell   ( -- n )    Returns the word size in bytes. (CELL is
-                       not part of this version of fig-Forth.)
+ rcll ( -- n )   Returns the word size in bytes. (CELL is not 
+                 part of this version of fig-Forth.)
 
  rcls ( n -- n ) Multiplies the value on the stack by the word 
                  size. (CELLS is not part of this version of 

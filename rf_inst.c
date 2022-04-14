@@ -849,7 +849,7 @@ static void rf_inst_code_compile(void)
     assert(RF_USER_STATE);
     /* R> */
     a = RF_IP_GET;
-    /* DUP rf-cell + >R */
+    /* DUP rcll + >R */
     RF_IP_INC;
     /* @ , */
     rf_inst_comma(*a);
@@ -1376,7 +1376,7 @@ static void rf_inst_code_ext(void)
 {
   RF_START;
   RF_INST_ONLY;
-  rf_inst_def_code("rf-cell", rf_code_cell);
+  rf_inst_def_code("rcll", rf_code_cell);
   rf_inst_def_code("rcls", rf_code_cells);
   rf_inst_def_code("rf-code", rf_code_code);
   rf_inst_def_code("rf-exit", rf_code_exit);
@@ -1597,7 +1597,7 @@ void rf_inst(void)
 
 #ifdef RF_INST_OVERWRITE
   /* break link with inst time code */
-  *(rf_lfa(rf_inst_find_string("rf-cell"))) = 0;
+  *(rf_lfa(rf_inst_find_string("rcll"))) = 0;
 #endif
 
   /* set WARNING = 1 */

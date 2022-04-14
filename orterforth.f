@@ -611,7 +611,7 @@ HEX              ( O THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 : 2+      2   +  ;           ( INCREMENT STACK NUMBER BY TWO *)
 : HERE    DP  @  ;        ( FETCH NEXT FREE ADDRESS IN DICT. *)
 : ALLOT   DP  +! ;                ( MOVE DICT. POINTER AHEAD *)
-: ,   HERE  ! rf-cell ALLOT ;  ( ENTER STACK NUMBER TO DICT. *)
+: ,   HERE  !  rcll  ALLOT  ;  ( ENTER STACK NUMBER TO DICT. *)
 : C,   HERE  C!  1   ALLOT  ;    ( ENTER STACK BYTE TO DICT. *)
 : -   MINUS   +  ;               ( LEAVE DIFF.  SEC - BOTTOM *)
 : =   -  0=  ;                   ( LEAVE BOOLEAN OF EQUALITY *)
@@ -634,7 +634,7 @@ HEX              ( O THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 ( FOLLOWING HAVE LITERALS DEPENDENT ON COMPUTER WORD SIZE )
 
 : LFA    2 rcls  -  ;           ( CONVERT A WORDS PFA TO LFA *)
-: CFA    rf-cell  -  ;          ( CONVERT A WORDS PFA TO CFA *)
+: CFA    rcll  -  ;             ( CONVERT A WORDS PFA TO CFA *)
 : NFA 2 rcls 1+ - -1 TRAVERSE ; ( CONVERT A WORDS PFA TO NFA *)
 : PFA 1 TRAVERSE 2 rcls 1+ + ;  ( CONVERT A WORDS NFA TO PFA *)
     -->    
@@ -657,7 +657,7 @@ HEX              ( O THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 (  COMPILE,  SMUDGE,  HEX, DECIMAL                WFR-79APR20 )
 
 : COMPILE          ( COMPILE THE EXECUTION ADDRESS FOLLOWING *)
-        ?COMP  R>  DUP  rf-cell +  >R  @  ,  ;
+        ?COMP  R>  DUP  rcll +  >R  @  ,  ;
 
 : [    0  STATE  !  ;  IMMEDIATE          ( STOP COMPILATION *)
 
@@ -810,7 +810,7 @@ inst-dodoe rf-code ;
       DP  C@  OFD  =  ALLOT
       DUP  A0  TOGGLE HERE  1  -  80  TOGGLE ( DELIMIT BITS )
       LATEST  ,  CURRENT  @  ! 
-      HERE  rf-cell +  ,  ;
+      HERE  rcll +  ,  ;
 -->    
 
 
@@ -931,7 +931,7 @@ FIRST  VARIABLE  USE           ( NEXT BUFFER TO USE, STALEST *)
 FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 : +BUF     ( ADVANCE ADDRESS-1 TO NEXT BUFFER. RETURNS FALSE *)
-      82 rf-cell +         +  DUP  LIMIT  =     ( IF AT PREV *)
+      82 rcll +            +  DUP  LIMIT  =     ( IF AT PREV *)
       IF  DROP  FIRST  ENDIF  DUP  PREV  @  -  ;
 
 : UPDATE     ( MARK THE BUFFER POINTED TO BY PREV AS ALTERED *)
@@ -948,13 +948,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
     BEGIN  +BUF  UNTIL ( AVOID PREV )  USE  !  ( FOR NEXT TIME )
     R  @  8000 AND  ( TEST FOR UPDATE IN THIS BUFFER )
     IF ( UPDATED, FLUSH TO DISC )
-       R  rf-cell + ( STORAGE LOC. )
+       R  rcll + ( STORAGE LOC. )
        R  @  7FFF  AND  ( ITS BLOCK # )
        0         R/W     ( WRITE SECTOR TO DISC )
       ENDIF
     R  !  ( WRITE NEW BLOCK # INTO THIS BUFFER )
     R  PREV  !  ( ASSIGN THIS BUFFER AS 'PREV' )
-    R>  rf-cell +  ( MOVE TO STORAGE LOCATION )  ;
+    R>  rcll +  ( MOVE TO STORAGE LOCATION )  ;
 
 -->    
 
@@ -966,13 +966,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
       BEGIN  +BUF  0=  ( TRUE UPON REACHING 'PREV' )
          IF ( WRAPPED )  DROP  R  BUFFER
              DUP  R  1         R/W    ( READ SECTOR FROM DISC )
-             rf-cell - ( BACKUP )
+             rcll  - ( BACKUP )
            ENDIF 
            DUP  @  R  -  7FFF AND  0= 
         UNTIL  ( WITH BUFFER ADDRESS ) 
       DUP  PREV  !
      ENDIF 
-     R>  DROP    rf-cell +  ;
+     R>  DROP    rcll +  ;
 -->    
 (  TEXT OUTPUT FORMATTING                         WFR-79MAY03 )
 
