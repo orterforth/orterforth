@@ -162,7 +162,8 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
-BBCOPTION := asm
+# BBCOPTION := default
+BBCOPTION := assembly
 
 BBCORG := 1720
 BBCROMS := \
@@ -174,9 +175,11 @@ BBCROMS := \
 
 ifeq ($(BBCOPTION),default)
 	BBCDEPS := bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
+	BBCINC := target/bbc/default.inc
 endif
-ifeq ($(BBCOPTION),asm)
+ifeq ($(BBCOPTION),assembly)
 	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCINC := target/bbc/assembly.inc
 endif
 
 bbc :
@@ -211,7 +214,7 @@ bbc/%.o : bbc/%.s
 # general compile rule
 bbc/%.s : %.c | bbc
 
-	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
 # find cc65 install dir and copy lib file
 bbc/apple2.lib : $(shell readlink $(shell which ld65))
@@ -312,7 +315,7 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 # main lib
 bbc/rf.s : rf.c rf.h target/bbc.inc | bbc
 
-	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
 # asm bbc system lib
 bbc/rf_6502.o : rf_6502.s | bbc
@@ -322,7 +325,7 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # main lib
 bbc/rf_inst.s : rf_inst.c rf.h target/bbc.inc | bbc
 
-	cc65 -O --signed-chars -t none -D__BBC__ --bss-name INST --code-name INST --rodata-name INST -o $@ $<
+	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --rodata-name INST -o $@ $<
 
 # # C system lib
 bbc/rf_system_c.s : target/bbc.c | bbc

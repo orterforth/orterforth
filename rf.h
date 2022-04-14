@@ -69,7 +69,7 @@ typedef uint32_t rf_double_t;
 #ifdef __BBC__
 #define RF_TARGET 0x00003948 /* BBC */
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/bbc.inc"
+#define RF_TARGET_INC "target/bbc/default.inc"
 #endif
 #endif
 #endif
