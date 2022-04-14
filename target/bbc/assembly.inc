@@ -14,7 +14,7 @@
 
 /* for return stack, reserve some space above the stack used by the calling C */
 #define RF_R0 0x01C0
-#define RF_RETURN_STACK_SIZE 0x003F
+#define RF_RETURN_STACK_SIZE 0x003F /* TODO 0x005F? */
 
 /* for user space, use the BASIC workspace */
 #define RF_USER 0x0480

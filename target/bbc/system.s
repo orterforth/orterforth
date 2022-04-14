@@ -187,8 +187,9 @@ write2:
 	lda #$03                      ; *FX 3,4 (write to screen)
 	ldx #$04
 	jsr osbyte2
-	jmp incsp3
+	jsr incsp3
+	rts
 
 osbyte2:
-	jsr osbyte                    ; workaround for unknown issue
+	jmp osbyte                    ; workaround for unknown issue
 	rts

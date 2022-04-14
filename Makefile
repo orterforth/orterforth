@@ -313,7 +313,7 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 	bbcim -a $@ bbc/orterforth-inst
 
 # main lib
-bbc/rf.s : rf.c rf.h target/bbc.inc | bbc
+bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
 	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
@@ -323,17 +323,17 @@ bbc/rf_6502.o : rf_6502.s | bbc
 	ca65 -o $@ $<
 
 # main lib
-bbc/rf_inst.s : rf_inst.c rf.h target/bbc.inc | bbc
+bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc
 
 	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --rodata-name INST -o $@ $<
 
 # # C system lib
-bbc/rf_system_c.s : target/bbc.c | bbc
+bbc/rf_system_c.s : target/bbc/system.c | bbc
 
 	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
 
 # asm system lib
-bbc/rf_system_asm.o : target/bbc.s | bbc
+bbc/rf_system_asm.o : target/bbc/system.s | bbc
 
 	ca65 -o $@ $<
 

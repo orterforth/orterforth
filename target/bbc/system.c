@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../rf.h"
+#include "../../rf.h"
 
 uint8_t osbyte(uint8_t a, uint8_t x);
 
