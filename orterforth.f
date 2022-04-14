@@ -208,7 +208,7 @@ inst-tib ,      ( TERMINAL INPUT BUFFER )
 0000   ,        ( COLD START VALUE FOR VOC-LINK ) inst-ext -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
-inst-lit rf-code
+inst-lit rcod
 
 
 
@@ -233,19 +233,19 @@ inst-lit rf-code
 
 CODE EXECUTE              ( EXECUTE A WORD BY ITS CODE FIELD *)
                                       ( ADDRESS ON THE STACK *)
-inst-exec rf-code
+inst-exec rcod
 
 
 
 -->    
 (  BRANCH, 0BRANCH     W/16-BIT OFFSET            WFR-79APR01 )
 CODE BRANCH            ( ADJUST IP BY IN-LINE 16 BIT LITERAL *)
-inst-bran rf-code
+inst-bran rcod
 
 
 
 CODE 0BRANCH           ( IF BOT IS ZERO, BRANCH FROM LITERAL *)
-inst-zbran rf-code
+inst-zbran rcod
 
 
 
@@ -256,14 +256,14 @@ inst-zbran rf-code
 
 (  LOOP CONTROL                                   WFR-79MAR20 )
 CODE (LOOP)      ( INCREMENT LOOP INDEX, LOOP UNTIL => LIMIT *)
-inst-xloop rf-code
+inst-xloop rcod
 
 
 
 
 
 CODE (+LOOP)          ( INCREMENT INDEX BY STACK VALUE +/-   *)
-inst-xploo rf-code
+inst-xploo rcod
 
 
 
@@ -273,14 +273,14 @@ inst-xploo rf-code
 (  (DO-                                           WFR-79MAR30 )
 
 CODE (DO)             ( MOVE TWO STACK ITEMS TO RETURN STACK *)
-inst-xdo rf-code
+inst-xdo rcod
 
 
 
 
 
 CODE I                    ( COPY CURRENT LOOP INDEX TO STACK *)
-inst-rr rf-code           ( THIS WILL LATER BE POINTED TO 'R' )
+inst-rr rcod              ( THIS WILL LATER BE POINTED TO 'R' )
 
 -->    
 
@@ -290,7 +290,7 @@ inst-rr rf-code           ( THIS WILL LATER BE POINTED TO 'R' )
 CODE DIGIT     ( CONVERT ASCII CHAR-SECOND, WITH BASE-BOTTOM *)
                    ( IF OK RETURN DIGIT-SECOND, TRUE-BOTTOM; *)
                                    ( OTHERWISE FALSE-BOTTOM. *)
-inst-digit rf-code
+inst-digit rcod
 
 
 
@@ -304,7 +304,7 @@ inst-digit rf-code
 -->    
 (  FIND FOR VARIABLE LENGTH NAMES                  WFR-790225 )
 CODE (FIND)  ( HERE, NFA ... PFA, LEN BYTE, TRUE; ELSE FALSE *)
-inst-pfind rf-code
+inst-pfind rcod
 
 
 
@@ -321,7 +321,7 @@ inst-pfind rf-code
 (  ENCLOSE                                         WFR-780926 )
 CODE ENCLOSE   ( ENTER WITH ADDRESS-2, DELIM-1.  RETURN WITH *)
     ( ADDR-4, AND OFFST TO FIRST CH-3, END WORD-2, NEXT CH-1 *)
-inst-encl rf-code
+inst-encl rcod
 
 
 
@@ -340,19 +340,19 @@ inst-encl rf-code
 (  INSTALLATION SPECIFIC CODE.                                )
 
 CODE EMIT             ( PRINT ASCII VALUE ON BOTTOM OF STACK *)
-inst-emit rf-code
+inst-emit rcod
 CODE KEY        ( ACCEPT ONE TERMINAL CHARACTER TO THE STACK *)
-inst-key rf-code
+inst-key rcod
 CODE ?TERMINAL      ( 'BREAK' LEAVES 1 ON STACK; OTHERWISE 0 *)
-inst-qterm rf-code
+inst-qterm rcod
 CODE CR         ( EXECUTE CAR. RETURN, LINE FEED ON TERMINAL *)
-inst-cr rf-code
+inst-cr rcod
 -->    
 
 
 (  CMOVE,                                         WFR-79MAR20 )
 CODE CMOVE   ( WITHIN MEMORY; ENTER W/  FROM-3, TO-2, QUAN-1 *)
-inst-cmove rf-code
+inst-cmove rcod
 
 
 
@@ -369,7 +369,7 @@ inst-cmove rf-code
 (  U*,  UNSIGNED MULTIPLY FOR 16 BITS             WFR-79APR08 )
 CODE U*        ( 16 BIT MULTIPLICAND-2,  16 BIT MULTIPLIER-1 *)
              ( 32 BIT UNSIGNED PRODUCT: LO WORD-2, HI WORD-1 *)
-inst-ustar rf-code
+inst-ustar rcod
 
 
 
@@ -385,7 +385,7 @@ inst-ustar rf-code
 (  U/,  UNSIGNED DIVIDE FOR 31 BITS               WFR-79APR29 )
 CODE U/          ( 31 BIT DIVIDEND-2, -3,  16 BIT DIVISOR-1  *)
                  ( 16 BIT REMAINDER-2,  16 BIT QUOTIENT-1    *)
-inst-uslas rf-code
+inst-uslas rcod
 
 
 
@@ -401,59 +401,59 @@ inst-uslas rf-code
 (  LOGICALS                                       WFR-79APR20 )
 
 CODE AND           ( LOGICAL BITWISE AND OF BOTTOM TWO ITEMS *)
-inst-andd rf-code
+inst-andd rcod
 
 
 CODE OR           ( LOGICAL BITWISE 'OR' OF BOTTOM TWO ITEMS *)
-inst-orr rf-code
+inst-orr rcod
 
 
 CODE XOR        ( LOGICAL 'EXCLUSIVE OR' OF BOTTOM TWO ITEMS *)
-inst-xorr rf-code
+inst-xorr rcod
 
 
 -->    
 
 (  STACK INITIALIZATION                           WFR-79MAR30 )
 CODE SP@                      ( FETCH STACK POINTER TO STACK *)
-inst-spat rf-code
+inst-spat rcod
 
 
 CODE SP!                                 ( LOAD SP FROM 'S0' *)
-inst-spsto rf-code
+inst-spsto rcod
 
 CODE RP!                                   ( LOAD RP FROM R0 *)
-inst-rpsto rf-code
+inst-rpsto rcod
 
 
 CODE ;S              ( RESTORE IP REGISTER FROM RETURN STACK *)
-inst-semis rf-code
+inst-semis rcod
 
 -->    
 (  RETURN STACK WORDS                             WFR-79MAR29 )
 CODE LEAVE          ( FORCE EXIT OF DO-LOOP BY SETTING LIMIT *)
                                                   ( TO INDEX *)
-inst-leave rf-code
+inst-leave rcod
 
 CODE >R              ( MOVE FROM COMP. STACK TO RETURN STACK *)
-inst-tor rf-code
+inst-tor rcod
 
 CODE R>              ( MOVE FROM RETURN STACK TO COMP. STACK *)
-inst-fromr rf-code
+inst-fromr rcod
 
 CODE R  ( COPY THE BOTTOM OF THE RETURN STACK TO COMP. STACK *)
-inst-rr rf-code
+inst-rr rcod
 
 ( '   R    -2  BYTE.IN  I  ! )
 -->    
 (  TESTS AND LOGICALS                             WFR-79MAR19 )
 
 CODE 0=           ( REVERSE LOGICAL STATE OF BOTTOM OF STACK *)
-inst-zequ rf-code
+inst-zequ rcod
 
 
 CODE 0<            ( LEAVE TRUE IF NEGATIVE; OTHERWISE FALSE *)
-inst-zless rf-code
+inst-zless rcod
 
 
 -->    
@@ -464,45 +464,45 @@ inst-zless rf-code
 
 (  MATH                                           WFR-79MAR19 )
 CODE +         ( LEAVE THE SUM OF THE BOTTOM TWO STACK ITEMS *)
-inst-plus rf-code
+inst-plus rcod
 
 CODE D+            ( ADD TWO DOUBLE INTEGERS, LEAVING DOUBLE *)
-inst-dplus rf-code
+inst-dplus rcod
 
 
 
 CODE MINUS         ( TWOS COMPLEMENT OF BOTTOM SINGLE NUMBER *)
-inst-minus rf-code
+inst-minus rcod
 
 CODE DMINUS        ( TWOS COMPLEMENT OF BOTTOM DOUBLE NUMBER *)
-inst-dminu rf-code
+inst-dminu rcod
 
                                            -->    
 (  STACK MANIPULATION                             WFR-79MAR29 )
 CODE OVER              ( DUPLICATE SECOND ITEM AS NEW BOTTOM *)
-inst-over rf-code
+inst-over rcod
 
 CODE DROP                           ( DROP BOTTOM STACK ITEM *)
-inst-drop rf-code            ( C.F. VECTORS DIRECTLY TO 'POP' )
+inst-drop rcod               ( C.F. VECTORS DIRECTLY TO 'POP' )
 
 CODE SWAP        ( EXCHANGE BOTTOM AND SECOND ITEMS ON STACK *)
-inst-swap rf-code
+inst-swap rcod
 
 
 CODE DUP                    ( DUPLICATE BOTTOM ITEM ON STACK *)
-inst-dup rf-code
+inst-dup rcod
 
 -->    
 
 (  MEMORY INCREMENT,                              WFR-79MAR30 )
 
 CODE +!   ( ADD SECOND TO MEMORY 16 BITS ADDRESSED BY BOTTOM *)
-inst-pstor rf-code
+inst-pstor rcod
 
 
 
 CODE TOGGLE           ( BYTE AT ADDRESS-2, BIT PATTERN-1 ... *)
-inst-toggl rf-code
+inst-toggl rcod
 
 -->    
 
@@ -512,18 +512,18 @@ inst-toggl rf-code
 
 (  MEMORY FETCH AND STORE                          WFR-781202 )
 CODE @                   ( REPLACE STACK ADDRESS WITH 16 BIT *)
-inst-at rf-code                   ( CONTENTS OF THAT ADDRESS *)
+inst-at rcod                      ( CONTENTS OF THAT ADDRESS *)
 
 
 CODE C@      ( REPLACE STACK ADDRESS WITH POINTED 8 BIT BYTE *)
-inst-cat rf-code
+inst-cat rcod
 
 CODE !         ( STORE SECOND AT 16 BITS ADDRESSED BY BOTTOM *)
-inst-store rf-code
+inst-store rcod
 
 
 CODE C!           ( STORE SECOND AT BYTE ADDRESSED BY BOTTOM *)
-inst-cstor rf-code
+inst-cstor rcod
 
 DECIMAL     ;S    
 (  :,  ;,                                         WFR-79MAR30 )
@@ -531,7 +531,7 @@ DECIMAL     ;S
 : :                  ( CREATE NEW COLON-DEFINITION UNTIL ';' *)
                     ?EXEC !CSP CURRENT   @         CONTEXT    !
                 CREATE  ]
-inst-docol rf-code ; IMMEDIATE
+inst-docol rcod ; IMMEDIATE
 
 
 
@@ -545,15 +545,15 @@ inst-docol rf-code ; IMMEDIATE
 (  CONSTANT,  VARIABLE, USER                      WFR-79MAR30 )
 : CONSTANT              ( WORD WHICH LATER CREATES CONSTANTS *)
                       CREATE  SMUDGE  ,
-inst-docon rf-code ;
+inst-docon rcod ;
 
 : VARIABLE              ( WORD WHICH LATER CREATES VARIABLES *)
      CONSTANT
-inst-dovar rf-code ;
+inst-dovar rcod ;
 
 : USER                                ( CREATE USER VARIABLE *)
      CONSTANT
-inst-douse rf-code ;
+inst-douse rcod ;
 
 
 
@@ -698,8 +698,8 @@ HEX              ( O THRU 5 RESERVED,    REFERENCED TO $00A0 *)
       ( INY,  W (Y LDA,  IP 1+ STA, )    ( AS NEXT INTERP. PTR )
       ( CLC,  W LDA,  4 # ADC,  PHA,) ( PUSH ADDRESS OF PARAMS )
       ( W 1+ LDA,  00 # ADC,  PUSH JMP, )
-inst-dodoe rf-code ;
--->    
+inst-dodoe rcod ;
+-->
 
 
 (  TEXT OUTPUTS                                   WFR-79APR02 )
@@ -880,7 +880,7 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
-inst-cold rf-code
+inst-cold rcod
 
 
 
@@ -896,7 +896,7 @@ inst-cold rf-code
                                                     -->    
 (  MATH UTILITY                               DJK-WFR-79APR29 )
 CODE S->D                  ( EXTEND SINGLE INTEGER TO DOUBLE *)
-inst-stod rf-code
+inst-stod rcod
 
 : +-    0< IF MINUS ENDIF ;   ( APPLY SIGN TO NUMBER BENEATH *)
 
@@ -1056,7 +1056,7 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 (  D/CHAR,  ?DISC,                                WFR-79MAR23 )
 CODE D/CHAR      ( TEST CHAR-1. EXIT TEST BOOL-2, NEW CHAR-1 *)
-inst-dchar rf-code
+inst-dchar rcod
 
 
 
@@ -1072,7 +1072,7 @@ inst-dchar rf-code
      ENDIF  R>  DROP  ;   -->    
 (  BLOCK-WRITE                                     WFR-790103 )
 CODE BLOCK-WRITE     ( SEND TO DISC FROM ADDRESS-2,  COUNT-1 *)
-inst-bwrit rf-code                         ( WITH EOT AT END *)
+inst-bwrit rcod                            ( WITH EOT AT END *)
 
 
 
@@ -1089,7 +1089,7 @@ inst-bwrit rf-code                         ( WITH EOT AT END *)
 (  BLOCK-READ,                                     WFR-790103 )
 
 CODE BLOCK-READ   ( BUF.ADDR-1. EXIT AT 128 CHAR OR CONTROL *)
-inst-bread rf-code
+inst-bread rcod
 
 
 
