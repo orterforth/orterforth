@@ -1380,7 +1380,7 @@ static void rf_inst_code_ext(void)
   rf_inst_def_code("rcls", rf_code_cells);
   rf_inst_def_code("rcod", rf_code_code);
   rf_inst_def_code("rxit", rf_code_exit);
-  rf_inst_def_code("rf-target", rf_code_target);
+  rf_inst_def_code("rtgt", rf_code_target);
   RF_JUMP_NEXT;
 }
 
