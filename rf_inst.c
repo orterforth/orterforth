@@ -1384,9 +1384,7 @@ static void rf_inst_code_ext(void)
   RF_JUMP_NEXT;
 }
 
-#ifdef SPECTRUM
-#define RF_BS 0x000C
-#else
+#ifndef RF_BS
 #define RF_BS 0x007F
 #endif
 
