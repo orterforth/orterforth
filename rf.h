@@ -11,7 +11,6 @@
 
 #ifdef __clang__
 #include <stdint.h>
-typedef uintptr_t rf_word_t;
 #if (__WORDSIZE == 32)
 
 /* 32 bit */
@@ -35,7 +34,6 @@ typedef __uint128_t rf_double_t;
 #ifndef QDOS
 
 #include <stdint.h>
-typedef uintptr_t rf_word_t;
 #if __SIZEOF_POINTER__ == 4
 
 /* 32 bit */
@@ -62,7 +60,6 @@ typedef __uint128_t rf_double_t;
 
 #ifdef __CC65__
 #include <stdint.h>
-typedef uintptr_t rf_word_t;
 #define RF_WORD_SIZE 2
 typedef uint32_t rf_double_t;
 #define RF_LE
@@ -78,7 +75,6 @@ typedef uint32_t rf_double_t;
 
 #ifdef __Z80
 #include <stdint.h>
-typedef uintptr_t rf_word_t;
 #define RF_WORD_SIZE 2
 typedef uint32_t rf_double_t;
 #define RF_LE
@@ -102,12 +98,12 @@ typedef uint32_t rf_double_t;
 
 /* C68 */
 
-#ifdef __C68__
+#ifdef QDOS
 #define RF_WORD_SIZE 4
 #define RF_BE
 typedef long intptr_t;
-typedef unsigned long rf_word_t;
-typedef unsigned long long rf_double_t;
+typedef unsigned long uintptr_t;
+typedef double rf_double_t; /* TODO 64 bit integer handling */
 #ifdef QDOS
 #define RF_TARGET 0x000003bd /* QL */
 #endif
@@ -264,7 +260,7 @@ extern char *rf_memory;
 /* FORTH MACHINE */
 
 /* parameter stack pointer */
-extern rf_word_t *rf_sp;
+extern uintptr_t *rf_sp;
 
 #define RF_SP_GET rf_sp
 #define RF_SP_SET(a) { rf_sp = (a); }
@@ -273,34 +269,34 @@ extern rf_word_t *rf_sp;
 #define RF_SP_POP (*(rf_sp++))
 #define RF_SP_PUSH(a) { *(--rf_sp) = (a); }
 #else
-rf_word_t rf_sp_pop(void);
+uintptr_t rf_sp_pop(void);
 
-void __FASTCALL__ rf_sp_push(rf_word_t a);
+void __FASTCALL__ rf_sp_push(uintptr_t a);
 
 #define RF_SP_POP rf_sp_pop()
 #define RF_SP_PUSH(a) rf_sp_push(a)
 #endif
 
 /* return stack pointer */
-extern rf_word_t *rf_rp;
+extern uintptr_t *rf_rp;
 
 #define RF_RP_GET rf_rp
 #define RF_RP_SET(a) { rf_rp = (a); }
 
 #ifdef RF_INLINE_RP
 #define RF_RP_POP (*(rf_rp++))
-#define RF_RP_PUSH(a) { *(--rf_rp) = ((rf_word_t) (a)); }
+#define RF_RP_PUSH(a) { *(--rf_rp) = ((uintptr_t) (a)); }
 #else
-rf_word_t rf_rp_pop(void);
+uintptr_t rf_rp_pop(void);
 
-void __FASTCALL__ rf_rp_push(rf_word_t a);
+void __FASTCALL__ rf_rp_push(uintptr_t a);
 
 #define RF_RP_POP rf_rp_pop()
-#define RF_RP_PUSH(a) { rf_rp_push((rf_word_t) (a)); }
+#define RF_RP_PUSH(a) { rf_rp_push((uintptr_t) (a)); }
 #endif
 
 /* interpretive pointer */
-extern rf_word_t *rf_ip;
+extern uintptr_t *rf_ip;
 
 #define RF_IP_GET rf_ip
 #define RF_IP_INC { rf_ip++; }
@@ -311,7 +307,7 @@ typedef void (*rf_code_t)(void);
 extern rf_code_t *rf_w;
 
 /* user area pointer */
-extern rf_word_t *rf_up;
+extern uintptr_t *rf_up;
 
 /* TRAMPOLINE */
 
@@ -347,9 +343,9 @@ void rf_fin(void);
 
 rf_code_t __FASTCALL__ *rf_cfa(char *nfa);
 
-rf_word_t __FASTCALL__ *rf_lfa(char *nfa);
+uintptr_t __FASTCALL__ *rf_lfa(char *nfa);
 
-rf_word_t __FASTCALL__ *rf_pfa(char *nfa);
+uintptr_t __FASTCALL__ *rf_pfa(char *nfa);
 
 char *rf_find(char *t, char t_length, char *nfa);
 
@@ -359,9 +355,9 @@ void rf_enclose(char c, char *addr1, unsigned char *s3, unsigned char *s2, unsig
 
 /* COLD START */
 
-extern rf_word_t *rf_cold_forth;
+extern uintptr_t *rf_cold_forth;
 
-extern rf_word_t *rf_cold_abort;
+extern uintptr_t *rf_cold_abort;
 
 /* CODE */
 

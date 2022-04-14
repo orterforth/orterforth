@@ -60,9 +60,9 @@ static void __FASTCALL__ rf_inst_disc_expect(char e)
 }
 
 /* convert block number into drive, track and sector */
-static void rf_inst_disc_blk(rf_word_t blk, unsigned char *drive, unsigned char *track, unsigned char *sector)
+static void rf_inst_disc_blk(uintptr_t blk, unsigned char *drive, unsigned char *track, unsigned char *sector)
 {
-  rf_word_t blk_offset;
+  uintptr_t blk_offset;
   
   blk_offset = blk % 2000;
   *drive = blk / 2000;
@@ -110,7 +110,7 @@ static char sp = ' ';
 static char eot = RF_ASCII_EOT;
 
 /* write PerSci disc command, I or O */
-static void rf_inst_disc_cmd(char c, rf_word_t blk)
+static void rf_inst_disc_cmd(char c, uintptr_t blk)
 {
   unsigned char drive, track, sector;
 
@@ -129,7 +129,7 @@ static void rf_inst_disc_cmd(char c, rf_word_t blk)
 }
 
 /* read block */
-static void rf_inst_disc_r(char *b, rf_word_t blk)
+static void rf_inst_disc_r(char *b, uintptr_t blk)
 {
   /* send command */
   rf_inst_disc_cmd('I', blk);
@@ -143,7 +143,7 @@ static void rf_inst_disc_r(char *b, rf_word_t blk)
 
 /* write block */
 #ifdef RF_INST_SAVE
-static void rf_inst_disc_w(char *b, rf_word_t blk)
+static void rf_inst_disc_w(char *b, uintptr_t blk)
 {
   static char eot = RF_ASCII_EOT;
 
@@ -199,34 +199,34 @@ static void rf_inst_code_storecsp(void)
 {
   RF_START;
   RF_INST_ONLY;
-  RF_USER_CSP = (rf_word_t) RF_SP_GET;
+  RF_USER_CSP = (uintptr_t) RF_SP_GET;
   RF_JUMP_NEXT;
 }
 
 /* USE */
 #ifndef RF_INST_SMALLER
-static rf_word_t *rf_inst_use;
+static uintptr_t *rf_inst_use;
 #endif
 
 /* PREV */
-static rf_word_t *rf_inst_prev;
+static uintptr_t *rf_inst_prev;
 
 #ifndef RF_INST_SMALLER
 /* +BUF */
-static rf_word_t __FASTCALL__ *rf_inst_pbuf(rf_word_t *p)
+static uintptr_t __FASTCALL__ *rf_inst_pbuf(uintptr_t *p)
 {
-  p = (rf_word_t *) (((rf_word_t) p) + RF_DISC_BUFFER_SIZE);
-  if (p == (rf_word_t *) RF_LIMIT) {
-    p = (rf_word_t *) RF_FIRST;
+  p = (uintptr_t *) (((uintptr_t) p) + RF_DISC_BUFFER_SIZE);
+  if (p == (uintptr_t *) RF_LIMIT) {
+    p = (uintptr_t *) RF_FIRST;
   }
   return p;
 }
 
 /* BUFFER */
-static char __FASTCALL__ *rf_inst_buffer(rf_word_t block)
+static char __FASTCALL__ *rf_inst_buffer(uintptr_t block)
 {
   /* USE @ DUP >R ( BUFFER ADDRESS TO BE ASSIGNED ) */
-  rf_word_t *p = rf_inst_use;
+  uintptr_t *p = rf_inst_use;
 
   /* BEGIN */
   do {
@@ -254,7 +254,7 @@ static char __FASTCALL__ *rf_inst_buffer(rf_word_t block)
 #endif
 
 /* BLOCK */
-static char __FASTCALL__ *rf_inst_block(rf_word_t block)
+static char __FASTCALL__ *rf_inst_block(uintptr_t block)
 {
 #ifdef RF_INST_SMALLER
   if (block != *rf_inst_prev) {
@@ -263,7 +263,7 @@ static char __FASTCALL__ *rf_inst_block(rf_word_t block)
   }
   return ((char *) rf_inst_prev) + RF_WORD_SIZE;
 #else
-  rf_word_t *p;
+  uintptr_t *p;
 
   /* OFFSET @ + >R   ( RETAIN BLOCK # ON RETURN STACK ) */
   block += RF_USER_OFFSET;
@@ -281,7 +281,7 @@ static char __FASTCALL__ *rf_inst_block(rf_word_t block)
         /* DUP R 1 R/W ( READ SECTOR FROM DISC ) */
         rf_inst_disc_r(s, block);
         /* 2 - ( BACKUP ) */
-        p = (rf_word_t *) ((char *) (s - RF_WORD_SIZE));
+        p = (uintptr_t *) ((char *) (s - RF_WORD_SIZE));
         /* ENDIF */
       }
       /* DUP @ R - DUP + 0= UNTIL ( WITH BUFFER ADDRESS ) */
@@ -353,7 +353,7 @@ static void rf_inst_code_block(void)
   RF_INST_ONLY;
   {
     char *p = rf_inst_block(RF_SP_POP);
-    RF_SP_PUSH((rf_word_t) p);
+    RF_SP_PUSH((uintptr_t) p);
   }
   RF_JUMP_NEXT;
 }
@@ -367,13 +367,13 @@ void rf_inst_code_word(void)
   RF_JUMP_NEXT;
 }
 
-static void __FASTCALL__ rf_inst_comma(rf_word_t word)
+static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 {
-  rf_word_t *dp;
+  uintptr_t *dp;
 
-  dp = (rf_word_t *) RF_USER_DP;
+  dp = (uintptr_t *) RF_USER_DP;
   *dp = word;
-  RF_USER_DP = (rf_word_t) (dp + 1);
+  RF_USER_DP = (uintptr_t) (dp + 1);
 }
 
 /* LATEST */
@@ -394,7 +394,7 @@ static void rf_inst_create(unsigned char length, char *address)
   rf_inst_memcpy(here + 1, address, length);
 
   /* TIB HERE 0A0 + < 2 ?ERROR */
-  assert(RF_USER_TIB - (rf_word_t) here >= 0xA0);
+  assert(RF_USER_TIB - (uintptr_t) here >= 0xA0);
   /* NB address of TIB not value; instead use a portable dictionary limit */
 
   /* -FIND IF DROP NFA ID. 4 MESSAGE SPACE ENDIF  */
@@ -406,12 +406,12 @@ static void rf_inst_create(unsigned char length, char *address)
 #ifdef __CC65__
   /* 6502 bug workaround */
   /* DP C@ 0FD = ALLOT */
-  if (((rf_word_t) p & 0xFF) == 0xFD) {
+  if (((uintptr_t) p & 0xFF) == 0xFD) {
     /* *p = 0; */
     ++p;
   }
 #endif
-  RF_USER_DP = (rf_word_t) p;
+  RF_USER_DP = (uintptr_t) p;
 
   /* DUP A0 TOGGLE  */
   here[0] ^= 0xA0;
@@ -420,7 +420,7 @@ static void rf_inst_create(unsigned char length, char *address)
   *(--p) ^= 0x80;
 
   /* LATEST ,  */
-  rf_inst_comma((rf_word_t) rf_inst_latest());
+  rf_inst_comma((uintptr_t) rf_inst_latest());
 
   /* CURRENT @ !  */
   *((char **) RF_USER_CURRENT) = here;
@@ -439,7 +439,7 @@ static void rf_inst_code_create(void)
     rf_inst_create(here[0], here + 1);
 
     /* HERE 2+ , */
-    rf_inst_comma((rf_word_t) ((rf_word_t *) RF_USER_DP + 1));
+    rf_inst_comma((uintptr_t) ((uintptr_t *) RF_USER_DP + 1));
   }
   RF_JUMP_NEXT;
 }
@@ -490,7 +490,7 @@ static void rf_inst_code_bcompile(void)
     assert(nfa); /* 0= 0 ?ERROR */
     /* DROP */
     /* CFA , */
-    rf_inst_comma((rf_word_t) rf_cfa(nfa));
+    rf_inst_comma((uintptr_t) rf_cfa(nfa));
   }
   RF_JUMP_NEXT;
 }
@@ -545,14 +545,14 @@ static void rf_inst_code_x(void)
     if (!(RF_USER_BLK & 7)) {
       /* ?EXEC R> DROP */
       assert(!RF_USER_STATE);
-      RF_IP_SET((rf_word_t *) RF_RP_POP);
+      RF_IP_SET((uintptr_t *) RF_RP_POP);
     /* ENDIF */
     }
 #ifndef RF_INST_SMALLER
   /* ELSE */
   /* } else { */
     /* R> DROP */
-    /* RF_IP_SET((rf_word_t *) RF_RP_POP); */
+    /* RF_IP_SET((uintptr_t *) RF_RP_POP); */
   /* ENDIF */
   /* } */
 #endif
@@ -582,7 +582,7 @@ static void rf_inst_code_code(void)
     rf_inst_create(here[0], here + 1);
 
     /* HERE 2+ , */
-    rf_inst_comma((rf_word_t) ((rf_word_t *) RF_USER_DP + 1));
+    rf_inst_comma((uintptr_t) ((uintptr_t *) RF_USER_DP + 1));
 
     /* LATEST 20 TOGGLE */
     *(rf_inst_latest()) ^= 0x20;
@@ -592,9 +592,9 @@ static void rf_inst_code_code(void)
 
 /* ?PAIRS */
 #ifndef RF_INST_SMALLER
-static void __FASTCALL__ rf_inst_qpairs(rf_word_t a)
+static void __FASTCALL__ rf_inst_qpairs(uintptr_t a)
 {
-  rf_word_t b;
+  uintptr_t b;
 
   b = RF_SP_POP;
   assert(a == b);
@@ -609,7 +609,7 @@ static void __FASTCALL__ rf_inst_qpairs(rf_word_t a)
 /* ENDIF */
 static void rf_inst_endif(void)
 {
-  rf_word_t a;
+  uintptr_t a;
   intptr_t o;
 
   /* ?COMP */
@@ -647,7 +647,7 @@ static char __FASTCALL__ *rf_inst_find_string(char *t)
 /* COMPILE */
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
-	rf_inst_comma((rf_word_t) rf_cfa(rf_inst_find_string(name)));
+	rf_inst_comma((uintptr_t) rf_cfa(rf_inst_find_string(name)));
 }
 
 /* IF */
@@ -672,8 +672,8 @@ static void rf_inst_code_else(void)
   RF_START;
   RF_INST_ONLY;
   {
-    rf_word_t a;
-    rf_word_t b;
+    uintptr_t a;
+    uintptr_t b;
 
     /* 2 ?PAIRS */
     rf_inst_qpairs(2);
@@ -702,7 +702,7 @@ static void rf_inst_code_else(void)
 static void rf_inst_back(void)
 {
   /* HERE */
-  rf_word_t b = RF_USER_DP;
+  uintptr_t b = RF_USER_DP;
   /* - */
   intptr_t c = RF_SP_POP - b;
   /* , */
@@ -729,7 +729,7 @@ static void rf_inst_code_while(void)
   RF_START;
   RF_INST_ONLY;
   {
-    rf_word_t n;
+    uintptr_t n;
 
     /* [COMPILE] IF */
     rf_inst_compile("0BRANCH");
@@ -769,7 +769,7 @@ static void rf_inst_code_repeat(void)
   RF_START;
   RF_INST_ONLY;
   {
-    rf_word_t x;
+    uintptr_t x;
 
     /* >R */
     RF_RP_PUSH(RF_SP_POP);
@@ -778,9 +778,9 @@ static void rf_inst_code_repeat(void)
     /* [COMPILE] AGAIN */
     rf_inst_again();
     /* R> */
-    RF_SP_PUSH((rf_word_t) RF_RP_POP);
+    RF_SP_PUSH((uintptr_t) RF_RP_POP);
     /* R> */
-    RF_SP_PUSH((rf_word_t) RF_RP_POP);
+    RF_SP_PUSH((uintptr_t) RF_RP_POP);
     /* 2 - */
     x = RF_SP_POP;
     assert(x == 4);
@@ -843,7 +843,7 @@ static void rf_inst_code_compile(void)
   RF_START;
   RF_INST_ONLY;
   {
-    rf_word_t *a;
+    uintptr_t *a;
 
     /* ?COMP */
     assert(RF_USER_STATE);
@@ -876,7 +876,7 @@ static void rf_inst_code_immediate(void)
 /* ?STACK */
 static void rf_inst_qstack(void)
 {
-  if (rf_sp > (rf_word_t *) RF_S0 || rf_sp < ((rf_word_t *) RF_S0 - RF_STACK_SIZE)) {
+  if (rf_sp > (uintptr_t *) RF_S0 || rf_sp < ((uintptr_t *) RF_S0 - RF_STACK_SIZE)) {
     rf_inst_error("stack out of bounds");
   }
 }
@@ -903,7 +903,7 @@ static void rf_inst_code_interpret_word(void)
       /* STATE @ < IF  */
       if (*((unsigned char *) nfa) < RF_USER_STATE) {
         /* CFA , */
-        rf_inst_comma((rf_word_t) rf_cfa(nfa));
+        rf_inst_comma((uintptr_t) rf_cfa(nfa));
       } else {
         /* ELSE CFA EXECUTE */
         rf_w = rf_cfa(nfa);
@@ -924,7 +924,7 @@ static void rf_inst_code_interpret_word(void)
       /* DROP [COMPILE] LITERAL  */
       if (RF_USER_STATE) {
         rf_inst_compile("LIT");
-        rf_inst_comma((rf_word_t) number);
+        rf_inst_comma((uintptr_t) number);
       } else {
         RF_SP_PUSH(number); 
       }
@@ -1004,12 +1004,12 @@ static void rf_inst_code_plusorigin(void)
   RF_START;
   RF_INST_ONLY;
   {
-    rf_word_t a;
-    rf_word_t *origin;
+    uintptr_t a;
+    uintptr_t *origin;
     
     a = RF_SP_POP;
-    origin = (rf_word_t *) RF_ORIGIN;
-    RF_SP_PUSH((rf_word_t) (&origin[a / RF_WORD_SIZE]));
+    origin = (uintptr_t *) RF_ORIGIN;
+    RF_SP_PUSH((uintptr_t) (&origin[a / RF_WORD_SIZE]));
   }
   RF_JUMP_NEXT;
 }
@@ -1035,7 +1035,7 @@ static void rf_inst_code_bytein(void)
   RF_INST_ONLY;
   {
     char *nfa;
-    rf_word_t a;
+    uintptr_t a;
 
     /* -FIND DROP DROP */
     nfa = rf_inst_hfind();
@@ -1043,7 +1043,7 @@ static void rf_inst_code_bytein(void)
 
     /* + */
     a = RF_SP_POP;
-    RF_SP_PUSH(((rf_word_t) rf_pfa(nfa)) + a);
+    RF_SP_PUSH(((uintptr_t) rf_pfa(nfa)) + a);
   }
   RF_JUMP_NEXT;
 }
@@ -1055,21 +1055,21 @@ static void rf_inst_code_replacedby(void)
   RF_INST_ONLY;
   {
     char *nfa;
-    rf_word_t *a;
+    uintptr_t *a;
 
     /* -FIND DROP DROP */
     nfa = rf_inst_hfind();
     assert(nfa);
 
     /* CFA SWAP ! */
-    a = (rf_word_t *) RF_SP_POP;
-    *a = (rf_word_t) rf_cfa(nfa);
+    a = (uintptr_t *) RF_SP_POP;
+    *a = (uintptr_t) rf_cfa(nfa);
   }
   RF_JUMP_NEXT;
 }
 
 /* compile a LIT value */
-static void __FASTCALL__ rf_inst_compile_lit(rf_word_t literal)
+static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
 {
   rf_inst_compile("LIT");
 	rf_inst_comma(literal);
@@ -1079,14 +1079,14 @@ static void __FASTCALL__ rf_inst_compile_lit(rf_word_t literal)
 static void rf_inst_def_code(char *name, rf_code_t code)
 {
   rf_inst_def(name);
-  rf_inst_comma((rf_word_t) code);
+  rf_inst_comma((uintptr_t) code);
 }
 
 /* compile an immediate definition and set CFA */
 static void rf_inst_def_code_immediate(char *name, rf_code_t code)
 {
   rf_inst_def(name);
-  rf_inst_comma((rf_word_t) code);
+  rf_inst_comma((uintptr_t) code);
   rf_inst_immediate();
 }
 
@@ -1094,7 +1094,7 @@ static void rf_inst_def_code_immediate(char *name, rf_code_t code)
 static void __FASTCALL__ rf_inst_colon(char *name)
 {
   rf_inst_def(name);
-  rf_inst_comma((rf_word_t) rf_code_docol);
+  rf_inst_comma((uintptr_t) rf_code_docol);
 }
 
 /* inst time literal code */
@@ -1102,9 +1102,9 @@ static void rf_inst_code_doliteral(void)
 {
   RF_START;
   {
-    rf_word_t number;
+    uintptr_t number;
     
-    number = *((rf_word_t *) rf_w + 1);
+    number = *((uintptr_t *) rf_w + 1);
     if (RF_USER_STATE) {
       rf_inst_compile_lit(number);
     } else {
@@ -1115,10 +1115,10 @@ static void rf_inst_code_doliteral(void)
 }
 
 /* compile an inst time literal */
-static void rf_inst_def_literal(char *name, rf_word_t value)
+static void rf_inst_def_literal(char *name, uintptr_t value)
 {
   rf_inst_def(name);
-  rf_inst_comma((rf_word_t) rf_inst_code_doliteral);
+  rf_inst_comma((uintptr_t) rf_inst_code_doliteral);
   rf_inst_comma(value);
   rf_inst_immediate();
 }
@@ -1128,7 +1128,7 @@ static void rf_inst_def_literal(char *name, rf_word_t value)
 static void rf_inst_def_user(char *name, unsigned int idx)
 {
   rf_inst_def(name);
-  rf_inst_comma((rf_word_t) rf_code_douse);
+  rf_inst_comma((uintptr_t) rf_code_douse);
   rf_inst_comma(idx * RF_WORD_SIZE);
 }
 
@@ -1166,7 +1166,7 @@ static uint8_t rf_inst_attr(void)
 }
 
 /* location for CURRENT and CONTEXT during inst */
-rf_word_t *rf_inst_vocabulary = 0;
+uintptr_t *rf_inst_vocabulary = 0;
 
 static void rf_inst_cold(void)
 {
@@ -1175,39 +1175,39 @@ static void rf_inst_cold(void)
   rf_inst_vocabulary = 0;
 
   /* set UP and user vars */
-  rf_up = (rf_word_t *) RF_USER;
+  rf_up = (uintptr_t *) RF_USER;
 
   /* USER */
 
   /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
   /* UP )Y STA, ( TO USER AREA ) */
   /* DEY, 0< END, */
-  RF_USER_S0 = (rf_word_t) RF_S0;
-  RF_USER_R0 = (rf_word_t) RF_R0;
-  RF_USER_TIB = (rf_word_t) RF_TIB;
+  RF_USER_S0 = (uintptr_t) RF_S0;
+  RF_USER_R0 = (uintptr_t) RF_R0;
+  RF_USER_TIB = (uintptr_t) RF_TIB;
   RF_USER_WIDTH = 31;
   RF_USER_WARNING = 0;
 
-  RF_USER_FENCE = (rf_word_t) RF_INST_DICTIONARY;
-  RF_USER_DP = (rf_word_t) RF_INST_DICTIONARY;
+  RF_USER_FENCE = (uintptr_t) RF_INST_DICTIONARY;
+  RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
   RF_USER_VOCLINK = 0;
 
   /* jump to RP! then to ABORT */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
   /* # LDA, IP STA, */
   /* 6C # LDA, W 1 - STA, 'T RP! JMP, ( RUN ) */
-  RF_RP_SET((rf_word_t *) RF_USER_R0);
+  RF_RP_SET((uintptr_t *) RF_USER_R0);
 
   /* : ABORT */
   /* SP! */
-  RF_SP_SET((rf_word_t *) RF_USER_S0);
+  RF_SP_SET((uintptr_t *) RF_USER_S0);
   /* DECIMAL */
   RF_USER_BASE = 10;
   /* DR0 */
   RF_USER_OFFSET = 0;
   /* CR ." FORTH-65 V 4.0" */
   /* [COMPILE] FORTH */
-  RF_USER_CONTEXT = (rf_word_t) &rf_inst_vocabulary;
+  RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;
   /* DEFINITIONS */
   RF_USER_CURRENT = RF_USER_CONTEXT;
   /* QUIT */
@@ -1406,13 +1406,13 @@ static void rf_inst_forward(void)
   rf_inst_compile("rxit");
 
   /* boot time literals */
-  rf_inst_def_literal("inst-relrev", (rf_word_t) (RF_FIGREL | (RF_FIGREV << 8)));
-  rf_inst_def_literal("inst-ver", (rf_word_t) (RF_USRVER | (rf_inst_attr() << 8)));
-  rf_inst_def_literal("inst-bs", (rf_word_t) RF_BS);
-  rf_inst_def_literal("inst-user", (rf_word_t) RF_USER);
-  rf_inst_def_literal("inst-inits0", (rf_word_t) RF_S0);
-  rf_inst_def_literal("inst-initr0", (rf_word_t) RF_R0);
-  rf_inst_def_literal("inst-tib", (rf_word_t) RF_TIB);
+  rf_inst_def_literal("inst-relrev", (uintptr_t) (RF_FIGREL | (RF_FIGREV << 8)));
+  rf_inst_def_literal("inst-ver", (uintptr_t) (RF_USRVER | (rf_inst_attr() << 8)));
+  rf_inst_def_literal("inst-bs", (uintptr_t) RF_BS);
+  rf_inst_def_literal("inst-user", (uintptr_t) RF_USER);
+  rf_inst_def_literal("inst-inits0", (uintptr_t) RF_S0);
+  rf_inst_def_literal("inst-initr0", (uintptr_t) RF_R0);
+  rf_inst_def_literal("inst-tib", (uintptr_t) RF_TIB);
 
   /* orterforth extension words compiled inline after boot up literals */
   rf_inst_def_code("inst-ext", rf_inst_code_ext);
@@ -1424,8 +1424,8 @@ static void rf_inst_forward(void)
   }
 
   /* disc buffer literals */
-  rf_inst_def_literal("inst-first", (rf_word_t) RF_FIRST);
-  rf_inst_def_literal("inst-limit", (rf_word_t) RF_LIMIT);
+  rf_inst_def_literal("inst-first", (uintptr_t) RF_FIRST);
+  rf_inst_def_literal("inst-limit", (uintptr_t) RF_LIMIT);
 
   /* ( */
   /* rf_inst_compile("LIT"); */
@@ -1458,10 +1458,10 @@ static void rf_inst_forward(void)
   rf_inst_compile("CREATE");
   rf_inst_compile("]");
   /* write docol to CFA */
-  rf_inst_compile_lit((rf_word_t) rf_code_docol);
+  rf_inst_compile_lit((uintptr_t) rf_code_docol);
   rf_inst_compile("DP");
   rf_inst_compile("@");
-  rf_inst_compile_lit((rf_word_t) -RF_WORD_SIZE);
+  rf_inst_compile_lit((uintptr_t) -RF_WORD_SIZE);
   rf_inst_compile("+");
   rf_inst_compile("!");
   rf_inst_compile(";S");
@@ -1490,13 +1490,13 @@ static void rf_inst_forward(void)
   rf_inst_def_code_immediate("LITERAL", rf_inst_code_literal);
 
   /* stack limit literals */
-  rf_inst_def_literal("inst-s0", (rf_word_t) RF_S0);
-  rf_inst_def_literal("inst-s1", (rf_word_t) ((rf_word_t *) RF_S0 - RF_STACK_SIZE));
+  rf_inst_def_literal("inst-s0", (uintptr_t) RF_S0);
+  rf_inst_def_literal("inst-s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
 
   /* define code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    rf_inst_def_literal(code->name, (rf_word_t) code->value);
+    rf_inst_def_literal(code->name, (uintptr_t) code->value);
   }
 }
 
@@ -1507,18 +1507,18 @@ static void rf_inst_emptybuffers(void)
   rf_inst_memset((char *) RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
 }
 
-static void __FASTCALL__ rf_inst_load(rf_word_t screen)
+static void __FASTCALL__ rf_inst_load(uintptr_t screen)
 {
   /* initialise BLK, IN */
   RF_USER_BLK = screen * RF_BSCR;
   RF_USER_IN = 0;
 
   /* initialise RP */
-  RF_RP_SET((rf_word_t *) RF_USER_R0);
+  RF_RP_SET((uintptr_t *) RF_USER_R0);
 
   /* jump to inst-load */
   assert(rf_inst_load_cfa);
-  RF_IP_SET((rf_word_t *) &rf_inst_load_cfa);
+  RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
   RF_JUMP(rf_next);
   rf_trampoline();
 }
@@ -1550,7 +1550,7 @@ static void rf_inst_save(void)
 void rf_inst(void)
 {
   char *nfa;
-  rf_word_t *origin;
+  uintptr_t *origin;
 
   /* fail if called after installed */
   RF_INST_ONLY;
@@ -1569,7 +1569,7 @@ void rf_inst(void)
 
 #ifdef RF_INST_OVERWRITE
   /* now move DP to target the real dictionary */
-  RF_USER_DP = (rf_word_t) RF_ORIGIN;
+  RF_USER_DP = (uintptr_t) RF_ORIGIN;
 #endif
 
   /* inst-load is the starting point to load and interpret */
@@ -1583,9 +1583,9 @@ void rf_inst(void)
   rf_inst_emptybuffers();
 
 #ifndef RF_INST_SMALLER
-  rf_inst_use = (rf_word_t *) RF_FIRST;
+  rf_inst_use = (uintptr_t *) RF_FIRST;
 #endif
-  rf_inst_prev = (rf_word_t *) RF_FIRST;
+  rf_inst_prev = (uintptr_t *) RF_FIRST;
   rf_inst_load(12);
   rf_inst_load(33);
   rf_inst_load(72);
@@ -1599,7 +1599,7 @@ void rf_inst(void)
 #endif
 
   /* set WARNING = 1 */
-  origin = (rf_word_t *) RF_ORIGIN;
+  origin = (uintptr_t *) RF_ORIGIN;
   origin[13] = 0x0001;
 
   /* FORTH and ABORT are used in rf_code_cold */

@@ -5,38 +5,38 @@
 /* FORTH MACHINE */
 
 /* parameter stack pointer */
-rf_word_t *rf_sp = 0;
+uintptr_t *rf_sp = 0;
 
 #ifndef RF_INLINE_SP
-rf_word_t rf_sp_pop(void)
+uintptr_t rf_sp_pop(void)
 {
   return *(rf_sp++);
 }
 
-void __FASTCALL__ rf_sp_push(rf_word_t a)
+void __FASTCALL__ rf_sp_push(uintptr_t a)
 {
   *(--rf_sp) = (a);
 }
 #endif
 
 /* return stack pointer */
-rf_word_t *rf_rp = 0;
+uintptr_t *rf_rp = 0;
 
 #ifndef RF_INLINE_RP
-rf_word_t rf_rp_pop(void)
+uintptr_t rf_rp_pop(void)
 {
   return *(rf_rp++);
 }
 
-void __FASTCALL__ rf_rp_push(rf_word_t a)
+void __FASTCALL__ rf_rp_push(uintptr_t a)
 {
-  *(--rf_rp) = ((rf_word_t) a);
+  *(--rf_rp) = ((uintptr_t) a);
 }
 #endif
 
 #ifndef RF_TARGET_IP
 /* Interpretive Pointer */
-rf_word_t *rf_ip = 0;
+uintptr_t *rf_ip = 0;
 #endif
 
 /* code field pointer */
@@ -46,7 +46,7 @@ rf_code_t *rf_w = 0;
 
 /* user area pointer */
 #ifndef RF_TARGET_UP
-rf_word_t *rf_up = 0;
+uintptr_t *rf_up = 0;
 #endif
 
 /* TRAMPOLINE */
@@ -82,7 +82,7 @@ void rf_code_lit(void)
 {
   RF_START;
   {
-    rf_word_t a;
+    uintptr_t a;
 
     a = *(RF_IP_GET);
     RF_SP_PUSH(a);
@@ -113,10 +113,10 @@ void rf_code_exec(void)
 
 void rf_branch(void)
 {
-  rf_word_t offset;
+  uintptr_t offset;
   
-  offset = (rf_word_t) *(RF_IP_GET);
-  RF_IP_SET((rf_word_t *) (((char *) RF_IP_GET) + offset));
+  offset = (uintptr_t) *(RF_IP_GET);
+  RF_IP_SET((uintptr_t *) (((char *) RF_IP_GET) + offset));
 }
 
 #ifndef RF_TARGET_CODE_BRAN
@@ -195,8 +195,8 @@ void rf_code_xdo(void)
 {
   RF_START;
   {
-    rf_word_t n1;
-    rf_word_t n2;
+    uintptr_t n1;
+    uintptr_t n2;
 
     n2 = RF_SP_POP;
     n1 = RF_SP_POP;
@@ -207,24 +207,24 @@ void rf_code_xdo(void)
 }
 #endif
 
-rf_word_t __FASTCALL__ *rf_lfa(char *nfa)
+uintptr_t __FASTCALL__ *rf_lfa(char *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
   }
-  return (rf_word_t *) ++nfa;
+  return (uintptr_t *) ++nfa;
 }
 
 rf_code_t __FASTCALL__ *rf_cfa(char *nfa)
 {
-  rf_word_t *lfa = rf_lfa(nfa);
-  rf_word_t *cfa = lfa + 1;
+  uintptr_t *lfa = rf_lfa(nfa);
+  uintptr_t *cfa = lfa + 1;
   return (rf_code_t *) cfa;
 }
 
-rf_word_t __FASTCALL__ *rf_pfa(char *nfa)
+uintptr_t __FASTCALL__ *rf_pfa(char *nfa)
 {
-  rf_word_t *lfa = rf_lfa(nfa);
-  rf_word_t *pfa = lfa + 2;
+  uintptr_t *lfa = rf_lfa(nfa);
+  uintptr_t *pfa = lfa + 2;
   return pfa;
 }
 
@@ -233,21 +233,21 @@ void rf_code_dodoe(void)
 {
   RF_START;
   {
-    rf_word_t *p1;
-    rf_word_t *p2;
+    uintptr_t *p1;
+    uintptr_t *p2;
 
     /* execute the words after DOES> (addr in the PFA): */
 
     /* push IP onto RP */
-    RF_RP_PUSH((rf_word_t) RF_IP_GET);
+    RF_RP_PUSH((uintptr_t) RF_IP_GET);
 
     /* fetch first param *(W + 1) as new IP */
-    p1 = (rf_word_t *) rf_w + 1;
-    RF_IP_SET((rf_word_t *) (*p1));
+    p1 = (uintptr_t *) rf_w + 1;
+    RF_IP_SET((uintptr_t *) (*p1));
 
     /* push second param addr (W + 2) onto SP */
-    p2 = (rf_word_t *) rf_w + 2;
-    RF_SP_PUSH((rf_word_t) p2);
+    p2 = (uintptr_t *) rf_w + 2;
+    RF_SP_PUSH((uintptr_t) p2);
   }
   RF_JUMP_NEXT;
 }
@@ -258,9 +258,9 @@ void rf_code_rr(void)
 {
   RF_START;
   {
-    rf_word_t i;
+    uintptr_t i;
 
-    i = (rf_word_t) *(RF_RP_GET);
+    i = (uintptr_t) *(RF_RP_GET);
     RF_SP_PUSH(i);
   }
   RF_JUMP_NEXT;
@@ -334,7 +334,7 @@ char *rf_find(char *t, char length, char *nfa)
 }
 
 #ifndef RF_TARGET_CODE_PFIND
-rf_word_t rf_pfind(char *addr1, char *addr2)
+uintptr_t rf_pfind(char *addr1, char *addr2)
 {
   char length;
   char *f;
@@ -342,7 +342,7 @@ rf_word_t rf_pfind(char *addr1, char *addr2)
   length = *addr1;
   f = rf_find(addr1 + 1, length, (char *) addr2);
   if (f) {
-    RF_SP_PUSH((rf_word_t) rf_pfa(f));
+    RF_SP_PUSH((uintptr_t) rf_pfa(f));
     RF_SP_PUSH(*((unsigned char *) f));
     return 1;
   } else {
@@ -356,7 +356,7 @@ void rf_code_pfind(void)
   {
     char *addr2;
     char *addr1;
-    rf_word_t f;
+    uintptr_t f;
 
     addr2 = (char *) RF_SP_POP; /* nfa */
     addr1 = (char *) RF_SP_POP; /* text to find */
@@ -418,7 +418,7 @@ void rf_code_encl(void)
     c = (char) RF_SP_POP;
     addr1 = (char *) RF_SP_POP;
     rf_enclose(c, addr1, &n1, &n2, &n3);
-    RF_SP_PUSH((rf_word_t) addr1);
+    RF_SP_PUSH((uintptr_t) addr1);
     RF_SP_PUSH(n1);
     RF_SP_PUSH(n2);
     RF_SP_PUSH(n3);
@@ -432,10 +432,10 @@ void rf_code_cmove(void)
 {
   RF_START;
   {
-    rf_word_t count;
+    uintptr_t count;
     char *to;
     char *from;
-    rf_word_t i;
+    uintptr_t i;
 
     count = RF_SP_POP;
     to = (char *) RF_SP_POP;
@@ -450,8 +450,8 @@ void rf_code_cmove(void)
 
 void __FASTCALL__ rf_dpush(rf_double_t a)
 {
-  rf_word_t b = a;
-  rf_word_t c = a >> RF_WORD_SIZE_BITS;
+  uintptr_t b = a;
+  uintptr_t c = a >> RF_WORD_SIZE_BITS;
   RF_SP_PUSH(b);
   RF_SP_PUSH(c);
 }
@@ -461,8 +461,8 @@ void rf_code_ustar(void)
 {
   RF_START;
   {
-    rf_word_t a;
-    rf_word_t b;
+    uintptr_t a;
+    uintptr_t b;
 
     a = RF_SP_POP;
     b = RF_SP_POP;
@@ -474,8 +474,8 @@ void rf_code_ustar(void)
 
 rf_double_t rf_dpop(void)
 {
-  rf_word_t a = RF_SP_POP;
-  rf_word_t b = RF_SP_POP;
+  uintptr_t a = RF_SP_POP;
+  uintptr_t b = RF_SP_POP;
   rf_double_t c = (rf_double_t) a << RF_WORD_SIZE_BITS;
   rf_double_t d = (rf_double_t) b;
   return c | d;
@@ -491,8 +491,8 @@ void rf_code_uslas(void)
 
     b = (rf_double_t) RF_SP_POP;
     a = rf_dpop();
-    RF_SP_PUSH((rf_word_t) (a % b));
-    RF_SP_PUSH((rf_word_t) (a / b));
+    RF_SP_PUSH((uintptr_t) (a % b));
+    RF_SP_PUSH((uintptr_t) (a / b));
   }
   RF_JUMP_NEXT;
 }
@@ -503,8 +503,8 @@ void rf_code_andd(void)
 {
   RF_START;
   {
-    rf_word_t a;
-    rf_word_t b;
+    uintptr_t a;
+    uintptr_t b;
 
     a = RF_SP_POP;
     b = RF_SP_POP;
@@ -519,8 +519,8 @@ void rf_code_orr(void)
 {
   RF_START;
   {
-    rf_word_t a;
-    rf_word_t b;
+    uintptr_t a;
+    uintptr_t b;
 
     a = RF_SP_POP;
     b = RF_SP_POP;
@@ -535,8 +535,8 @@ void rf_code_xorr(void)
 {
   RF_START;
   {
-    rf_word_t a;
-    rf_word_t b;
+    uintptr_t a;
+    uintptr_t b;
 
     a = RF_SP_POP;
     b = RF_SP_POP;
@@ -551,9 +551,9 @@ void rf_code_spat(void)
 {
   RF_START;
   {
-    rf_word_t sp;
+    uintptr_t sp;
 
-    sp = (rf_word_t) RF_SP_GET;
+    sp = (uintptr_t) RF_SP_GET;
     RF_SP_PUSH(sp);
   }
   RF_JUMP_NEXT;
@@ -564,7 +564,7 @@ void rf_code_spat(void)
 void rf_code_spsto(void)
 {
   RF_START;
-  RF_SP_SET((rf_word_t *) RF_USER_S0);
+  RF_SP_SET((uintptr_t *) RF_USER_S0);
   RF_JUMP_NEXT;
 }
 #endif
@@ -573,7 +573,7 @@ void rf_code_spsto(void)
 void rf_code_rpsto(void)
 {
   RF_START;
-  RF_RP_SET((rf_word_t *) RF_USER_R0);
+  RF_RP_SET((uintptr_t *) RF_USER_R0);
   RF_JUMP_NEXT;
 }
 #endif
@@ -582,7 +582,7 @@ void rf_code_rpsto(void)
 void rf_code_semis(void)
 {
   RF_START;
-  RF_IP_SET((rf_word_t *) RF_RP_POP);
+  RF_IP_SET((uintptr_t *) RF_RP_POP);
   RF_JUMP_NEXT;
 }
 #endif
@@ -592,9 +592,9 @@ void rf_code_leave(void)
 {
   RF_START;
   {
-    rf_word_t index;
+    uintptr_t index;
 
-    index = (rf_word_t) RF_RP_POP;
+    index = (uintptr_t) RF_RP_POP;
     (void) RF_RP_POP;
     RF_RP_PUSH(index);
     RF_RP_PUSH(index);
@@ -616,7 +616,7 @@ void rf_code_tor(void)
 void rf_code_fromr(void)
 {
   RF_START;
-  RF_SP_PUSH((rf_word_t) RF_RP_POP);
+  RF_SP_PUSH((uintptr_t) RF_RP_POP);
   RF_JUMP_NEXT;
 }
 #endif
@@ -626,7 +626,7 @@ void rf_code_zequ(void)
 {
   RF_START;
   {
-    rf_word_t a;
+    uintptr_t a;
 
     a = (RF_SP_POP == 0);
     RF_SP_PUSH(a);
@@ -640,7 +640,7 @@ void rf_code_zless(void)
 {
   RF_START;
   {
-    rf_word_t a;
+    uintptr_t a;
     
     a = (((intptr_t) RF_SP_POP) < 0);
     RF_SP_PUSH(a);
@@ -686,7 +686,7 @@ void rf_code_minus(void)
 {
   RF_START;
   {
-    rf_word_t a;
+    uintptr_t a;
 
     a = (~RF_SP_POP) + 1;
     RF_SP_PUSH(a);
@@ -709,8 +709,8 @@ void rf_code_over(void)
 {
   RF_START;
   {
-    rf_word_t a;
-    rf_word_t b;
+    uintptr_t a;
+    uintptr_t b;
 
     a = RF_SP_POP;
     b = RF_SP_POP;
@@ -736,8 +736,8 @@ void rf_code_swap(void)
 {
   RF_START;
   {
-    rf_word_t a;
-    rf_word_t b;
+    uintptr_t a;
+    uintptr_t b;
 
     a = RF_SP_POP;
     b = RF_SP_POP;
@@ -753,7 +753,7 @@ void rf_code_dup(void)
 {
   RF_START;
   {
-    rf_word_t a;
+    uintptr_t a;
 
     a = RF_SP_POP;
     RF_SP_PUSH(a);
@@ -768,10 +768,10 @@ void rf_code_pstor(void)
 {
   RF_START;
   {
-    rf_word_t *addr;
+    uintptr_t *addr;
     intptr_t n;
 
-    addr = (rf_word_t *) RF_SP_POP;
+    addr = (uintptr_t *) RF_SP_POP;
     n = (intptr_t) RF_SP_POP;
     *addr += n;
   }
@@ -800,10 +800,10 @@ void rf_code_at(void)
 {
   RF_START;
   {
-    rf_word_t *addr;
-    rf_word_t word;
+    uintptr_t *addr;
+    uintptr_t word;
 
-    addr = (rf_word_t *) RF_SP_POP;
+    addr = (uintptr_t *) RF_SP_POP;
     word = *addr;
     RF_SP_PUSH(word);
   }
@@ -819,7 +819,7 @@ void rf_code_cat(void)
     unsigned char *addr;
     
     addr = (unsigned char *) RF_SP_POP;
-    RF_SP_PUSH((rf_word_t) *addr);
+    RF_SP_PUSH((uintptr_t) *addr);
   }
   RF_JUMP_NEXT;
 }
@@ -830,10 +830,10 @@ void rf_code_store(void)
 {
   RF_START;
   {
-    rf_word_t *addr;
-    rf_word_t p;
+    uintptr_t *addr;
+    uintptr_t p;
 
-    addr = (rf_word_t *) RF_SP_POP;
+    addr = (uintptr_t *) RF_SP_POP;
     p = RF_SP_POP;
     *addr = p;
   }
@@ -861,8 +861,8 @@ void rf_code_cstor(void)
 void rf_code_docol(void)
 {
   RF_START;
-  RF_RP_PUSH((rf_word_t) RF_IP_GET);
-  RF_IP_SET((rf_word_t *) rf_w + 1);
+  RF_RP_PUSH((uintptr_t) RF_IP_GET);
+  RF_IP_SET((uintptr_t *) rf_w + 1);
   RF_JUMP_NEXT;
 }
 #endif
@@ -871,7 +871,7 @@ void rf_code_docol(void)
 void rf_code_docon(void)
 {
   RF_START;
-  RF_SP_PUSH(*((rf_word_t *) rf_w + 1));
+  RF_SP_PUSH(*((uintptr_t *) rf_w + 1));
   RF_JUMP_NEXT;
 }
 #endif
@@ -880,7 +880,7 @@ void rf_code_docon(void)
 void rf_code_dovar(void)
 {
   RF_START;
-  RF_SP_PUSH((rf_word_t) (rf_w + 1));
+  RF_SP_PUSH((uintptr_t) (rf_w + 1));
   RF_JUMP_NEXT;
 }
 #endif
@@ -890,10 +890,10 @@ void rf_code_douse(void)
 {
   RF_START;
   {
-    rf_word_t idx;
+    uintptr_t idx;
 
-    idx = *((rf_word_t *) (rf_w + 1));
-    RF_SP_PUSH((rf_word_t) (((char *) rf_up) + idx));
+    idx = *((uintptr_t *) (rf_w + 1));
+    RF_SP_PUSH((uintptr_t) (((char *) rf_up) + idx));
   }
   RF_JUMP_NEXT;
 }
@@ -916,26 +916,26 @@ void rf_code_stod(void)
 
 #ifndef RF_TARGET_CODE_COLD
 /* non-zero so not allocated in BSS and not zeroed on entry */
-rf_word_t *rf_cold_forth = (rf_word_t *) 1;
-rf_word_t *rf_cold_abort = (rf_word_t *) 1;
+uintptr_t *rf_cold_forth = (uintptr_t *) 1;
+uintptr_t *rf_cold_abort = (uintptr_t *) 1;
 
 void rf_code_cold(void)
 {
   RF_START;
   {
     /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
-    rf_word_t *origin = (rf_word_t *) RF_ORIGIN;
+    uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
     /* FORTH vocabulary */
     /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
     /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
-    *((rf_word_t *) ((char *) rf_cold_forth + 2) + 1) = origin[6];
+    *((uintptr_t *) ((char *) rf_cold_forth + 2) + 1) = origin[6];
 
     /* UP and USER vars */
 
     /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
     /* 11 +ORIGIN LDA, UP 1+ STA, */
-    rf_up = (rf_word_t *) origin[8];
+    rf_up = (uintptr_t *) origin[8];
 
     /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
     /* UP )Y STA, ( TO USER AREA ) */
@@ -956,7 +956,7 @@ void rf_code_cold(void)
     RF_IP_SET(rf_cold_abort);
     /* 6C # LDA, W 1 - STA,  */
     /* 'T RP! JMP, ( RUN )  */
-    RF_RP_SET((rf_word_t *) RF_USER_R0);
+    RF_RP_SET((uintptr_t *) RF_USER_R0);
   }
   RF_JUMP_NEXT;
 }
@@ -1030,7 +1030,7 @@ void rf_code_cells(void)
 {
   RF_START;
   {
-    rf_word_t a;
+    uintptr_t a;
 
     a = RF_SP_POP;
     RF_SP_PUSH(RF_WORD_SIZE * a);
