@@ -19,6 +19,7 @@ __Cstart:
 	sta	sp
 	lda	#$06
 	sta	sp+1
+
 	sei                           ; set escape handler
 	lda	evntv
 	sta	evntv_save
@@ -29,25 +30,33 @@ __Cstart:
 	lda	#>handle
 	sta	evntv+1
 	cli
+
 	lda	#$0E                      ; enable escape event
 	ldx	#$06
 	jsr	osbyte
-	stx	enable_save               ; run constructors
-	jsr	initlib
+	stx	enable_save
+
+	jsr	initlib                   ; run constructors
+
 	tsx                           ; save S
 	stx	s_save
+
 	jsr	callmain                  ; call C
+
 doexit:
 	tax                           ; return exit code in user flag
 	ldy	#$00
 	lda	#$01
 	jsr	osbyte
+
 	jsr donelib
+
 	lda	enable_save               ; reset escape event state
 	bne	doexit1
 	lda	#$0D
 	ldx	#$06
 	jsr	osbyte
+
 doexit1:
 	sei                           ; restore event handler
 	lda	evntv_save
@@ -55,7 +64,8 @@ doexit1:
 	lda	evntv_save+1
 	sta	evntv+1
 	cli
-	rts
+
+	rts                           ; done
 
 .export _exit
 
