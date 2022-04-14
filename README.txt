@@ -69,17 +69,17 @@ by calling:
 
 A typical Forth implementation rests on a number of base words
 implemented in native machine code. Higher-level words are 
-implemented with reference to other words, and "threaded" 
-together to build complex programs.
+implemented in terms of these words, making up the rest of the
+Forth vocabulary.
 
 In the Installation Manual, 6502 native code is assembled
-immediately following each word in memory (using an assembler
-implemented in Forth). The word's code field address (CFA) is
-pointed at this code.
+immediately following each base word in memory (using an
+assembler implemented in Forth). The word's code field address
+(CFA) is pointed at this code.
 
-By contrast, orterforth has platform-independent 
-implementations of the base words in ANSI C. In the place of 
-the 6502 assembly code, the CFA is set to point to this C code.
+Instead of this assembly code, orterforth has platform-
+independent implementations of each base word in ANSI C. The
+CFA is set to point to this C code.
 
 
 # It uses a trampoline #
