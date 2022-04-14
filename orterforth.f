@@ -576,31 +576,31 @@ inst-limit CONSTANT LIMIT           ( JUST BEYOND TOP OF RAM *)
 
 (  USER VARIABLES                                 WFR-78APR29 )
 HEX              ( O THRU 5 RESERVED,    REFERENCED TO $00A0 *)
-( 03 rf-cells USER  S0 )    ( TOP OF EMPTY COMPUTATION STACK *)
-( 04 rf-cells USER  R0 )         ( TOP OF EMPTY RETURN STACK *)
-05 rf-cells USER  TIB                ( TERMINAL INPUT BUFFER *)
-06 rf-cells USER  WIDTH           ( MAXIMUM NAME FIELD WIDTH *)
-07 rf-cells USER  WARNING            ( CONTROL WARNING MODES *)
-08 rf-cells USER  FENCE             ( BARRIER FOR FORGETTING *)
-09 rf-cells USER  DP                    ( DICTIONARY POINTER *)
-0A rf-cells USER  VOC-LINK            ( TO NEWEST VOCABULARY *)
-0B rf-cells USER  BLK                 ( INTERPRETATION BLOCK *)
-0C rf-cells USER  IN               ( OFFSET INTO SOURCE TEXT *)
-0D rf-cells USER  OUT              ( DISPLAY CURSOR POSITION *)
-0E rf-cells USER  SCR                       ( EDITING SCREEN *)
+( 06 USER  S0 )             ( TOP OF EMPTY COMPUTATION STACK *)
+( 08 USER  R0 )                  ( TOP OF EMPTY RETURN STACK *)
+05 rcls USER  TIB                    ( TERMINAL INPUT BUFFER *)
+06 rcls USER  WIDTH               ( MAXIMUM NAME FIELD WIDTH *)
+07 rcls USER  WARNING                ( CONTROL WARNING MODES *)
+08 rcls USER  FENCE                 ( BARRIER FOR FORGETTING *)
+09 rcls USER  DP                        ( DICTIONARY POINTER *)
+0A rcls USER  VOC-LINK                ( TO NEWEST VOCABULARY *)
+0B rcls USER  BLK                     ( INTERPRETATION BLOCK *)
+0C rcls USER  IN                   ( OFFSET INTO SOURCE TEXT *)
+0D rcls USER  OUT                  ( DISPLAY CURSOR POSITION *)
+0E rcls USER  SCR                           ( EDITING SCREEN *)
 -->    
 
 (  USER VARIABLES, CONT.                          WFR-79APR29 )
-0F rf-cells USER  OFFSET          ( POSSIBLY TO OTHER DRIVES *)
-10 rf-cells USER  CONTEXT        ( VOCABULARY FIRST SEARCHED *)
-11 rf-cells USER  CURRENT   ( SEARCHED SECOND, COMPILED INTO *)
-12 rf-cells USER  STATE                  ( COMPILATION STATE *)
-13 rf-cells USER  BASE            ( FOR NUMERIC INPUT-OUTPUT *)
-14 rf-cells USER  DPL               ( DECIMAL POINT LOCATION *)
-15 rf-cells USER  FLD                   ( OUTPUT FIELD WIDTH *)
-16 rf-cells USER  CSP                 ( CHECK STACK POSITION *)
-17 rf-cells USER  R#               ( EDITING CURSOR POSITION *)
-18 rf-cells USER  HLD ( POINTS TO LAST CHARACTER HELD IN PAD *)
+0F rcls USER  OFFSET              ( POSSIBLY TO OTHER DRIVES *)
+10 rcls USER  CONTEXT            ( VOCABULARY FIRST SEARCHED *)
+11 rcls USER  CURRENT       ( SEARCHED SECOND, COMPILED INTO *)
+12 rcls USER  STATE                      ( COMPILATION STATE *)
+13 rcls USER  BASE                ( FOR NUMERIC INPUT-OUTPUT *)
+14 rcls USER  DPL                   ( DECIMAL POINT LOCATION *)
+15 rcls USER  FLD                       ( OUTPUT FIELD WIDTH *)
+16 rcls USER  CSP                     ( CHECK STACK POSITION *)
+17 rcls USER  R#                   ( EDITING CURSOR POSITION *)
+18 rcls USER  HLD     ( POINTS TO LAST CHARACTER HELD IN PAD *)
 -->    
 
 
@@ -633,11 +633,11 @@ HEX              ( O THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 
 ( FOLLOWING HAVE LITERALS DEPENDENT ON COMPUTER WORD SIZE )
 
-: LFA    2 rf-cells   -  ;      ( CONVERT A WORDS PFA TO LFA *)
+: LFA    2 rcls  -  ;           ( CONVERT A WORDS PFA TO LFA *)
 : CFA    rf-cell  -  ;          ( CONVERT A WORDS PFA TO CFA *)
-: NFA 2 rf-cells 1+ - -1        ( CONVERT A WORDS PFA TO NFA *)
-  TRAVERSE ; : PFA              ( CONVERT A WORDS NFA TO PFA *)
-  1 TRAVERSE 2 rf-cells 1+ + ; -->    
+: NFA 2 rcls 1+ - -1 TRAVERSE ; ( CONVERT A WORDS PFA TO NFA *)
+: PFA 1 TRAVERSE 2 rcls 1+ + ;  ( CONVERT A WORDS NFA TO PFA *)
+    -->    
 (  ERROR PROCEEDURES, PER SHIRA                   WFR-79MAR23 )
 : !CSP     SP@  CSP  !  ;     ( SAVE STACK POSITION IN 'CSP' *)
 
@@ -721,7 +721,7 @@ inst-dodoe rf-code ;
 (  TERMINAL INPUT                                 WFR-79APR29 )
 
 : EXPECT            ( TERMINAL INPUT MEMORY-2,  CHAR LIMIT-1 *)
-    OVER  +  OVER  DO  KEY  DUP  07 rf-cells +ORIGIN ( BS ) @ =
+    OVER  +  OVER  DO  KEY  DUP  07 rcls +ORIGIN ( BS ) @ =
     IF  DROP  08  OVER  I  =  DUP  R>  2  -  + >R  -
        ELSE ( NOT BS )  DUP  0D  =
            IF ( RET ) LEAVE  DROP  BL  0  ELSE  DUP  ENDIF
@@ -1119,36 +1119,36 @@ inst-bread rf-code
    IF  BLOCK-READ  ELSE  B/BUF  BLOCK-WRITE  ENDIF
    ?DISC  ;     -->    
 (  FORWARD REFERENCES                             WFR-79MAR30 )
-00  BYTE.IN  :         REPLACED.BY  ?EXEC
-01 rf-cells BYTE.IN :  REPLACED.BY  !CSP
-02 rf-cells BYTE.IN :  REPLACED.BY  CURRENT
-04 rf-cells BYTE.IN :  REPLACED.BY  CONTEXT
-06 rf-cells BYTE.IN :  REPLACED.BY  CREATE
-07 rf-cells BYTE.IN :  REPLACED.BY  ]
-0B rf-cells BYTE.IN :  REPLACED.BY  ;S
+00  BYTE.IN :          REPLACED.BY  ?EXEC
+01 rcls BYTE.IN :      REPLACED.BY  !CSP
+02 rcls BYTE.IN :      REPLACED.BY  CURRENT
+04 rcls BYTE.IN :      REPLACED.BY  CONTEXT
+06 rcls BYTE.IN :      REPLACED.BY  CREATE
+07 rcls BYTE.IN :      REPLACED.BY  ]
+0B rcls BYTE.IN :      REPLACED.BY  ;S
 00  BYTE.IN  ;         REPLACED.BY  ?CSP
-01 rf-cells BYTE.IN ;  REPLACED.BY  COMPILE
-03 rf-cells BYTE.IN ;  REPLACED.BY  SMUDGE
-04 rf-cells BYTE.IN ;  REPLACED.BY  [
-05 rf-cells BYTE.IN ;  REPLACED.BY  ;S
+01 rcls BYTE.IN ;      REPLACED.BY  COMPILE
+03 rcls BYTE.IN ;      REPLACED.BY  SMUDGE
+04 rcls BYTE.IN ;      REPLACED.BY  [
+05 rcls BYTE.IN ;      REPLACED.BY  ;S
 00  BYTE.IN  CONSTANT  REPLACED.BY  CREATE
-01 rf-cells BYTE.IN CONSTANT REPLACED.BY SMUDGE
-02 rf-cells BYTE.IN CONSTANT REPLACED.BY , -->    
+01 rcls BYTE.IN CONSTANT REPLACED.BY SMUDGE
+02 rcls BYTE.IN CONSTANT REPLACED.BY , -->    
 (  FORWARD REFERENCES                             WFR-79APR29 )
 ( 02  BYTE.IN  VARIABLE    REPLACED.BY  (;CODE)
 ( 02  BYTE.IN  USER        REPLACED.BY  (;CODE) 
-03 rf-cells BYTE.IN ?ERROR   REPLACED.BY ERROR
-08 rf-cells BYTE.IN ."       REPLACED.BY WORD
-0F rf-cells BYTE.IN ."       REPLACED.BY WORD
-00  BYTE.IN (ABORT)          REPLACED.BY ABORT
-0A rf-cells 5 + BYTE.IN ERROR REPLACED.BY MESSAGE
-10 rf-cells 5 + BYTE.IN ERROR REPLACED.BY QUIT
-06 rf-cells BYTE.IN WORD     REPLACED.BY BLOCK
-10 rf-cells BYTE.IN CREATE   REPLACED.BY MESSAGE
-17 rf-cells BYTE.IN CREATE   REPLACED.BY MIN 
-02 rf-cells BYTE.IN ABORT    REPLACED.BY DR0
-19 rf-cells BYTE.IN BUFFER   REPLACED.BY  R/W
-19 rf-cells BYTE.IN BLOCK    REPLACED.BY  R/W  DECIMAL ;S    
+03 rcls BYTE.IN ?ERROR   REPLACED.BY  ERROR
+08 rcls BYTE.IN ."       REPLACED.BY  WORD
+0F rcls BYTE.IN ."       REPLACED.BY  WORD
+00  BYTE.IN  (ABORT)     REPLACED.BY  ABORT
+0A rcls 5 + BYTE.IN ERROR REPLACED.BY MESSAGE
+10 rcls 5 + BYTE.IN ERROR REPLACED.BY QUIT
+06 rcls BYTE.IN WORD     REPLACED.BY  BLOCK
+10 rcls BYTE.IN CREATE   REPLACED.BY  MESSAGE
+17 rcls BYTE.IN CREATE   REPLACED.BY  MIN 
+02 rcls BYTE.IN ABORT    REPLACED.BY  DR0
+19 rcls BYTE.IN BUFFER   REPLACED.BY  R/W
+19 rcls BYTE.IN BLOCK    REPLACED.BY  R/W      DECIMAL ;S    
 
 (  ',  FORGET,  \                                 WFR-79APR28 )
 HEX  ( 3   WIDTH  ! )
@@ -1227,7 +1227,7 @@ HEX  ( 3   WIDTH  ! )
 
 : ?      @  .  ;                  ( PRINT CONTENTS OF MEMORY *)
 
-'  . CFA ' MESSAGE 12 rf-cells + 7 + ! ( PRINT MESSAGE NUMBER )
+'  . CFA ' MESSAGE 12 rcls + 7 + ! ( PRINT MESSAGE NUMBER )
 -->    
 
 (  PROGRAM DOCUMENTATION                          WFR-79APR20 )
@@ -1273,8 +1273,8 @@ CREATE MON          ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
 
 
 DECIMAL
-HERE FENCE !
-HERE 14 rf-cells +ORIGIN ! ( COLD START FENCE )
-HERE 15 rf-cells +ORIGIN ! ( COLD START DP )
-LATEST 6 rf-cells +ORIGIN ! ( TOPMOST WORD )
-' FORTH 2+ 2 rf-cells + 16 rf-cells +ORIGIN ! ( VOC-LINK ) ;S
+HERE              FENCE  !
+HERE 14 rcls    +ORIGIN  !   ( COLD START FENCE )
+HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
+LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
+' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S

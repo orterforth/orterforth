@@ -143,9 +143,9 @@ system-independent:
  rf-cell   ( -- n )    Returns the word size in bytes. (CELL is
                        not part of this version of fig-Forth.)
 
- rf-cells  ( n -- n )  Multiplies the value on the stack by the
-                       word size. (CELLS is not part of this 
-                       version of fig-Forth.)
+ rcls ( n -- n ) Multiplies the value on the stack by the word 
+                 size. (CELLS is not part of this version of 
+                 fig-Forth.)
 
  rf-code   ( addr -- ) Sets the code field of the most recent 
                        definition. Used by defining words 

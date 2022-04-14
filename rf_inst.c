@@ -1377,7 +1377,7 @@ static void rf_inst_code_ext(void)
   RF_START;
   RF_INST_ONLY;
   rf_inst_def_code("rf-cell", rf_code_cell);
-  rf_inst_def_code("rf-cells", rf_code_cells);
+  rf_inst_def_code("rcls", rf_code_cells);
   rf_inst_def_code("rf-code", rf_code_code);
   rf_inst_def_code("rf-exit", rf_code_exit);
   rf_inst_def_code("rf-target", rf_code_target);
