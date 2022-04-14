@@ -446,10 +446,10 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
 
 # config option
-SPECTRUMCONFIG := a
+SPECTRUMOPTION := a
 
 # minimal ROM-based
-ifeq ($(SPECTRUMCONFIG),a)
+ifeq ($(SPECTRUMOPTION),a)
 # uses Interface 1 ROM for RS232
 SPECTRUMLIBS := \
 	-lmzx_tiny \
@@ -464,7 +464,7 @@ SPECTRUMORG := 32768
 # ORIGIN
 SPECTRUMORIGIN := 35840
 # assembly system dependent code uses ROM routines
-SPECTRUMSYSTEM := target/spectrum.asm
+SPECTRUMSYSTEM := target/spectrum/system.asm
 # locates inst code at 0xC800
 SPECTRUMINSTOFFSET := 18432
 # superzazu emulator is minimal and launches no GUI
@@ -472,7 +472,7 @@ SPECTRUMIMPL := superzazu
 endif
 
 # z88dk library based
-ifeq ($(SPECTRUMCONFIG),b)
+ifeq ($(SPECTRUMOPTION),b)
 # requires z88dk RS232 library
 SPECTRUMLIBS := \
 	-lmzx_tiny \
@@ -487,7 +487,7 @@ SPECTRUMORG := 32768
 # ORIGIN higher, 0x9500, C code is larger as uses z88dk libs
 SPECTRUMORIGIN := 38144
 # C impl of system dependent code uses z88dk libs
-SPECTRUMSYSTEM := target/spectrum.c
+SPECTRUMSYSTEM := target/spectrum/system.c
 # locates inst code at 0xC800
 SPECTRUMINSTOFFSET := 18432
 # no CPU hook for z88dk RS232 code so use Fuse
@@ -495,7 +495,7 @@ SPECTRUMIMPL := fuse
 endif
 
 # z88dk / pure C based
-ifeq ($(SPECTRUMCONFIG),c)
+ifeq ($(SPECTRUMOPTION),c)
 # requires z88dk RS232 library
 SPECTRUMLIBS := \
 	-lmzx_tiny \

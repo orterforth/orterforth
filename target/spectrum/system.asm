@@ -36,8 +36,10 @@ IFDEF USEIY
   push iy                       ; open RS-232
   ld iy, $5C3A
 ENDIF
+
   rst $0008
   defb $34                      ; OP-B-CHAN
+
 IFDEF USEIY
   pop iy
 ENDIF
@@ -112,9 +114,10 @@ IFDEF USEIY
   ei                            ; enable interrupts to scan keyboard
 ENDIF
 key1:
-	ld a, ($5C08)                 ; loop until LAST-K set
-	and	a
-	jr z, key1
+  halt                          ; wait for interrupt
+  ld a, ($5C08)                 ; loop until LAST-K set
+  and	a
+  jr z, key1
 
   cp $06                        ; caps lock? (caps shift + 2)
   jr nz, key2
