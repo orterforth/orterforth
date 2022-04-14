@@ -152,8 +152,8 @@ system-independent:
                   of ;CODE and during installation instead of
                   inline assembler definitions.
 
- rf-exit   ( -- )      Exits orterforth (and returns to the 
-                       shell, BASIC prompt or equivalent).
+ rxit ( -- )      Exits orterforth (and returns to the
+                  shell, BASIC prompt or equivalent).
 
  rf-target ( -- d )    Returns a base-36 representation of
                        the target system (e.g., one of:

@@ -1267,7 +1267,7 @@ HEX
 
 CREATE MON          ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
        ( 0  C,     4C C,   ' LIT 18 + ,    SMUDGE )
-       SMUDGE ' rf-exit CFA @ LATEST PFA CFA !
+       SMUDGE ' rxit CFA @ LATEST PFA CFA !
 
 
 
