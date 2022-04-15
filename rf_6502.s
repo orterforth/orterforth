@@ -869,9 +869,9 @@ _rf_code_rcll:
 	lda #$00
 	jmp push
 
-.export _rf_code_rclls
+.export _rf_code_rcls
 
-_rf_code_rclls:
+_rf_code_rcls:
 
 	asl $00,x
 	rol $01,x
