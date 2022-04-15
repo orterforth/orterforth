@@ -51,7 +51,7 @@ void rf_code_emit(void)
 {
   RF_START;
   {
-    unsigned char c = RF_SP_POP & 0x7F;
+    uint8_t c = RF_SP_POP & 0x7F;
 
     putchar(c);
     RF_USER_OUT++;
@@ -128,14 +128,14 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
-void rf_disc_read(char *p, unsigned char len)
+void rf_disc_read(char *p, uint8_t len)
 {
   for (; len; --len) {
     *(p++) = rf_persci_getc();
   }
 }
 
-void rf_disc_write(char *p, unsigned char len)
+void rf_disc_write(char *p, uint8_t len)
 {
   for (; len; --len) {
     rf_persci_putc(*(p++));

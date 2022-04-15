@@ -60,7 +60,7 @@ static void __FASTCALL__ rf_inst_disc_expect(char e)
 }
 
 /* convert block number into drive, track and sector */
-static void rf_inst_disc_blk(uintptr_t blk, unsigned char *drive, unsigned char *track, unsigned char *sector)
+static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint8_t *sector)
 {
   uintptr_t blk_offset;
   
@@ -71,7 +71,7 @@ static void rf_inst_disc_blk(uintptr_t blk, unsigned char *drive, unsigned char 
 }
 
 /* write two place decimal integer to disc */
-static void __FASTCALL__ rf_inst_disc_puti(unsigned char i)
+static void __FASTCALL__ rf_inst_disc_puti(uint8_t i)
 {
   char p[2];
 
@@ -112,7 +112,7 @@ static char eot = RF_ASCII_EOT;
 /* write PerSci disc command, I or O */
 static void rf_inst_disc_cmd(char c, uintptr_t blk)
 {
-  unsigned char drive, track, sector;
+  uint8_t drive, track, sector;
 
   /* calculate params */
   rf_inst_disc_blk(blk, &drive, &track, &sector);
@@ -296,7 +296,7 @@ static char __FASTCALL__ *rf_inst_block(uintptr_t block)
 }
 
 /* replaces memcpy */
-static void rf_inst_memcpy(char *dst, char *src, unsigned char length)
+static void rf_inst_memcpy(char *dst, char *src, uint8_t length)
 {
   while (length--) {
     *dst++ = *src++;
@@ -312,12 +312,12 @@ static void rf_inst_memset(char *ptr, char value, unsigned int num)
 }
 
 /* WORD */
-static void __FASTCALL__ rf_inst_word(unsigned char c)
+static void __FASTCALL__ rf_inst_word(uint8_t c)
 {
-  unsigned char length;
+  uint8_t length;
   char *here;
   char *addr1;
-  unsigned char n1, n2, n3;
+  uint8_t n1, n2, n3;
 
   /* BLK @ IF BLK @ BLOCK ELSE TIB @ ENDIF */
   /* IN @ + */
@@ -383,7 +383,7 @@ static char *rf_inst_latest(void)
 }
 
 /* CREATE */
-static void rf_inst_create(unsigned char length, char *address)
+static void rf_inst_create(uint8_t length, char *address)
 {
   char *here;
   char *p;
@@ -901,7 +901,7 @@ static void rf_inst_code_interpret_word(void)
     /* IF  */
     if (nfa) {
       /* STATE @ < IF  */
-      if (*((unsigned char *) nfa) < RF_USER_STATE) {
+      if (*((uint8_t *) nfa) < RF_USER_STATE) {
         /* CFA , */
         rf_inst_comma((uintptr_t) rf_cfa(nfa));
       } else {
@@ -1391,7 +1391,7 @@ static void rf_inst_code_ext(void)
 static void rf_inst_forward(void)
 {
   int i;
-  unsigned char *here;
+  uint8_t *here;
 
   /* outer interpreter */
   rf_inst_def_code("inst-interpret-word", rf_inst_code_interpret_word);
@@ -1480,7 +1480,7 @@ static void rf_inst_forward(void)
   rf_inst_immediate();
 
   /* X */  
-  here = (unsigned char *) RF_USER_DP;
+  here = (uint8_t *) RF_USER_DP;
   rf_inst_def_code("X", rf_inst_code_x);
   here[0] = 0x81;
   here[1] = 0x80;
@@ -1532,10 +1532,10 @@ static void rf_inst_save(void)
   char *i = (char *) RF_ORG;
   /* write blocks to disc until HERE */
   char buf[128];
-  unsigned char j;
+  uint8_t j;
   while (i < (char *) RF_USER_DP) {
     for (j = 0; j < 128;) {
-      unsigned char b = *i++;
+      uint8_t b = *i++;
       buf[j++] = rf_inst_hex(b >> 4);
       buf[j++] = rf_inst_hex(b & 15);
     }

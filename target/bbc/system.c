@@ -75,7 +75,7 @@ void rf_code_cr()
   RF_JUMP_NEXT;
 }
 
-void rf_disc_read(char *p, unsigned char len)
+void rf_disc_read(char *p, uint8_t len)
 {
   uint8_t c;
 
@@ -92,7 +92,7 @@ void rf_disc_read(char *p, unsigned char len)
   osbyte(2, 2);
 }
 
-void rf_disc_write(char *p, unsigned char len)
+void rf_disc_write(char *p, uint8_t len)
 {
   /* switch from screen to RS423 */
   osbyte(3, 7);

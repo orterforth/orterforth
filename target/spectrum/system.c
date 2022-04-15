@@ -19,7 +19,7 @@ void rf_code_emit()
 {
   RF_START;
   {
-    unsigned char c;
+    uint8_t c;
     
     c = RF_SP_POP & 0x7F;
     fputc_cons(c);
@@ -87,7 +87,7 @@ void rf_code_cr()
   RF_JUMP_NEXT;
 }
 
-void rf_disc_read(char *c, unsigned char len)
+void rf_disc_read(char *c, uint8_t len)
 {
   ++len;
   while (--len) {
@@ -97,7 +97,7 @@ void rf_disc_read(char *c, unsigned char len)
   }
 }
 
-void rf_disc_write(char *p, unsigned char len)
+void rf_disc_write(char *p, uint8_t len)
 {
   ++len;
   while (--len) {

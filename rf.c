@@ -267,7 +267,7 @@ void rf_code_rr(void)
 }
 #endif
 
-unsigned char rf_digit(char base, char c)
+uint8_t rf_digit(char base, char c)
 {
   c -= 0x30;
   if (c >= 0) {
@@ -286,7 +286,7 @@ void rf_code_digit(void)
 {
   RF_START;
   {
-    unsigned char b, c, d;
+    uint8_t b, c, d;
 
     b = RF_SP_POP;
     c = RF_SP_POP;
@@ -305,7 +305,7 @@ void rf_code_digit(void)
 char *rf_find(char *t, char length, char *nfa)
 {
   char l;
-  unsigned char i;
+  uint8_t i;
 
   while (nfa) {
     /* length from name field incl smudge bit */
@@ -343,7 +343,7 @@ uintptr_t rf_pfind(char *addr1, char *addr2)
   f = rf_find(addr1 + 1, length, (char *) addr2);
   if (f) {
     RF_SP_PUSH((uintptr_t) rf_pfa(f));
-    RF_SP_PUSH(*((unsigned char *) f));
+    RF_SP_PUSH(*((uint8_t *) f));
     return 1;
   } else {
     return 0;
@@ -367,10 +367,10 @@ void rf_code_pfind(void)
 }
 #endif
 
-void rf_enclose(char c, char *addr1, unsigned char *s3, unsigned char *s2, unsigned char *s1)
+void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s1)
 {
   char *hl = addr1;
-  unsigned char e = 0xFF;
+  uint8_t e = 0xFF;
 
   /* skip leading delimiters */
   hl--;
@@ -413,7 +413,7 @@ void rf_code_encl(void)
   {
     char c;
     char *addr1;
-    unsigned char n1, n2, n3;
+    uint8_t n1, n2, n3;
 
     c = (char) RF_SP_POP;
     addr1 = (char *) RF_SP_POP;
@@ -816,9 +816,9 @@ void rf_code_cat(void)
 {
   RF_START;
   {
-    unsigned char *addr;
+    uint8_t *addr;
     
-    addr = (unsigned char *) RF_SP_POP;
+    addr = (uint8_t *) RF_SP_POP;
     RF_SP_PUSH((uintptr_t) *addr);
   }
   RF_JUMP_NEXT;
@@ -846,11 +846,11 @@ void rf_code_cstor(void)
 {
   RF_START;
   {
-    unsigned char *addr;
-    unsigned char c;
+    uint8_t *addr;
+    uint8_t c;
 
-    addr = (unsigned char *) RF_SP_POP;
-    c = (unsigned char) RF_SP_POP;
+    addr = (uint8_t *) RF_SP_POP;
+    c = (uint8_t) RF_SP_POP;
     *addr = c;
   }
   RF_JUMP_NEXT;
@@ -989,7 +989,7 @@ void rf_code_bwrit(void)
 {
   RF_START;
   {
-    unsigned char a = RF_SP_POP;
+    uint8_t a = RF_SP_POP;
     char *b = (char *) RF_SP_POP;
 
     rf_disc_write(b, a);

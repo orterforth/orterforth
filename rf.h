@@ -349,9 +349,9 @@ uintptr_t __FASTCALL__ *rf_pfa(char *nfa);
 
 char *rf_find(char *t, char t_length, char *nfa);
 
-unsigned char rf_digit(char base, char c);
+uint8_t rf_digit(char base, char c);
 
-void rf_enclose(char c, char *addr1, unsigned char *s3, unsigned char *s2, unsigned char *s1);
+void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s1);
 
 /* COLD START */
 
@@ -467,9 +467,9 @@ void rf_code_cr(void);
 
 /* DISC */
 
-void rf_disc_read(char *c, unsigned char len);
+void rf_disc_read(char *c, uint8_t len);
 
-void rf_disc_write(char *p, unsigned char len);
+void rf_disc_write(char *p, uint8_t len);
 
 void rf_code_bread(void);
 

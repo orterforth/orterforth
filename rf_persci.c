@@ -63,7 +63,7 @@ void rf_persci_ws(const char *s)
 }
 
 /* write a two place decimal int to write buffer */
-void rf_persci_wi(unsigned char i)
+void rf_persci_wi(uint8_t i)
 {
   rf_persci_w(48 + (i / 10));
   rf_persci_w(48 + (i % 10));
@@ -80,7 +80,7 @@ void rf_persci_error(const char *message)
 }
 
 /* write error message with drive number */
-void rf_persci_error_on_drive(const char *message, unsigned char drive)
+void rf_persci_error_on_drive(const char *message, uint8_t drive)
 {
   rf_persci_w(RF_ASCII_NAK);
   rf_persci_ws(message);
@@ -92,7 +92,7 @@ void rf_persci_error_on_drive(const char *message, unsigned char drive)
 /* READING AND WRITING */
 
 /* validate drive track and sector are within ranges */
-char rf_persci_validate(unsigned char track, unsigned char sector, unsigned char drive)
+char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
 {
   /* validate drive number */
   if (drive > 3) {
@@ -111,7 +111,7 @@ char rf_persci_validate(unsigned char track, unsigned char sector, unsigned char
 
 FILE *rf_persci_files[4];
 
-FILE *rf_persci_open_file(unsigned char drive)
+FILE *rf_persci_open_file(uint8_t drive)
 {
   FILE *ptr;
 
@@ -123,7 +123,7 @@ FILE *rf_persci_open_file(unsigned char drive)
 }
 
 /* move to track and sector */
-int seek(FILE *ptr, unsigned char track, unsigned char sector, unsigned char drive)
+int seek(FILE *ptr, uint8_t track, uint8_t sector, uint8_t drive)
 {
   if (fseek(ptr, ((track * 26) + (sector - 1)) * 128, SEEK_SET)) {
     perror("fseek failed");
@@ -136,10 +136,10 @@ int seek(FILE *ptr, unsigned char track, unsigned char sector, unsigned char dri
 }
 
 /* I (Input) */
-void rf_persci_input(unsigned char track, unsigned char sector, unsigned char drive)
+void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
 {
   FILE *ptr;
-  unsigned char i;
+  uint8_t i;
 
   /* reset buffer */
   rf_persci_reset();
@@ -188,12 +188,12 @@ void rf_persci_input(unsigned char track, unsigned char sector, unsigned char dr
   rf_persci_w(RF_ASCII_EOT);
 }
 
-unsigned char rf_persci_drive = 0;
-unsigned char rf_persci_track = 0;
-unsigned char rf_persci_sector = 0;
+uint8_t rf_persci_drive = 0;
+uint8_t rf_persci_track = 0;
+uint8_t rf_persci_sector = 0;
 
 /* O (Output) */
-void rf_persci_output(unsigned char track, unsigned char sector, unsigned char drive)
+void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
 {
   /* reset buffer */
   rf_persci_reset();
