@@ -479,14 +479,14 @@ void rf_code_dchar(void);
 
 /* EXTENSIONS */
 
-void rf_code_cell(void);
+void rf_code_rcll(void);
 
-void rf_code_cells(void);
+void rf_code_rcls(void);
 
-void rf_code_code(void);
+void rf_code_rcod(void);
 
-void rf_code_exit(void);
+void rf_code_rxit(void);
 
-void rf_code_target(void);
+void rf_code_rtgt(void);
 
 #endif /* RF_H_ */

@@ -998,7 +998,7 @@ void rf_code_bwrit(void)
   RF_JUMP_NEXT;
 }
 
-void rf_code_code(void)
+void rf_code_rcod(void)
 {
   RF_START;
   {
@@ -1010,14 +1010,14 @@ void rf_code_code(void)
   RF_JUMP_NEXT;
 }
 
-void rf_code_exit(void)
+void rf_code_rxit(void)
 {
   RF_START;
   rf_fp = 0;
 }
 
 #ifndef RF_TARGET_CODE_CELL
-void rf_code_cell(void)
+void rf_code_rcll(void)
 {
   RF_START;
   RF_SP_PUSH(RF_WORD_SIZE);
@@ -1026,7 +1026,7 @@ void rf_code_cell(void)
 #endif
 
 #ifndef RF_TARGET_CODE_CELLS
-void rf_code_cells(void)
+void rf_code_rcls(void)
 {
   RF_START;
   {
@@ -1040,7 +1040,7 @@ void rf_code_cells(void)
 #endif
 
 #ifndef RF_TARGET_CODE_TARGET
-void rf_code_target(void)
+void rf_code_rtgt(void)
 {
   RF_START;
   rf_dpush(RF_TARGET);

@@ -1029,9 +1029,9 @@ cold2:
 
   jp (ix)
 
-PUBLIC _rf_code_cell
+PUBLIC _rf_code_rcll
 
-_rf_code_cell:
+_rf_code_rcll:
   ld hl, $0002                  ; push 2
 IFDEF USEIY
   jp (iy)
@@ -1039,9 +1039,9 @@ ELSE
   jp hpush
 ENDIF
 
-PUBLIC _rf_code_cells
+PUBLIC _rf_code_rcls
 
-_rf_code_cells:
+_rf_code_rcls:
   pop hl                        ; push hl * 2
   add hl, hl
 IFDEF USEIY

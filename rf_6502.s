@@ -860,18 +860,18 @@ _rf_code_dodoe:
 	adc #$00
 	jmp push
 
-.export _rf_code_cell
+.export _rf_code_rcll
 
-_rf_code_cell:
+_rf_code_rcll:
 
 	lda #$02
 	pha
 	lda #$00
 	jmp push
 
-.export _rf_code_cells
+.export _rf_code_rclls
 
-_rf_code_cells:
+_rf_code_rclls:
 
 	asl $00,x
 	rol $01,x

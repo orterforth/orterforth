@@ -1376,11 +1376,11 @@ static void rf_inst_code_ext(void)
 {
   RF_START;
   RF_INST_ONLY;
-  rf_inst_def_code("rcll", rf_code_cell);
-  rf_inst_def_code("rcls", rf_code_cells);
-  rf_inst_def_code("rcod", rf_code_code);
-  rf_inst_def_code("rxit", rf_code_exit);
-  rf_inst_def_code("rtgt", rf_code_target);
+  rf_inst_def_code("rcll", rf_code_rcll);
+  rf_inst_def_code("rcls", rf_code_rcls);
+  rf_inst_def_code("rcod", rf_code_rcod);
+  rf_inst_def_code("rxit", rf_code_rxit);
+  rf_inst_def_code("rtgt", rf_code_rtgt);
   RF_JUMP_NEXT;
 }
 
@@ -1400,7 +1400,7 @@ static void rf_inst_forward(void)
   rf_inst_compile("inst-interpret-word");
 	rf_inst_compile("BRANCH");
 	rf_inst_comma(-2 * RF_WORD_SIZE);
-  rf_inst_def_code("rxit", rf_code_exit);
+  rf_inst_def_code("rxit", rf_code_rxit);
   rf_inst_colon("inst-load");
   rf_inst_compile("inst-interpret");
   rf_inst_compile("rxit");
