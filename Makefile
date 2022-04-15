@@ -162,8 +162,8 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
-# BBCOPTION := default
-BBCOPTION := assembly
+BBCOPTION := default
+# BBCOPTION := assembly
 
 BBCORG := 1720
 BBCROMS := \
@@ -509,7 +509,7 @@ SPECTRUMORG := 32768
 # ORIGIN higher, 0x9EFC, C code is larger as uses z88dk libs and pure C impl
 SPECTRUMORIGIN := 40700
 # C impl of system dependent code uses z88dk libs
-SPECTRUMSYSTEM := target/spectrum.c
+SPECTRUMSYSTEM := target/spectrum/system.c
 # locates inst code at 0xC800
 SPECTRUMINSTOFFSET := 18432
 # no CPU hook for z88dk RS232 code so use Fuse
