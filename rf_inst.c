@@ -1228,68 +1228,68 @@ typedef struct rf_inst_code_t {
 #define RF_INST_CODE_LIT_LIST_SIZE 54
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
-  { "inst-lit", rf_code_lit },
-  { "inst-exec", rf_code_exec },
-  { "inst-bran", rf_code_bran },
-  { "inst-zbran", rf_code_zbran },
-  { "inst-xloop", rf_code_xloop },
-  { "inst-xploo", rf_code_xploo },
-  { "inst-xdo", rf_code_xdo },
-  { "inst-digit", rf_code_digit },
-  { "inst-pfind", rf_code_pfind },
-  { "inst-encl", rf_code_encl },
+  { "lit", rf_code_lit },
+  { "exec", rf_code_exec },
+  { "bran", rf_code_bran },
+  { "zbran", rf_code_zbran },
+  { "xloop", rf_code_xloop },
+  { "xploo", rf_code_xploo },
+  { "xdo", rf_code_xdo },
+  { "digit", rf_code_digit },
+  { "pfind", rf_code_pfind },
+  { "encl", rf_code_encl },
 #ifdef RF_INST_SILENT
-  { "inst-emit", rf_code_drop },
+  { "emit", rf_code_drop },
 #else
-  { "inst-emit", rf_code_emit },
+  { "emit", rf_code_emit },
 #endif
-  { "inst-key", rf_code_key },
-  { "inst-qterm", rf_code_qterm },
+  { "key", rf_code_key },
+  { "qterm", rf_code_qterm },
 #ifdef RF_INST_SILENT
-  { "inst-cr", rf_inst_code_noop },
+  { "cr", rf_inst_code_noop },
 #else
-  { "inst-cr", rf_code_cr },
+  { "cr", rf_code_cr },
 #endif
-  { "inst-cmove", rf_code_cmove },
-  { "inst-ustar", rf_code_ustar },
-  { "inst-uslas", rf_code_uslas },
-  { "inst-andd", rf_code_andd },
-  { "inst-orr", rf_code_orr },
-  { "inst-xorr", rf_code_xorr },
-  { "inst-spat", rf_code_spat },
-  { "inst-spsto", rf_code_spsto },
-  { "inst-rpsto", rf_code_rpsto },
-  { "inst-semis", rf_code_semis },
-  { "inst-leave", rf_code_leave },
-  { "inst-tor", rf_code_tor },
-  { "inst-fromr", rf_code_fromr },
-  { "inst-rr", rf_code_rr },
-  { "inst-zequ", rf_code_zequ },
-  { "inst-zless", rf_code_zless },
-  { "inst-plus", rf_code_plus },
-  { "inst-dplus", rf_code_dplus },
-  { "inst-minus", rf_code_minus },
-  { "inst-dminu", rf_code_dminu },
-  { "inst-over", rf_code_over },
-  { "inst-drop", rf_code_drop },
-  { "inst-swap", rf_code_swap },
-  { "inst-dup", rf_code_dup },
-  { "inst-pstor", rf_code_pstor },
-  { "inst-toggl", rf_code_toggl },
-  { "inst-at", rf_code_at },
-  { "inst-cat", rf_code_cat },
-  { "inst-store", rf_code_store },
-  { "inst-cstor", rf_code_cstor },
-  { "inst-docol", rf_code_docol },
-  { "inst-docon", rf_code_docon },
-  { "inst-dovar", rf_code_dovar },
-  { "inst-douse", rf_code_douse },
-  { "inst-dodoe", rf_code_dodoe },
-  { "inst-cold", rf_code_cold },
-  { "inst-stod", rf_code_stod },
-  { "inst-dchar", rf_code_dchar },
-  { "inst-bwrit", rf_code_bwrit },
-  { "inst-bread", rf_code_bread }
+  { "cmove", rf_code_cmove },
+  { "ustar", rf_code_ustar },
+  { "uslas", rf_code_uslas },
+  { "andd", rf_code_andd },
+  { "orr", rf_code_orr },
+  { "xorr", rf_code_xorr },
+  { "spat", rf_code_spat },
+  { "spsto", rf_code_spsto },
+  { "rpsto", rf_code_rpsto },
+  { "semis", rf_code_semis },
+  { "leave", rf_code_leave },
+  { "tor", rf_code_tor },
+  { "fromr", rf_code_fromr },
+  { "rr", rf_code_rr },
+  { "zequ", rf_code_zequ },
+  { "zless", rf_code_zless },
+  { "plus", rf_code_plus },
+  { "dplus", rf_code_dplus },
+  { "minus", rf_code_minus },
+  { "dminu", rf_code_dminu },
+  { "over", rf_code_over },
+  { "drop", rf_code_drop },
+  { "swap", rf_code_swap },
+  { "dup", rf_code_dup },
+  { "pstor", rf_code_pstor },
+  { "toggl", rf_code_toggl },
+  { "at", rf_code_at },
+  { "cat", rf_code_cat },
+  { "store", rf_code_store },
+  { "cstor", rf_code_cstor },
+  { "docol", rf_code_docol },
+  { "docon", rf_code_docon },
+  { "dovar", rf_code_dovar },
+  { "douse", rf_code_douse },
+  { "dodoe", rf_code_dodoe },
+  { "cold", rf_code_cold },
+  { "stod", rf_code_stod },
+  { "dchar", rf_code_dchar },
+  { "bwrit", rf_code_bwrit },
+  { "bread", rf_code_bread }
 };
 
 /* list of forward declared words that will fail until replaced later */
@@ -1394,28 +1394,28 @@ static void rf_inst_forward(void)
   uint8_t *here;
 
   /* outer interpreter */
-  rf_inst_def_code("inst-interpret-word", rf_inst_code_interpret_word);
+  rf_inst_def_code("interpret-word", rf_inst_code_interpret_word);
   rf_inst_def_code("BRANCH", rf_code_bran);
-  rf_inst_colon("inst-interpret");
-  rf_inst_compile("inst-interpret-word");
+  rf_inst_colon("interpret");
+  rf_inst_compile("interpret-word");
 	rf_inst_compile("BRANCH");
 	rf_inst_comma(-2 * RF_WORD_SIZE);
   rf_inst_def_code("rxit", rf_code_rxit);
-  rf_inst_colon("inst-load");
-  rf_inst_compile("inst-interpret");
+  rf_inst_colon("load");
+  rf_inst_compile("interpret");
   rf_inst_compile("rxit");
 
   /* boot time literals */
-  rf_inst_def_literal("inst-relrev", (uintptr_t) (RF_FIGREL | (RF_FIGREV << 8)));
-  rf_inst_def_literal("inst-ver", (uintptr_t) (RF_USRVER | (rf_inst_attr() << 8)));
-  rf_inst_def_literal("inst-bs", (uintptr_t) RF_BS);
-  rf_inst_def_literal("inst-user", (uintptr_t) RF_USER);
-  rf_inst_def_literal("inst-inits0", (uintptr_t) RF_S0);
-  rf_inst_def_literal("inst-initr0", (uintptr_t) RF_R0);
-  rf_inst_def_literal("inst-tib", (uintptr_t) RF_TIB);
+  rf_inst_def_literal("relrev", (uintptr_t) (RF_FIGREL | (RF_FIGREV << 8)));
+  rf_inst_def_literal("ver", (uintptr_t) (RF_USRVER | (rf_inst_attr() << 8)));
+  rf_inst_def_literal("bs", (uintptr_t) RF_BS);
+  rf_inst_def_literal("user", (uintptr_t) RF_USER);
+  rf_inst_def_literal("inits0", (uintptr_t) RF_S0);
+  rf_inst_def_literal("initr0", (uintptr_t) RF_R0);
+  rf_inst_def_literal("tib", (uintptr_t) RF_TIB);
 
   /* orterforth extension words compiled inline after boot up literals */
-  rf_inst_def_code("inst-ext", rf_inst_code_ext);
+  rf_inst_def_code("ext", rf_inst_code_ext);
 
   /* inst time code field declarations */
   for (i = 0; i < RF_INST_CODE_LIST_SIZE; ++i) {
@@ -1424,8 +1424,8 @@ static void rf_inst_forward(void)
   }
 
   /* disc buffer literals */
-  rf_inst_def_literal("inst-first", (uintptr_t) RF_FIRST);
-  rf_inst_def_literal("inst-limit", (uintptr_t) RF_LIMIT);
+  rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
+  rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
 
   /* ( */
   /* rf_inst_compile("LIT"); */
@@ -1490,8 +1490,8 @@ static void rf_inst_forward(void)
   rf_inst_def_code_immediate("LITERAL", rf_inst_code_literal);
 
   /* stack limit literals */
-  rf_inst_def_literal("inst-s0", (uintptr_t) RF_S0);
-  rf_inst_def_literal("inst-s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
+  rf_inst_def_literal("s0", (uintptr_t) RF_S0);
+  rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
 
   /* define code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
@@ -1516,7 +1516,7 @@ static void __FASTCALL__ rf_inst_load(uintptr_t screen)
   /* initialise RP */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
-  /* jump to inst-load */
+  /* jump to load */
   assert(rf_inst_load_cfa);
   RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
   RF_JUMP(rf_next);
@@ -1572,8 +1572,8 @@ void rf_inst(void)
   RF_USER_DP = (uintptr_t) RF_ORIGIN;
 #endif
 
-  /* inst-load is the starting point to load and interpret */
-  nfa = rf_inst_find_string("inst-load");
+  /* load is the starting point to load and interpret */
+  nfa = rf_inst_find_string("load");
   assert(nfa);
 
   rf_inst_load_cfa = rf_cfa(nfa);
