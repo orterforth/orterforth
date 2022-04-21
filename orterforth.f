@@ -1279,7 +1279,12 @@ HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
 LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
 DECIMAL
-12 LOAD 33 LOAD 72 LOAD
+( load boot-up parameters and machine code definitions        )
+12 LOAD
+( load high level utility definitions                         )
+33 LOAD
+( load high level definitions                                 )
+72 LOAD
 ( break link with inst time code                              )
 ' rcll LFA overwrite 0= OVER @ * SWAP !
 ( WARNING = 1                                                 )
