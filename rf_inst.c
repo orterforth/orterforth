@@ -1061,12 +1061,19 @@ static void rf_inst_forward(void)
   int i;
   uint8_t *here;
 
-  /* outer interpreter */
+  /* user variables */
+  rf_inst_def_user("DP", RF_USER_DP_IDX);
+  rf_inst_def_user("BLK", RF_USER_BLK_IDX);
   rf_inst_def_user("IN", RF_USER_IN_IDX);
+  rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
+  rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
+  rf_inst_def_user("STATE", RF_USER_STATE_IDX);
+  rf_inst_def_user("CSP", RF_USER_CSP_IDX);
+
+  /* outer interpreter */
   rf_inst_def_code("LIT", rf_code_lit);
   rf_inst_def_code("U*", rf_code_ustar);
   rf_inst_def_code("DROP", rf_code_drop);
-  rf_inst_def_user("BLK", RF_USER_BLK_IDX);
   rf_inst_def_code("!", rf_code_store);
   rf_inst_def_code("interpret-word", rf_inst_code_interpret_word);
   rf_inst_def_code("BRANCH", rf_code_bran);
@@ -1139,10 +1146,6 @@ static void rf_inst_forward(void)
   rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
 
   /* : */
-  rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
-  rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
-  rf_inst_def_user("STATE", RF_USER_STATE_IDX);
-  rf_inst_def_user("DP", RF_USER_DP_IDX);
   rf_inst_def_code("rcll", rf_code_rcll);
 
   /* ; */
@@ -1173,7 +1176,6 @@ static void rf_inst_forward(void)
 
   /* used in !CSP */
   rf_inst_def_code("SP@", rf_code_spat);
-  rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
   /* used in forward declared control words */
   rf_inst_def_code("SWAP", rf_code_swap);
