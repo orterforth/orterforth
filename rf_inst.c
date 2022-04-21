@@ -1075,7 +1075,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 24
+#define RF_INST_CODE_LIST_SIZE 21
 
 static rf_inst_code_t rf_inst_code_list[] = {
   /* used from the start */
@@ -1090,14 +1090,11 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "HEX", rf_inst_code_hex },
   /* : ; are the next to be called */
   { "IMMEDIATE", rf_inst_code_immediate },
-  /* used in MESSAGE */
-  { ".", rf_code_drop },
   /* used in WORD */
   { "BLOCK", rf_inst_code_block },
   /* used in CONSTANT, : */
   { "CREATE", rf_inst_code_create },  
   /* : */
-  { "?EXEC", rf_inst_code_noop },
   { "!CSP", rf_inst_code_storecsp },
   /* rf_inst_def_user uses this as well as makeshift : */
   { "+", rf_code_plus },
@@ -1107,7 +1104,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   /* ; */
   { "COMPILE", rf_inst_code_compile },
   { "SMUDGE", rf_inst_code_smudge },
-  { "?CSP", rf_inst_code_noop },
   { ",", rf_inst_code_comma },
   /* --> */
   { "-->", rf_inst_code_nexts },

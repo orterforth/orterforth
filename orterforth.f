@@ -1296,6 +1296,8 @@ DECIMAL
 
 
 ( forward declared words                                      )
+: ?EXEC ;
+: ?CSP ;
 : ERROR ;
 : ABORT ;
 : MESSAGE ;
@@ -1303,10 +1305,8 @@ DECIMAL
 : MIN ;
 : DR0 ;
 : R/W ;
+: . DROP ;
 -->
-
-
-
 
 
 
