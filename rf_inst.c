@@ -166,17 +166,6 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
 
 /* INST TIME CODE */
 
-#ifndef RF_INST_SMALLER
-/* fails with "notimpl" if called */
-static void rf_inst_code_notimpl(void)
-{
-  RF_START;
-  rf_inst_error("notimpl");
-}
-#else
-#define rf_inst_code_notimpl 0
-#endif
-
 /* flag to indicate completion of install */
 extern char rf_installed;
 
