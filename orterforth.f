@@ -1279,20 +1279,19 @@ HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
 LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
 DECIMAL
-( forward declarations                                        )
+
+CREATE : docol DP @ rcll MINUS + ! 192 STATE !
+CREATE 192 STATE ! docol DP @ rcll MINUS + !
+[COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
+: ; COMPILE ;S CURRENT @ @ 32 TOGGLE [COMPILE] [
+[COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
 : noop ;
 : HERE DP @ ;
 : - MINUS + ;
+: SMUDGE CURRENT @ @ 32 TOGGLE ;
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
+: ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
 -->
-
-
-
-
-
-
-
-
 
 
 ( forward declared words                                      )

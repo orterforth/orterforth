@@ -559,16 +559,6 @@ static void rf_inst_code_x(void)
   RF_JUMP_NEXT;
 }
 
-/* SMUDGE */
-static void rf_inst_code_smudge(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  /* LATEST 20 TOGGLE */
-  *(rf_inst_latest()) ^= 0x20;
-  RF_JUMP_NEXT;
-}
-
 /* CODE */
 static void rf_inst_code_code(void)
 {
@@ -639,18 +629,10 @@ static void rf_inst_code_compile(void)
 }
 
 /* IMMEDIATE */
+
 static void rf_inst_immediate(void)
 {
   *(rf_inst_latest()) ^= 0x40;
-}
-
-/* IMMEDIATE */
-static void rf_inst_code_immediate(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  rf_inst_immediate();
-  RF_JUMP_NEXT;
 }
 
 #ifndef RF_INST_SMALLER
@@ -1075,7 +1057,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 21
+#define RF_INST_CODE_LIST_SIZE 19
 
 static rf_inst_code_t rf_inst_code_list[] = {
   /* used from the start */
@@ -1088,8 +1070,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   /* DECIMAL, HEX */
   { "DECIMAL", rf_inst_code_decimal },
   { "HEX", rf_inst_code_hex },
-  /* : ; are the next to be called */
-  { "IMMEDIATE", rf_inst_code_immediate },
   /* used in WORD */
   { "BLOCK", rf_inst_code_block },
   /* used in CONSTANT, : */
@@ -1103,7 +1083,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "]", rf_inst_code_rbrac },
   /* ; */
   { "COMPILE", rf_inst_code_compile },
-  { "SMUDGE", rf_inst_code_smudge },
   { ",", rf_inst_code_comma },
   /* --> */
   { "-->", rf_inst_code_nexts },
@@ -1209,45 +1188,18 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
   rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
 
-  /* ( */
-  /* rf_inst_compile("LIT"); */
-  rf_inst_colon("(");
-  rf_inst_compile_lit(0x29);
-  rf_inst_compile("WORD");
-  rf_inst_compile(";S");
-  rf_inst_immediate();
-
   /* used in ;CODE */
   rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
 
   /* : */
   rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
   rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
+  rf_inst_def_user("STATE", RF_USER_STATE_IDX);
   rf_inst_def_user("DP", RF_USER_DP_IDX);
-
-  rf_inst_colon(":");
-  rf_inst_compile("CREATE");
-  rf_inst_compile("]");
-  /* write docol to CFA */
-  rf_inst_compile_lit((uintptr_t) rf_code_docol);
-  rf_inst_compile("DP");
-  rf_inst_compile("@");
-  rf_inst_compile_lit((uintptr_t) -RF_WORD_SIZE);
-  rf_inst_compile("+");
-  rf_inst_compile("!");
-  rf_inst_compile(";S");
-  rf_inst_immediate();
+  rf_inst_def_code("rcll", rf_code_rcll);
 
   /* ; */
   rf_inst_def_code("[", rf_inst_code_lbrac);
-  rf_inst_immediate();
-
-  rf_inst_colon(";");
-  rf_inst_compile("COMPILE");
-  rf_inst_compile(";S");
-  rf_inst_compile("SMUDGE");
-  rf_inst_compile("[");
-  rf_inst_compile(";S");
   rf_inst_immediate();
 
   /* X */  
