@@ -1257,12 +1257,9 @@ void rf_inst(void)
   /* inst forward declarations */
   rf_inst_forward();
 
-#ifdef RF_INST_OVERWRITE
-  /* now move DP to target the real dictionary */
-/*
-  RF_USER_DP = (uintptr_t) RF_ORIGIN;
-*/
-#endif
+  /* COLD routine forward references */
+  rf_inst_def_literal("coldforth", (uintptr_t) &rf_cold_forth);
+  rf_inst_def_literal("coldabort", (uintptr_t) &rf_cold_abort);
 
   /* load is the starting point to load and interpret */
   nfa = rf_inst_find_string("load");
@@ -1282,12 +1279,6 @@ void rf_inst(void)
 
   /* finished loading */
   rf_inst_load_cfa = 0;
-
-  /* FORTH and ABORT are used in rf_code_cold */
-  rf_cold_forth = rf_pfa(rf_inst_find_string("FORTH"));
-  assert(rf_cold_forth);
-  rf_cold_abort = rf_pfa(rf_inst_find_string("ABORT"));
-  assert(rf_cold_abort);
 
 #ifdef RF_INST_SILENT
   /* enable CR, EMIT after silent install */
