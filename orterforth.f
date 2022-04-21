@@ -1280,5 +1280,8 @@ LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
 DECIMAL
 12 LOAD 33 LOAD 72 LOAD
-1 13 rcls +ORIGIN !             ( WARNING = 1                 )
+( break link with inst time code                              )
+' rcll LFA overwrite 0= OVER @ * SWAP !
+( WARNING = 1                                                 )
+1 13 rcls +ORIGIN !             
 ;S

@@ -1538,6 +1538,13 @@ static void rf_inst_forward(void)
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
     rf_inst_def_literal(code->name, (uintptr_t) code->value);
   }
+
+  /* switch literals */
+#ifdef RF_INST_OVERWRITE
+  rf_inst_def_literal("overwrite", 1);
+#else
+  rf_inst_def_literal("overwrite", 0);
+#endif
 }
 
 rf_code_t *rf_inst_load_cfa = 0;
@@ -1625,11 +1632,6 @@ void rf_inst(void)
 
   /* finished loading */
   rf_inst_load_cfa = 0;
-
-#ifdef RF_INST_OVERWRITE
-  /* break link with inst time code */
-  *(rf_lfa(rf_inst_find_string("rcll"))) = 0;
-#endif
 
   /* FORTH and ABORT are used in rf_code_cold */
   rf_cold_forth = rf_pfa(rf_inst_find_string("FORTH"));
