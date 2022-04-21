@@ -768,20 +768,6 @@ static void rf_inst_code_plusorigin(void)
   RF_JUMP_NEXT;
 }
 
-/* --> */
-static void rf_inst_code_nexts(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  /* ?LOADING */
-  assert(RF_USER_BLK);
-  /* 0 IN ! */
-  RF_USER_IN = 0;
-  /* B/SCR BLK @ OVER MOD - BLK +! */
-  RF_USER_BLK += (RF_BSCR - (RF_USER_BLK % RF_BSCR));
-  RF_JUMP_NEXT;
-}
-
 /* BYTE.IN */
 static void rf_inst_code_bytein(void)
 {
@@ -1048,7 +1034,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 18
+#define RF_INST_CODE_LIST_SIZE 17
 
 static rf_inst_code_t rf_inst_code_list[] = {
   /* used from the start */
@@ -1074,8 +1060,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   /* ; */
   { "COMPILE", rf_inst_code_compile },
   { ",", rf_inst_code_comma },
-  /* --> */
-  { "-->", rf_inst_code_nexts },
   /* used by +ORIGIN itself */
   { "+ORIGIN", rf_inst_code_plusorigin },
   /* resolving forward declarations */
@@ -1213,6 +1197,9 @@ static void rf_inst_forward(void)
 
   /* used when resetting DP */
   rf_inst_def_code("+!", rf_code_pstor);
+
+  /* used in --> */
+  rf_inst_def_code("AND", rf_code_andd);
 
   /* used in forward declared control words */
   rf_inst_def_code("SWAP", rf_code_swap);

@@ -1292,8 +1292,8 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 : noop ;
 : HERE DP @ ;
 : - MINUS + ;
+: --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
 -->
-
 ( forward declared words                                      )
 : ?EXEC ;
 : ?CSP ;
