@@ -1295,6 +1295,22 @@ DECIMAL
 
 
 
+( forward declared words                                      )
+: ERROR ;
+: ABORT ;
+: MESSAGE ;
+: QUIT ;
+: MIN ;
+: DR0 ;
+: R/W ;
+-->
+
+
+
+
+
+
+
 ( forward declared control words                              )
 : BACK HERE - , ;
 : BEGIN HERE 1 ; IMMEDIATE

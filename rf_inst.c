@@ -1073,26 +1073,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "bread", rf_code_bread }
 };
 
-/* list of forward declared words that will fail until replaced later */
-
-#define RF_INST_NOTIMPL_LIST_SIZE 7
-
-static char *rf_inst_notimpl_list[] = {
-  /* used in ?ERROR */
-  "ERROR",
-  /* used in (ABORT) */
-  "ABORT",
-  /* used in ERROR */
-  "MESSAGE",
-  "QUIT",
-  /* used in CREATE */
-  "MIN",
-  /* used in ABORT */
-  "DR0",
-  /* used in BUFFER, BLOCK */
-  "R/W"
-};
-
 /* list of forward declared words used in inst */
 
 #define RF_INST_CODE_LIST_SIZE 24
@@ -1240,11 +1220,6 @@ static void rf_inst_forward(void)
   rf_inst_compile("WORD");
   rf_inst_compile(";S");
   rf_inst_immediate();
-
-  /* forward declarations not yet implemented */
-  for (i = 0; i < RF_INST_NOTIMPL_LIST_SIZE; ++i) {
-    rf_inst_def_code(rf_inst_notimpl_list[i], rf_inst_code_notimpl);
-  }
 
   /* used in ;CODE */
   rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
