@@ -1394,15 +1394,46 @@ static void rf_inst_forward(void)
   uint8_t *here;
 
   /* outer interpreter */
+  rf_inst_def_user("IN", RF_USER_IN_IDX);
+  rf_inst_def_code("LIT", rf_code_lit);
+  rf_inst_def_code("U*", rf_code_ustar);
+  rf_inst_def_code("DROP", rf_code_drop);
+  rf_inst_def_user("BLK", RF_USER_BLK_IDX);
+  rf_inst_def_code("!", rf_code_store);
   rf_inst_def_code("interpret-word", rf_inst_code_interpret_word);
   rf_inst_def_code("BRANCH", rf_code_bran);
+
   rf_inst_colon("interpret");
   rf_inst_compile("interpret-word");
 	rf_inst_compile("BRANCH");
 	rf_inst_comma(-2 * RF_WORD_SIZE);
+
+  rf_inst_def_code(";S", rf_code_semis);
   rf_inst_def_code("rxit", rf_code_rxit);
-  rf_inst_colon("load");
+
+  /* LOAD */
+  rf_inst_colon("LOAD");
+  /* TODO BLK @ >R IN @ >R */
+  rf_inst_compile_lit(0);
+  rf_inst_compile("IN");
+  rf_inst_compile("!");
+  rf_inst_compile_lit(RF_BSCR);
+  rf_inst_compile("U*");
+  rf_inst_compile("DROP");
+  rf_inst_compile("BLK");
+  rf_inst_compile("!");
   rf_inst_compile("interpret");
+  /* TODO R> IN ! R> BLK ! */
+  rf_inst_compile(";S");
+
+  /* inst load sequence */
+  rf_inst_colon("load");
+  rf_inst_compile_lit(12);
+  rf_inst_compile("LOAD");
+  rf_inst_compile_lit(33);
+  rf_inst_compile("LOAD");
+  rf_inst_compile_lit(72);
+  rf_inst_compile("LOAD");
   rf_inst_compile("rxit");
 
   /* boot time literals */
@@ -1507,12 +1538,8 @@ static void rf_inst_emptybuffers(void)
   rf_inst_memset((char *) RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
 }
 
-static void __FASTCALL__ rf_inst_load(uintptr_t screen)
+static void rf_inst_load(void)
 {
-  /* initialise BLK, IN */
-  RF_USER_BLK = screen * RF_BSCR;
-  RF_USER_IN = 0;
-
   /* initialise RP */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
@@ -1586,9 +1613,7 @@ void rf_inst(void)
   rf_inst_use = (uintptr_t *) RF_FIRST;
 #endif
   rf_inst_prev = (uintptr_t *) RF_FIRST;
-  rf_inst_load(12);
-  rf_inst_load(33);
-  rf_inst_load(72);
+  rf_inst_load();
 
   /* finished loading */
   rf_inst_load_cfa = 0;
