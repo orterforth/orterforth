@@ -1586,7 +1586,6 @@ static void rf_inst_save(void)
 void rf_inst(void)
 {
   char *nfa;
-  uintptr_t *origin;
 
   /* fail if called after installed */
   RF_INST_ONLY;
@@ -1631,10 +1630,6 @@ void rf_inst(void)
   /* break link with inst time code */
   *(rf_lfa(rf_inst_find_string("rcll"))) = 0;
 #endif
-
-  /* set WARNING = 1 */
-  origin = (uintptr_t *) RF_ORIGIN;
-  origin[13] = 0x0001;
 
   /* FORTH and ABORT are used in rf_code_cold */
   rf_cold_forth = rf_pfa(rf_inst_find_string("FORTH"));
