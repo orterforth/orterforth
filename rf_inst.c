@@ -1410,10 +1410,18 @@ static void rf_inst_forward(void)
 
   rf_inst_def_code(";S", rf_code_semis);
   rf_inst_def_code("rxit", rf_code_rxit);
+  rf_inst_def_code("@", rf_code_at);
+  rf_inst_def_code(">R", rf_code_tor);
+  rf_inst_def_code("R>", rf_code_fromr);
 
   /* LOAD */
   rf_inst_colon("LOAD");
-  /* TODO BLK @ >R IN @ >R */
+  rf_inst_compile("BLK");
+  rf_inst_compile("@");
+  rf_inst_compile(">R");
+  rf_inst_compile("IN");
+  rf_inst_compile("@");
+  rf_inst_compile(">R");
   rf_inst_compile_lit(0);
   rf_inst_compile("IN");
   rf_inst_compile("!");
@@ -1423,16 +1431,17 @@ static void rf_inst_forward(void)
   rf_inst_compile("BLK");
   rf_inst_compile("!");
   rf_inst_compile("interpret");
-  /* TODO R> IN ! R> BLK ! */
+  rf_inst_compile("R>");
+  rf_inst_compile("IN");
+  rf_inst_compile("!");
+  rf_inst_compile("R>");
+  rf_inst_compile("BLK");
+  rf_inst_compile("!");
   rf_inst_compile(";S");
 
   /* inst load sequence */
   rf_inst_colon("load");
-  rf_inst_compile_lit(12);
-  rf_inst_compile("LOAD");
-  rf_inst_compile_lit(33);
-  rf_inst_compile("LOAD");
-  rf_inst_compile_lit(72);
+  rf_inst_compile_lit(80);
   rf_inst_compile("LOAD");
   rf_inst_compile("rxit");
 
