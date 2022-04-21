@@ -1290,9 +1290,9 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 : HERE DP @ ;
 : - MINUS + ;
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
+: , HERE ! rcll DP +! ;
 : LITERAL COMPILE noop , ; IMMEDIATE
 -->
-
 
 ( forward declared words                                      )
 : ?EXEC ;

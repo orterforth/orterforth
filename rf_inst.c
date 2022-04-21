@@ -698,15 +698,6 @@ static void rf_inst_code_hex(void)
   RF_JUMP_NEXT;
 }
 
-/* , */
-static void rf_inst_code_comma(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  rf_inst_comma(RF_SP_POP); 
-  RF_JUMP_NEXT;
-}
-
 /* [ */
 static void rf_inst_code_lbrac(void)
 {
@@ -998,7 +989,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 16
+#define RF_INST_CODE_LIST_SIZE 15
 
 static rf_inst_code_t rf_inst_code_list[] = {
   /* used from the start */
@@ -1021,7 +1012,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "!", rf_code_store },
   /* ; */
   { "COMPILE", rf_inst_code_compile },
-  { ",", rf_inst_code_comma },
   /* used by +ORIGIN itself */
   { "+ORIGIN", rf_inst_code_plusorigin },
   /* resolving forward declarations */
