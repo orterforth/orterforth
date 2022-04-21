@@ -606,38 +606,6 @@ static void __FASTCALL__ rf_inst_qpairs(uintptr_t a)
 #define rf_inst_qpairs(a) (void) RF_SP_POP
 #endif
 
-/* ENDIF */
-static void rf_inst_endif(void)
-{
-  uintptr_t a;
-  intptr_t o;
-
-  /* ?COMP */
-  assert(RF_USER_STATE);
-  /* 2 ?PAIRS */
-  rf_inst_qpairs(2);
-  /* HERE OVER - SWAP */
-  a = RF_SP_POP;
-  o = (intptr_t) (RF_USER_DP - a);
-  /* ! */
-  *((intptr_t *) a) = o;
-}
-
-/* ENDIF */
-static void rf_inst_code_endif(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  rf_inst_endif();
-  RF_JUMP_NEXT;
-}
-
-/* HERE */
-static void rf_inst_here(void)
-{
-  RF_SP_PUSH(RF_USER_DP);
-}
-
 /* find a definition */
 static char __FASTCALL__ *rf_inst_find_string(char *t)
 {
@@ -648,193 +616,6 @@ static char __FASTCALL__ *rf_inst_find_string(char *t)
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
 	rf_inst_comma((uintptr_t) rf_cfa(rf_inst_find_string(name)));
-}
-
-/* IF */
-static void rf_inst_code_if(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  /* COMPILE 0BRANCH */
-  rf_inst_compile("0BRANCH");
-  /* HERE */
-  rf_inst_here();
-  /* 0 , */
-  rf_inst_comma(0);
-  /* 2 */
-  RF_SP_PUSH(2);
-  RF_JUMP_NEXT;
-}
-
-/* ELSE */
-static void rf_inst_code_else(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    uintptr_t a;
-    uintptr_t b;
-
-    /* 2 ?PAIRS */
-    rf_inst_qpairs(2);
-    /* COMPILE BRANCH */
-    rf_inst_compile("BRANCH");
-    /* HERE */
-    rf_inst_here();
-    /* 0 , */
-    rf_inst_comma(0);
-    /* SWAP */
-    a = RF_SP_POP;
-    b = RF_SP_POP;
-    RF_SP_PUSH(a);
-    RF_SP_PUSH(b);
-    /* 2 */
-    RF_SP_PUSH(2);
-    /* [COMPILE] ENDIF */
-    rf_inst_endif();
-    /* 2 */
-    RF_SP_PUSH(2);
-  }
-  RF_JUMP_NEXT;
-}
-
-/* BACK */
-static void rf_inst_back(void)
-{
-  /* HERE */
-  uintptr_t b = RF_USER_DP;
-  /* - */
-  intptr_t c = RF_SP_POP - b;
-  /* , */
-  rf_inst_comma(c);
-}
-
-/* BEGIN */
-static void rf_inst_code_begin(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  /* ?COMP */
-  assert(RF_USER_STATE);
-  /* HERE */
-  rf_inst_here();
-  /* 1 */
-  RF_SP_PUSH(1);
-  RF_JUMP_NEXT;
-}
-
-/* WHILE */
-static void rf_inst_code_while(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    uintptr_t n;
-
-    /* [COMPILE] IF */
-    rf_inst_compile("0BRANCH");
-    rf_inst_here();
-    rf_inst_comma(0);
-    RF_SP_PUSH(2);
-    /* 2+ */
-    n = RF_SP_POP;
-    RF_SP_PUSH(n + 2);
-  }
-  RF_JUMP_NEXT;
-}
-
-/* AGAIN */
-static void rf_inst_again(void)
-{
-  /* 1 ?PAIRS */
-  rf_inst_qpairs(1);
-  /* COMPILE BRANCH */
-  rf_inst_compile("BRANCH");
-  /* BACK */
-  rf_inst_back();
-}
-
-/* AGAIN */
-static void rf_inst_code_again(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  rf_inst_again();
-  RF_JUMP_NEXT;
-}
-
-/* REPEAT */
-static void rf_inst_code_repeat(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    uintptr_t x;
-
-    /* >R */
-    RF_RP_PUSH(RF_SP_POP);
-    /* >R */
-    RF_RP_PUSH(RF_SP_POP);
-    /* [COMPILE] AGAIN */
-    rf_inst_again();
-    /* R> */
-    RF_SP_PUSH((uintptr_t) RF_RP_POP);
-    /* R> */
-    RF_SP_PUSH((uintptr_t) RF_RP_POP);
-    /* 2 - */
-    x = RF_SP_POP;
-    assert(x == 4);
-    RF_SP_PUSH(x - 2);
-    /* [COMPILE] ENDIF */
-    rf_inst_endif();
-  }
-  RF_JUMP_NEXT;
-}
-
-/* DO */
-static void rf_inst_code_do(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  /* COMPILE (DO) */
-  rf_inst_compile("(DO)");
-  /* HERE */
-  rf_inst_here();
-  /* 3 */
-  RF_SP_PUSH(3);
-  RF_JUMP_NEXT;
-}
-
-/* LOOP */
-static void rf_inst_code_loop(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    /* 3 ?PAIRS */
-    rf_inst_qpairs(3);
-    /* COMPILE (LOOP) */
-    rf_inst_compile("(LOOP)");
-    /* BACK */
-    rf_inst_back();
-  }
-  RF_JUMP_NEXT;
-}
-
-/* UNTIL */
-static void rf_inst_code_until(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    /* 1 ?PAIRS */
-    rf_inst_qpairs(1);
-    /* COMPILE 0BRANCH */
-    rf_inst_compile("0BRANCH");
-    /* BACK */
-    rf_inst_back();
-  }
-  RF_JUMP_NEXT;
 }
 
 /* COMPILE */
@@ -1357,21 +1138,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "REPLACED.BY", rf_inst_code_replacedby }
 };
 
-#define RF_INST_CODE_IMMEDIATE_LIST_SIZE 10
-
-static rf_inst_code_t rf_inst_code_immediate_list[] = {
-  { "ENDIF", rf_inst_code_endif },
-  { "IF", rf_inst_code_if },
-  { "ELSE", rf_inst_code_else },
-  { "BEGIN", rf_inst_code_begin },
-  { "WHILE", rf_inst_code_while },
-  { "REPEAT", rf_inst_code_repeat },
-  { "UNTIL", rf_inst_code_until },
-  { "AGAIN", rf_inst_code_again },
-  { "DO", rf_inst_code_do },
-  { "LOOP", rf_inst_code_loop }
-};
-
 static void rf_inst_code_ext(void)
 {
   RF_START;
@@ -1475,12 +1241,6 @@ static void rf_inst_forward(void)
   rf_inst_compile(";S");
   rf_inst_immediate();
 
-  /* control structures, compile time */
-  for (i = 0; i < RF_INST_CODE_IMMEDIATE_LIST_SIZE; ++i) {
-    rf_inst_code_t *code = &rf_inst_code_immediate_list[i];
-    rf_inst_def_code_immediate(code->name, code->value);
-  }
-
   /* forward declarations not yet implemented */
   for (i = 0; i < RF_INST_NOTIMPL_LIST_SIZE; ++i) {
     rf_inst_def_code(rf_inst_notimpl_list[i], rf_inst_code_notimpl);
@@ -1532,6 +1292,18 @@ static void rf_inst_forward(void)
   /* stack limit literals */
   rf_inst_def_literal("s0", (uintptr_t) RF_S0);
   rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
+
+  /* used in IMMEDIATE */
+  rf_inst_def_code("MINUS", rf_code_minus);
+  rf_inst_def_code("TOGGLE", rf_code_toggl);
+  rf_inst_def_code("rcls", rf_code_rcls);
+
+  /* used when resetting DP */
+  rf_inst_def_code("+!", rf_code_pstor);
+
+  /* used in forward declared control words */
+  rf_inst_def_code("SWAP", rf_code_swap);
+  rf_inst_def_code("OVER", rf_code_over);
 
   /* define code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
@@ -1611,7 +1383,9 @@ void rf_inst(void)
 
 #ifdef RF_INST_OVERWRITE
   /* now move DP to target the real dictionary */
+/*
   RF_USER_DP = (uintptr_t) RF_ORIGIN;
+*/
 #endif
 
   /* load is the starting point to load and interpret */

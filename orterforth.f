@@ -1279,8 +1279,54 @@ HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
 LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
 DECIMAL
+( forward declarations                                        )
+: noop ;
+: HERE DP @ ;
+: - MINUS + ;
+: IMMEDIATE CURRENT @ @ 64 TOGGLE ;
+-->
+
+
+
+
+
+
+
+
+
+
+( forward declared control words                              )
+: BACK HERE - , ;
+: BEGIN HERE 1 ; IMMEDIATE
+: ENDIF DROP HERE OVER - SWAP ! ; IMMEDIATE
+: DO COMPILE noop HERE 3 ; IMMEDIATE
+: LOOP DROP COMPILE noop BACK ; IMMEDIATE
+: UNTIL DROP COMPILE noop BACK ; IMMEDIATE
+: AGAIN DROP COMPILE noop BACK ; IMMEDIATE
+: REPEAT >R >R [COMPILE] AGAIN R> R> 2 - [COMPILE] ENDIF ;
+IMMEDIATE
+: IF COMPILE noop HERE 0 , 2 ; IMMEDIATE
+: ELSE DROP COMPILE noop HERE 0 , SWAP 2 [COMPILE] ENDIF 2 ;
+IMMEDIATE
+: WHILE [COMPILE] IF 2 + ; IMMEDIATE
+-->
+
+( move DP back to origin                                      )
+0 +ORIGIN DP @ - overwrite U* DROP DP +!
 ( load boot-up parameters and machine code definitions        )
 12 LOAD
+( resolve forward references in control words                 )
+01 rcls BYTE.IN DO REPLACED.BY (DO)
+02 rcls BYTE.IN LOOP REPLACED.BY (LOOP)
+02 rcls BYTE.IN UNTIL REPLACED.BY 0BRANCH
+02 rcls BYTE.IN AGAIN REPLACED.BY BRANCH
+01 rcls BYTE.IN IF REPLACED.BY 0BRANCH
+02 rcls BYTE.IN ELSE REPLACED.BY BRANCH
+-->
+
+
+
+
 ( load high level utility definitions                         )
 33 LOAD
 ( load high level definitions                                 )
