@@ -1279,24 +1279,27 @@ HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
 LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
 DECIMAL
-
 CREATE : docol DP @ rcll MINUS + ! 192 STATE !
 CREATE 192 STATE ! docol DP @ rcll MINUS + !
 [COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
 : ; COMPILE ;S CURRENT @ @ 32 TOGGLE [COMPILE] [
 [COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
-: ] 192 STATE ! ;
-: SMUDGE CURRENT @ @ 32 TOGGLE ;
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
 : ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
 : noop ;
 : HERE DP @ ;
 : - MINUS + ;
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
+: LITERAL COMPILE noop , ; IMMEDIATE
 -->
+
+
 ( forward declared words                                      )
 : ?EXEC ;
+: !CSP SP@ CSP ! ;
+: ] 192 STATE ! ;
 : ?CSP ;
+: SMUDGE CURRENT @ @ 32 TOGGLE ;
 : ERROR ;
 : ABORT ;
 : MESSAGE ;
@@ -1306,9 +1309,6 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 : R/W ;
 : . DROP ;
 -->
-
-
-
 
 ( forward declared control words                              )
 : BACK HERE - , ;
@@ -1331,6 +1331,7 @@ IMMEDIATE
 ( load boot-up parameters and machine code definitions        )
 12 LOAD
 ( resolve forward references in control words                 )
+01 rcls BYTE.IN LITERAL REPLACED.BY LIT
 01 rcls BYTE.IN DO REPLACED.BY (DO)
 02 rcls BYTE.IN LOOP REPLACED.BY (LOOP)
 02 rcls BYTE.IN UNTIL REPLACED.BY 0BRANCH
@@ -1338,7 +1339,6 @@ IMMEDIATE
 01 rcls BYTE.IN IF REPLACED.BY 0BRANCH
 02 rcls BYTE.IN ELSE REPLACED.BY BRANCH
 -->
-
 
 
 

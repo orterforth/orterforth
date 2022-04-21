@@ -194,15 +194,6 @@ static void rf_inst_code_noop(void)
   RF_JUMP_NEXT;
 }
 
-/* !CSP */
-static void rf_inst_code_storecsp(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  RF_USER_CSP = (uintptr_t) RF_SP_GET;
-  RF_JUMP_NEXT;
-}
-
 /* USE */
 #ifndef RF_INST_SMALLER
 static uintptr_t *rf_inst_use;
@@ -736,22 +727,6 @@ static void rf_inst_code_lbrac(void)
   RF_JUMP_NEXT;
 }
 
-/* LITERAL */
-static void rf_inst_code_literal(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  /* STATE @ IF */
-  if (RF_USER_STATE) {
-    /* COMPILE LIT */
-    rf_inst_compile("LIT");
-    /* , */
-    rf_inst_comma(RF_SP_POP);
-    /* ENDIF */
-  }
-  RF_JUMP_NEXT;
-}
-
 /* +ORIGIN */
 static void rf_inst_code_plusorigin(void)
 {
@@ -1034,7 +1009,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 17
+#define RF_INST_CODE_LIST_SIZE 16
 
 static rf_inst_code_t rf_inst_code_list[] = {
   /* used from the start */
@@ -1051,8 +1026,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "BLOCK", rf_inst_code_block },
   /* used in CONSTANT, : */
   { "CREATE", rf_inst_code_create },  
-  /* : */
-  { "!CSP", rf_inst_code_storecsp },
   /* rf_inst_def_user uses this as well as makeshift : */
   { "+", rf_code_plus },
   { "@", rf_code_at },
@@ -1183,9 +1156,6 @@ static void rf_inst_forward(void)
   here[1] = 0x80;
   rf_inst_immediate();
 
-  /* used by +ORIGIN itself */
-  rf_inst_def_code_immediate("LITERAL", rf_inst_code_literal);
-
   /* stack limit literals */
   rf_inst_def_literal("s0", (uintptr_t) RF_S0);
   rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
@@ -1200,6 +1170,10 @@ static void rf_inst_forward(void)
 
   /* used in --> */
   rf_inst_def_code("AND", rf_code_andd);
+
+  /* used in !CSP */
+  rf_inst_def_code("SP@", rf_code_spat);
+  rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
   /* used in forward declared control words */
   rf_inst_def_code("SWAP", rf_code_swap);
