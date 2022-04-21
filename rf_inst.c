@@ -736,15 +736,6 @@ static void rf_inst_code_lbrac(void)
   RF_JUMP_NEXT;
 }
 
-/* ] */
-static void rf_inst_code_rbrac(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  RF_USER_STATE = 0xC0;
-  RF_JUMP_NEXT;
-}
-
 /* LITERAL */
 static void rf_inst_code_literal(void)
 {
@@ -1057,7 +1048,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 19
+#define RF_INST_CODE_LIST_SIZE 18
 
 static rf_inst_code_t rf_inst_code_list[] = {
   /* used from the start */
@@ -1080,7 +1071,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "+", rf_code_plus },
   { "@", rf_code_at },
   { "!", rf_code_store },
-  { "]", rf_inst_code_rbrac },
   /* ; */
   { "COMPILE", rf_inst_code_compile },
   { ",", rf_inst_code_comma },

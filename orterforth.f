@@ -1285,14 +1285,14 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 [COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
 : ; COMPILE ;S CURRENT @ @ 32 TOGGLE [COMPILE] [
 [COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
-: noop ;
-: HERE DP @ ;
-: - MINUS + ;
+: ] 192 STATE ! ;
 : SMUDGE CURRENT @ @ 32 TOGGLE ;
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
 : ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
+: noop ;
+: HERE DP @ ;
+: - MINUS + ;
 -->
-
 
 ( forward declared words                                      )
 : ?EXEC ;
