@@ -987,38 +987,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "bread", rf_code_bread }
 };
 
-/* list of forward declared words used in inst */
-
-#define RF_INST_CODE_LIST_SIZE 15
-
-static rf_inst_code_t rf_inst_code_list[] = {
-  /* used from the start */
-  { "CODE", rf_inst_code_code },
-  /* used in ( */
-  { ";S", rf_code_semis },
-  /* used in ." , also ( */
-  { "WORD", rf_inst_code_word },
-  { "LIT", rf_code_lit },
-  /* DECIMAL, HEX */
-  { "DECIMAL", rf_inst_code_decimal },
-  { "HEX", rf_inst_code_hex },
-  /* used in WORD */
-  { "BLOCK", rf_inst_code_block },
-  /* used in CONSTANT, : */
-  { "CREATE", rf_inst_code_create },  
-  /* rf_inst_def_user uses this as well as makeshift : */
-  { "+", rf_code_plus },
-  { "@", rf_code_at },
-  { "!", rf_code_store },
-  /* ; */
-  { "COMPILE", rf_inst_code_compile },
-  /* used by +ORIGIN itself */
-  { "+ORIGIN", rf_inst_code_plusorigin },
-  /* resolving forward declarations */
-  { "BYTE.IN", rf_inst_code_bytein },
-  { "REPLACED.BY", rf_inst_code_replacedby }
-};
-
 static void rf_inst_code_ext(void)
 {
   RF_START;
@@ -1030,6 +998,45 @@ static void rf_inst_code_ext(void)
   rf_inst_def_code("rtgt", rf_code_rtgt);
   RF_JUMP_NEXT;
 }
+
+/* list of forward declared words used in inst */
+
+#define RF_INST_CODE_LIST_SIZE 32
+
+static rf_inst_code_t rf_inst_code_list[] = {
+  { "LIT", rf_code_lit },
+  { "BRANCH", rf_code_bran },
+  { "U*", rf_code_ustar },
+  { "AND", rf_code_andd },
+  { "SP@", rf_code_spat },
+  { ";S", rf_code_semis },
+  { ">R", rf_code_tor },
+  { "R>", rf_code_fromr },
+  { "+", rf_code_plus },
+  { "MINUS", rf_code_minus },
+  { "OVER", rf_code_over },
+  { "DROP", rf_code_drop },
+  { "SWAP", rf_code_swap },
+  { "+!", rf_code_pstor },
+  { "TOGGLE", rf_code_toggl },
+  { "@", rf_code_at },
+  { "!", rf_code_store },
+  { "CODE", rf_inst_code_code },
+  { "DECIMAL", rf_inst_code_decimal },
+  { "WORD", rf_inst_code_word },
+  { "HEX", rf_inst_code_hex },
+  { "BLOCK", rf_inst_code_block },
+  { "CREATE", rf_inst_code_create },  
+  { "COMPILE", rf_inst_code_compile },
+  { "+ORIGIN", rf_inst_code_plusorigin },
+  { "BYTE.IN", rf_inst_code_bytein },
+  { "REPLACED.BY", rf_inst_code_replacedby },
+  { "rxit", rf_code_rxit },
+  { "rcll", rf_code_rcll },
+  { "rcls", rf_code_rcls },
+  { "interpret-word", rf_inst_code_interpret_word },
+  { "ext", rf_inst_code_ext }
+};
 
 #ifndef RF_BS
 #define RF_BS 0x007F
@@ -1049,24 +1056,17 @@ static void rf_inst_forward(void)
   rf_inst_def_user("STATE", RF_USER_STATE_IDX);
   rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
-  /* outer interpreter */
-  rf_inst_def_code("LIT", rf_code_lit);
-  rf_inst_def_code("U*", rf_code_ustar);
-  rf_inst_def_code("DROP", rf_code_drop);
-  rf_inst_def_code("!", rf_code_store);
-  rf_inst_def_code("interpret-word", rf_inst_code_interpret_word);
-  rf_inst_def_code("BRANCH", rf_code_bran);
+  /* inst time code field declarations */
+  for (i = 0; i < RF_INST_CODE_LIST_SIZE; ++i) {
+    rf_inst_code_t *code = &rf_inst_code_list[i];
+    rf_inst_def_code(code->name, code->value);
+  }
 
+  /* outer interpreter */
   rf_inst_colon("interpret");
   rf_inst_compile("interpret-word");
 	rf_inst_compile("BRANCH");
 	rf_inst_comma(-2 * RF_WORD_SIZE);
-
-  rf_inst_def_code(";S", rf_code_semis);
-  rf_inst_def_code("rxit", rf_code_rxit);
-  rf_inst_def_code("@", rf_code_at);
-  rf_inst_def_code(">R", rf_code_tor);
-  rf_inst_def_code("R>", rf_code_fromr);
 
   /* LOAD */
   rf_inst_colon("LOAD");
@@ -1108,24 +1108,12 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("initr0", (uintptr_t) RF_R0);
   rf_inst_def_literal("tib", (uintptr_t) RF_TIB);
 
-  /* orterforth extension words compiled inline after boot up literals */
-  rf_inst_def_code("ext", rf_inst_code_ext);
-
-  /* inst time code field declarations */
-  for (i = 0; i < RF_INST_CODE_LIST_SIZE; ++i) {
-    rf_inst_code_t *code = &rf_inst_code_list[i];
-    rf_inst_def_code(code->name, code->value);
-  }
-
   /* disc buffer literals */
   rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
   rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
 
   /* used in ;CODE */
   rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
-
-  /* : */
-  rf_inst_def_code("rcll", rf_code_rcll);
 
   /* ; */
   rf_inst_def_code("[", rf_inst_code_lbrac);
@@ -1141,24 +1129,6 @@ static void rf_inst_forward(void)
   /* stack limit literals */
   rf_inst_def_literal("s0", (uintptr_t) RF_S0);
   rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
-
-  /* used in IMMEDIATE */
-  rf_inst_def_code("MINUS", rf_code_minus);
-  rf_inst_def_code("TOGGLE", rf_code_toggl);
-  rf_inst_def_code("rcls", rf_code_rcls);
-
-  /* used when resetting DP */
-  rf_inst_def_code("+!", rf_code_pstor);
-
-  /* used in --> */
-  rf_inst_def_code("AND", rf_code_andd);
-
-  /* used in !CSP */
-  rf_inst_def_code("SP@", rf_code_spat);
-
-  /* used in forward declared control words */
-  rf_inst_def_code("SWAP", rf_code_swap);
-  rf_inst_def_code("OVER", rf_code_over);
 
   /* define code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
