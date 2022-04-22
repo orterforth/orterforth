@@ -458,23 +458,6 @@ static void __FASTCALL__ rf_inst_def(char *name)
   *(rf_inst_latest()) ^= 0x20;
 }
 
-/* [COMPILE] */
-static void rf_inst_code_bcompile(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    /* FIND */
-    char *nfa = rf_inst_hfind();
-    /* 0 ?ERROR */
-    assert(nfa); /* 0= 0 ?ERROR */
-    /* DROP */
-    /* CFA , */
-    rf_inst_comma((uintptr_t) rf_cfa(nfa));
-  }
-  RF_JUMP_NEXT;
-}
-
 /* NUMBER */
 static intptr_t __FASTCALL__ rf_inst_number(char *t) {
 
@@ -1001,11 +984,12 @@ static void rf_inst_code_ext(void)
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 32
+#define RF_INST_CODE_LIST_SIZE 33
 
 static rf_inst_code_t rf_inst_code_list[] = {
   { "LIT", rf_code_lit },
   { "BRANCH", rf_code_bran },
+  { "(FIND)", rf_code_pfind },
   { "U*", rf_code_ustar },
   { "AND", rf_code_andd },
   { "SP@", rf_code_spat },
@@ -1061,7 +1045,6 @@ static void rf_inst_forward(void)
     rf_inst_code_t *code = &rf_inst_code_list[i];
     rf_inst_def_code(code->name, code->value);
   }
-  rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
   rf_inst_def_code_immediate("[", rf_inst_code_lbrac);
 
   /* boot time literals */

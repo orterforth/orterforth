@@ -1281,9 +1281,9 @@ LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 DECIMAL
 CREATE : docol DP @ rcll MINUS + ! 192 STATE !
 CREATE 192 STATE ! docol DP @ rcll MINUS + !
-[COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
-: ; COMPILE ;S CURRENT @ @ 32 TOGGLE [COMPILE] [
-[COMPILE] ;S [ CURRENT @ @ 96 TOGGLE
+;S [ CURRENT @ @ 96 TOGGLE
+: ; COMPILE ;S CURRENT @ @ 32 TOGGLE 0 STATE !
+;S [ CURRENT @ @ 96 TOGGLE
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
 : ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
 : noop ;
@@ -1292,8 +1292,8 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
 : , HERE ! rcll DP +! ;
 : LITERAL COMPILE noop , ; IMMEDIATE
--->
-
+: [COMPILE] 32 WORD HERE CONTEXT @ @ (FIND)
+DROP DROP rcll - , ; IMMEDIATE -->
 ( forward declared words                                      )
 : ?EXEC ;
 : !CSP SP@ CSP ! ;
