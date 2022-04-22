@@ -522,27 +522,6 @@ static void rf_inst_code_x(void)
   RF_JUMP_NEXT;
 }
 
-/* CODE */
-static void rf_inst_code_code(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    char *here;
-
-    rf_inst_word(32);
-    here = (char *) RF_USER_DP;
-    rf_inst_create(here[0], here + 1);
-
-    /* HERE 2+ , */
-    rf_inst_comma((uintptr_t) ((uintptr_t *) RF_USER_DP + 1));
-
-    /* LATEST 20 TOGGLE */
-    *(rf_inst_latest()) ^= 0x20;
-  }
-  RF_JUMP_NEXT;
-}
-
 /* ?PAIRS */
 #ifndef RF_INST_SMALLER
 static void __FASTCALL__ rf_inst_qpairs(uintptr_t a)
@@ -975,7 +954,7 @@ static void rf_inst_code_ext(void)
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 32
+#define RF_INST_CODE_LIST_SIZE 31
 
 static rf_inst_code_t rf_inst_code_list[] = {
   { "LIT", rf_code_lit },
@@ -996,7 +975,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "TOGGLE", rf_code_toggl },
   { "@", rf_code_at },
   { "!", rf_code_store },
-  { "CODE", rf_inst_code_code },
   { "DECIMAL", rf_inst_code_decimal },
   { "WORD", rf_inst_code_word },
   { "BLOCK", rf_inst_code_block },
