@@ -1310,18 +1310,18 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 : R/W ;
 : . DROP ;
 -->
-( HEX CODE , LITERAL [COMPILE] required by the model source   )
+( required by the model source                                )
 : HEX 16 BASE ! ;
 : HERE DP @ ;
 : CODE CREATE SMUDGE ;
 : , HERE ! rcll DP +! ;
 : LITERAL COMPILE noop , ; IMMEDIATE
-: [COMPILE] 32 WORD HERE CONTEXT @ @ (FIND)
-DROP DROP rcll - , ; IMMEDIATE
+: +ORIGIN origin + ;
+: -FIND 32 WORD HERE CONTEXT @ @ (FIND) ;
+: [COMPILE] -FIND DROP DROP rcll - , ; IMMEDIATE
+: BYTE.IN -FIND DROP DROP + ;
+: REPLACED.BY -FIND DROP DROP rcll - SWAP ! ;
 -->
-
-
-
 
 
 

@@ -660,62 +660,6 @@ static void rf_inst_code_lbrac(void)
   RF_JUMP_NEXT;
 }
 
-/* +ORIGIN */
-static void rf_inst_code_plusorigin(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    uintptr_t a;
-    uintptr_t *origin;
-    
-    a = RF_SP_POP;
-    origin = (uintptr_t *) RF_ORIGIN;
-    RF_SP_PUSH((uintptr_t) (&origin[a / RF_WORD_SIZE]));
-  }
-  RF_JUMP_NEXT;
-}
-
-/* BYTE.IN */
-static void rf_inst_code_bytein(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    char *nfa;
-    uintptr_t a;
-
-    /* -FIND DROP DROP */
-    nfa = rf_inst_hfind();
-    assert(nfa);
-
-    /* + */
-    a = RF_SP_POP;
-    RF_SP_PUSH(((uintptr_t) rf_pfa(nfa)) + a);
-  }
-  RF_JUMP_NEXT;
-}
-
-/* REPLACED.BY */
-static void rf_inst_code_replacedby(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    char *nfa;
-    uintptr_t *a;
-
-    /* -FIND DROP DROP */
-    nfa = rf_inst_hfind();
-    assert(nfa);
-
-    /* CFA SWAP ! */
-    a = (uintptr_t *) RF_SP_POP;
-    *a = (uintptr_t) rf_cfa(nfa);
-  }
-  RF_JUMP_NEXT;
-}
-
 /* compile a LIT value */
 static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
 {
@@ -954,7 +898,7 @@ static void rf_inst_code_ext(void)
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 31
+#define RF_INST_CODE_LIST_SIZE 28
 
 static rf_inst_code_t rf_inst_code_list[] = {
   { "LIT", rf_code_lit },
@@ -980,9 +924,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "BLOCK", rf_inst_code_block },
   { "CREATE", rf_inst_code_create },  
   { "COMPILE", rf_inst_code_compile },
-  { "+ORIGIN", rf_inst_code_plusorigin },
-  { "BYTE.IN", rf_inst_code_bytein },
-  { "REPLACED.BY", rf_inst_code_replacedby },
   { "rxit", rf_code_rxit },
   { "rcll", rf_code_rcll },
   { "rcls", rf_code_rcls },
@@ -1030,6 +971,9 @@ static void rf_inst_forward(void)
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
     rf_inst_def_literal(code->name, (uintptr_t) code->value);
   }
+
+  /* for +ORIGIN */
+  rf_inst_def_literal("origin", (uintptr_t) RF_ORIGIN);
 
   /* disc buffer literals */
   rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
