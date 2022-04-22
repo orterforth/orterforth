@@ -1286,15 +1286,16 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 ;S [ CURRENT @ @ 96 TOGGLE
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
 : ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
-: noop ;
-: HERE DP @ ;
 : - MINUS + ;
+( need --> in order to progress to next screen                )
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
-: , HERE ! rcll DP +! ;
-: LITERAL COMPILE noop , ; IMMEDIATE
-: [COMPILE] 32 WORD HERE CONTEXT @ @ (FIND)
-DROP DROP rcll - , ; IMMEDIATE -->
-( forward declared words                                      )
+-->
+
+
+
+
+( forward reference words                                     )
+: noop ;
 : ?EXEC ;
 : !CSP SP@ CSP ! ;
 : ] 192 STATE ! ;
@@ -1309,8 +1310,23 @@ DROP DROP rcll - , ; IMMEDIATE -->
 : R/W ;
 : . DROP ;
 -->
+( HEX , LITERAL [COMPILE] all required by the model source    )
+: HEX 16 BASE ! ;
+: HERE DP @ ;
+: , HERE ! rcll DP +! ;
+: LITERAL COMPILE noop , ; IMMEDIATE
+: [COMPILE] 32 WORD HERE CONTEXT @ @ (FIND)
+DROP DROP rcll - , ; IMMEDIATE
+-->
 
-( forward declared control words                              )
+
+
+
+
+
+
+
+( control words                                               )
 : BACK HERE - , ;
 : BEGIN HERE 1 ; IMMEDIATE
 : ENDIF DROP HERE OVER - SWAP ! ; IMMEDIATE

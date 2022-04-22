@@ -672,15 +672,6 @@ static void rf_inst_code_decimal(void)
   RF_JUMP_NEXT;
 }
 
-/* HEX */
-static void rf_inst_code_hex(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  RF_USER_BASE = 16;
-  RF_JUMP_NEXT;
-}
-
 /* [ */
 static void rf_inst_code_lbrac(void)
 {
@@ -984,7 +975,7 @@ static void rf_inst_code_ext(void)
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 33
+#define RF_INST_CODE_LIST_SIZE 32
 
 static rf_inst_code_t rf_inst_code_list[] = {
   { "LIT", rf_code_lit },
@@ -1008,7 +999,6 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "CODE", rf_inst_code_code },
   { "DECIMAL", rf_inst_code_decimal },
   { "WORD", rf_inst_code_word },
-  { "HEX", rf_inst_code_hex },
   { "BLOCK", rf_inst_code_block },
   { "CREATE", rf_inst_code_create },  
   { "COMPILE", rf_inst_code_compile },
@@ -1038,6 +1028,7 @@ static void rf_inst_forward(void)
   rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
   rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
   rf_inst_def_user("STATE", RF_USER_STATE_IDX);
+  rf_inst_def_user("BASE", RF_USER_BASE_IDX);
   rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
   /* inst time code field declarations */
