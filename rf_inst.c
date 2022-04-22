@@ -677,16 +677,14 @@ static void rf_inst_def_code(char *name, rf_code_t code)
 /* compile an immediate definition and set CFA */
 static void rf_inst_def_code_immediate(char *name, rf_code_t code)
 {
-  rf_inst_def(name);
-  rf_inst_comma((uintptr_t) code);
+  rf_inst_def_code(name, code);
   rf_inst_immediate();
 }
 
 /* compile a colon definition */
 static void __FASTCALL__ rf_inst_colon(char *name)
 {
-  rf_inst_def(name);
-  rf_inst_comma((uintptr_t) rf_code_docol);
+  rf_inst_def_code(name, rf_code_docol);
 }
 
 /* inst time literal code */
@@ -709,18 +707,15 @@ static void rf_inst_code_doliteral(void)
 /* compile an inst time literal */
 static void rf_inst_def_literal(char *name, uintptr_t value)
 {
-  rf_inst_def(name);
-  rf_inst_comma((uintptr_t) rf_inst_code_doliteral);
+  rf_inst_def_code(name, rf_inst_code_doliteral);
   rf_inst_comma(value);
   rf_inst_immediate();
 }
 
 /* compile a user variable */
-/* still needed for fwd decls of CURRENT and CONTEXT */
 static void rf_inst_def_user(char *name, unsigned int idx)
 {
-  rf_inst_def(name);
-  rf_inst_comma((uintptr_t) rf_code_douse);
+  rf_inst_def_code(name, rf_code_douse);
   rf_inst_comma(idx * RF_WORD_SIZE);
 }
 
