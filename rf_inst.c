@@ -1061,6 +1061,38 @@ static void rf_inst_forward(void)
     rf_inst_code_t *code = &rf_inst_code_list[i];
     rf_inst_def_code(code->name, code->value);
   }
+  rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
+  rf_inst_def_code_immediate("[", rf_inst_code_lbrac);
+
+  /* boot time literals */
+  rf_inst_def_literal("relrev", (uintptr_t) (RF_FIGREL | (RF_FIGREV << 8)));
+  rf_inst_def_literal("ver", (uintptr_t) (RF_USRVER | (rf_inst_attr() << 8)));
+  rf_inst_def_literal("bs", (uintptr_t) RF_BS);
+  rf_inst_def_literal("user", (uintptr_t) RF_USER);
+  rf_inst_def_literal("inits0", (uintptr_t) RF_S0);
+  rf_inst_def_literal("initr0", (uintptr_t) RF_R0);
+  rf_inst_def_literal("tib", (uintptr_t) RF_TIB);
+
+  /* code address literals */
+  for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
+    rf_inst_code_t *code = &rf_inst_code_lit_list[i];
+    rf_inst_def_literal(code->name, (uintptr_t) code->value);
+  }
+
+  /* disc buffer literals */
+  rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
+  rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
+
+  /* stack limit literals */
+  rf_inst_def_literal("s0", (uintptr_t) RF_S0);
+  rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
+
+  /* inst switch literals */
+#ifdef RF_INST_OVERWRITE
+  rf_inst_def_literal("overwrite", 1);
+#else
+  rf_inst_def_literal("overwrite", 0);
+#endif
 
   /* outer interpreter */
   rf_inst_colon("interpret");
@@ -1099,49 +1131,12 @@ static void rf_inst_forward(void)
   rf_inst_compile("LOAD");
   rf_inst_compile("rxit");
 
-  /* boot time literals */
-  rf_inst_def_literal("relrev", (uintptr_t) (RF_FIGREL | (RF_FIGREV << 8)));
-  rf_inst_def_literal("ver", (uintptr_t) (RF_USRVER | (rf_inst_attr() << 8)));
-  rf_inst_def_literal("bs", (uintptr_t) RF_BS);
-  rf_inst_def_literal("user", (uintptr_t) RF_USER);
-  rf_inst_def_literal("inits0", (uintptr_t) RF_S0);
-  rf_inst_def_literal("initr0", (uintptr_t) RF_R0);
-  rf_inst_def_literal("tib", (uintptr_t) RF_TIB);
-
-  /* disc buffer literals */
-  rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
-  rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
-
-  /* used in ;CODE */
-  rf_inst_def_code_immediate("[COMPILE]", rf_inst_code_bcompile);
-
-  /* ; */
-  rf_inst_def_code("[", rf_inst_code_lbrac);
-  rf_inst_immediate();
-
   /* X */  
   here = (uint8_t *) RF_USER_DP;
   rf_inst_def_code("X", rf_inst_code_x);
   here[0] = 0x81;
   here[1] = 0x80;
   rf_inst_immediate();
-
-  /* stack limit literals */
-  rf_inst_def_literal("s0", (uintptr_t) RF_S0);
-  rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
-
-  /* define code address literals */
-  for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
-    rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    rf_inst_def_literal(code->name, (uintptr_t) code->value);
-  }
-
-  /* switch literals */
-#ifdef RF_INST_OVERWRITE
-  rf_inst_def_literal("overwrite", 1);
-#else
-  rf_inst_def_literal("overwrite", 0);
-#endif
 }
 
 rf_code_t *rf_inst_load_cfa = 0;
