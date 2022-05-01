@@ -876,7 +876,6 @@ RF_ORIGIN := $2800
 
 _rf_code_cold:
                                 ; TODO this increment moved to Forth code
-                                ; TODO preserve immed idx in ABORT
 
 	lda _rf_cold_forth            ; move FORTH to cold3
 	sta cold3+1
@@ -897,6 +896,10 @@ cold1:
 	bne cold2
 	inc cold4+2
 cold2:
+	lda _rf_cold_abort+1          ; move ABORT to cold7, cold8
+	sta cold7+1
+	lda _rf_cold_abort
+	sta cold8+1
 	lda RF_ORIGIN+$000C           ; set FORTH vocab to ORIGIN + 6
 cold3:
 	sta $1000                     ; self modified
@@ -917,9 +920,11 @@ cold6:
 	sta (_rf_up),y
 	dey
 	bpl cold6
-	lda _rf_cold_abort+$0001      ; set IP to ABORT
-	sta _rf_ip+1
-	lda _rf_cold_abort
+cold7:
+	lda #$FF                      ; self modified
+	sta _rf_ip+1                  ; set IP to ABORT
+cold8:
+	lda #$FF                      ; self modified
 	sta _rf_ip
 	cld
 	lda #$6C                      ; set JMP
