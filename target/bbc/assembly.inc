@@ -14,7 +14,7 @@
 
 /* for return stack, reserve some space above the stack used by the calling C */
 #define RF_R0 0x01C0
-#define RF_RETURN_STACK_SIZE 0x003F /* TODO 0x005F? */
+#define RF_RETURN_STACK_SIZE 0x005F
 
 /* for user space, use the BASIC workspace */
 #define RF_USER 0x0480
@@ -23,13 +23,13 @@
 #define RF_TIB 0x0700
 
 /* place disc buffers before origin at 0x1300 - 0x1720 */
-#define RF_LIMIT 0x1720
+#define RF_LIMIT 0x1620
 
 /* C code start address */
 #define RF_ORG 0x1720
 
 /* origin follows the C code */
-#define RF_ORIGIN 0x2900
+#define RF_ORIGIN 0x2800
 
 /* assembly definitions */
 #define RF_TARGET_IP
@@ -82,5 +82,6 @@
 #define RF_TARGET_CODE_DOVAR
 #define RF_TARGET_CODE_DOUSE
 #define RF_TARGET_CODE_DODOE
+#define RF_TARGET_CODE_COLD
 #define RF_TARGET_CODE_CELL
 #define RF_TARGET_CODE_CELLS

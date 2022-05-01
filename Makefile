@@ -162,8 +162,8 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
-BBCOPTION := default
-# BBCOPTION := assembly
+# BBCOPTION := default
+BBCOPTION := assembly
 
 BBCORG := 1720
 BBCROMS := \

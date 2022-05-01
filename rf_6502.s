@@ -12,7 +12,7 @@ _rf_ip := $80
 
 .export _rf_w: near
 
-_rf_w := $83
+_rf_w := $83                    ; _rf_w-1 must be reserved for $6C JMP (W)
 
 .exportzp _rf_6502_w
 
@@ -859,6 +859,72 @@ _rf_code_dodoe:
 	lda _rf_w+1
 	adc #$00
 	jmp push
+
+.export _rf_code_cold
+
+.export _rf_cold_abort
+
+_rf_cold_abort:
+	.word $0001                   ; modify at inst time
+
+.export _rf_cold_forth
+
+_rf_cold_forth:
+	.word $0001                   ; modify at inst time
+
+RF_ORIGIN := $2800
+
+_rf_code_cold:
+                                ; TODO this increment moved to Forth code
+                                ; TODO preserve immed idx in ABORT
+
+	lda _rf_cold_forth            ; move FORTH to cold3
+	sta cold3+1
+	lda _rf_cold_forth+1
+	sta cold3+2
+	lda cold3+1                   ; increment cold3 by 4
+	clc
+	adc #$04
+	sta cold3+1
+	bcc cold1
+	inc cold3+2
+cold1:
+	lda cold3+1                   ; move cold3 to cold4
+	sta cold4+1
+	lda cold3+2
+	sta cold4+2
+	inc cold4+1                   ; increment cold4 by 1
+	bne cold2
+	inc cold4+2
+cold2:
+	lda RF_ORIGIN+$000C           ; set FORTH vocab to ORIGIN + 6
+cold3:
+	sta $1000                     ; self modified
+	lda RF_ORIGIN+$000D
+cold4:
+	sta $1000                     ; self modified
+	ldy #$15                      ; cold, copy 11 words
+	bne cold5
+warm:
+	ldy #$0F                      ; warm, copy 8 words
+cold5:
+	lda RF_ORIGIN+$0010           ; set UP to ORIGIN + 8
+	sta _rf_up
+	lda RF_ORIGIN+$0011
+	sta _rf_up+1
+cold6:
+	lda RF_ORIGIN+$000C,y         ; copy from ORIGIN to UP
+	sta (_rf_up),y
+	dey
+	bpl cold6
+	lda _rf_cold_abort+$0001      ; set IP to ABORT
+	sta _rf_ip+1
+	lda _rf_cold_abort
+	sta _rf_ip
+	cld
+	lda #$6C                      ; set JMP
+	sta _rf_w-1
+	jmp _rf_code_rpsto            ; to RP!
 
 .export _rf_code_rcll
 
