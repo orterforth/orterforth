@@ -101,12 +101,11 @@ typedef uint32_t rf_double_t;
 #ifdef QDOS
 #define RF_WORD_SIZE 4
 #define RF_BE
+typedef unsigned char uint8_t;
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
 typedef double rf_double_t; /* TODO 64 bit integer handling */
-#ifdef QDOS
 #define RF_TARGET 0x000003bd /* QL */
-#endif
 #endif
 
 /* modern platforms */
