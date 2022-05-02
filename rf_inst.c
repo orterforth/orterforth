@@ -2,8 +2,6 @@
 
 #include "rf.h"
 
-#define RF_INST_SMALLER
-
 #ifdef RF_INST_SAVE
 /* return an ASCII hex digit */
 static char __FASTCALL__ rf_inst_hex(uint8_t b)
@@ -14,31 +12,6 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
 
 /* ERROR REPORTING */
 
-#ifndef RF_INST_SMALLER
-/* write a string to output */
-static void __FASTCALL__ rf_inst_print(char *string)
-{
-  while (*string) {
-    rf_out(*string++);
-  }
-}
-
-/* write an error message and stop */
-static void __FASTCALL__ rf_inst_error(char *string)
-{
-  rf_inst_print(string);
-  rf_out('\n');
-  exit(1);
-}
-
-/* write a byte in hex */
-void __FASTCALL__ rf_inst_print_hex(uint8_t c)
-{
-  rf_out(rf_inst_hex(c >> 4));
-  rf_out(rf_inst_hex(c & 15));
-}
-#endif
-
 /* INST TIME DISC OPERATIONS */
 
 /* read the next byte from disc, fail if not the expected value */
@@ -48,13 +21,6 @@ static void __FASTCALL__ rf_inst_disc_expect(char e)
 
   rf_disc_read(&c, 1);
   if (c != e) {
-#ifndef RF_INST_SMALLER
-    rf_inst_print("rf_inst_disc_expect failed exp=");
-    rf_inst_print_hex(e);
-    rf_inst_print(" act=");
-    rf_inst_print_hex(c);
-    rf_out('\n');
-#endif
     exit(1);
   }
 }
@@ -183,96 +149,17 @@ static void rf_inst_code_noop(void)
   RF_JUMP_NEXT;
 }
 
-/* USE */
-#ifndef RF_INST_SMALLER
-static uintptr_t *rf_inst_use;
-#endif
-
 /* PREV */
 static uintptr_t *rf_inst_prev;
-
-#ifndef RF_INST_SMALLER
-/* +BUF */
-static uintptr_t __FASTCALL__ *rf_inst_pbuf(uintptr_t *p)
-{
-  p = (uintptr_t *) (((uintptr_t) p) + RF_DISC_BUFFER_SIZE);
-  if (p == (uintptr_t *) RF_LIMIT) {
-    p = (uintptr_t *) RF_FIRST;
-  }
-  return p;
-}
-
-/* BUFFER */
-static char __FASTCALL__ *rf_inst_buffer(uintptr_t block)
-{
-  /* USE @ DUP >R ( BUFFER ADDRESS TO BE ASSIGNED ) */
-  uintptr_t *p = rf_inst_use;
-
-  /* BEGIN */
-  do {
-    /* +BUF */
-    p = rf_inst_pbuf(p);
-    /* UNTIL ( AVOID PREV ) */
-  } while (p == rf_inst_prev);
-  /* USE ! ( FOR NEXT TIME ) */
-  rf_inst_use = p;
-  /* R @ 0< ( TEST FOR UPDATE IN THIS BUFFER ) IF ( UPDATED, FLUSH TO DISC ) */
-  if (*p & 0x8000) {
-    /* R 2+ ( STORAGE LOC. ) */
-    /* R @ 7FFF AND ( ITS BLOCK # ) */
-    /* 0 R/W ( WRITE SECTOR TO DISC ) */
-    rf_inst_error("inst disc write not impl");
-    /* ENDIF */
-  }
-  /* R ! ( WRITE NEW BLOCK # INTO THIS BUFFER ) */
-  *p = block;
-  /* R PREV ! ( ASSIGN THIS BUFFER AS 'PREV' ) */
-  rf_inst_prev = p;
-  /* R> 2+ ( MOVE TO STORAGE LOCATION ) */
-  return ((char *) p) + RF_WORD_SIZE;
-}
-#endif
 
 /* BLOCK */
 static char __FASTCALL__ *rf_inst_block(uintptr_t block)
 {
-#ifdef RF_INST_SMALLER
   if (block != *rf_inst_prev) {
     rf_inst_disc_r(((char *) rf_inst_prev) + RF_WORD_SIZE, block);
     *rf_inst_prev = block;
   }
   return ((char *) rf_inst_prev) + RF_WORD_SIZE;
-#else
-  uintptr_t *p;
-
-  /* OFFSET @ + >R   ( RETAIN BLOCK # ON RETURN STACK ) */
-  block += RF_USER_OFFSET;
-  /* PREV @ DUP @ R - DUP + ( BLOCK = PREV ? ) IF ( NOT PREV ) */
-  if (block != *rf_inst_prev) {
-    p = rf_inst_prev;
-    /* BEGIN */
-    do {
-      /* +BUF */
-      p = rf_inst_pbuf(p);
-      /* 0= ( TRUE UPON REACHING 'PREV' ) IF ( WRAPPED ) */
-      if (p == rf_inst_prev) {
-        /* DROP R BUFFER */
-        char *s = rf_inst_buffer(block);
-        /* DUP R 1 R/W ( READ SECTOR FROM DISC ) */
-        rf_inst_disc_r(s, block);
-        /* 2 - ( BACKUP ) */
-        p = (uintptr_t *) ((char *) (s - RF_WORD_SIZE));
-        /* ENDIF */
-      }
-      /* DUP @ R - DUP + 0= UNTIL ( WITH BUFFER ADDRESS ) */
-    } while (block != *p);
-    /* DUP PREV ! */
-    rf_inst_prev = p;
-    /* ENDIF */
-  }
-  /* R> DROP 2+ */
-  return ((char *) rf_inst_prev) + RF_WORD_SIZE;
-#endif
 }
 
 /* replaces memcpy */
@@ -301,11 +188,7 @@ static void __FASTCALL__ rf_inst_word(uint8_t c)
 
   /* BLK @ IF BLK @ BLOCK ELSE TIB @ ENDIF */
   /* IN @ + */
-#ifdef RF_INST_SMALLER
   addr1 = rf_inst_block(RF_USER_BLK) + RF_USER_IN;
-#else
-  addr1 = (RF_USER_BLK ? rf_inst_block(RF_USER_BLK) : ((char *) RF_USER_TIB)) + RF_USER_IN;
-#endif
 
   /* SWAP ENCLOSE */
   rf_enclose(c, addr1, &n1, &n2, &n3);
@@ -438,13 +321,6 @@ static char *rf_inst_hfind(void)
     here = (char *) RF_USER_DP;
     /* CONTEXT @ @ (FIND) */
     nfa = rf_find(here + 1, here[0], *((char **) RF_USER_CONTEXT));
-#ifndef RF_INST_SMALLER
-    /* DUP 0= IF */
-    if (!nfa) {
-      /* DROP HERE LATEST (FIND) */
-      nfa = rf_find(here + 1, here[0], rf_inst_latest());
-    }
-#endif
     /* ENDIF */
     return nfa;
   }
@@ -496,47 +372,22 @@ static void rf_inst_code_x(void)
 {
   RF_START;
   RF_INST_ONLY;
-#ifndef RF_INST_SMALLER
-  /* BLK @ IF */
-  /* if (RF_USER_BLK) { */
-#endif
-    /* 1 BLK +! */
-    RF_USER_BLK++;
-    /* 0 IN ! */
-    RF_USER_IN = 0;
-    /* BLK @ 7 AND 0= IF */
-    if (!(RF_USER_BLK & 7)) {
-      /* ?EXEC R> DROP */
-      assert(!RF_USER_STATE);
-      RF_IP_SET((uintptr_t *) RF_RP_POP);
-    /* ENDIF */
-    }
-#ifndef RF_INST_SMALLER
-  /* ELSE */
-  /* } else { */
-    /* R> DROP */
-    /* RF_IP_SET((uintptr_t *) RF_RP_POP); */
+  /* 1 BLK +! */
+  RF_USER_BLK++;
+  /* 0 IN ! */
+  RF_USER_IN = 0;
+  /* BLK @ 7 AND 0= IF */
+  if (!(RF_USER_BLK & 7)) {
+    /* ?EXEC R> DROP */
+    assert(!RF_USER_STATE);
+    RF_IP_SET((uintptr_t *) RF_RP_POP);
   /* ENDIF */
-  /* } */
-#endif
+  }
   RF_JUMP_NEXT;
 }
 
 /* ?PAIRS */
-#ifndef RF_INST_SMALLER
-static void __FASTCALL__ rf_inst_qpairs(uintptr_t a)
-{
-  uintptr_t b;
-
-  b = RF_SP_POP;
-  assert(a == b);
-  if (a != b) {
-    rf_inst_error("?PAIRS failed");
-  }
-}
-#else
 #define rf_inst_qpairs(a) (void) RF_SP_POP
-#endif
 
 /* find a definition */
 static char __FASTCALL__ *rf_inst_find_string(char *t)
@@ -577,17 +428,7 @@ static void rf_inst_immediate(void)
   *(rf_inst_latest()) ^= 0x40;
 }
 
-#ifndef RF_INST_SMALLER
-/* ?STACK */
-static void rf_inst_qstack(void)
-{
-  if (rf_sp > (uintptr_t *) RF_S0 || rf_sp < ((uintptr_t *) RF_S0 - RF_STACK_SIZE)) {
-    rf_inst_error("stack out of bounds");
-  }
-}
-#else
 #define rf_inst_qstack()
-#endif
 
 /* INTERPRET */
 static void rf_inst_code_interpret_word(void)
@@ -1106,9 +947,6 @@ void rf_inst(void)
   /* load */
   rf_inst_emptybuffers();
 
-#ifndef RF_INST_SMALLER
-  rf_inst_use = (uintptr_t *) RF_FIRST;
-#endif
   rf_inst_prev = (uintptr_t *) RF_FIRST;
   rf_inst_load();
 
