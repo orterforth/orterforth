@@ -1045,3 +1045,10 @@ IFDEF USEIY
 ELSE
   jp hpush
 ENDIF
+
+PUBLIC _rf_code_rtgt
+
+_rf_code_rtgt:
+  ld de, $E16F                  ; SPECTR
+  ld hl, $6774
+  jp dpush
