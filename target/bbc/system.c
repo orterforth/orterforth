@@ -28,11 +28,6 @@ void rf_init(void)
   osbyte(3, 4);
 }
 
-void rf_out(char c)
-{
-  oswrch(c);
-}
-
 void rf_code_emit(void)
 {
   RF_START;

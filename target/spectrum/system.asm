@@ -49,21 +49,6 @@ ENDIF
 
   ret                           ; return to C
 
-PUBLIC _rf_out
-
-_rf_out:
-  xor a                         ; reset scroll
-  ld ($5C8C), a                 ; SCR-CT
-  ld a, l                       ; print character in l
-IFDEF USEIY
-  ld iy, $5C3A
-ENDIF
-  rst $0010                     ; PRINT_A_1
-IFDEF USEIY
-  ld iy, _rf_z80_hpush
-ENDIF
-  ret                           ; return to C
-
 PUBLIC _rf_code_emit
 
 _rf_code_emit:

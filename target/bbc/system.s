@@ -25,7 +25,7 @@ osbyte := $FFF4
 
 _rf_init:
 
-	lda #$6C                      ; jsr (W)
+	lda #$6C                      ; jsr (W) ; TODO this lives in COLD?
 	sta _rf_6502_w-1
 	lda #$07                      ; *FX 7,7 (9600 baud receive)
 	tax
@@ -40,16 +40,6 @@ _rf_init:
 	ldx #$04
 	jsr osbyte
 	rts
-
-.export _rf_out
-
-_rf_out:
-
-	jsr pusha
-	ldy #$00
-	lda (sp),y
-	jsr oswrch
-	jmp incsp1
 
 .export _rf_code_emit
 

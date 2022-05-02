@@ -28,11 +28,6 @@ void rf_code_emit()
   RF_JUMP_NEXT;
 }
 
-void __FASTCALL__ rf_out(char c)
-{
-  fputc_cons(c);
-}
-
 static char capslock = 0;
 
 void rf_code_key(void)

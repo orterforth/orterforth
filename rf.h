@@ -334,8 +334,6 @@ void rf_start(void);
 
 void rf_init(void);
 
-void __FASTCALL__ rf_out(char c);
-
 void rf_fin(void);
 
 /* UTILITIES */

@@ -42,11 +42,6 @@ void rf_init(void)
 
 extern char rf_installed;
 
-void rf_out(char c)
-{
-  putchar(c);
-}
-
 void rf_code_emit(void)
 {
   RF_START;
