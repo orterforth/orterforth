@@ -940,6 +940,10 @@ void rf_code_cold(void)
     /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
     /* UP )Y STA, ( TO USER AREA ) */
     /* DEY, 0< END, */
+
+    rf_up[0] = origin[6];
+    rf_up[1] = origin[7];
+    rf_up[2] = origin[8];
     RF_USER_S0 = origin[9];
     RF_USER_R0 = origin[10];
     RF_USER_TIB = origin[11];
