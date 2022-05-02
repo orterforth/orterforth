@@ -340,13 +340,13 @@ encl rcod
 (  INSTALLATION SPECIFIC CODE.                                )
 
 CODE EMIT             ( PRINT ASCII VALUE ON BOTTOM OF STACK *)
-emit rcod
+emitsilent rcod
 CODE KEY        ( ACCEPT ONE TERMINAL CHARACTER TO THE STACK *)
 key rcod
 CODE ?TERMINAL      ( 'BREAK' LEAVES 1 ON STACK; OTHERWISE 0 *)
 qterm rcod
 CODE CR         ( EXECUTE CAR. RETURN, LINE FEED ON TERMINAL *)
-cr rcod
+crsilent rcod
 -->    
 
 
@@ -1362,6 +1362,8 @@ IMMEDIATE
 33 LOAD
 ( load high level definitions                                 )
 72 LOAD
+( set EMIT and CR CFAs after silent install                   )
+emit ' EMIT CFA ! cr ' CR CFA !
 ( installed = 1                                               )
 1 installed !
 ( break link with inst time code                              )

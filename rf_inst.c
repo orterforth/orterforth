@@ -645,7 +645,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 54
+#define RF_INST_CODE_LIT_LIST_SIZE 56
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "lit", rf_code_lit },
@@ -658,17 +658,19 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "digit", rf_code_digit },
   { "pfind", rf_code_pfind },
   { "encl", rf_code_encl },
-#ifdef RF_INST_SILENT
-  { "emit", rf_code_drop },
-#else
   { "emit", rf_code_emit },
+#ifdef RF_INST_SILENT
+  { "emitsilent", rf_code_drop },
+#else
+  { "emitsilent", rf_code_emit },
 #endif
   { "key", rf_code_key },
   { "qterm", rf_code_qterm },
-#ifdef RF_INST_SILENT
-  { "cr", rf_inst_code_noop },
-#else
   { "cr", rf_code_cr },
+#ifdef RF_INST_SILENT
+  { "crsilent", rf_inst_code_noop },
+#else
+  { "crsilent", rf_code_cr },
 #endif
   { "cmove", rf_code_cmove },
   { "ustar", rf_code_ustar },
@@ -954,12 +956,6 @@ void rf_inst(void)
 
   /* finished loading */
   rf_inst_load_cfa = 0;
-
-#ifdef RF_INST_SILENT
-  /* enable CR, EMIT after silent install */
-  *(rf_cfa(rf_inst_find_string("CR"))) = rf_code_cr;
-  *(rf_cfa(rf_inst_find_string("EMIT"))) = rf_code_emit;
-#endif
 
 #ifdef RF_INST_SAVE
   /* save the result to disc */
