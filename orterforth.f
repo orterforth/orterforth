@@ -881,7 +881,7 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
 cold rcod
-0 BYTE.IN FORTH coldforth !
+rcll 2+ BYTE.IN FORTH coldforth !
 0 BYTE.IN ABORT coldabort !
 
 

@@ -929,7 +929,7 @@ void rf_code_cold(void)
     /* FORTH vocabulary */
     /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
     /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
-    *((uintptr_t *) ((char *) rf_cold_forth + 2) + 1) = origin[6];
+    *rf_cold_forth = origin[6];
 
     /* UP and USER vars */
 

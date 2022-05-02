@@ -996,13 +996,9 @@ PUBLIC _rf_code_cold
 
 _rf_code_cold:
 
-  ld hl, RF_ORIGIN+$000C        ; set FORTH vocab to ORIGIN + 6
+  ld hl, RF_ORIGIN+$000C        ; set FORTH vocab addr to ORIGIN + 6
 cold1:
-  ld de, $0000                  ; modify at inst time: FORTH + 2
-  inc de
-  inc de
-  inc de
-  inc de
+  ld de, $0000                  ; modify at inst time
   ldi
   ldi
 
@@ -1013,7 +1009,7 @@ cold1:
   add hl, de
   ex de, hl
   ld hl, RF_ORIGIN+$0012        ; from ORIGIN + 9
-  ld bc, $0010                  ; copy 8 words
+  ld bc, $0016                  ; copy 11 words
   ldir
 
 cold2:
