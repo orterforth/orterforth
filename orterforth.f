@@ -1362,6 +1362,8 @@ IMMEDIATE
 33 LOAD
 ( load high level definitions                                 )
 72 LOAD
+( installed = 1                                               )
+1 installed !
 ( break link with inst time code                              )
 ' rcll LFA overwrite 0= OVER @ * SWAP !
 ( WARNING = 1                                                 )

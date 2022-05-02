@@ -2,14 +2,6 @@
 
 #include "rf.h"
 
-#ifdef RF_INST_SAVE
-/* return an ASCII hex digit */
-static char __FASTCALL__ rf_inst_hex(uint8_t b)
-{
-  return b + (b < 10 ? 48 : 55);
-}
-#endif
-
 /* ERROR REPORTING */
 
 /* INST TIME DISC OPERATIONS */
@@ -891,6 +883,13 @@ static void rf_inst_load(void)
 }
 
 #ifdef RF_INST_SAVE
+/* return an ASCII hex digit */
+static char __FASTCALL__ rf_inst_hex(uint8_t b)
+{
+  return b + (b < 10 ? 48 : 55);
+}
+
+/* save the installation as hex on DR1 */
 static void rf_inst_save(void)
 {
   /* write to DR1 */
@@ -937,6 +936,9 @@ void rf_inst(void)
   rf_inst_def_literal("coldforth", (uintptr_t) &rf_cold_forth);
   rf_inst_def_literal("coldabort", (uintptr_t) &rf_cold_abort);
 
+  /* installed flag now set from Forth */
+  rf_inst_def_literal("installed", (uintptr_t) &rf_installed);
+
   /* load is the starting point to load and interpret */
   nfa = rf_inst_find_string("load");
   assert(nfa);
@@ -958,9 +960,6 @@ void rf_inst(void)
   *(rf_cfa(rf_inst_find_string("CR"))) = rf_code_cr;
   *(rf_cfa(rf_inst_find_string("EMIT"))) = rf_code_emit;
 #endif
-
-  /* mark as installed; fail if inst time code called */
-  rf_installed = 1;
 
 #ifdef RF_INST_SAVE
   /* save the result to disc */
