@@ -260,6 +260,14 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
+BBCMAMEFAST := mame bbcb -video none -sound none \
+							 -skip_gameinfo -nomax -window -speed 20 -frameskip 10 -nothrottle \
+							 -seconds_to_run 640 -rs423 null_modem -bitb socket.localhost:5705
+
+BBCMAMEINSTDISK := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
+
+BBCMAMEINSTTAPE := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
+
 # final binary hex
 bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC)
 
@@ -273,16 +281,7 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC
 	SYSTEM=$(SYSTEM) scripts/disc-tcp &
 
 	# run emulator, wait for result
-	mame bbcb \
-		-video none -sound none \
-		-speed 20 -frameskip 10 -nothrottle \
-		-seconds_to_run 420 \
-    -rs423 null_modem \
-    -bitb socket.localhost:5705 \
-    -skip_gameinfo -nomax -window \
-    -autoboot_delay 2 \
-    -autoboot_command '*DISK\r*EXEC !BOOT\r' \
-    -flop1 bbc/orterforth-inst.ssd & pid=$$! ; \
+	$(BBCMAMEFAST) $(BBCMAMEINSTDISK) & pid=$$! ; \
 		scripts/waitforhex ; \
 		kill -9 $$pid
 
@@ -323,6 +322,12 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 	rm -f $@
 	bbcim -a $@ bbc/boot
 	bbcim -a $@ bbc/orterforth-inst
+
+# inst tape image
+bbc/orterforth-inst.uef : bbc/orterforth-inst
+
+	$(ORTER) uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
+	mv $@.io $@
 
 # main lib
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
