@@ -13,39 +13,29 @@ PUBLIC _rf_init
 _rf_init:
 IFDEF USEIY
   di                            ; use of IY means we need interrupts disabled
+  push iy
+  ld iy, $5C3A
 ENDIF
 
   ld hl, $5C6B                  ; DF-SZ
   ld (hl), $00                  ; use all 24 rows on screen
 
-IFDEF USEIY
-  push iy                       ; clear screen
-  ld iy, $5C3A
-ENDIF
-  call $0DAF                    ; CL_ALL
-IFDEF USEIY
-  pop iy
-ENDIF
+  call $0DAF                    ; CL_ALL clear screen
 
   ld hl, $5CC3                  ; BAUD
   ld (hl), $0C                  ; $000C = 9600 ; $0005 = 19200
   inc hl
   ld (hl), $00
 
-IFDEF USEIY
-  push iy                       ; open RS-232
-  ld iy, $5C3A
-ENDIF
+  rst $0008                     ; create Interface 1 system vars
+  defb $31
 
-  rst $0008
-  defb $34                      ; OP-B-CHAN
+  ld hl, $5CC6                  ; IOBORD
+  ld (hl), $06                  ; yellow, less disturbing than black
 
 IFDEF USEIY
   pop iy
 ENDIF
-
-  ld hl, $5CC6                  ; IOBORD
-  ld (hl), $06                  ; yellow, less disturbing than black
 
   ret                           ; return to C
 
