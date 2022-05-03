@@ -21,6 +21,7 @@
 #include "orter_fuse.h"
 #include "orter_serial.h"
 #include "orter_spectrum.h"
+#include "orter_uef.h"
 
 static int usage()
 {
@@ -260,6 +261,18 @@ static int hex_read()
   return 0;
 }
 
+static int uef(int argc, char *argv[])
+{
+  /* create a UEF file from a binary */
+  if (argc == 6 && !strcmp("write", argv[2])) {
+    return orter_uef_write(argv[3], strtol(argv[4], 0, 0), strtol(argv[5], 0, 0));
+  }
+
+  /* usage */
+  fprintf(stderr, "Usage: orter uef write <filename> <load> <exec>\n");
+  return 1;
+}
+
 int main(int argc, char *argv[])
 {
   if (argc > 1) {
@@ -275,6 +288,9 @@ int main(int argc, char *argv[])
     }
     if (!strcmp("spectrum", arg)) {
       return spectrum(argc, argv);
+    }
+    if (!strcmp("uef", arg)) {
+      return uef(argc, argv);
     }
   }
 

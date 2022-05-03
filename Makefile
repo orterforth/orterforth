@@ -54,6 +54,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
+	$(SYSTEM)/orter_uef.o \
 	orter.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
@@ -191,20 +192,25 @@ bbc-clean :
 
 	rm -f bbc/*
 
-# load from disc and run
+BBCMAME := mame bbcb -video opengl -skip_gameinfo -nomax -window -rs423 null_modem -bitb socket.localhost:5705
+
+# default is to load from disk
 .PHONY : bbc-run
-bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC)
+bbc-run : bbc-run-disk
+
+# load from disk and run
+.PHONY : bbc-run-disk
+bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC)
 
 	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
 
-	@mame bbcb \
-    -video opengl \
-    -rs423 null_modem \
-    -bitb socket.localhost:5705 \
-    -skip_gameinfo -nomax -window \
-    -autoboot_delay 2 \
-    -autoboot_command '*DISK\r*EXEC !BOOT\r' \
-    -flop1 bbc/orterforth.ssd
+# load from tape and run
+.PHONY : bbc-run-tape
+bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC)
+
+	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
 # general assemble rule
 bbc/%.o : bbc/%.s
@@ -295,6 +301,12 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 	bbcim -a $@ bbc/boot
 	bbcim -a $@ bbc/orterforth
 
+# final tape image
+bbc/orterforth.uef : bbc/orterforth $(ORTER)
+
+	$(ORTER) uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
+	mv $@.io $@
+
 # inst binary
 bbc/orterforth-inst : $(BBCDEPS)
 
@@ -315,7 +327,7 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 # main lib
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
-	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
+	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
 # asm bbc system lib
 bbc/rf_6502.o : rf_6502.s | bbc
@@ -345,6 +357,36 @@ build : $(TARGET)-build
 .PHONY : build-all
 build-all : $(SYSTEM)-build spectrum-build
 
+
+c64 :
+
+	mkdir $@
+
+# general assemble rule
+c64/%.o : c64/%.s
+
+	ca65 -t c64 -o $@ $<
+
+# general compile rule
+c64/%.s : %.c | c64
+
+	cc65 -O -t c64 --signed-chars -DRF_TARGET_INC='"target/c64/default.inc"' -o $@ $<
+
+# general compile rule
+c64/hw : hw.c | c64
+
+	cl65 -O -t c64 -o $@ $<
+
+# # C system lib
+c64/rf_system_c.s : target/c64/system.c | c64
+
+	cc65 -O -t c64 --signed-chars -o $@ $<
+
+# inst binary
+c64/orterforth-inst : c64/orterforth.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o | c64
+
+	cl65 -O -t c64 -o $@ -m c64/orterforth-inst.map $^
+
 # clean
 .PHONY : clean
 clean : $(TARGET)-clean
@@ -362,6 +404,18 @@ disc : $(DISC)
 # help
 .PHONY : help
 help : $(TARGET)-help
+
+ql :
+
+	mkdir $@
+
+ql/hw : hw.c | ql
+
+	qcc -o $@ $<
+
+ql/orterforth : rf.c rf_inst.c orterforth.c | ql
+
+	qcc -o $@ $^
 
 # ROM file dir
 roms : 
