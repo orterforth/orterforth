@@ -166,6 +166,9 @@ typedef double rf_double_t; /* TODO 64 bit integer handling */
 
 #ifndef RF_TARGET_INC
 
+/* disc impl is process local; insert and eject the inst disc */
+#define RF_INST_LOCAL_DISC
+
 /* RP and SP operations inline, code is larger but faster */
 #define RF_INLINE_RP
 #define RF_INLINE_SP

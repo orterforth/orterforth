@@ -1,6 +1,9 @@
 #include <stdlib.h>
 
 #include "rf.h"
+#ifdef RF_INST_LOCAL_DISC
+#include "rf_persci.h"
+#endif
 
 /* ERROR REPORTING */
 
@@ -951,8 +954,16 @@ void rf_inst(void)
   /* load */
   rf_inst_emptybuffers();
 
+#ifdef RF_INST_LOCAL_DISC
+  rf_persci_insert(0, "orterforth.disc");
+#endif
   rf_inst_prev = (uintptr_t *) RF_FIRST;
   rf_inst_load();
+#ifdef RF_INST_LOCAL_DISC
+  rf_persci_eject(0);
+  rf_persci_insert(0, "0.disc");
+#endif
+
 
   /* finished loading */
   rf_inst_load_cfa = 0;

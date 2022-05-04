@@ -99,7 +99,7 @@ $(SYSTEM)-clean :
 .PHONY : $(SYSTEM)-run
 $(SYSTEM)-run : $(ORTERFORTH) orterforth.disc
 
-	@cp -p orterforth.disc 0.disc
+	@touch 0.disc
 	@$(ORTERFORTH)
 
 # main lib

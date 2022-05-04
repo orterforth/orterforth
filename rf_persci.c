@@ -10,13 +10,30 @@
 
 const char * filenames[] = { 0, 0, 0, 0 };
 
-void rf_persci_insert(int drive, char *filename)
+static void validate_drive_no(int drive)
 {
   if (drive < 0 || drive > 3) {
     fprintf(stderr, "invalid drive number %d\n", drive);
     exit(1);
   }
+}
+
+void rf_persci_insert(int drive, char *filename)
+{
+  validate_drive_no(drive);
   filenames[drive] = filename;
+}
+
+static FILE *rf_persci_files[4];
+
+void rf_persci_eject(int drive)
+{
+  validate_drive_no(drive);
+  filenames[drive] = 0;
+  if (rf_persci_files[drive]) {
+    fclose(rf_persci_files[drive]);
+    rf_persci_files[drive] = 0;
+  }
 }
 
 /* STATE */
@@ -109,8 +126,6 @@ char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
 
   return 1;
 }
-
-FILE *rf_persci_files[4];
 
 FILE *rf_persci_open_file(uint8_t drive)
 {
