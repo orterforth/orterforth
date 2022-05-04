@@ -202,14 +202,14 @@ bbc-run : bbc-run-disk
 .PHONY : bbc-run-disk
 bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC)
 
-	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	@SYSTEM=$(SYSTEM) scripts/disc-tcp 0.disc 1.disc &
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
 
 # load from tape and run
 .PHONY : bbc-run-tape
 bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC)
 
-	@SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	@SYSTEM=$(SYSTEM) scripts/disc-tcp 0.disc 1.disc &
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
 # general assemble rule
@@ -271,22 +271,20 @@ BBCMAMEINSTTAPE := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette
 # final binary hex
 bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC)
 
-	cp -p orterforth.disc 0.disc
-
 	# empty disc
-	rm -f 1.disc
-	touch 1.disc
+	rm -f $@.io
+	touch $@.io
 
 	# serve disc
-	SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	SYSTEM=$(SYSTEM) scripts/disc-tcp orterforth.disc $@.io &
 
 	# run emulator, wait for result
 	$(BBCMAMEFAST) $(BBCMAMEINSTDISK) & pid=$$! ; \
-		scripts/waitforhex ; \
+		scripts/waitforhex $@.io ; \
 		kill -9 $$pid
 
 	# copy result
-	cp 1.disc $@
+	mv $@.io $@
 
 # final disc inf
 bbc/orterforth.inf : | bbc
@@ -462,7 +460,7 @@ spectrum-fuse-disc : | $(DISC) $(ORTER) spectrum/fuse-rs232-rx spectrum/fuse-rs2
 
 	$(ORTER) fuse serial read \
 		< spectrum/fuse-rs232-tx \
-		| $(DISC) \
+		| $(DISC) standard 0.disc 1.disc \
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
@@ -597,11 +595,11 @@ spectrum-run-fuse : spectrum-fuse-tap | spectrum-fuse-disc
 spectrum-run-mame : spectrum/orterforth.tap
 
 	# start disc
-	SYSTEM=$(SYSTEM) scripts/disc-tcp &
+	SYSTEM=$(SYSTEM) scripts/disc-tcp 0.disc 1.disc &
 
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
-	@mame spectrum \
+	@mame spectrum -video opengl \
 		-exp intf1 \
 		-exp:intf1:rs232 null_modem \
 		-bitb socket.localhost:5705 \
@@ -720,18 +718,15 @@ endif
 
 spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
 
-	# inst disc in drive 0
-	cp -p orterforth.disc 0.disc
-
 	# empty disc in drive 1 for hex installed file
-	rm -f 1.disc
-	touch 1.disc
+	rm -f $@.io
+	touch $@.io
 
 ifeq ($(SPECTRUMIMPL),fuse)
 	# start disc
 	$(ORTER) fuse serial read \
 		< spectrum/fuse-rs232-tx \
-		| $(DISC) \
+		| $(DISC) standard orterforth.disc $@.io \
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
@@ -744,7 +739,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
 		spectrum/orterforth-inst-2.tap & pid=$$! ; \
-		scripts/waitforhex ; \
+		scripts/waitforhex $@.io ; \
 		kill -9 $$pid
 endif
 
@@ -765,13 +760,13 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial write -w 22 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth-inst-2.ser
 
 	@echo "* Starting disc and waiting for completion..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) & pid=$$! ; \
-		scripts/waitforhex ; \
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io & pid=$$! ; \
+		scripts/waitforhex $@.io ; \
 		kill -9 $$pid
 endif
 
 	# read hex from disc 1 blocks and write to file
-	cp 1.disc $@
+	cp $@.io $@
 
 # make serial load file from bin
 spectrum/orterforth.ser : spectrum/orterforth.bin | $(ORTER)

@@ -129,13 +129,13 @@ static void serial_init_standard(void)
 }
 
 /* Server loop */
-static int serve(void)
+static int serve(char *dr0, char *dr1)
 {
   unsigned int len = 0;
   int result = 1;
 
-  rf_persci_insert(0, "0.disc");
-  rf_persci_insert(1, "1.disc");
+  rf_persci_insert(0, dr0);
+  rf_persci_insert(1, dr1);
 
   for (;;) {
     int c;
@@ -198,26 +198,26 @@ static int serve(void)
 
 int main(int argc, char *argv[])
 {
-  /* Console */
-  if (argc == 1) {
-    serial_init_standard();
-    return serve();
-  }
-
   /* Text file to Forth block disc image */
   if (argc == 2 && !strcmp("create", argv[1])) {
     return create_disc();
   }
 
   /* Physical serial port */
-  if (argc == 4 && !strcmp("serial", argv[1])) {
+  if (argc == 6 && !strcmp("serial", argv[1])) {
     serial_init_physical(argv[2], atoi(argv[3]));
-    return serve();
+    return serve(argv[4], argv[5]);
+  }
+
+  /* Console */
+  if (argc == 4 && !strcmp("standard", argv[1])) {
+    serial_init_standard();
+    return serve(argv[2], argv[3]);
   }
 
   /* Usage */
-  fputs("Usage: disc                       Run disc controller over stdin/stdout\n", stderr);
-  fputs("       disc create                Convert text file (stdin) into Forth block format (stdout)\n", stderr);
-  fputs("       disc serial <name> <baud>  Run disc controller over physical serial port\n", stderr);
+  fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n", stderr);
+  fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n", stderr);
+  fputs("       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n", stderr);
   return 1;
 }
