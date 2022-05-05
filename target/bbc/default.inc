@@ -8,22 +8,21 @@
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
 
-/* for parameter stack, use the BASIC workspace at 0x0700 downwards (string buffer) */
-#define RF_S0 0x0700
+/* default parameter stack below TIB */
+/*#define RF_S0 xxxx*/
 
-/* for return stack, use the BASIC workspace at 0x0600 downwards (FOR, RETURN, GOSUB stacks) */
-/*#define RF_R0 0x0600*/
-/* for return stack, use the BASIC text input buffer at 0x0800 downwards */
-#define RF_R0 0x0800
+/* default return stack below user space */
+/*#define RF_R0 xxxx*/
 
-/* for user space, use the BASIC workspace at 0x0400 (integer variables) */
-#define RF_USER 0x0400
+/* default user space below disc buffers */
+/*#define RF_USER xxxx*/
 
-/* for TIB, use the BASIC text input buffer area at 0x0700 */
-#define RF_TIB 0x0700
+/* default TIB below return stack */
+/*#define RF_TIB xxxx*/
 
-/* place disc buffers before origin at 0x1300 - 0x1720 */
-#define RF_LIMIT 0x1720
+/* disc buffers below MODE 7 screen memory */
+/* and below C stack if this is at 0x7C00 */
+#define RF_LIMIT 0x7B00
 
 /* C code start address */
 #define RF_ORG 0x1720
