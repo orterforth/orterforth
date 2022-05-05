@@ -362,15 +362,15 @@ bbc/rf_6502.o : rf_6502.s | bbc
 bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc
 
 	# TODO don't require --signed-chars
+	# TODO determine why --data-name INST crashes
 	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --rodata-name INST -o $@ $<
 
-# # C system lib
+# system lib, C
 bbc/rf_system_c.s : target/bbc/system.c | bbc
 
-	# TODO don't require --signed-chars
-	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
+	cc65 -O -t none -D__BBC__ -o $@ $<
 
-# asm system lib
+# system lib, assembly
 bbc/rf_system_asm.o : target/bbc/system.s | bbc
 
 	ca65 -o $@ $<
@@ -427,7 +427,7 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 .PHONY : disc
 disc : $(DISC)
 
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
 
 # help
 .PHONY : help
@@ -511,6 +511,7 @@ spectrum-fuse-tap : spectrum/orterforth.tap | roms/spectrum/if1-2.rom spectrum/f
 		$< &
 
 # load from serial
+# TODO should not rebuild orterforth-inst-2.tap via dependency chain
 .PHONY : spectrum-load-serial
 spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 
@@ -525,7 +526,7 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 	@$(ORTER) serial write -w 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 
 	@echo "* Starting disc..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
 
 # config option
 SPECTRUMOPTION := a
@@ -726,7 +727,7 @@ spectrum/orterforth-inst-2.tap : spectrum/orterforth-inst-2.bin
 spectrum/orterforth-inst_INST.bin : spectrum/orterforth-inst.bin
 
 # final bin from the hex output by inst
-spectrum/orterforth.bin : spectrum/orterforth.bin.hex $(ORTER)
+spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
