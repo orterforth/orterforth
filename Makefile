@@ -200,16 +200,20 @@ bbc-run : bbc-run-disk
 
 # load from disk and run
 .PHONY : bbc-run-disk
-bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC)
+bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 
-	@SYSTEM=$(SYSTEM) scripts/disc-tcp 0.disc 1.disc &
+	cp messages.disc 0.disc
+	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
+
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
 
 # load from tape and run
 .PHONY : bbc-run-tape
-bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC)
+bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 
-	@SYSTEM=$(SYSTEM) scripts/disc-tcp 0.disc 1.disc &
+	cp messages.disc 0.disc
+	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
+
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
 # general assemble rule
@@ -276,7 +280,7 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC
 	touch $@.io
 
 	# serve disc
-	SYSTEM=$(SYSTEM) scripts/disc-tcp orterforth.disc $@.io &
+	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard orterforth.disc $@.io &
 
 	# run emulator, wait for result
 	$(BBCMAMEFAST) $(BBCMAMEINSTDISK) & pid=$$! ; \
@@ -594,8 +598,8 @@ spectrum-run-fuse : spectrum-fuse-tap | spectrum-fuse-disc
 .PHONY: spectrum-run-mame
 spectrum-run-mame : spectrum/orterforth.tap
 
-	# start disc
-	SYSTEM=$(SYSTEM) scripts/disc-tcp 0.disc 1.disc &
+	# serve disc
+	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
 
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
@@ -766,7 +770,7 @@ ifeq ($(SPECTRUMIMPL),real)
 endif
 
 	# read hex from disc 1 blocks and write to file
-	cp $@.io $@
+	mv $@.io $@
 
 # make serial load file from bin
 spectrum/orterforth.ser : spectrum/orterforth.bin | $(ORTER)
