@@ -163,10 +163,10 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
-# BBCOPTION := default
-BBCOPTION := assembly
+# BBCOPTION := assembly
+BBCOPTION := default
+# BBCOPTION := tape
 
-BBCORG := 1720
 BBCROMS := \
 	roms/bbcb/os12.rom \
 	roms/bbcb/basic2.rom \
@@ -174,13 +174,29 @@ BBCROMS := \
 	roms/bbcb/saa5050 \
 	roms/bbcb/dnfs120.rom
 
-ifeq ($(BBCOPTION),default)
-	BBCDEPS := bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
-	BBCINC := target/bbc/default.inc
-endif
 ifeq ($(BBCOPTION),assembly)
 	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/assembly.inc
+	BBCINSTMEDIA = bbc/orterforth-inst.ssd
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
+	BBCORG := 1720
+	BBCRUN := bbc-run-disk
+endif
+ifeq ($(BBCOPTION),default)
+	BBCDEPS := bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
+	BBCINC := target/bbc/default.inc
+	BBCINSTMEDIA = bbc/orterforth-inst.ssd
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
+	BBCORG := 1720
+	BBCRUN := bbc-run-disk
+endif
+ifeq ($(BBCOPTION),tape)
+	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCINC := target/bbc/tape.inc
+	BBCINSTMEDIA = bbc/orterforth-inst.uef
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
+	BBCORG := 1220
+	BBCRUN := bbc-run-tape
 endif
 
 bbc :
@@ -192,11 +208,19 @@ bbc-clean :
 
 	rm -f bbc/*
 
-BBCMAME := mame bbcb -video opengl -skip_gameinfo -nomax -window -rs423 null_modem -bitb socket.localhost:5705
+# MAME command line
+BBCMAME := mame bbcb -video opengl \
+	-skip_gameinfo -nomax -window \
+	-rs423 null_modem -bitb socket.localhost:5705
+
+BBCMAMEFAST := mame bbcb -video none -sound none \
+	-skip_gameinfo -nomax -window \
+	-speed 20 -frameskip 10 -nothrottle -seconds_to_run 640 \
+	-rs423 null_modem -bitb socket.localhost:5705
 
 # default is to load from disk
 .PHONY : bbc-run
-bbc-run : bbc-run-disk
+bbc-run : $(BBCRUN)
 
 # load from disk and run
 .PHONY : bbc-run-disk
@@ -214,7 +238,7 @@ bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 	cp messages.disc 0.disc
 	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
 
-	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
+	@$(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
 # general assemble rule
 bbc/%.o : bbc/%.s
@@ -265,16 +289,8 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-BBCMAMEFAST := mame bbcb -video none -sound none \
-							 -skip_gameinfo -nomax -window -speed 20 -frameskip 10 -nothrottle \
-							 -seconds_to_run 640 -rs423 null_modem -bitb socket.localhost:5705
-
-BBCMAMEINSTDISK := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
-
-BBCMAMEINSTTAPE := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
-
 # final binary hex
-bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC)
+bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 
 	# empty disc
 	rm -f $@.io
@@ -284,7 +300,7 @@ bbc/orterforth.hex : bbc/orterforth-inst.ssd orterforth.disc $(BBCROMS) | $(DISC
 	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard orterforth.disc $@.io &
 
 	# run emulator, wait for result
-	$(BBCMAMEFAST) $(BBCMAMEINSTDISK) & pid=$$! ; \
+	$(BBCMAMEFAST) $(BBCMAMEINST) & pid=$$! ; \
 		scripts/waitforhex $@.io ; \
 		kill -9 $$pid
 
