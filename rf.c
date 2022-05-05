@@ -207,7 +207,7 @@ void rf_code_xdo(void)
 }
 #endif
 
-uintptr_t __FASTCALL__ *rf_lfa(char *nfa)
+static uintptr_t __FASTCALL__ *rf_lfa(char *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
   }
@@ -219,13 +219,6 @@ rf_code_t __FASTCALL__ *rf_cfa(char *nfa)
   uintptr_t *lfa = rf_lfa(nfa);
   uintptr_t *cfa = lfa + 1;
   return (rf_code_t *) cfa;
-}
-
-uintptr_t __FASTCALL__ *rf_pfa(char *nfa)
-{
-  uintptr_t *lfa = rf_lfa(nfa);
-  uintptr_t *pfa = lfa + 2;
-  return pfa;
 }
 
 #ifndef RF_TARGET_CODE_DODOE
@@ -334,7 +327,14 @@ char *rf_find(char *t, char length, char *nfa)
 }
 
 #ifndef RF_TARGET_CODE_PFIND
-uintptr_t rf_pfind(char *addr1, char *addr2)
+static uintptr_t __FASTCALL__ *rf_pfa(char *nfa)
+{
+  uintptr_t *lfa = rf_lfa(nfa);
+  uintptr_t *pfa = lfa + 2;
+  return pfa;
+}
+
+static uintptr_t rf_pfind(char *addr1, char *addr2)
 {
   char length;
   char *f;
