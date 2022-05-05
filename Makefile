@@ -163,10 +163,12 @@ $(TARGET)-help :
 
 # === BBC Micro ===
 
+# build config option
 # BBCOPTION := assembly
 BBCOPTION := default
 # BBCOPTION := tape
 
+# emulator ROM files
 BBCROMS := \
 	roms/bbcb/os12.rom \
 	roms/bbcb/basic2.rom \
@@ -174,28 +176,36 @@ BBCROMS := \
 	roms/bbcb/saa5050 \
 	roms/bbcb/dnfs120.rom
 
+# assembly code
 ifeq ($(BBCOPTION),assembly)
 	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/assembly.inc
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
+	BBCORIGIN := $$2800
 	BBCRUN := bbc-run-disk
 endif
+
+# default C code
 ifeq ($(BBCOPTION),default)
 	BBCDEPS := bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
 	BBCINC := target/bbc/default.inc
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
+	BBCORIGIN := $$3000
 	BBCRUN := bbc-run-disk
 endif
+
+# assembly code, tape only config starting at 0xE00
 ifeq ($(BBCOPTION),tape)
 	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/tape.inc
 	BBCINSTMEDIA = bbc/orterforth-inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
 	BBCORG := 1220
+	BBCORIGIN := $$2100
 	BBCRUN := bbc-run-tape
 endif
 
@@ -238,7 +248,7 @@ bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 	cp messages.disc 0.disc
 	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
 
-	@$(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
+	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
 # general assemble rule
 bbc/%.o : bbc/%.s
@@ -356,7 +366,7 @@ bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 # asm bbc system lib
 bbc/rf_6502.o : rf_6502.s | bbc
 
-	ca65 -o $@ $<
+	ca65 -DRF_ORIGIN='$(BBCORIGIN)' -o $@ $<
 
 # main lib
 bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc

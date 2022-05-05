@@ -869,31 +869,26 @@ _rf_cold_abort:
 
 .export _rf_cold_forth
 
-_rf_cold_forth := cold3+1
-; _rf_cold_forth:
-; 	.word $0001                   ; modify at inst time
-
-RF_ORIGIN := $2800              ; TODO pass this in
+_rf_cold_forth := cold3+1       ; modify at inst time
 
 _rf_code_cold:
 
-	; lda _rf_cold_forth            ; move FORTH vocab addr to cold3
-	; sta cold3+1
-	; lda _rf_cold_forth+1
-	; sta cold3+2
 cold1:
 	lda cold3+1                   ; move cold3 to cold4
 	sta cold4+1
 	lda cold3+2
 	sta cold4+2
+
 	inc cold4+1                   ; increment cold4 by 1
 	bne cold2
 	inc cold4+2
 cold2:
+
 	lda _rf_cold_abort+1          ; move ABORT to cold7, cold8
 	sta cold7+1
 	lda _rf_cold_abort
 	sta cold8+1
+
 	lda RF_ORIGIN+$000C           ; set FORTH vocab to ORIGIN + 6
 cold3:
 	sta $1000                     ; self modified
