@@ -224,6 +224,7 @@ bbc/%.o : bbc/%.s
 # general compile rule
 bbc/%.s : %.c | bbc
 
+	# TODO don't require --signed-chars
 	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
 # find cc65 install dir and copy lib file
@@ -344,11 +345,13 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # main lib
 bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc
 
+	# TODO don't require --signed-chars
 	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --rodata-name INST -o $@ $<
 
 # # C system lib
 bbc/rf_system_c.s : target/bbc/system.c | bbc
 
+	# TODO don't require --signed-chars
 	cc65 -O --signed-chars -t none -D__BBC__ -o $@ $<
 
 # asm system lib
@@ -377,6 +380,7 @@ c64/%.o : c64/%.s
 # general compile rule
 c64/%.s : %.c | c64
 
+	# TODO don't require --signed-chars
 	cc65 -O -t c64 --signed-chars -DRF_TARGET_INC='"target/c64/default.inc"' -o $@ $<
 
 # general compile rule
@@ -387,6 +391,7 @@ c64/hw : hw.c | c64
 # # C system lib
 c64/rf_system_c.s : target/c64/system.c | c64
 
+	# TODO don't require --signed-chars
 	cc65 -O -t c64 --signed-chars -o $@ $<
 
 # inst binary
@@ -734,17 +739,18 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
-	# run Fuse, install, wait, kill Fuse when believed finished
-	$(FUSE) \
+	# start Fuse, install, stop Fuse
+	sh scripts/fuse-start.sh \
 		--speed=5000 \
 		--machine 48 \
 		--interface1 \
 		--rom-interface-1 roms/spectrum/if1-2.rom \
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
-		spectrum/orterforth-inst-2.tap & pid=$$! ; \
-		scripts/waitforhex $@.io ; \
-		kill -9 $$pid
+		spectrum/orterforth-inst-2.tap
+	sh scripts/waitforhex $@.io
+	sh scripts/fuse-stop.sh
+
 endif
 
 ifeq ($(SPECTRUMIMPL),superzazu)
