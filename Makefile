@@ -372,8 +372,8 @@ bbc/rf_6502.o : rf_6502.s | bbc
 bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc
 
 	# TODO don't require --signed-chars
-	# TODO determine why --data-name INST crashes
-	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --rodata-name INST -o $@ $<
+	# TODO determine why INST and INDA need to be distinct sections
+	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
 
 # system lib, C
 bbc/rf_system_c.s : target/bbc/system.c | bbc
