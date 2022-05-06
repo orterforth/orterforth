@@ -23,7 +23,7 @@
 #define RF_TIB 0x0700
 
 /* place disc buffers before origin at 0x1300 - 0x1720 */
-#define RF_LIMIT 0x1620
+#define RF_LIMIT 0x1720
 
 /* C code start address */
 #define RF_ORG 0x1720
