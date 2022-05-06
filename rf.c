@@ -448,7 +448,7 @@ void rf_code_cmove(void)
 }
 #endif
 
-void __FASTCALL__ rf_dpush(rf_double_t a)
+static void __FASTCALL__ rf_dpush(rf_double_t a)
 {
   uintptr_t b = a;
   uintptr_t c = a >> RF_WORD_SIZE_BITS;
