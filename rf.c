@@ -472,7 +472,7 @@ void rf_code_ustar(void)
 }
 #endif
 
-rf_double_t rf_dpop(void)
+static rf_double_t rf_dpop(void)
 {
   uintptr_t a = RF_SP_POP;
   uintptr_t b = RF_SP_POP;
