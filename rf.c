@@ -111,15 +111,10 @@ void rf_code_exec(void)
 }
 #endif
 
-void rf_branch(void)
-{
-  uintptr_t offset;
-  
-  offset = (uintptr_t) *(RF_IP_GET);
-  RF_IP_SET((uintptr_t *) (((char *) RF_IP_GET) + offset));
-}
+static void rf_branch(void);
 
 #ifndef RF_TARGET_CODE_BRAN
+#define RF_BRANCH
 void rf_code_bran(void)
 {
   RF_START;
@@ -129,6 +124,7 @@ void rf_code_bran(void)
 #endif
 
 #ifndef RF_TARGET_CODE_ZBRAN
+#define RF_BRANCH
 void rf_code_zbran(void)
 {
   RF_START;
@@ -142,6 +138,7 @@ void rf_code_zbran(void)
 #endif
 
 #ifndef RF_TARGET_CODE_XLOOP
+#define RF_BRANCH
 void rf_code_xloop(void)
 {
   RF_START;
@@ -165,6 +162,7 @@ void rf_code_xloop(void)
 #endif
 
 #ifndef RF_TARGET_CODE_XPLOO
+#define RF_BRANCH
 void rf_code_xploo(void)
 {
   RF_START;
@@ -187,6 +185,16 @@ void rf_code_xploo(void)
     }
   }
   RF_JUMP_NEXT;
+}
+#endif
+
+#ifdef RF_BRANCH
+static void rf_branch(void)
+{
+  uintptr_t offset;
+  
+  offset = (uintptr_t) *(RF_IP_GET);
+  RF_IP_SET((uintptr_t *) (((char *) RF_IP_GET) + offset));
 }
 #endif
 
@@ -995,6 +1003,7 @@ void rf_code_bread(void)
 }
 #endif
 
+#ifndef RF_TARGET_CODE_BWRIT
 static char eot = 0x04;
 
 void rf_code_bwrit(void)
@@ -1009,6 +1018,7 @@ void rf_code_bwrit(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
 void rf_code_rcod(void)
 {

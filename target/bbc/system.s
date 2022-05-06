@@ -236,3 +236,30 @@ write2:
 osbyte2:
 	jmp osbyte                    ; workaround for unknown issue
 	rts
+
+.export _rf_code_bwrit
+
+_rf_code_bwrit:
+
+	lda #$02
+	jsr setup
+	stx xsave
+	lda #$03                      ; *FX 3,7 (write to RS423)
+	ldx #$07
+	jsr osbyte
+	ldy #$00
+bwrit1:
+  cpy _rf_6502_n
+	bne bwrit2
+	lda #$04                      ; EOT
+	jsr oswrch
+	tax                           ; *FX 3,4 (write to screen)
+	lda #$03
+	jsr osbyte
+	ldx xsave
+	jmp _rf_next
+bwrit2:
+  lda (_rf_6502_n+2),y          ; write 1 byte
+	jsr oswrch
+	iny                           ; loop
+	bne bwrit1

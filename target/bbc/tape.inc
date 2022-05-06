@@ -29,7 +29,7 @@
 #define RF_ORG 0x1220
 
 /* origin follows the C code */
-#define RF_ORIGIN 0x1F00
+#define RF_ORIGIN 0x1E80
 
 /* assembly definitions */
 #define RF_TARGET_IP
@@ -86,6 +86,7 @@
 #define RF_TARGET_CODE_STOD
 #define RF_TARGET_CODE_DCHAR
 #define RF_TARGET_CODE_BREAD
+#define RF_TARGET_CODE_BWRIT
 #define RF_TARGET_CODE_CELL
 #define RF_TARGET_CODE_CELLS
 #define RF_TARGET_CODE_TARGET
