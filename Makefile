@@ -183,7 +183,7 @@ ifeq ($(BBCOPTION),assembly)
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := $$2500
+	BBCORIGIN := $$2400
 	BBCRUN := bbc-run-disk
 endif
 
@@ -205,7 +205,7 @@ ifeq ($(BBCOPTION),tape)
 	BBCINSTMEDIA = bbc/orterforth-inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
 	BBCORG := 1220
-	BBCORIGIN := $$2000
+	BBCORIGIN := $$1F00
 	BBCRUN := bbc-run-tape
 endif
 
