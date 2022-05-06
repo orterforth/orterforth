@@ -29,7 +29,7 @@
 #define RF_ORG 0x1720
 
 /* origin follows the C code */
-#define RF_ORIGIN 0x2800
+#define RF_ORIGIN 0x2500
 
 /* assembly definitions */
 #define RF_TARGET_IP

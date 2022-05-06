@@ -29,8 +29,7 @@
 #define RF_ORG 0x1220
 
 /* origin follows the C code */
-/* TODO work out why this can't be dropped below 0x2800 */
-#define RF_ORIGIN 0x2100
+#define RF_ORIGIN 0x2000
 
 /* assembly definitions */
 #define RF_TARGET_IP
