@@ -343,9 +343,9 @@ void rf_fin(void);
 
 rf_code_t __FASTCALL__ *rf_cfa(char *nfa);
 
-char *rf_find(char *t, char t_length, char *nfa);
+uint8_t rf_digit(uint8_t base, uint8_t c);
 
-uint8_t rf_digit(char base, char c);
+char *rf_find(char *t, char t_length, char *nfa);
 
 void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s1);
 

@@ -351,7 +351,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t) {
     }
 
     /* digit */
-    if ((d = rf_digit(b, c)) == 255) {
+    if ((d = rf_digit(b, c)) == 0xFF) {
       break;
     }
 

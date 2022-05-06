@@ -258,8 +258,7 @@ bbc/%.o : bbc/%.s
 # general compile rule
 bbc/%.s : %.c | bbc
 
-	# TODO don't require --signed-chars
-	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
+	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
 # find cc65 install dir and copy lib file
 bbc/apple2.lib : $(shell readlink $(shell which ld65))
@@ -371,9 +370,8 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # main lib
 bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc
 
-	# TODO don't require --signed-chars
 	# TODO determine why INST and INDA need to be distinct sections
-	cc65 -O --signed-chars -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
+	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
 
 # system lib, C
 bbc/rf_system_c.s : target/bbc/system.c | bbc
@@ -406,8 +404,7 @@ c64/%.o : c64/%.s
 # general compile rule
 c64/%.s : %.c | c64
 
-	# TODO don't require --signed-chars
-	cc65 -O -t c64 --signed-chars -DRF_TARGET_INC='"target/c64/default.inc"' -o $@ $<
+	cc65 -O -t c64 -DRF_TARGET_INC='"target/c64/default.inc"' -o $@ $<
 
 # general compile rule
 c64/hw : hw.c | c64
@@ -417,8 +414,7 @@ c64/hw : hw.c | c64
 # # C system lib
 c64/rf_system_c.s : target/c64/system.c | c64
 
-	# TODO don't require --signed-chars
-	cc65 -O -t c64 --signed-chars -o $@ $<
+	cc65 -O -t c64 -o $@ $<
 
 # inst binary
 c64/orterforth-inst : c64/orterforth.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o | c64

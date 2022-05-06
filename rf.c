@@ -268,10 +268,10 @@ void rf_code_rr(void)
 }
 #endif
 
-uint8_t rf_digit(char base, char c)
+uint8_t rf_digit(uint8_t base, uint8_t c)
 {
-  c -= 0x30;
-  if (c >= 0) {
+  if (c >= 0x30) {
+    c -= 0x30;
     if (c >= 10) {
       c -= 7;
     }
