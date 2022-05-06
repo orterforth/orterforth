@@ -381,9 +381,6 @@ static void rf_inst_code_x(void)
   RF_JUMP_NEXT;
 }
 
-/* ?PAIRS */
-#define rf_inst_qpairs(a) (void) RF_SP_POP
-
 /* find a definition */
 static char __FASTCALL__ *rf_inst_find_string(char *t)
 {
@@ -425,6 +422,19 @@ static void rf_inst_immediate(void)
 
 #define rf_inst_qstack()
 
+/* -FIND */
+static void rf_inst_code_hfind(void)
+{
+  RF_START;
+  RF_INST_ONLY;
+  {
+    char *nfa;
+    nfa = rf_inst_hfind();
+    RF_SP_PUSH((uintptr_t) nfa);
+  }
+  RF_JUMP_NEXT;
+}
+
 /* INTERPRET */
 static void rf_inst_code_interpret_word(void)
 {
@@ -437,7 +447,7 @@ static void rf_inst_code_interpret_word(void)
     /* BEGIN (outside this in inst time version of INTERPRET) */
     
     /* -FIND  */
-    nfa = rf_inst_hfind();
+    nfa = (char *) RF_SP_POP;
 
     /* IF  */
     if (nfa) {
@@ -824,10 +834,12 @@ static void rf_inst_forward(void)
 #endif
 
   /* outer interpreter */
+  rf_inst_def_code("-hfind", rf_inst_code_hfind);
   rf_inst_colon("interpret");
+  rf_inst_compile("-hfind");
   rf_inst_compile("interpret-word");
 	rf_inst_compile("BRANCH");
-	rf_inst_comma(-2 * RF_WORD_SIZE);
+	rf_inst_comma(-3 * RF_WORD_SIZE);
 
   /* LOAD */
   rf_inst_colon("LOAD");
