@@ -966,6 +966,7 @@ void rf_code_cold(void)
 }
 #endif
 
+#ifndef RF_TARGET_CODE_DCHAR
 void rf_code_dchar(void)
 {
   RF_START;
@@ -979,6 +980,7 @@ void rf_code_dchar(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
 #ifndef RF_TARGET_CODE_BREAD
 void rf_code_bread(void)

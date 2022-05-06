@@ -147,6 +147,34 @@ read2:
 	jsr osbyte
 	jmp incsp6
 
+.export _rf_code_dchar
+
+_rf_code_dchar:
+
+	stx xsave
+	lda #$02                      ; *FX 2,1 (read from RS423)
+	ldx #$01
+	jsr osbyte
+	jsr	osrdch                    ; read 1 byte
+	pha
+	lda #$02                      ; *FX 2,2 (read from keyboard)
+	tax
+	jsr osbyte
+	ldx xsave
+	ldy #$00
+
+	dex
+	dex
+	sty 1,x                       ; zero high byte
+	pla                           ; read 1 byte
+	sta 0,x
+	cmp 2,x                       ; return true if equal
+	bne dchar1
+	iny
+dchar1:
+	sty 2,x
+	jmp _rf_next
+
 .export _rf_code_bread
 
 _rf_code_bread:
@@ -163,6 +191,7 @@ bread1:
 	sta (_rf_6502_n),y
 	iny
 	bpl bread1
+bread2:
 	lda #$02                      ; *FX 2,2 (read from keyboard)
 	tax
 	jsr osbyte
