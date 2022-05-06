@@ -9,9 +9,11 @@
 .importzp	sp
 .import staxysp
 
+.importzp _rf_6502_n
 .importzp _rf_6502_up
 .importzp _rf_6502_w
 .import pop
+.import setup
 .import _rf_next
 .importzp xsave
 .import push0a
@@ -144,6 +146,28 @@ read2:
 	tax                           ; *FX 2,2 (read from keyboard)
 	jsr osbyte
 	jmp incsp6
+
+.export _rf_code_bread
+
+_rf_code_bread:
+
+	lda #$01                      ; fetch addr into N
+	jsr setup
+	stx xsave
+	lda #$02                      ; *FX 2,1 (read from RS423)
+	ldx #$01
+	jsr osbyte
+	ldy #$00                      ; read 128 bytes
+bread1:
+	jsr	osrdch
+	sta (_rf_6502_n),y
+	iny
+	bpl bread1
+	lda #$02                      ; *FX 2,2 (read from keyboard)
+	tax
+	jsr osbyte
+	ldx xsave
+	jmp _rf_next
 
 .export _rf_disc_write
 

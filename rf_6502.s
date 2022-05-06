@@ -6,6 +6,10 @@ temps := $76
 
 n := $78                        ; n-1 must be reserved for the length of n in words
 
+.exportzp _rf_6502_n
+
+_rf_6502_n := $78               ; export as zp for use by other asm
+
 .export _rf_ip: near
 
 _rf_ip := $80
@@ -113,6 +117,8 @@ _rf_next:
 
 next1:
 	jmp _rf_w-1                   ; jump to (W)
+
+.export setup
 
 setup:
 	asl                           ; store number of bytes

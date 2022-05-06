@@ -980,12 +980,14 @@ void rf_code_dchar(void)
   RF_JUMP_NEXT;
 }
 
+#ifndef RF_TARGET_CODE_BREAD
 void rf_code_bread(void)
 {
   RF_START;
   rf_disc_read((char *) RF_SP_POP, RF_BBLK);
   RF_JUMP_NEXT;
 }
+#endif
 
 static char eot = 0x04;
 
