@@ -926,6 +926,19 @@ cold8:
 	sta _rf_w-1
 	jmp _rf_code_rpsto            ; to RP!
 
+
+.export _rf_code_stod
+
+_rf_code_stod:
+
+	lda 1,x
+	bpl stod1
+	dey
+stod1:
+	tya
+	pha
+	jmp push
+
 .export _rf_code_rcll
 
 _rf_code_rcll:
