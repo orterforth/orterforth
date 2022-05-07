@@ -302,25 +302,6 @@ static void rf_inst_code_create(void)
   RF_JUMP_NEXT;
 }
 
-/* -FIND */
-static char *rf_inst_hfind(void)
-{
-  RF_INST_ONLY;
-  {
-    char *here;
-    char *nfa;
-
-    /* BL WORD */
-    rf_inst_word(32);
-    /* HERE */
-    here = (char *) RF_USER_DP;
-    /* CONTEXT @ @ (FIND) */
-    nfa = rf_find(here + 1, here[0], *((char **) RF_USER_CONTEXT));
-    /* ENDIF */
-    return nfa;
-  }
-}
-
 /* create and smudge */
 static void __FASTCALL__ rf_inst_def(char *name)
 {
@@ -422,42 +403,34 @@ static void rf_inst_immediate(void)
 
 #define rf_inst_qstack()
 
-/* -FIND */
-static void rf_inst_code_hfind(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    char *nfa;
-    nfa = rf_inst_hfind();
-    RF_SP_PUSH((uintptr_t) nfa);
-  }
-  RF_JUMP_NEXT;
-}
-
 /* INTERPRET */
 static void rf_inst_code_interpret_word(void)
 {
   RF_START;
   RF_INST_ONLY;
   {
-    char *nfa;
+    uintptr_t found;
+    uintptr_t len;
+    uintptr_t *pfa;
     intptr_t number;
 
     /* BEGIN (outside this in inst time version of INTERPRET) */
     
     /* -FIND  */
-    nfa = (char *) RF_SP_POP;
+    found = RF_SP_POP;
 
     /* IF  */
-    if (nfa) {
+    if (found) {
+      len = RF_SP_POP;
+      pfa = (uintptr_t *) RF_SP_POP;
+
       /* STATE @ < IF  */
-      if (*((uint8_t *) nfa) < RF_USER_STATE) {
+      if (len < RF_USER_STATE) {
         /* CFA , */
-        rf_inst_comma((uintptr_t) rf_cfa(nfa));
+        rf_inst_comma((uintptr_t) ((uintptr_t *) pfa - 1));
       } else {
         /* ELSE CFA EXECUTE */
-        rf_w = rf_cfa(nfa);
+        rf_w = (rf_code_t *) ((uintptr_t *) pfa - 1);
         RF_JUMP(*rf_w);
         return;
       }
@@ -833,10 +806,21 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("overwrite", 0);
 #endif
 
-  /* outer interpreter */
-  rf_inst_def_code("-hfind", rf_inst_code_hfind);
-  rf_inst_colon("interpret");
-  rf_inst_compile("-hfind");
+  /* -FIND */
+  rf_inst_colon("-FIND");
+  rf_inst_compile_lit(32);
+  rf_inst_compile("WORD");
+  rf_inst_compile("DP");
+  rf_inst_compile("@");
+  rf_inst_compile("CONTEXT");
+  rf_inst_compile("@");
+  rf_inst_compile("@");
+  rf_inst_compile("(FIND)");
+  rf_inst_compile(";S");
+
+  /* INTERPRET */
+  rf_inst_colon("INTERPRET");
+  rf_inst_compile("-FIND");
   rf_inst_compile("interpret-word");
 	rf_inst_compile("BRANCH");
 	rf_inst_comma(-3 * RF_WORD_SIZE);
@@ -857,7 +841,7 @@ static void rf_inst_forward(void)
   rf_inst_compile("DROP");
   rf_inst_compile("BLK");
   rf_inst_compile("!");
-  rf_inst_compile("interpret");
+  rf_inst_compile("INTERPRET");
   rf_inst_compile("R>");
   rf_inst_compile("IN");
   rf_inst_compile("!");
