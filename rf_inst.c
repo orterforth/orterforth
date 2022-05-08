@@ -173,37 +173,6 @@ static void rf_inst_memset(char *ptr, char value, unsigned int num)
   }
 }
 
-/* WORD */
-static void __FASTCALL__ rf_inst_word(uint8_t c)
-{
-  uint8_t length;
-  char *here;
-  char *addr1;
-  uint8_t n1, n2, n3;
-
-  /* BLK @ IF BLK @ BLOCK ELSE TIB @ ENDIF */
-  /* IN @ + */
-  addr1 = rf_inst_block(RF_USER_BLK) + RF_USER_IN;
-
-  /* SWAP ENCLOSE */
-  rf_enclose(c, addr1, &n1, &n2, &n3);
-
-  /* HERE 22 BLANKS */
-  here = (char *) RF_USER_DP;
-  rf_inst_memset(here, ' ', 34);
-
-  /* IN +! */
-  RF_USER_IN += n3;
-
-  /* OVER  -  >R ( SAVE CHAR COUNT ) */
-  length = n2 - n1;
-  /* R HERE C! ( LENGTH STORED FIRST ) */
-  here[0] = length;
-
-  /* + HERE 1+ R> CMOVE */
-  rf_inst_memcpy(here + 1, addr1 + n1, length);
-}
-
 /* BLOCK */
 static void rf_inst_code_block(void)
 {
@@ -213,15 +182,6 @@ static void rf_inst_code_block(void)
     char *p = rf_inst_block(RF_SP_POP);
     RF_SP_PUSH((uintptr_t) p);
   }
-  RF_JUMP_NEXT;
-}
-
-/* WORD */
-void rf_inst_code_word(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  rf_inst_word(RF_SP_POP);
   RF_JUMP_NEXT;
 }
 
@@ -250,6 +210,8 @@ static void rf_inst_create(uint8_t length, char *address)
   here = (char *) RF_USER_DP;
   here[0] = length;
   rf_inst_memcpy(here + 1, address, length);
+  /* during 6502 bug workaround (FIND) expects 0xA0 at end of name */
+  here[length + 1] = 0x20;
 
   /* TIB HERE 0A0 + < 2 ?ERROR */
   assert(RF_USER_TIB - (uintptr_t) here >= 0xA0);
@@ -282,24 +244,6 @@ static void rf_inst_create(uint8_t length, char *address)
 
   /* CURRENT @ !  */
   *((char **) RF_USER_CURRENT) = here;
-}
-
-/* CREATE */
-static void rf_inst_code_create(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    char *here;
-
-    rf_inst_word(32);
-    here = (char *) RF_USER_DP;
-    rf_inst_create(here[0], here + 1);
-
-    /* HERE 2+ , */
-    rf_inst_comma((uintptr_t) ((uintptr_t *) RF_USER_DP + 1));
-  }
-  RF_JUMP_NEXT;
 }
 
 /* create and smudge */
@@ -714,31 +658,37 @@ static void rf_inst_code_ext(void)
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 28
+#define RF_INST_CODE_LIST_SIZE 34
 
 static rf_inst_code_t rf_inst_code_list[] = {
   { "LIT", rf_code_lit },
   { "BRANCH", rf_code_bran },
+  { "0BRANCH", rf_code_zbran },
   { "(FIND)", rf_code_pfind },
+  { "ENCLOSE", rf_code_encl },
+  { "CMOVE", rf_code_cmove },
   { "U*", rf_code_ustar },
   { "AND", rf_code_andd },
   { "SP@", rf_code_spat },
   { ";S", rf_code_semis },
   { ">R", rf_code_tor },
   { "R>", rf_code_fromr },
+  { "R", rf_code_rr },
+  { "0=", rf_code_zequ },
   { "+", rf_code_plus },
   { "MINUS", rf_code_minus },
   { "OVER", rf_code_over },
   { "DROP", rf_code_drop },
   { "SWAP", rf_code_swap },
+  { "DUP", rf_code_dup },
   { "+!", rf_code_pstor },
   { "TOGGLE", rf_code_toggl },
   { "@", rf_code_at },
+  { "C@", rf_code_cat },
   { "!", rf_code_store },
+  { "C!", rf_code_cstor },
   { "DECIMAL", rf_inst_code_decimal },
-  { "WORD", rf_inst_code_word },
   { "BLOCK", rf_inst_code_block },
-  { "CREATE", rf_inst_code_create },  
   { "COMPILE", rf_inst_code_compile },
   { "rxit", rf_code_rxit },
   { "rcll", rf_code_rcll },
@@ -806,12 +756,68 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("overwrite", 0);
 #endif
 
+  /* - */
+  rf_inst_colon("-");
+  rf_inst_compile("MINUS");
+  rf_inst_compile("+");
+  rf_inst_compile(";S");
+
+  /* HERE */
+  rf_inst_colon("HERE");
+  rf_inst_compile("DP");
+  rf_inst_compile("@");
+  rf_inst_compile(";S");
+
+  /* BLANKS */
+  rf_inst_colon("BLANKS");
+  rf_inst_compile_lit(0x20);
+  rf_inst_compile("SWAP");
+  rf_inst_compile(">R");
+  rf_inst_compile("OVER");
+  rf_inst_compile("C!");
+  rf_inst_compile("DUP");
+  rf_inst_compile_lit(1);
+  rf_inst_compile("+");
+  rf_inst_compile("R>");
+  rf_inst_compile_lit(1);
+  rf_inst_compile("-");
+  rf_inst_compile("CMOVE");
+  rf_inst_compile(";S");
+
+  /* WORD */
+  rf_inst_colon("WORD");
+  rf_inst_compile("BLK");
+  rf_inst_compile("@");
+  rf_inst_compile("BLOCK");
+  rf_inst_compile("IN");
+  rf_inst_compile("@");
+  rf_inst_compile("+");
+  rf_inst_compile("SWAP");
+  rf_inst_compile("ENCLOSE");
+  rf_inst_compile("HERE");
+  rf_inst_compile_lit(0x22);
+  rf_inst_compile("BLANKS");
+  rf_inst_compile("IN");
+  rf_inst_compile("+!");
+  rf_inst_compile("OVER");
+  rf_inst_compile("-");
+  rf_inst_compile(">R");
+  rf_inst_compile("R");
+  rf_inst_compile("HERE");
+  rf_inst_compile("C!");
+  rf_inst_compile("+");
+  rf_inst_compile("HERE");
+  rf_inst_compile_lit(1);
+  rf_inst_compile("+");
+  rf_inst_compile("R>");
+  rf_inst_compile("CMOVE");
+  rf_inst_compile(";S");
+ 
   /* -FIND */
   rf_inst_colon("-FIND");
   rf_inst_compile_lit(32);
   rf_inst_compile("WORD");
-  rf_inst_compile("DP");
-  rf_inst_compile("@");
+  rf_inst_compile("HERE");
   rf_inst_compile("CONTEXT");
   rf_inst_compile("@");
   rf_inst_compile("@");
@@ -824,6 +830,56 @@ static void rf_inst_forward(void)
   rf_inst_compile("interpret-word");
 	rf_inst_compile("BRANCH");
 	rf_inst_comma(-3 * RF_WORD_SIZE);
+
+  /* CREATE */
+  rf_inst_colon("CREATE");
+  rf_inst_compile("-FIND");
+  rf_inst_compile("0BRANCH");
+	rf_inst_comma(3 * RF_WORD_SIZE);
+  rf_inst_compile("DROP");
+  rf_inst_compile("DROP");
+  rf_inst_compile("HERE");
+  rf_inst_compile("DUP");
+  rf_inst_compile("C@");
+  rf_inst_compile_lit(1);
+  rf_inst_compile("+");
+  rf_inst_compile("DP");
+  rf_inst_compile("+!");
+  rf_inst_compile("DP");
+  rf_inst_compile("C@");
+  rf_inst_compile_lit((uintptr_t) (uint8_t) 253);
+  rf_inst_compile("-");
+  rf_inst_compile("0=");
+  rf_inst_compile("DP");
+  rf_inst_compile("+!");
+  rf_inst_compile("DUP");
+  rf_inst_compile_lit(0xA0);
+  rf_inst_compile("TOGGLE");
+  rf_inst_compile("HERE");
+  rf_inst_compile_lit(1);
+  rf_inst_compile("-");
+  rf_inst_compile_lit(0x80);
+  rf_inst_compile("TOGGLE");
+  rf_inst_compile("CURRENT");
+  rf_inst_compile("@");
+  rf_inst_compile("@");
+  rf_inst_compile("HERE");
+  rf_inst_compile("!");
+  rf_inst_compile("rcll");
+  rf_inst_compile("DP");
+  rf_inst_compile("+!");
+  rf_inst_compile("CURRENT");
+  rf_inst_compile("@");
+  rf_inst_compile("!");
+  rf_inst_compile("HERE");
+  rf_inst_compile("rcll");
+  rf_inst_compile("+");
+  rf_inst_compile("HERE");
+  rf_inst_compile("!");
+  rf_inst_compile("rcll");
+  rf_inst_compile("DP");
+  rf_inst_compile("+!");
+  rf_inst_compile(";S");
 
   /* LOAD */
   rf_inst_colon("LOAD");
