@@ -183,7 +183,7 @@ ifeq ($(BBCOPTION),assembly)
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := $$2400
+	BBCORIGIN := 2400
 	BBCRUN := bbc-run-disk
 endif
 
@@ -194,7 +194,7 @@ ifeq ($(BBCOPTION),default)
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := $$2D00
+	BBCORIGIN := 2D00
 	BBCRUN := bbc-run-disk
 endif
 
@@ -205,7 +205,7 @@ ifeq ($(BBCOPTION),tape)
 	BBCINSTMEDIA = bbc/orterforth-inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
 	BBCORG := 1220
-	BBCORIGIN := $$1F00
+	BBCORIGIN := 1F00
 	BBCRUN := bbc-run-tape
 endif
 
@@ -253,7 +253,7 @@ bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 # general assemble rule
 bbc/%.o : bbc/%.s
 
-	ca65 -o $@ $<
+	ca65 -DRF_ORIGIN='$$$(BBCORIGIN)' -o $@ $<
 
 # general compile rule
 bbc/%.s : %.c | bbc
@@ -360,28 +360,28 @@ bbc/orterforth-inst.uef : bbc/orterforth-inst
 # main lib
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
-	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
+	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
 # asm bbc system lib
 bbc/rf_6502.o : rf_6502.s | bbc
 
-	ca65 -DRF_ORIGIN='$(BBCORIGIN)' -o $@ $<
+	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
 
 # main lib
 bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc
 
 	# TODO determine why INST and INDA need to be distinct sections
-	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
+	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
 
 # system lib, C
 bbc/rf_system_c.s : target/bbc/system.c | bbc
 
-	cc65 -O -t none -D__BBC__ -o $@ $<
+	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
 
 # system lib, assembly
 bbc/rf_system_asm.o : target/bbc/system.s | bbc
 
-	ca65 -o $@ $<
+	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
 
 # build
 .PHONY : build

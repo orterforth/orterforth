@@ -28,8 +28,8 @@
 /* C code start address */
 #define RF_ORG 0x1720
 
-/* origin follows the C code */
-#define RF_ORIGIN 0x2400
+/* origin passed in command line, follows the C code */
+/*#define RF_ORIGIN xxxx*/
 
 /* assembly definitions */
 #define RF_TARGET_IP

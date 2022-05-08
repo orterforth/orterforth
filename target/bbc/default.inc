@@ -27,7 +27,7 @@
 /* C code start address */
 #define RF_ORG 0x1720
 
-/* origin follows the C code */
-#define RF_ORIGIN 0x2D00
+/* origin passed in command line, follows the C code */
+/*#define RF_ORIGIN xxxx*/
 
 /* no assembly definitions */
