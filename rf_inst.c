@@ -203,47 +203,36 @@ static char *rf_inst_latest(void)
 /* CREATE */
 static void rf_inst_create(uint8_t length, char *address)
 {
-  char *here;
-  char *p;
+  char *here, *there;
 
-  /* below assumes word already written to HERE */
   here = (char *) RF_USER_DP;
-  here[0] = length;
-  rf_inst_memcpy(here + 1, address, length);
-  /* during 6502 bug workaround (FIND) expects 0xA0 at end of name */
-  here[length + 1] = 0x20;
+  there = here;
 
-  /* TIB HERE 0A0 + < 2 ?ERROR */
-  assert(RF_USER_TIB - (uintptr_t) here >= 0xA0);
-  /* NB address of TIB not value; instead use a portable dictionary limit */
+  /* length byte */
+  here[0] = length | 0xA0;
+  ++here;
 
-  /* -FIND IF DROP NFA ID. 4 MESSAGE SPACE ENDIF  */
-  /* not important at inst time */
+  /* name */
+  rf_inst_memcpy(here, address, length);
+  here += length;
+  here[0] = 0x20;
 
-  /* HERE DUP C@ WIDTH @ MIN 1+ ALLOT make space */
-  p = here;
-  p += length + 1;
-#ifdef __CC65__
   /* 6502 bug workaround */
-  /* DP C@ 0FD = ALLOT */
-  if (((uintptr_t) p & 0xFF) == 0xFD) {
-    /* *p = 0; */
-    ++p;
+#ifdef __CC65__
+  if (((uintptr_t) here & 0xFF) == 0xFD) {
+    ++here;
   }
 #endif
-  RF_USER_DP = (uintptr_t) p;
 
-  /* DUP A0 TOGGLE  */
-  here[0] ^= 0xA0;
+  /* terminating bit */
+  *(here - 1) |= 0x80;
 
-  /* HERE 1 - 80 TOGGLE */
-  *(--p) ^= 0x80;
-
-  /* LATEST ,  */
+  /* link field */
+  RF_USER_DP = (uintptr_t) here;
   rf_inst_comma((uintptr_t) rf_inst_latest());
 
-  /* CURRENT @ !  */
-  *((char **) RF_USER_CURRENT) = here;
+  /* vocabulary */
+  *((char **) RF_USER_CURRENT) = there;
 }
 
 /* create and smudge */
