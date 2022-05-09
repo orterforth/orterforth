@@ -158,7 +158,7 @@ static char __FASTCALL__ *rf_inst_block(uintptr_t block)
 }
 
 /* replaces memcpy */
-static void rf_inst_memcpy(char *dst, char *src, uint8_t length)
+static void rf_inst_memcpy(uint8_t *dst, uint8_t *src, uint8_t length)
 {
   while (length--) {
     *dst++ = *src++;
@@ -201,21 +201,21 @@ static char *rf_inst_latest(void)
 }
 
 /* CREATE */
-static void rf_inst_create(uint8_t length, char *address)
+static void rf_inst_create(uint8_t length, uint8_t *address)
 {
-  char *here, *there;
+  uint8_t *here, *there;
 
-  here = (char *) RF_USER_DP;
+  here = (uint8_t *) RF_USER_DP;
   there = here;
 
   /* length byte */
-  here[0] = length | 0xA0;
+  *here = length | 0xA0;
   ++here;
 
   /* name */
   rf_inst_memcpy(here, address, length);
   here += length;
-  here[0] = 0x20;
+  *here = 0x20;
 
   /* 6502 bug workaround */
 #ifdef __CC65__
@@ -232,13 +232,13 @@ static void rf_inst_create(uint8_t length, char *address)
   rf_inst_comma((uintptr_t) rf_inst_latest());
 
   /* vocabulary */
-  *((char **) RF_USER_CURRENT) = there;
+  *((uint8_t **) RF_USER_CURRENT) = there;
 }
 
 /* create and smudge */
 static void __FASTCALL__ rf_inst_def(char *name)
 {
-  rf_inst_create(rf_inst_strlen(name), name);
+  rf_inst_create(rf_inst_strlen(name), (uint8_t *) name);
   /* un-smudge */
   *(rf_inst_latest()) ^= 0x20;
 }
