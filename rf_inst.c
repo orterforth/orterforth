@@ -100,17 +100,10 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
 /* flag to indicate completion of install */
 extern char rf_installed;
 
-/* use to validate calls that are made post inst */
-#define RF_INST_ONLY
-
-/* empty assert */
-#define assert(a)
-
 /* do nothing */
 static void rf_inst_code_noop(void)
 {
   RF_START;
-  RF_INST_ONLY;
   RF_JUMP_NEXT;
 }
 
@@ -121,7 +114,6 @@ static uintptr_t *rf_inst_prev;
 static void rf_inst_code_prev(void)
 {
   RF_START;
-  RF_INST_ONLY;
   RF_SP_PUSH((uintptr_t) rf_inst_prev);
   RF_JUMP_NEXT;
 }
@@ -130,7 +122,6 @@ static void rf_inst_code_prev(void)
 static void rf_inst_code_block_cmd(void)
 {
   RF_START;
-  RF_INST_ONLY;
   {
     uintptr_t block;
 
@@ -237,7 +228,6 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t) {
   uint8_t d;
   uint8_t b = RF_USER_BASE;
 
-  RF_INST_ONLY;
   sign = 0;
   l = 0;
   for (;;) {
@@ -265,7 +255,6 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t) {
 static void rf_inst_code_x(void)
 {
   RF_START;
-  RF_INST_ONLY;
   /* 1 BLK +! */
   RF_USER_BLK++;
   /* 0 IN ! */
@@ -273,7 +262,6 @@ static void rf_inst_code_x(void)
   /* BLK @ 7 AND 0= IF */
   if (!(RF_USER_BLK & 7)) {
     /* ?EXEC R> DROP */
-    assert(!RF_USER_STATE);
     RF_IP_SET((uintptr_t *) RF_RP_POP);
   /* ENDIF */
   }
@@ -296,12 +284,10 @@ static void __FASTCALL__ rf_inst_compile(char *name)
 static void rf_inst_code_compile(void)
 {
   RF_START;
-  RF_INST_ONLY;
   {
     uintptr_t *a;
 
     /* ?COMP */
-    assert(RF_USER_STATE);
     /* R> */
     a = RF_IP_GET;
     /* DUP rcll + >R */
@@ -324,7 +310,6 @@ static void rf_inst_immediate(void)
 static void rf_inst_code_interpret_word(void)
 {
   RF_START;
-  RF_INST_ONLY;
   {
     uintptr_t found;
     uintptr_t len;
@@ -382,7 +367,6 @@ static void rf_inst_code_interpret_word(void)
 static void rf_inst_code_decimal(void)
 {
   RF_START;
-  RF_INST_ONLY;
   RF_USER_BASE = 10;
   RF_JUMP_NEXT;
 }
@@ -604,7 +588,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 static void rf_inst_code_ext(void)
 {
   RF_START;
-  RF_INST_ONLY;
   rf_inst_def_code("rcll", rf_code_rcll);
   rf_inst_def_code("rcls", rf_code_rcls);
   rf_inst_def_code("rcod", rf_code_rcod);
@@ -959,7 +942,6 @@ static void rf_inst_load(void)
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
   /* jump to load */
-  assert(rf_inst_load_cfa);
   RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
   RF_JUMP(rf_next);
   rf_trampoline();
@@ -1000,9 +982,6 @@ void rf_inst(void)
 {
   char *nfa;
 
-  /* fail if called after installed */
-  RF_INST_ONLY;
-
 #ifdef SPECTRUM
   /* wait for disc server to init */
   /* TODO Fix the underlying issue with spectrum serial */
@@ -1024,10 +1003,8 @@ void rf_inst(void)
 
   /* load is the starting point to load and interpret */
   nfa = rf_inst_find_string("load");
-  assert(nfa);
 
   rf_inst_load_cfa = rf_cfa(nfa);
-  assert(rf_inst_load_cfa);
 
   /* load */
   rf_inst_emptybuffers();
