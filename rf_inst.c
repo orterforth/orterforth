@@ -31,16 +31,6 @@ static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint
   *sector = (blk_offset % 26) + 1;
 }
 
-/* write two place decimal integer to disc */
-static void __FASTCALL__ rf_inst_disc_puti(uint8_t i)
-{
-  char p[2];
-
-  p[0] = 48 + (i / 10);
-  p[1] = 48 + (i % 10);
-  rf_disc_write(p, 2);
-}
-
 /* return the length of a string */
 static int __FASTCALL__ rf_inst_strlen(const char *s)
 {
@@ -49,12 +39,6 @@ static int __FASTCALL__ rf_inst_strlen(const char *s)
   for (i = 0; *(s++); ++i) {
   }
   return i;
-}
-
-/* write string to disc */
-static void __FASTCALL__ rf_inst_disc_puts(char *s)
-{
-  rf_disc_write(s, rf_inst_strlen(s));
 }
 
 /* ASCII CONTROL CHARS */
@@ -67,8 +51,16 @@ static void __FASTCALL__ rf_inst_disc_puts(char *s)
 #define RF_ASCII_CR 13
 #define RF_ASCII_NAK 21
 
-static char sp = ' ';
-static char eot = RF_ASCII_EOT;
+static uint8_t cmd[12] = {
+  'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '0', '\x04'
+};
+
+/* write two place decimal integer */
+static void rf_inst_puti(uint8_t idx, uint8_t i)
+{
+  cmd[idx++] = 48 + (i / 10);
+  cmd[idx] = 48 + (i % 10);
+}
 
 /* write PerSci disc command, I or O */
 static void rf_inst_disc_cmd(char c, uintptr_t blk)
@@ -78,15 +70,14 @@ static void rf_inst_disc_cmd(char c, uintptr_t blk)
   /* calculate params */
   rf_inst_disc_blk(blk, &drive, &track, &sector);
 
+  /* create command */
+  cmd[0] = c;
+  rf_inst_puti(2, track);
+  rf_inst_puti(5, sector);
+  rf_inst_puti(9, drive);
+
   /* send command */
-  rf_disc_write(&c, 1);
-  rf_disc_write(&sp, 1);
-  rf_inst_disc_puti(track);
-  rf_disc_write(&sp, 1);
-  rf_inst_disc_puti(sector);
-  rf_inst_disc_puts(" /");
-  rf_inst_disc_puti(drive);
-  rf_disc_write(&eot, 1);
+  rf_disc_write((char *) cmd, 12);
 }
 
 /* read block */
