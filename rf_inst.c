@@ -414,15 +414,6 @@ static void rf_inst_code_decimal(void)
   RF_JUMP_NEXT;
 }
 
-/* [ */
-static void rf_inst_code_lbrac(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  RF_USER_STATE = 0;
-  RF_JUMP_NEXT;
-}
-
 /* compile a LIT value */
 static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
 {
@@ -435,13 +426,6 @@ static void rf_inst_def_code(char *name, rf_code_t code)
 {
   rf_inst_def(name);
   rf_inst_comma((uintptr_t) code);
-}
-
-/* compile an immediate definition and set CFA */
-static void rf_inst_def_code_immediate(char *name, rf_code_t code)
-{
-  rf_inst_def_code(name, code);
-  rf_inst_immediate();
 }
 
 /* compile a colon definition */
@@ -721,7 +705,6 @@ static void rf_inst_forward(void)
     rf_inst_code_t *code = &rf_inst_code_list[i];
     rf_inst_def_code(code->name, code->value);
   }
-  rf_inst_def_code_immediate("[", rf_inst_code_lbrac);
 
   /* boot time literals */
   rf_inst_def_literal("relrev", (uintptr_t) (RF_FIGREL | (RF_FIGREV << 8)));
@@ -847,7 +830,7 @@ static void rf_inst_forward(void)
   rf_inst_compile("+!");
   rf_inst_compile("DP");
   rf_inst_compile("C@");
-  rf_inst_compile_lit((uintptr_t) (uint8_t) 253);
+  rf_inst_compile_lit(0xFD);
   rf_inst_compile("-");
   rf_inst_compile("0=");
   rf_inst_compile("DP");
@@ -917,6 +900,14 @@ static void rf_inst_forward(void)
   rf_inst_def_code("X", rf_inst_code_x);
   here[0] = 0x81;
   here[1] = 0x80;
+  rf_inst_immediate();
+
+  /* [ */
+  rf_inst_colon("[");
+  rf_inst_compile_lit(0);
+  rf_inst_compile("STATE");
+  rf_inst_compile("!");
+  rf_inst_compile(";S");
   rf_inst_immediate();
 }
 
