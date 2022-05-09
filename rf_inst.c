@@ -5,20 +5,7 @@
 #include "rf_persci.h"
 #endif
 
-/* ERROR REPORTING */
-
 /* INST TIME DISC OPERATIONS */
-
-/* read the next byte from disc, fail if not the expected value */
-static void __FASTCALL__ rf_inst_disc_expect(char e)
-{
-  char c;
-
-  rf_disc_read(&c, 1);
-  if (c != e) {
-    exit(1);
-  }
-}
 
 /* convert block number into drive, track and sector */
 static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint8_t *sector)
@@ -29,16 +16,6 @@ static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint
   *drive = blk / 2000;
   *track = blk_offset / 26;
   *sector = (blk_offset % 26) + 1;
-}
-
-/* return the length of a string */
-static int __FASTCALL__ rf_inst_strlen(const char *s)
-{
-  int i;
-
-  for (i = 0; *(s++); ++i) {
-  }
-  return i;
 }
 
 /* ASCII CONTROL CHARS */
@@ -62,8 +39,8 @@ static void rf_inst_puti(uint8_t idx, uint8_t i)
   cmd[idx] = 48 + (i % 10);
 }
 
-/* write PerSci disc command, I or O */
-static void rf_inst_disc_cmd(char c, uintptr_t blk)
+/* PerSci disc command, I or O */
+static void rf_inst_disc_cmd_set(char c, uintptr_t blk)
 {
   uint8_t drive, track, sector;
 
@@ -75,26 +52,28 @@ static void rf_inst_disc_cmd(char c, uintptr_t blk)
   rf_inst_puti(2, track);
   rf_inst_puti(5, sector);
   rf_inst_puti(9, drive);
+}
 
-  /* send command */
+#ifdef RF_INST_SAVE
+/* write disc command */
+static void rf_inst_disc_cmd(char c, uintptr_t blk)
+{
+  rf_inst_disc_cmd_set(c, blk);
   rf_disc_write((char *) cmd, 12);
 }
 
-/* read block */
-static void rf_inst_disc_r(char *b, uintptr_t blk)
+/* read the next byte from disc, fail if not the expected value */
+static void __FASTCALL__ rf_inst_disc_expect(char e)
 {
-  /* send command */
-  rf_inst_disc_cmd('I', blk);
+  char c;
 
-  /* get response */
-  rf_inst_disc_expect(RF_ASCII_SOH);
-  rf_disc_read(b, RF_BBLK);
-  rf_inst_disc_expect(RF_ASCII_ACK);
-  rf_inst_disc_expect(RF_ASCII_EOT);
+  rf_disc_read(&c, 1);
+  if (c != e) {
+    exit(1);
+  }
 }
 
 /* write block */
-#ifdef RF_INST_SAVE
 static void rf_inst_disc_w(char *b, uintptr_t blk)
 {
   static char eot = RF_ASCII_EOT;
@@ -138,14 +117,41 @@ static void rf_inst_code_noop(void)
 /* PREV */
 static uintptr_t *rf_inst_prev;
 
-/* BLOCK */
-static char __FASTCALL__ *rf_inst_block(uintptr_t block)
+/* prev */
+static void rf_inst_code_prev(void)
 {
-  if (block != *rf_inst_prev) {
-    rf_inst_disc_r(((char *) rf_inst_prev) + RF_WORD_SIZE, block);
-    *rf_inst_prev = block;
+  RF_START;
+  RF_INST_ONLY;
+  RF_SP_PUSH((uintptr_t) rf_inst_prev);
+  RF_JUMP_NEXT;
+}
+
+/* block-cmd */
+static void rf_inst_code_block_cmd(void)
+{
+  RF_START;
+  RF_INST_ONLY;
+  {
+    uintptr_t block;
+
+    /* create command */
+    block = RF_SP_POP;
+    rf_inst_disc_cmd_set('I', block);
+
+    /* return command addr */
+    RF_SP_PUSH((uintptr_t) cmd);
   }
-  return ((char *) rf_inst_prev) + RF_WORD_SIZE;
+  RF_JUMP_NEXT;
+}
+
+/* replaces strlen */
+static int __FASTCALL__ rf_inst_strlen(const char *s)
+{
+  int i;
+
+  for (i = 0; *(s++); ++i) {
+  }
+  return i;
 }
 
 /* replaces memcpy */
@@ -162,18 +168,6 @@ static void rf_inst_memset(char *ptr, char value, unsigned int num)
   while (num--) {
     *((char *) ptr++) = value;
   }
-}
-
-/* BLOCK */
-static void rf_inst_code_block(void)
-{
-  RF_START;
-  RF_INST_ONLY;
-  {
-    char *p = rf_inst_block(RF_SP_POP);
-    RF_SP_PUSH((uintptr_t) p);
-  }
-  RF_JUMP_NEXT;
 }
 
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
@@ -319,7 +313,6 @@ static void rf_inst_code_compile(void)
 }
 
 /* IMMEDIATE */
-
 static void rf_inst_immediate(void)
 {
   *(rf_inst_latest()) ^= 0x40;
@@ -622,7 +615,7 @@ static void rf_inst_code_ext(void)
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 34
+#define RF_INST_CODE_LIST_SIZE 38
 
 static rf_inst_code_t rf_inst_code_list[] = {
   { "LIT", rf_code_lit },
@@ -652,13 +645,17 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "!", rf_code_store },
   { "C!", rf_code_cstor },
   { "DECIMAL", rf_inst_code_decimal },
-  { "BLOCK", rf_inst_code_block },
   { "COMPILE", rf_inst_code_compile },
   { "rxit", rf_code_rxit },
   { "rcll", rf_code_rcll },
   { "rcls", rf_code_rcls },
   { "interpret-word", rf_inst_code_interpret_word },
-  { "ext", rf_inst_code_ext }
+  { "ext", rf_inst_code_ext },
+  { "prev", rf_inst_code_prev },
+  { "block-cmd", rf_inst_code_block_cmd },
+  { "D/CHAR", rf_code_dchar },
+  { "BLOCK-READ", rf_code_bread },
+  { "BLOCK-WRITE", rf_code_bwrit }
 };
 
 #ifndef RF_BS
@@ -747,27 +744,85 @@ static void rf_inst_forward(void)
   rf_inst_compile("CMOVE");
   rf_inst_compile(";S");
 
+  /* ?DISC */
+  rf_inst_colon("?DISC");
+  /* SOH */
+  rf_inst_compile_lit(RF_ASCII_SOH);
+  rf_inst_compile("D/CHAR");
+  rf_inst_compile("DROP");
+  rf_inst_compile("0BRANCH");
+  rf_inst_comma(2 * RF_WORD_SIZE);
+  rf_inst_compile(";S");
+  /* ACK EOT, ENQ EOT */
+  rf_inst_compile_lit(0);
+  rf_inst_compile("D/CHAR");
+  rf_inst_compile("DROP");
+  rf_inst_compile("DROP");
+  rf_inst_compile(";S");
+
+  /* BLOCK */
+  rf_inst_colon("BLOCK");
+  /* prev */
+  rf_inst_compile("DUP");
+  rf_inst_compile("prev");
+  rf_inst_compile("@");
+  rf_inst_compile("-");
+  rf_inst_compile("0BRANCH");
+	rf_inst_comma(15 * RF_WORD_SIZE);
+  /* not prev */
+  rf_inst_compile("DUP");
+  /* I tt ss /dr */
+  rf_inst_compile("block-cmd");
+  rf_inst_compile_lit(11);
+  rf_inst_compile("BLOCK-WRITE");
+  /* SOH */
+  rf_inst_compile("?DISC");
+  /* 128 bytes */
+  rf_inst_compile("prev");
+  rf_inst_compile("rcll");
+  rf_inst_compile("+");
+  rf_inst_compile("BLOCK-READ");
+  /* ACK EOT */
+  rf_inst_compile("?DISC");
+  /* prev = new */
+  rf_inst_compile("DUP");
+  rf_inst_compile("prev");
+  rf_inst_compile("!");
+  /* return addr */
+  rf_inst_compile("DROP");
+  rf_inst_compile("prev");
+  rf_inst_compile("rcll");
+  rf_inst_compile("+");
+  rf_inst_compile(";S");
+
   /* WORD */
   rf_inst_colon("WORD");
+  /* block addr */
   rf_inst_compile("BLK");
   rf_inst_compile("@");
   rf_inst_compile("BLOCK");
+  /* offset by IN */
   rf_inst_compile("IN");
   rf_inst_compile("@");
   rf_inst_compile("+");
+  /* parse word */
   rf_inst_compile("SWAP");
   rf_inst_compile("ENCLOSE");
+  /* clear field */
   rf_inst_compile("HERE");
   rf_inst_compile_lit(0x22);
   rf_inst_compile("BLANKS");
+  /* advance IN */
   rf_inst_compile("IN");
   rf_inst_compile("+!");
+  /* length */
   rf_inst_compile("OVER");
   rf_inst_compile("-");
   rf_inst_compile(">R");
   rf_inst_compile("R");
   rf_inst_compile("HERE");
   rf_inst_compile("C!");
+  /* move word to field */
   rf_inst_compile("+");
   rf_inst_compile("HERE");
   rf_inst_compile_lit(1);
