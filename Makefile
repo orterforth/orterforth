@@ -1,7 +1,7 @@
 # C compiler options
 CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic
 
-# determine local system OS and architecture
+# local system OS
 UNAME_S := $(shell uname -s)
 ifneq ($(filter CYGWIN%,$(UNAME_S)),)
 	OPER := cygwin
@@ -15,12 +15,15 @@ endif
 ifeq ($(UNAME_S),MINGW)
 	OPER := mingw
 endif
+
+# local processor architecture
 UNAME_M := $(shell uname -m)
 PROC := $(UNAME_M)
 
+# local system
 SYSTEM := $(OPER)-$(PROC)
 
-# platform to build by default
+# default build is local system platform
 TARGET := $(SYSTEM)
 
 # local system target executables
@@ -29,6 +32,9 @@ ORTER := $(SYSTEM)/orter
 ORTERFORTH := $(SYSTEM)/orterforth
 
 # serial port
+ifeq ($(OPER),cygwin)
+SERIALPORT := /dev/ttyS2
+endif
 ifeq ($(OPER),darwin)
 SERIALPORT := /dev/tty.usbserial-FT2XIBOF
 endif
@@ -77,11 +83,6 @@ $(SYSTEM) :
 
 	mkdir $@
 
-# local system lib default
-$(SYSTEM)/%.o : %.c | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
 # all local system executables
 .PHONY : $(SYSTEM)-build
 $(SYSTEM)-build : \
@@ -102,23 +103,8 @@ $(SYSTEM)-run : $(ORTERFORTH) orterforth.disc
 	@touch 0.disc
 	@$(ORTERFORTH)
 
-# main lib
-$(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-# inst lib
-$(SYSTEM)/rf_inst.o : rf_inst.c rf.h | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-# disc impl lib
-$(SYSTEM)/rf_persci.o : rf_persci.c rf_persci.h | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-# local system lib
-$(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
+# local system lib default
+$(SYSTEM)/%.o : %.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -136,12 +122,25 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h z80.h | $(S
 	mkdir -p $(@D)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
-# local test executable
-$(SYSTEM)/test : \
-	$(SYSTEM)/rf.o \
-	test.c
+# main lib
+$(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# inst lib
+$(SYSTEM)/rf_inst.o : rf_inst.c rf.h rf_persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# disc impl lib
+$(SYSTEM)/rf_persci.o : rf_persci.c rf_persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# local system lib
+$(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # https://github.com/superzazu/z80.git
 $(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
@@ -170,11 +169,11 @@ BBCOPTION := default
 
 # emulator ROM files
 BBCROMS := \
-	roms/bbcb/os12.rom \
 	roms/bbcb/basic2.rom \
+	roms/bbcb/dnfs120.rom \
+	roms/bbcb/os12.rom \
 	roms/bbcb/phroma.bin \
-	roms/bbcb/saa5050 \
-	roms/bbcb/dnfs120.rom
+	roms/bbcb/saa5050
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
@@ -276,7 +275,7 @@ bbc/bbc.lib : bbc/crt0.o bbc/apple2.lib
 # boot script
 bbc/boot : | bbc
 
-	printf '*RUN "ORTERFO"\r' > $@
+	printf '*RUN "orterfo"\r' > $@
 
 # boot disc inf
 bbc/boot.inf : | bbc
@@ -319,7 +318,7 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 # final disc inf
 bbc/orterforth.inf : | bbc
 
-	echo "$$.ORTERFO  $(BBCORG)   $(BBCORG)  CRC=0" > $@
+	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
 # final disc image
 bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
@@ -342,7 +341,7 @@ bbc/orterforth-inst : $(BBCDEPS)
 # inst disc inf
 bbc/orterforth-inst.inf : | bbc
 
-	echo "$$.ORTERFO  $(BBCORG)   $(BBCORG)  CRC=0" > $@
+	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
 # inst disc image
 bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterforth-inst.inf
@@ -395,6 +394,19 @@ build-all : $(SYSTEM)-build spectrum-build
 c64 :
 
 	mkdir $@
+
+.PHONY : c64-build
+c64-build : c64/orterforth-inst
+
+.PHONY : c64-clean
+c64-clean :
+
+	rm -rf c64/*
+
+.PHONY : c64-run
+c64-run : c64/orterforth-inst
+
+	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -autostart $<
 
 # general assemble rule
 c64/%.o : c64/%.s
