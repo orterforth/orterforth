@@ -1,6 +1,5 @@
 .import decsp3
 .import incax1
-.import incsp1
 .import incsp3
 .import incsp6
 .import ldaxysp
@@ -155,7 +154,7 @@ _rf_code_dchar:
 	lda #$02                      ; *FX 2,1 (read from RS423)
 	ldx #$01
 	jsr osbyte
-	jsr	osrdch                    ; read 1 byte
+	jsr	osrdch                    ; read 1 byte and push
 	pha
 	lda #$02                      ; *FX 2,2 (read from keyboard)
 	tax
@@ -166,7 +165,7 @@ _rf_code_dchar:
 	dex
 	dex
 	sty 1,x                       ; zero high byte
-	pla                           ; read 1 byte
+	pla                           ; pull 1 byte
 	sta 0,x
 	cmp 2,x                       ; return true if equal
 	bne dchar1
