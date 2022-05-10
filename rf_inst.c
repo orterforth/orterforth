@@ -251,23 +251,6 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t) {
   return sign ? -l : l;
 }
 
-/* X */
-static void rf_inst_code_x(void)
-{
-  RF_START;
-  /* 1 BLK +! */
-  RF_USER_BLK++;
-  /* 0 IN ! */
-  RF_USER_IN = 0;
-  /* BLK @ 7 AND 0= IF */
-  if (!(RF_USER_BLK & 7)) {
-    /* ?EXEC R> DROP */
-    RF_IP_SET((uintptr_t *) RF_RP_POP);
-  /* ENDIF */
-  }
-  RF_JUMP_NEXT;
-}
-
 /* find a definition */
 static char __FASTCALL__ *rf_inst_find_string(char *t)
 {
@@ -459,7 +442,7 @@ static void rf_inst_def_user(char *name, unsigned int idx)
 #endif
 
 /* location for CURRENT and CONTEXT during inst */
-uintptr_t *rf_inst_vocabulary = 0;
+static uintptr_t *rf_inst_vocabulary = 0;
 
 static void rf_inst_cold(void)
 {
@@ -820,7 +803,15 @@ static void rf_inst_forward(void)
 
   /* X */  
   here = (uint8_t *) RF_USER_DP;
-  rf_inst_def_code("X", rf_inst_code_x);
+  rf_inst_colon("X");
+  rf_inst_compile_lit(1);
+  rf_inst_compile("BLK +!");
+  rf_inst_compile_lit(0);
+  rf_inst_compile("IN ! BLK @");
+  rf_inst_compile_lit(7);
+  rf_inst_compile("AND 0= 0BRANCH");
+  rf_inst_comma(3 * RF_WORD_SIZE);
+  rf_inst_compile("R> DROP ;S");
   here[0] = 0x81;
   here[1] = 0x80;
   rf_inst_immediate();
@@ -832,7 +823,7 @@ static void rf_inst_forward(void)
   rf_inst_immediate();
 }
 
-rf_code_t *rf_inst_load_cfa = 0;
+static rf_code_t *rf_inst_load_cfa = 0;
 
 static void rf_inst_emptybuffers(void)
 {
@@ -915,10 +906,6 @@ void rf_inst(void)
   rf_persci_eject(0);
   rf_persci_insert(0, "0.disc");
 #endif
-
-
-  /* finished loading */
-  rf_inst_load_cfa = 0;
 
 #ifdef RF_INST_SAVE
   /* save the result to disc */
