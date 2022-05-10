@@ -100,15 +100,15 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
 /* flag to indicate completion of install */
 extern char rf_installed;
 
+/* PREV */
+static uintptr_t *rf_inst_prev;
+
 /* do nothing */
 static void rf_inst_code_noop(void)
 {
   RF_START;
   RF_JUMP_NEXT;
 }
-
-/* PREV */
-static uintptr_t *rf_inst_prev;
 
 /* prev */
 static void rf_inst_code_prev(void)
@@ -277,7 +277,19 @@ static char __FASTCALL__ *rf_inst_find_string(char *t)
 /* COMPILE */
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
-	rf_inst_comma((uintptr_t) rf_cfa(rf_inst_find_string(name)));
+  char *p;
+
+  for (;;) {
+    /* read until space or null */
+    for (p = name; *p != ' ' && *p != '\0'; p++) { }
+
+    /* compile word */
+    rf_inst_comma((uintptr_t) rf_cfa(rf_find(name, p - name, rf_inst_latest())));
+
+    /* look for more */
+    if (!*p) break;
+    name = ++p;
+  }
 }
 
 /* COMPILE */
@@ -699,58 +711,45 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("overwrite", 0);
 #endif
 
+  /* COLD routine forward references */
+  rf_inst_def_literal("coldforth", (uintptr_t) &rf_cold_forth);
+  rf_inst_def_literal("coldabort", (uintptr_t) &rf_cold_abort);
+
+  /* installed flag now set from Forth */
+  rf_inst_def_literal("installed", (uintptr_t) &rf_installed);
+
   /* - */
   rf_inst_colon("-");
-  rf_inst_compile("MINUS");
-  rf_inst_compile("+");
-  rf_inst_compile(";S");
+  rf_inst_compile("MINUS + ;S");
 
   /* HERE */
   rf_inst_colon("HERE");
-  rf_inst_compile("DP");
-  rf_inst_compile("@");
-  rf_inst_compile(";S");
+  rf_inst_compile("DP @ ;S");
 
   /* BLANKS */
   rf_inst_colon("BLANKS");
   rf_inst_compile_lit(0x20);
-  rf_inst_compile("SWAP");
-  rf_inst_compile(">R");
-  rf_inst_compile("OVER");
-  rf_inst_compile("C!");
-  rf_inst_compile("DUP");
+  rf_inst_compile("SWAP >R OVER C! DUP");
   rf_inst_compile_lit(1);
-  rf_inst_compile("+");
-  rf_inst_compile("R>");
+  rf_inst_compile("+ R>");
   rf_inst_compile_lit(1);
-  rf_inst_compile("-");
-  rf_inst_compile("CMOVE");
-  rf_inst_compile(";S");
+  rf_inst_compile("- CMOVE ;S");
 
   /* ?DISC */
   rf_inst_colon("?DISC");
   /* SOH */
   rf_inst_compile_lit(RF_ASCII_SOH);
-  rf_inst_compile("D/CHAR");
-  rf_inst_compile("DROP");
-  rf_inst_compile("0BRANCH");
+  rf_inst_compile("D/CHAR DROP 0BRANCH");
   rf_inst_comma(2 * RF_WORD_SIZE);
   rf_inst_compile(";S");
   /* ACK EOT, ENQ EOT */
   rf_inst_compile_lit(0);
-  rf_inst_compile("D/CHAR");
-  rf_inst_compile("DROP");
-  rf_inst_compile("DROP");
-  rf_inst_compile(";S");
+  rf_inst_compile("D/CHAR DROP DROP ;S");
 
   /* BLOCK */
   rf_inst_colon("BLOCK");
   /* prev */
-  rf_inst_compile("DUP");
-  rf_inst_compile("prev");
-  rf_inst_compile("@");
-  rf_inst_compile("-");
-  rf_inst_compile("0BRANCH");
+  rf_inst_compile("DUP prev @ - 0BRANCH");
 	rf_inst_comma(15 * RF_WORD_SIZE);
   /* not prev */
   rf_inst_compile("DUP");
@@ -761,157 +760,73 @@ static void rf_inst_forward(void)
   /* SOH */
   rf_inst_compile("?DISC");
   /* 128 bytes */
-  rf_inst_compile("prev");
-  rf_inst_compile("rcll");
-  rf_inst_compile("+");
-  rf_inst_compile("BLOCK-READ");
+  rf_inst_compile("prev rcll + BLOCK-READ");
   /* ACK EOT */
   rf_inst_compile("?DISC");
   /* prev = new */
-  rf_inst_compile("DUP");
-  rf_inst_compile("prev");
-  rf_inst_compile("!");
+  rf_inst_compile("DUP prev !");
   /* return addr */
-  rf_inst_compile("DROP");
-  rf_inst_compile("prev");
-  rf_inst_compile("rcll");
-  rf_inst_compile("+");
-  rf_inst_compile(";S");
+  rf_inst_compile("DROP prev rcll + ;S");
 
   /* WORD */
   rf_inst_colon("WORD");
   /* block addr */
-  rf_inst_compile("BLK");
-  rf_inst_compile("@");
-  rf_inst_compile("BLOCK");
+  rf_inst_compile("BLK @ BLOCK");
   /* offset by IN */
-  rf_inst_compile("IN");
-  rf_inst_compile("@");
-  rf_inst_compile("+");
+  rf_inst_compile("IN @ +");
   /* parse word */
-  rf_inst_compile("SWAP");
-  rf_inst_compile("ENCLOSE");
+  rf_inst_compile("SWAP ENCLOSE");
   /* clear field */
   rf_inst_compile("HERE");
   rf_inst_compile_lit(0x22);
   rf_inst_compile("BLANKS");
   /* advance IN */
-  rf_inst_compile("IN");
-  rf_inst_compile("+!");
+  rf_inst_compile("IN +!");
   /* length */
-  rf_inst_compile("OVER");
-  rf_inst_compile("-");
-  rf_inst_compile(">R");
-  rf_inst_compile("R");
-  rf_inst_compile("HERE");
-  rf_inst_compile("C!");
+  rf_inst_compile("OVER - >R R HERE C!");
   /* move word to field */
-  rf_inst_compile("+");
-  rf_inst_compile("HERE");
+  rf_inst_compile("+ HERE");
   rf_inst_compile_lit(1);
-  rf_inst_compile("+");
-  rf_inst_compile("R>");
-  rf_inst_compile("CMOVE");
-  rf_inst_compile(";S");
+  rf_inst_compile("+ R> CMOVE ;S");
  
   /* -FIND */
   rf_inst_colon("-FIND");
   rf_inst_compile_lit(32);
-  rf_inst_compile("WORD");
-  rf_inst_compile("HERE");
-  rf_inst_compile("CONTEXT");
-  rf_inst_compile("@");
-  rf_inst_compile("@");
-  rf_inst_compile("(FIND)");
-  rf_inst_compile(";S");
+  rf_inst_compile("WORD HERE CONTEXT @ @ (FIND) ;S");
 
   /* INTERPRET */
   rf_inst_colon("INTERPRET");
-  rf_inst_compile("-FIND");
-  rf_inst_compile("interpret-word");
-	rf_inst_compile("BRANCH");
+  rf_inst_compile("-FIND interpret-word BRANCH");
 	rf_inst_comma(-3 * RF_WORD_SIZE);
 
   /* CREATE */
   rf_inst_colon("CREATE");
-  rf_inst_compile("-FIND");
-  rf_inst_compile("0BRANCH");
+  rf_inst_compile("-FIND 0BRANCH");
 	rf_inst_comma(3 * RF_WORD_SIZE);
-  rf_inst_compile("DROP");
-  rf_inst_compile("DROP");
-  rf_inst_compile("HERE");
-  rf_inst_compile("DUP");
-  rf_inst_compile("C@");
+  rf_inst_compile("DROP DROP HERE DUP C@");
   rf_inst_compile_lit(1);
-  rf_inst_compile("+");
-  rf_inst_compile("DP");
-  rf_inst_compile("+!");
-  rf_inst_compile("DP");
-  rf_inst_compile("C@");
+  rf_inst_compile("+ DP +! DP C@");
   rf_inst_compile_lit(0xFD);
-  rf_inst_compile("-");
-  rf_inst_compile("0=");
-  rf_inst_compile("DP");
-  rf_inst_compile("+!");
-  rf_inst_compile("DUP");
+  rf_inst_compile("- 0= DP +! DUP");
   rf_inst_compile_lit(0xA0);
-  rf_inst_compile("TOGGLE");
-  rf_inst_compile("HERE");
+  rf_inst_compile("TOGGLE HERE");
   rf_inst_compile_lit(1);
   rf_inst_compile("-");
   rf_inst_compile_lit(0x80);
-  rf_inst_compile("TOGGLE");
-  rf_inst_compile("CURRENT");
-  rf_inst_compile("@");
-  rf_inst_compile("@");
-  rf_inst_compile("HERE");
-  rf_inst_compile("!");
-  rf_inst_compile("rcll");
-  rf_inst_compile("DP");
-  rf_inst_compile("+!");
-  rf_inst_compile("CURRENT");
-  rf_inst_compile("@");
-  rf_inst_compile("!");
-  rf_inst_compile("HERE");
-  rf_inst_compile("rcll");
-  rf_inst_compile("+");
-  rf_inst_compile("HERE");
-  rf_inst_compile("!");
-  rf_inst_compile("rcll");
-  rf_inst_compile("DP");
-  rf_inst_compile("+!");
-  rf_inst_compile(";S");
+  rf_inst_compile("TOGGLE CURRENT @ @ HERE ! rcll DP +! CURRENT @ ! HERE rcll + HERE ! rcll DP +! ;S");
 
   /* LOAD */
   rf_inst_colon("LOAD");
-  rf_inst_compile("BLK");
-  rf_inst_compile("@");
-  rf_inst_compile(">R");
-  rf_inst_compile("IN");
-  rf_inst_compile("@");
-  rf_inst_compile(">R");
+  rf_inst_compile("BLK @ >R IN @ >R");
   rf_inst_compile_lit(0);
-  rf_inst_compile("IN");
-  rf_inst_compile("!");
+  rf_inst_compile("IN !");
   rf_inst_compile_lit(RF_BSCR);
-  rf_inst_compile("U*");
-  rf_inst_compile("DROP");
-  rf_inst_compile("BLK");
-  rf_inst_compile("!");
-  rf_inst_compile("INTERPRET");
-  rf_inst_compile("R>");
-  rf_inst_compile("IN");
-  rf_inst_compile("!");
-  rf_inst_compile("R>");
-  rf_inst_compile("BLK");
-  rf_inst_compile("!");
-  rf_inst_compile(";S");
+  rf_inst_compile("U* DROP BLK ! INTERPRET R> IN ! R> BLK ! ;S");
 
   /* inst load sequence */
   rf_inst_colon("load");
   rf_inst_compile_lit(80);
-  rf_inst_compile("LOAD");
-  rf_inst_compile("rxit");
+  rf_inst_compile("LOAD rxit");
 
   /* X */  
   here = (uint8_t *) RF_USER_DP;
@@ -923,9 +838,7 @@ static void rf_inst_forward(void)
   /* [ */
   rf_inst_colon("[");
   rf_inst_compile_lit(0);
-  rf_inst_compile("STATE");
-  rf_inst_compile("!");
-  rf_inst_compile(";S");
+  rf_inst_compile("STATE ! ;S");
   rf_inst_immediate();
 }
 
@@ -938,6 +851,16 @@ static void rf_inst_emptybuffers(void)
 
 static void rf_inst_load(void)
 {
+  char *nfa;
+
+  /* initialise buffers */
+  rf_inst_prev = (uintptr_t *) RF_FIRST;
+  rf_inst_emptybuffers();
+
+  /* load is the starting point */
+  nfa = rf_inst_find_string("load");
+  rf_inst_load_cfa = rf_cfa(nfa);
+
   /* initialise RP */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
@@ -980,8 +903,6 @@ static void rf_inst_save(void)
 
 void rf_inst(void)
 {
-  char *nfa;
-
 #ifdef SPECTRUM
   /* wait for disc server to init */
   /* TODO Fix the underlying issue with spectrum serial */
@@ -991,29 +912,15 @@ void rf_inst(void)
   /* cold start */
   rf_inst_cold();
 
-  /* inst forward declarations */
+  /* define required words */
   rf_inst_forward();
-
-  /* COLD routine forward references */
-  rf_inst_def_literal("coldforth", (uintptr_t) &rf_cold_forth);
-  rf_inst_def_literal("coldabort", (uintptr_t) &rf_cold_abort);
-
-  /* installed flag now set from Forth */
-  rf_inst_def_literal("installed", (uintptr_t) &rf_installed);
-
-  /* load is the starting point to load and interpret */
-  nfa = rf_inst_find_string("load");
-
-  rf_inst_load_cfa = rf_cfa(nfa);
-
-  /* load */
-  rf_inst_emptybuffers();
 
 #ifdef RF_INST_LOCAL_DISC
   rf_persci_insert(0, "orterforth.disc");
 #endif
-  rf_inst_prev = (uintptr_t *) RF_FIRST;
+
   rf_inst_load();
+
 #ifdef RF_INST_LOCAL_DISC
   rf_persci_eject(0);
   rf_persci_insert(0, "0.disc");
