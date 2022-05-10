@@ -443,30 +443,20 @@ static void rf_inst_def_user(char *name, unsigned int idx)
 #define RF_INST_DICTIONARY (RF_ORIGIN)
 #endif
 
-#define RF_FIGREL 0x01 /* 1.1 */
-#define RF_FIGREV 0x01
-#define RF_USRVER 0x72 /* r for retro */
-
-static uint8_t rf_inst_attr(void)
-{
-  uint8_t p;
-
-  /* IMPLEMENTATION ATTRIBUTES */
-  /* B +ORIGIN   ...W:IEBA */
-  /* W: 0=above sufficient 1=other differences exist */
-  p = 0x00;
-  /* I: Interpreter is	0=pre- 1=post incrementing */
-  p |= 0x08;
-  /* E: Addr must be even: 0 yes 1 no */
-  p |= 0x04;
-  /* B: High byte @	0=low addr. 1=high addr. */
+#define RF_FIGRELFIGREV 0x0101 /* 1.1 */
+/* IMPLEMENTATION ATTRIBUTES */
+/* B +ORIGIN   ...W:IEBA */
+/* W: 0=above sufficient 1=other differences exist */
+/* I: Interpreter is	0=pre- 1=post incrementing */
+/* E: Addr must be even: 0 yes 1 no */
+/* B: High byte @	0=low addr. 1=high addr. */
+/* A: CPU Addr.		0=BYTE 1=WORD */
+/* USRVER = r for retro */
 #ifdef RF_LE
-  p |= 0x02;
+#define RF_USRVERATTR 0x0E72
+#else
+#define RF_USRVERATTR 0x0C72
 #endif
-  /* A: CPU Addr.		0=BYTE 1=WORD */
-
-  return p;
-}
 
 /* location for CURRENT and CONTEXT during inst */
 uintptr_t *rf_inst_vocabulary = 0;
@@ -679,8 +669,8 @@ static void rf_inst_forward(void)
   }
 
   /* boot time literals */
-  rf_inst_def_literal("relrev", (uintptr_t) (RF_FIGREL | (RF_FIGREV << 8)));
-  rf_inst_def_literal("ver", (uintptr_t) (RF_USRVER | (rf_inst_attr() << 8)));
+  rf_inst_def_literal("relrev", (uintptr_t) RF_FIGRELFIGREV);
+  rf_inst_def_literal("ver", (uintptr_t) RF_USRVERATTR);
   rf_inst_def_literal("bs", (uintptr_t) RF_BS);
   rf_inst_def_literal("user", (uintptr_t) RF_USER);
   rf_inst_def_literal("inits0", (uintptr_t) RF_S0);
