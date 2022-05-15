@@ -74,6 +74,7 @@ $(ORTERFORTH) : \
 	$(SYSTEM)/rf_inst.o \
 	$(SYSTEM)/rf_persci.o \
 	$(SYSTEM)/rf_system.o \
+	$(SYSTEM)/rf_x86_64.o \
 	orterforth.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
@@ -108,6 +109,11 @@ $(SYSTEM)/%.o : %.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
+# local system lib default
+$(SYSTEM)/%.s : %.c | $(SYSTEM)
+
+	$(CC) -S $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
 # emulator to build fast
 $(SYSTEM)/emulate_spectrum : \
 	$(SYSTEM)/emulate_spectrum.o \
@@ -139,6 +145,11 @@ $(SYSTEM)/rf_persci.o : rf_persci.c rf_persci.h | $(SYSTEM)
 
 # local system lib
 $(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# x86_64 assembly code
+$(SYSTEM)/rf_x86_64.o : rf_x86_64.s
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -305,6 +316,7 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 	touch $@.io
 
 	# serve disc
+
 	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard orterforth.disc $@.io &
 
 	# run emulator, wait for result
@@ -406,7 +418,7 @@ c64-clean :
 .PHONY : c64-run
 c64-run : c64/orterforth-inst
 
-	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -autostart $<
+	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc 1.disc" -rsdev4baud 2400 -autostart $<
 
 # general assemble rule
 c64/%.o : c64/%.s
@@ -418,18 +430,17 @@ c64/%.s : %.c | c64
 
 	cc65 -O -t c64 -DRF_TARGET_INC='"target/c64/default.inc"' -o $@ $<
 
-# general compile rule
-c64/hw : hw.c | c64
+c64/c64-up2400.s : c64/c64-up2400.ser
 
-	cl65 -O -t c64 -o $@ $<
-
-# # C system lib
+	co65 --code-label _c64_serial -o $@ $<
+  
+# C system lib
 c64/rf_system_c.s : target/c64/system.c | c64
 
 	cc65 -O -t c64 -o $@ $<
 
 # inst binary
-c64/orterforth-inst : c64/orterforth.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o | c64
+c64/orterforth-inst : c64/orterforth.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
 
 	cl65 -O -t c64 -o $@ -m c64/orterforth-inst.map $^
 

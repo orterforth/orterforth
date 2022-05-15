@@ -191,6 +191,14 @@ extern char *rf_memory;
 /* LIMIT at end of memory */
 #define RF_LIMIT ((char *) rf_memory + RF_MEMORY_SIZE)
 
+/* assembly code definitions */
+#define RF_TARGET_TRAMPOLINE
+#define RF_TARGET_NEXT
+#define RF_TARGET_CODE_LIT
+#define RF_TARGET_CODE_EXEC
+#define RF_TARGET_CODE_BRAN
+#define RF_TARGET_CODE_ZBRAN
+
 #endif
 
 /* DISC BUFFERS */
