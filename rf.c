@@ -111,10 +111,11 @@ void rf_code_exec(void)
 }
 #endif
 
-static void rf_branch(void);
-
 #ifndef RF_TARGET_CODE_BRAN
+#ifndef RF_BRANCH
 #define RF_BRANCH
+static void rf_branch(void);
+#endif
 void rf_code_bran(void)
 {
   RF_START;
@@ -124,7 +125,10 @@ void rf_code_bran(void)
 #endif
 
 #ifndef RF_TARGET_CODE_ZBRAN
+#ifndef RF_BRANCH
 #define RF_BRANCH
+static void rf_branch(void);
+#endif
 void rf_code_zbran(void)
 {
   RF_START;
@@ -138,7 +142,10 @@ void rf_code_zbran(void)
 #endif
 
 #ifndef RF_TARGET_CODE_XLOOP
+#ifndef RF_BRANCH
 #define RF_BRANCH
+static void rf_branch(void);
+#endif
 void rf_code_xloop(void)
 {
   RF_START;
@@ -162,7 +169,10 @@ void rf_code_xloop(void)
 #endif
 
 #ifndef RF_TARGET_CODE_XPLOO
+#ifndef RF_BRANCH
 #define RF_BRANCH
+static void rf_branch(void);
+#endif
 void rf_code_xploo(void)
 {
   RF_START;
