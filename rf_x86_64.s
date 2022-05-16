@@ -701,6 +701,21 @@ _rf_code_stod:
 stod1:
 	jmp dpush
 
+.globl	_rf_code_rcll
+.p2align	4, 0x90
+_rf_code_rcll:
+
+	movq $8, %rax
+	jmp apush
+
+.globl	_rf_code_rcls
+.p2align	4, 0x90
+_rf_code_rcls:
+
+	popq %rax
+	shlq $3, %rax
+	jmp apush
+
 .section	__DATA,__data
 
 .globl _rf_x86_64_rbp_save

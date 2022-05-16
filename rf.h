@@ -240,6 +240,8 @@ extern char *rf_memory;
 #define RF_TARGET_CODE_DOUSE
 #define RF_TARGET_CODE_DODOE
 #define RF_TARGET_CODE_STOD
+#define RF_TARGET_CODE_CELL
+#define RF_TARGET_CODE_CELLS
 
 #endif
 
