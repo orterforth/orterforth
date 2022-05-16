@@ -77,7 +77,7 @@ SYSTEMDEPS := \
 	$(SYSTEM)/rf_inst.o \
 	$(SYSTEM)/rf_persci.o \
 	$(SYSTEM)/rf_system.o \
-	$(SYSTEM)/rf_x86_64.o
+	$(SYSTEM)/rf_$(PROC).o
 SYSTEMINC := target/system/assembly.inc
 endif
 ifeq ($(SYSTEMOPTION),default)
