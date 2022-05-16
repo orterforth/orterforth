@@ -675,6 +675,20 @@ _rf_code_douse:
 	leaq (%rbx, %rdi), %rax       # ADDR OF VARIABLE
 	jmp apush
 
+.globl	_rf_code_dodoe
+.p2align	4, 0x90
+_rf_code_dodoe:
+
+	xchgq %rsp, %rbp              # GET RETURN STACK
+	pushq %rsi                    # (RP) <- (IP)
+	xchgq %rsp, %rbp
+	addq $8, %rdx                 # PFA
+	movq %rdx, %rbx
+	movq (%rbx), %rsi             # NEW CFA
+	addq $8, %rdx
+	pushq %rdx                    # PFA
+	jmp next
+
 .globl	_rf_code_stod
 .p2align	4, 0x90
 _rf_code_stod:
