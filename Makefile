@@ -68,14 +68,31 @@ $(ORTER) : \
 
 # === LOCAL SYSTEM ===
 
-# local orterforth executable
-$(ORTERFORTH) : \
+SYSTEMOPTION := assembly
+# SYSTEMOPTION := default
+
+ifeq ($(SYSTEMOPTION),assembly)
+SYSTEMDEPS := \
 	$(SYSTEM)/rf.o \
 	$(SYSTEM)/rf_inst.o \
 	$(SYSTEM)/rf_persci.o \
 	$(SYSTEM)/rf_system.o \
-	$(SYSTEM)/rf_x86_64.o \
-	orterforth.c
+	$(SYSTEM)/rf_x86_64.o
+SYSTEMINC := target/system/assembly.inc
+endif
+ifeq ($(SYSTEMOPTION),default)
+SYSTEMDEPS := \
+	$(SYSTEM)/rf.o \
+	$(SYSTEM)/rf_inst.o \
+	$(SYSTEM)/rf_persci.o \
+	$(SYSTEM)/rf_system.o
+SYSTEMINC := target/system/default.inc
+endif
+
+CPPFLAGS += -DRF_TARGET_INC='"$(SYSTEMINC)"'
+
+# local orterforth executable
+$(ORTERFORTH) : $(SYSTEMDEPS) orterforth.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
 
@@ -125,7 +142,6 @@ $(SYSTEM)/emulate_spectrum : \
 # spectrum emulator
 $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h z80.h | $(SYSTEM)
 
-	mkdir -p $(@D)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
 # main lib
@@ -149,14 +165,13 @@ $(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # x86_64 assembly code
-$(SYSTEM)/rf_x86_64.o : rf_x86_64.s
+$(SYSTEM)/rf_x86_64.o : rf_x86_64.s | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # https://github.com/superzazu/z80.git
 $(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
 
-	mkdir -p $(@D)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
 # help
@@ -473,6 +488,44 @@ ql/hw : hw.c | ql
 ql/orterforth : rf.c rf_inst.c orterforth.c | ql
 
 	qcc -o $@ $^
+
+
+# RC2014
+
+.PHONY : rc2014-build
+rc2014-build : rc2014/orterforth-inst.ihx | rc2014
+
+rc2014 :
+
+	mkdir $@
+
+# base orterforth code
+rc2014/rf.lib : rf.c rf.h | rc2014
+
+	zcc +rc2014 -x -o $@ $<
+
+# inst code
+rc2014/rf_inst.lib : rf_inst.c rf.h rf_inst.h | rc2014
+
+	zcc +rc2014 -x -o $@ $<
+
+# system code
+rc2014/rf_system.lib : target/rc2014.c | rc2014
+
+	zcc +rc2014 -x -o $@ $<
+
+# inst executable
+rc2014/orterforth-inst.ihx : \
+	rc2014/rf.lib \
+	rc2014/rf_inst.lib \
+	rc2014/rf_system.lib \
+	orterforth.c
+
+	zcc +rc2014 -subtype=basic \
+		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
+		-m \
+		-o $@ \
+		orterforth.c -create-app
 
 # ROM file dir
 roms : 
