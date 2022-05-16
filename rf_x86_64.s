@@ -1,4 +1,50 @@
-# x86_64 implementation of fig-Forth machine and 
+# ***************************************
+# ***                                 ***
+# ***    FIG-FORTH for the 8086/88    ***
+# ***                                 ***
+# ***           Version 1.0           ***
+# ***            2/18/81              ***
+# ***                                 ***
+# ***     Contains interface for      ***
+# ***      CP/M-86 (version 1.0)      ***
+# ***                                 ***
+# ***                                 ***
+# ***     Implementation by           ***
+# ***           Thomas Newman         ***
+# ***           27444 Berenda Way     ***
+# ***           Hayward, Ca. 94544    ***
+# ***                                 ***
+# ***************************************
+#
+#
+#
+# NOTE: This version only supports one
+#       memory segment of the 8086 (64k bytes).
+#
+#
+# -----------------------------------------------
+#
+# All publications of the Forth Interest Group
+# are public domain.  They may be further
+# distributed by the inclusion of this credit
+# notice:
+#
+# This publication has been made available by the
+# FORTH INTEREST GROUP (fig)
+# P.O. Box 8231
+# San Jose, CA 95155
+# -----------------------------------------------
+#
+# Acknowledgements:
+#       John Cassady
+#       Kim Harris
+#       George Flammer
+#       Robt. D. Villwock
+#-----------------------------------------------
+#
+# Modified for orterforth integration and x86_64
+# in 2022. 8086 specifics no longer apply (e.g.
+# segmentation, register names in comments).
 
 .globl _rf_trampoline
 .p2align 4, 0x90
