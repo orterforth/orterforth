@@ -1048,7 +1048,7 @@ void rf_code_rxit(void)
   rf_fp = 0;
 }
 
-#ifndef RF_TARGET_CODE_CELL
+#ifndef RF_TARGET_CODE_RCLL
 void rf_code_rcll(void)
 {
   RF_START;
@@ -1057,7 +1057,7 @@ void rf_code_rcll(void)
 }
 #endif
 
-#ifndef RF_TARGET_CODE_CELLS
+#ifndef RF_TARGET_CODE_RCLS
 void rf_code_rcls(void)
 {
   RF_START;
@@ -1071,7 +1071,7 @@ void rf_code_rcls(void)
 }
 #endif
 
-#ifndef RF_TARGET_CODE_TARGET
+#ifndef RF_TARGET_CODE_RTGT
 #define RF_DPUSH
 void rf_code_rtgt(void)
 {
