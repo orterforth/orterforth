@@ -238,6 +238,7 @@ extern char *rf_memory;
 #define RF_TARGET_CODE_DOCON
 #define RF_TARGET_CODE_DOVAR
 #define RF_TARGET_CODE_DOUSE
+#define RF_TARGET_CODE_STOD
 
 #endif
 

@@ -43,8 +43,9 @@
 #-----------------------------------------------
 #
 # Modified for orterforth integration and x86_64
-# in 2022. 8086 specifics no longer apply (e.g.
-# segmentation, register names in comments).
+# in 2022. Some info in the comments no longer 
+# applies (CP/M, 8086 register names, 
+# segmentation).
 
 .globl _rf_trampoline
 .p2align 4, 0x90
@@ -671,8 +672,20 @@ _rf_code_douse:
 	movb (%rbx), %bl
 	andq $0xFF, %rbx
 	movq _rf_up(%rip), %rdi       # USER VARIABLE ADDR
-	leaq (%rbx, %rdi), %rax        # ADDR OF VARIABLE
+	leaq (%rbx, %rdi), %rax       # ADDR OF VARIABLE
 	jmp apush
+
+.globl	_rf_code_stod
+.p2align	4, 0x90
+_rf_code_stod:
+
+	popq %rdx                     # S1
+	subq %rax, %rax               # AX = 0
+	orq %rdx, %rdx                # SET FLAGS
+	jns stod1                     # POSITIVE NUMBER
+	decq %rax                     # NEGITIVE NUMBER
+stod1:
+	jmp dpush
 
 .section	__DATA,__data
 
