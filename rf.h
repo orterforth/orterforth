@@ -207,7 +207,7 @@ extern char *rf_memory;
 #define RF_TARGET_CODE_ENCL
 #define RF_TARGET_CODE_CMOVE
 #define RF_TARGET_CODE_USTAR
-/*#define RF_TARGET_CODE_USLAS*/
+#define RF_TARGET_CODE_USLAS
 #define RF_TARGET_CODE_ANDD
 #define RF_TARGET_CODE_ORR
 #define RF_TARGET_CODE_XORR

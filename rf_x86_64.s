@@ -49,14 +49,12 @@
 
 .globl _rf_trampoline
 .p2align 4, 0x90
-
 _rf_trampoline:
 
   pushq %rbp                    # enter stack frame
   movq %rsp, %rbp
 
 trampoline1:
-
 	cmpq $0, _rf_fp(%rip)         # if FP is null skip to exit
 	je trampoline2
 
@@ -73,7 +71,6 @@ trampoline1:
                                 # will return to trampoline1
 
 trampoline2:
-
 	popq %rbp                     # leave stack frame
 	retq                          # bye
 
@@ -384,14 +381,14 @@ _rf_code_ustar:
 	xchg %rdx, %rax               # AX NOW = MSW
 	jmp dpush                     # STORE DOUBLE WORD
 
-# .globl	_rf_code_uslas
+.globl _rf_code_uslas
 .p2align	4, 0x90
 _rf_code_uslas:
 
 	popq %rbx                     # DIVISOR
 	popq %rdx                     # MSW OF DIVIDEND
 	popq %rax                     # LSW OF DIVIDEND
-	cmpq %rdx, %rbx               # DIVIDE BY ZERO?
+	cmpq %rbx, %rdx               # DIVIDE BY ZERO?
 	jnb dzero                     # ZERO DIVIDE, NO WAY
 	divq %rbx                     # 16 BIT DIVIDE
 	jmp dpush                     # STORE QUOT/REM
