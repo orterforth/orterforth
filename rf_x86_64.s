@@ -55,6 +55,7 @@ _rf_trampoline:
   movq %rsp, %rbp
 
 trampoline1:
+
 	cmpq $0, _rf_fp(%rip)         # if FP is null skip to exit
 	je trampoline2
 
@@ -203,7 +204,7 @@ xloo1:
 .p2align	4, 0x90
 _rf_code_xploo:
 
-	popq%rbx                      # GET LOOP VALUE
+	popq %rbx                      # GET LOOP VALUE
 	jmp xloo1
 
 .globl	_rf_code_xdo
@@ -713,7 +714,7 @@ _rf_code_rcls:
 	shlq $3, %rax
 	jmp apush
 
-.section	__DATA,__data
+.section __DATA.__data,""
 
 .globl _rf_x86_64_rbp_save
 .p2align 3

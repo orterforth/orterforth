@@ -68,8 +68,8 @@ $(ORTER) : \
 
 # === LOCAL SYSTEM ===
 
-SYSTEMOPTION := assembly
-# SYSTEMOPTION := default
+# SYSTEMOPTION := assembly
+SYSTEMOPTION := default
 
 ifeq ($(SYSTEMOPTION),assembly)
 SYSTEMDEPS := \
@@ -79,6 +79,10 @@ SYSTEMDEPS := \
 	$(SYSTEM)/rf_system.o \
 	$(SYSTEM)/rf_$(PROC).o
 SYSTEMINC := target/system/assembly.inc
+# to handle leading underscores
+ifeq ($(OPER),linux)
+LDFLAGS += -t target/system/linux.ld
+endif
 endif
 ifeq ($(SYSTEMOPTION),default)
 SYSTEMDEPS := \
@@ -94,7 +98,7 @@ CPPFLAGS += -DRF_TARGET_INC='"$(SYSTEMINC)"'
 # local orterforth executable
 $(ORTERFORTH) : $(SYSTEMDEPS) orterforth.c
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
 
 # local system build dir
 $(SYSTEM) :
@@ -476,6 +480,11 @@ disc : $(DISC)
 # help
 .PHONY : help
 help : $(TARGET)-help
+
+.PHONY : iterate
+iterate :
+
+	sh scripts/iterate.sh forth/6502.f
 
 ql :
 
