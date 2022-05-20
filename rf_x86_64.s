@@ -63,6 +63,7 @@ trampoline1:
   movq _rf_w(%rip), %rdx        # W to rdx
 	leaq trampoline1(%rip), %rax  # push the return address
 	push %rax
+
 	movq %rbp, _rf_x86_64_rbp_save(%rip) # save rsp and rbp
 	movq %rsp, _rf_x86_64_rsp_save(%rip)
   movq _rf_rp(%rip), %rbp       # put SP and RP into rsp and rbp
@@ -716,12 +717,14 @@ _rf_code_rcls:
 
 .section __DATA.__data,""
 
+.data
 .globl _rf_x86_64_rbp_save
 .p2align 3
 _rf_x86_64_rbp_save:
 
 	.quad	0
 
+.data
 .globl _rf_x86_64_rsp_save
 .p2align 3
 _rf_x86_64_rsp_save:
