@@ -11,11 +11,11 @@
 #define RF_PERSCI_STATE_COMMAND 0
 #define RF_PERSCI_STATE_WRITING 1
 
-char rf_persci_state = RF_PERSCI_STATE_COMMAND;
+static char rf_persci_state = RF_PERSCI_STATE_COMMAND;
 
 /* DRIVES */
 
-const char * filenames[] = { 0, 0, 0, 0 };
+static const char * filenames[] = { 0, 0, 0, 0 };
 
 static FILE *rf_persci_files[4] = { 0, 0, 0, 0 };
 

@@ -19,6 +19,11 @@ endif
 # local processor architecture
 UNAME_M := $(shell uname -m)
 PROC := $(UNAME_M)
+ifeq (${OPER},linux)
+ifeq ($(shell getconf LONG_BIT),32)
+		PROC := i686
+endif
+endif
 
 # local system
 SYSTEM := $(OPER)-$(PROC)
@@ -80,6 +85,9 @@ SYSTEMDEPS := \
 	$(SYSTEM)/rf_$(PROC).o
 SYSTEMINC := target/system/assembly.inc
 # to handle leading underscores
+ifeq ($(OPER),cygwin)
+LDFLAGS += -t target/system/linux.ld
+endif
 ifeq ($(OPER),linux)
 LDFLAGS += -t target/system/linux.ld
 endif
@@ -120,10 +128,9 @@ $(SYSTEM)-clean :
 
 # run local build
 .PHONY : $(SYSTEM)-run
-$(SYSTEM)-run : $(ORTERFORTH) orterforth.disc
+$(SYSTEM)-run : $(ORTERFORTH) orterforth.disc library.disc
 
-	@touch 0.disc
-	@$(ORTERFORTH)
+	@$(ORTERFORTH) library.disc
 
 # local system lib default
 $(SYSTEM)/%.o : %.c | $(SYSTEM)
@@ -169,7 +176,7 @@ $(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # x86_64 assembly code
-$(SYSTEM)/rf_x86_64.o : rf_x86_64.s | $(SYSTEM)
+$(SYSTEM)/rf_$(PROC).o : rf_$(PROC).s | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -946,6 +953,6 @@ spectrum/test.tap : \
 		test.c
 
 .PHONY : test
-test : $(SYSTEM)/test
+test : $(ORTERFORTH)
 
-	$(SYSTEM)/test
+	$< < test.f

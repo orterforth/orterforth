@@ -904,7 +904,6 @@ void rf_inst(void)
 
 #ifdef RF_INST_LOCAL_DISC
   rf_persci_eject(0);
-  rf_persci_insert(0, "0.disc");
 #endif
 
 #ifdef RF_INST_SAVE
