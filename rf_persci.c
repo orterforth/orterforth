@@ -6,9 +6,18 @@
 
 #include "rf_persci.h"
 
+/* STATE */
+
+#define RF_PERSCI_STATE_COMMAND 0
+#define RF_PERSCI_STATE_WRITING 1
+
+char rf_persci_state = RF_PERSCI_STATE_COMMAND;
+
 /* DRIVES */
 
 const char * filenames[] = { 0, 0, 0, 0 };
+
+static FILE *rf_persci_files[4] = { 0, 0, 0, 0 };
 
 static void validate_drive_no(int drive)
 {
@@ -18,45 +27,71 @@ static void validate_drive_no(int drive)
   }
 }
 
-void rf_persci_insert(int drive, char *filename)
+static FILE *rf_persci_open_file(uint8_t drive)
 {
-  validate_drive_no(drive);
-  filenames[drive] = filename;
+  FILE *ptr;
+
+  /* already open */
+  ptr = rf_persci_files[drive];
+  if (ptr) {
+    return ptr;
+  }
+
+  /* no disc */
+  if (!filenames[drive]) {
+    return 0;
+  }
+
+  /* disc */
+  rf_persci_files[drive] = ptr = fopen(filenames[drive], "r+b");
+  return ptr;
 }
 
-static FILE *rf_persci_files[4];
+void rf_persci_insert(int drive, char *filename)
+{
+  FILE *ptr;
+
+  /* keep filename */
+  validate_drive_no(drive);
+  filenames[drive] = filename;
+
+  /* open the file */
+  ptr = rf_persci_open_file(drive);
+  if (!ptr) {
+    perror("fopen failed");
+    exit(1);
+  }
+
+  rf_persci_state = RF_PERSCI_STATE_COMMAND;
+}
 
 void rf_persci_eject(int drive)
 {
+  /* lose filename */
   validate_drive_no(drive);
   filenames[drive] = 0;
+
+  /* close the file */
   if (rf_persci_files[drive]) {
     fclose(rf_persci_files[drive]);
     rf_persci_files[drive] = 0;
   }
 }
 
-/* STATE */
-
-#define RF_PERSCI_STATE_COMMAND 0
-#define RF_PERSCI_STATE_WRITING 1
-
-char rf_persci_state = RF_PERSCI_STATE_COMMAND;
-
 /* BUFFER */
 
 /* read buffer */
-char rf_persci_r_buf[131];
-unsigned int rf_persci_r_idx = 0;
-unsigned int rf_persci_r_len = 0;
+static char rf_persci_r_buf[131];
+static unsigned int rf_persci_r_idx = 0;
+static unsigned int rf_persci_r_len = 0;
 
 /* write buffer */
-char rf_persci_w_buf[131];
-unsigned int rf_persci_w_idx = 0;
-unsigned int rf_persci_w_len = 0;
+static char rf_persci_w_buf[131];
+static unsigned int rf_persci_w_idx = 0;
+static unsigned int rf_persci_w_len = 0;
 
 /* empty buffers */
-void rf_persci_reset(void)
+static void rf_persci_reset(void)
 {
   rf_persci_r_idx = 0;
   rf_persci_r_len = 0;
@@ -65,13 +100,13 @@ void rf_persci_reset(void)
 }
 
 /* write a char to write buffer */
-void rf_persci_w(char c)
+static void rf_persci_w(char c)
 {
   rf_persci_w_buf[rf_persci_w_len++] = c;
 }
 
 /* write a string to write buffer */
-void rf_persci_ws(const char *s)
+static void rf_persci_ws(const char *s)
 {
   const char *i;
 
@@ -81,7 +116,7 @@ void rf_persci_ws(const char *s)
 }
 
 /* write a two place decimal int to write buffer */
-void rf_persci_wi(uint8_t i)
+static void rf_persci_wi(uint8_t i)
 {
   rf_persci_w(48 + (i / 10));
   rf_persci_w(48 + (i % 10));
@@ -90,7 +125,7 @@ void rf_persci_wi(uint8_t i)
 /* ERROR HANDLING */
 
 /* write error message */
-void rf_persci_error(const char *message)
+static void rf_persci_error(const char *message)
 {
   rf_persci_w(RF_ASCII_NAK);
   rf_persci_ws(message);
@@ -98,7 +133,7 @@ void rf_persci_error(const char *message)
 }
 
 /* write error message with drive number */
-void rf_persci_error_on_drive(const char *message, uint8_t drive)
+static void rf_persci_error_on_drive(const char *message, uint8_t drive)
 {
   rf_persci_w(RF_ASCII_NAK);
   rf_persci_ws(message);
@@ -110,7 +145,7 @@ void rf_persci_error_on_drive(const char *message, uint8_t drive)
 /* READING AND WRITING */
 
 /* validate drive track and sector are within ranges */
-char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
+static char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
 {
   /* validate drive number */
   if (drive > 3) {
@@ -127,19 +162,8 @@ char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
   return 1;
 }
 
-FILE *rf_persci_open_file(uint8_t drive)
-{
-  FILE *ptr;
-
-  ptr = rf_persci_files[drive];
-  if (!ptr) {
-    rf_persci_files[drive] = ptr = fopen(filenames[drive], "r+b");
-  }
-  return ptr;
-}
-
 /* move to track and sector */
-int seek(FILE *ptr, uint8_t track, uint8_t sector, uint8_t drive)
+static int seek(FILE *ptr, uint8_t track, uint8_t sector, uint8_t drive)
 {
   if (fseek(ptr, ((track * 26) + (sector - 1)) * 128, SEEK_SET)) {
     perror("fseek failed");
@@ -152,7 +176,7 @@ int seek(FILE *ptr, uint8_t track, uint8_t sector, uint8_t drive)
 }
 
 /* I (Input) */
-void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
+static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
 {
   FILE *ptr;
   uint8_t i;
@@ -167,9 +191,7 @@ void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
 
   /* open drive file */
   ptr = rf_persci_open_file(drive);
-
-  /* handle error */
-  if (!ptr && errno != ENOENT) {
+  if (!ptr) {
     rf_persci_error_on_drive("HARD DISK", drive);
     return;
   }
@@ -204,12 +226,12 @@ void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
   rf_persci_w(RF_ASCII_EOT);
 }
 
-uint8_t rf_persci_drive = 0;
-uint8_t rf_persci_track = 0;
-uint8_t rf_persci_sector = 0;
+static uint8_t rf_persci_drive = 0;
+static uint8_t rf_persci_track = 0;
+static uint8_t rf_persci_sector = 0;
 
 /* O (Output) */
-void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
+static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
 {
   /* reset buffer */
   rf_persci_reset();
@@ -233,7 +255,7 @@ void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
 }
 
 /* write data after O */
-void rf_persci_write()
+static void rf_persci_write()
 {
   FILE *ptr;
   size_t s;
@@ -280,7 +302,7 @@ void rf_persci_write()
 /* READ */
 
 /* read char from read buffer */
-char rf_persci_r(void)
+static char rf_persci_r(void)
 {
   char c;
 
@@ -305,7 +327,7 @@ char rf_persci_r(void)
 /* COMMAND PARSING */
 
 /* skip whitespace in read buffer */
-void rf_persci_read_ws(void)
+static void rf_persci_read_ws(void)
 {
   /* validate buffer */
   if (rf_persci_r_idx >= rf_persci_r_len) {
@@ -326,7 +348,7 @@ void rf_persci_read_ws(void)
 }
 
 /* read decimal int from read buffer */
-char rf_persci_read_int(void)
+static char rf_persci_read_int(void)
 {
   char i;
   char c;
@@ -344,7 +366,7 @@ char rf_persci_read_int(void)
 }
 
 /* read char and check it is as expected */
-char rf_persci_expect(char c)
+static char rf_persci_expect(char c)
 {
   rf_persci_read_ws();
   if (rf_persci_r_buf[rf_persci_r_idx] == c) {
@@ -355,7 +377,7 @@ char rf_persci_expect(char c)
 }
 
 /* read command and execute it */
-void rf_persci_command(void)
+static void rf_persci_command(void)
 {
   char ch = rf_persci_r();
   switch (ch) {
@@ -403,7 +425,7 @@ void rf_persci_command(void)
 /* HANDLE COMMS */
 
 /* handle next operation */
-void rf_persci_serve(void)
+static void rf_persci_serve(void)
 {
   switch (rf_persci_state) {
     case RF_PERSCI_STATE_COMMAND:

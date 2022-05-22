@@ -27,10 +27,6 @@ void rf_init(void)
     exit(1);
   }
 
-  /* init disc */
-  rf_persci_insert(0, "0.disc");
-  rf_persci_insert(1, "1.disc");
-
 #ifdef RF_SYSTEM_POSIX
   /* make sure any output is written before a seg fault */
   if (setvbuf(stdout, NULL, _IONBF, 0)) {
