@@ -19,6 +19,8 @@ static const char * filenames[] = { 0, 0, 0, 0 };
 
 static FILE *rf_persci_files[4] = { 0, 0, 0, 0 };
 
+static uint8_t discs[4][256256];
+
 static void validate_drive_no(int drive)
 {
   if (drive < 0 || drive > 3) {
@@ -30,6 +32,7 @@ static void validate_drive_no(int drive)
 static FILE *rf_persci_open_file(uint8_t drive)
 {
   FILE *ptr;
+  size_t size;
 
   /* already open */
   ptr = rf_persci_files[drive];
@@ -44,6 +47,10 @@ static FILE *rf_persci_open_file(uint8_t drive)
 
   /* disc */
   rf_persci_files[drive] = ptr = fopen(filenames[drive], "r+b");
+
+  /* read contents into memory */
+  size = fread(discs[drive], 1, 256256, ptr);
+
   return ptr;
 }
 
@@ -58,6 +65,7 @@ void rf_persci_insert(int drive, char *filename)
   /* open the file */
   ptr = rf_persci_open_file(drive);
   if (!ptr) {
+    fprintf(stderr, "file %s\n", filename);
     perror("fopen failed");
     exit(1);
   }
@@ -162,10 +170,16 @@ static char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
   return 1;
 }
 
-/* move to track and sector */
-static int seek(FILE *ptr, uint8_t track, uint8_t sector, uint8_t drive)
+/* track and sector offset */
+static long offset(uint8_t track, uint8_t sector)
 {
-  if (fseek(ptr, ((track * 26) + (sector - 1)) * 128, SEEK_SET)) {
+  return ((track * 26) + (sector - 1)) * 128;
+}
+
+/* move to track and sector */
+static int seek(FILE *ptr, long off, uint8_t drive)
+{
+  if (fseek(ptr, off, SEEK_SET)) {
     perror("fseek failed");
     rf_persci_reset();
     rf_persci_error_on_drive("HARD DISK", drive);
@@ -196,29 +210,16 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
     return;
   }
 
-  /* move to track and sector */
-  if (seek(ptr, track, sector, drive)) {
-    return;
-  }
-
   /* start response */
   rf_persci_w(RF_ASCII_SOH);
 
-  /* read file and write max 128 bytes to buffer */
-  i = 128;
+  /* read from memory */
   if (ptr) {
-    for (; i; i--) {
-      int c = fgetc(ptr);
-      if (c == EOF) {
-        break;
-      }
-      rf_persci_w(c);
+    uint8_t *p = discs[drive] + offset(track, sector);
+    i = 128;
+    for (; i; --i) {
+      rf_persci_w(*(p++));
     }
-  }
-
-  /* write 128 bytes regardless of how many bytes read */
-  for (; i; i--) {
-    rf_persci_w('\0');
   }
 
   /* ACK EOT */
@@ -259,6 +260,7 @@ static void rf_persci_write()
 {
   FILE *ptr;
   size_t s;
+  long off;
 
   /* get size of data */
   for (; rf_persci_r_buf[rf_persci_r_idx] != RF_ASCII_EOT; rf_persci_r_idx++) {
@@ -267,14 +269,14 @@ static void rf_persci_write()
   /* open file */
   ptr = rf_persci_open_file(rf_persci_drive);
   if (!ptr) {
-    perror("fopen failed");
     rf_persci_reset();
     rf_persci_error_on_drive("READY", rf_persci_drive);
     return;
   }
 
   /* move to track and sector */
-  if (seek(ptr, rf_persci_track, rf_persci_sector, rf_persci_drive)) {
+  off = offset(rf_persci_track, rf_persci_sector);
+  if (seek(ptr, off, rf_persci_drive)) {
     return;
   }
 
@@ -289,6 +291,12 @@ static void rf_persci_write()
     rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
     return;
   }
+
+  /* cache in memory */
+  memcpy(
+    discs[rf_persci_drive] + off, 
+    rf_persci_r_buf, 
+    rf_persci_r_idx > 128 ? 128 : rf_persci_r_idx);
 
   /* ACK EOT */
   rf_persci_reset();
