@@ -12,7 +12,7 @@ endif
 ifeq ($(UNAME_S),Linux)
 	OPER := linux
 endif
-ifeq ($(UNAME_S),MINGW)
+ifneq ($(filter MINGW%,$(UNAME_S)),)
 	OPER := mingw
 endif
 
@@ -272,8 +272,8 @@ bbc-run : $(BBCRUN)
 .PHONY : bbc-run-disk
 bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 
-	cp messages.disc 0.disc
-	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
+	touch 1.disc
+	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc &
 
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
 
@@ -281,8 +281,8 @@ bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 .PHONY : bbc-run-tape
 bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 
-	cp messages.disc 0.disc
-	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
+	touch 1.disc
+	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc &
 
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
@@ -482,6 +482,7 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 .PHONY : disc
 disc : $(DISC)
 
+	touch 1.disc
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
 
 # help
@@ -493,9 +494,21 @@ iterate :
 
 	sh scripts/iterate.sh forth/6502.f
 
+orterforth.inc : orterforth.disc
+
+	xxd -i $< > $@
+
 ql :
 
 	mkdir $@
+
+.PHONY : ql-build
+ql-build : ql/orterforth
+
+.PHONY : ql-clean
+ql-clean :
+
+	rm -rf ql/*
 
 ql/hw : hw.c | ql
 
@@ -505,6 +518,10 @@ ql/orterforth : rf.c rf_inst.c orterforth.c | ql
 
 	qcc -o $@ $^
 
+
+ql/%.o : %.c | ql
+
+	qcc -o $@ $^
 
 # RC2014
 
@@ -542,6 +559,11 @@ rc2014/orterforth-inst.ihx : \
 		-m \
 		-o $@ \
 		orterforth.c -create-app
+
+
+rf_arith : rf_arith.c
+
+	$(CC) -o $@ $^
 
 # ROM file dir
 roms : 
@@ -581,9 +603,10 @@ spectrum-clean :
 .PHONY : spectrum-fuse-disc
 spectrum-fuse-disc : | $(DISC) $(ORTER) spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
 
+	touch 1.disc
 	$(ORTER) fuse serial read \
 		< spectrum/fuse-rs232-tx \
-		| $(DISC) standard 0.disc 1.disc \
+		| $(DISC) standard messages.disc 1.disc \
 		| $(ORTER) fuse serial write \
 		> spectrum/fuse-rs232-rx &
 
@@ -624,7 +647,8 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 	@$(ORTER) serial write -w 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 
 	@echo "* Starting disc..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
+	touch 1.disc
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) messages.disc 1.disc
 
 # config option
 SPECTRUMOPTION := a
@@ -719,7 +743,8 @@ spectrum-run-fuse : spectrum-fuse-tap | spectrum-fuse-disc
 spectrum-run-mame : spectrum/orterforth.tap
 
 	# serve disc
-	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard 0.disc 1.disc &
+	touch 1.disc
+	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc &
 
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
