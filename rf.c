@@ -466,7 +466,7 @@ void rf_code_cmove(void)
 }
 #endif
 
-static void __FASTCALL__ rf_dpush(rf_double_t a);
+static void __FASTCALL__ rf_dpush(rf_double_t *a);
 
 #ifndef RF_TARGET_CODE_USTAR
 #define RF_DPUSH
@@ -476,16 +476,19 @@ void rf_code_ustar(void)
   {
     uintptr_t a;
     uintptr_t b;
+    rf_double_t d;
+
 
     a = RF_SP_POP;
     b = RF_SP_POP;
-    rf_dpush((rf_double_t) a * b);
+    d = (rf_double_t) a * b;
+    rf_dpush(&d);
   }
   RF_JUMP_NEXT;
 }
 #endif
 
-static rf_double_t rf_dpop(void);
+static void rf_dpop(rf_double_t *a);
 
 #ifndef RF_TARGET_CODE_USLAS
 #define RF_DPOP
@@ -497,7 +500,7 @@ void rf_code_uslas(void)
     rf_double_t a;
 
     b = (rf_double_t) RF_SP_POP;
-    a = rf_dpop();
+    rf_dpop(&a);
     RF_SP_PUSH((uintptr_t) (a % b));
     RF_SP_PUSH((uintptr_t) (a / b));
   }
@@ -681,10 +684,10 @@ void rf_code_dplus(void)
   {
     rf_double_t a, b, c;
 
-    a = rf_dpop();
-    b = rf_dpop();
+    rf_dpop(&a);
+    rf_dpop(&b);
     c = a + b;
-    rf_dpush(c);
+    rf_dpush(&c);
   }
   RF_JUMP_NEXT;
 }
@@ -710,19 +713,25 @@ void rf_code_minus(void)
 void rf_code_dminu(void)
 {
   RF_START;
-  rf_dpush(-rf_dpop());
+  {
+    rf_double_t d;
+    
+    rf_dpop(&d);
+    d = -d;
+    rf_dpush(&d);
+  }
   RF_JUMP_NEXT;
 }
 #endif
 
 #ifdef RF_DPOP
-static rf_double_t rf_dpop(void)
+static void rf_dpop(rf_double_t *e)
 {
   uintptr_t a = RF_SP_POP;
   uintptr_t b = RF_SP_POP;
   rf_double_t c = (rf_double_t) a << RF_WORD_SIZE_BITS;
   rf_double_t d = (rf_double_t) b;
-  return c | d;
+  *e = c | d;
 }
 #endif
 
@@ -1076,16 +1085,21 @@ void rf_code_rcls(void)
 void rf_code_rtgt(void)
 {
   RF_START;
-  rf_dpush(RF_TARGET);
+  {
+    rf_double_t d;
+
+    d = RF_TARGET;
+    rf_dpush(&d);
+  }
   RF_JUMP_NEXT;
 }
 #endif
 
 #ifdef RF_DPUSH
-static void __FASTCALL__ rf_dpush(rf_double_t a)
+static void __FASTCALL__ rf_dpush(rf_double_t *a)
 {
-  uintptr_t b = a;
-  uintptr_t c = a >> RF_WORD_SIZE_BITS;
+  uintptr_t b = *a;
+  uintptr_t c = *a >> RF_WORD_SIZE_BITS;
   RF_SP_PUSH(b);
   RF_SP_PUSH(c);
 }
