@@ -466,7 +466,9 @@ void rf_code_cmove(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 static void __FASTCALL__ rf_dpush(rf_double_t *a);
+#endif
 
 #ifndef RF_TARGET_CODE_USTAR
 #define RF_DPUSH
@@ -488,7 +490,9 @@ void rf_code_ustar(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 static void rf_dpop(rf_double_t *a);
+#endif
 
 #ifndef RF_TARGET_CODE_USLAS
 #define RF_DPOP
@@ -724,6 +728,7 @@ void rf_code_dminu(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 #ifdef RF_DPOP
 static void rf_dpop(rf_double_t *e)
 {
@@ -733,6 +738,7 @@ static void rf_dpop(rf_double_t *e)
   rf_double_t d = (rf_double_t) b;
   *e = c | d;
 }
+#endif
 #endif
 
 #ifndef RF_TARGET_CODE_OVER
@@ -1095,6 +1101,7 @@ void rf_code_rtgt(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 #ifdef RF_DPUSH
 static void __FASTCALL__ rf_dpush(rf_double_t *a)
 {
@@ -1103,4 +1110,5 @@ static void __FASTCALL__ rf_dpush(rf_double_t *a)
   RF_SP_PUSH(b);
   RF_SP_PUSH(c);
 }
+#endif
 #endif
