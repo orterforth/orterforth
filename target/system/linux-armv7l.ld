@@ -1,4 +1,4 @@
-/* gcc does not prepend leading underscores */
+/* gcc does not prepend leading underscores, and assembly code expects them */
 _rf_fp = rf_fp;
 _rf_ip = rf_ip;
 _rf_rp = rf_rp;
@@ -9,6 +9,7 @@ _rf_w = rf_w;
 /* assembly code has leading underscores, and gcc does not expect them */
 rf_start = _rf_start;
 rf_trampoline = _rf_trampoline;
+/*
 rf_next = _rf_next;
 rf_code_lit = _rf_code_lit;
 rf_code_exec = _rf_code_exec;
@@ -59,3 +60,4 @@ rf_code_store = _rf_code_store;
 rf_code_cstor = _rf_code_cstor;
 rf_code_rcll = _rf_code_rcll;
 rf_code_rcls = _rf_code_rcls;
+*/
