@@ -15,12 +15,14 @@
 
 /* 32 bit */
 #define RF_WORD_SIZE 4
+#define RF_DOUBLE_ARITH
 typedef uint64_t rf_double_t;
 
 #elif (__WORDSIZE == 64)
 
 /* 64 bit */
 #define RF_WORD_SIZE 8
+#define RF_DOUBLE_ARITH
 typedef __uint128_t rf_double_t;
 
 #endif
@@ -38,12 +40,14 @@ typedef __uint128_t rf_double_t;
 
 /* 32 bit */
 #define RF_WORD_SIZE 4
+#define RF_DOUBLE_ARITH
 typedef uint64_t rf_double_t;
 
 #elif __SIZEOF_POINTER__ == 8
 
 /* 64 bit */
 #define RF_WORD_SIZE 8
+#define RF_DOUBLE_ARITH
 typedef __uint128_t rf_double_t;
 
 #endif
@@ -61,6 +65,7 @@ typedef __uint128_t rf_double_t;
 #ifdef __CC65__
 #include <stdint.h>
 #define RF_WORD_SIZE 2
+#define RF_DOUBLE_ARITH
 typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __BBC__
@@ -76,6 +81,7 @@ typedef uint32_t rf_double_t;
 #ifdef __Z80
 #include <stdint.h>
 #define RF_WORD_SIZE 2
+#define RF_DOUBLE_ARITH
 typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __RC2014
@@ -104,8 +110,10 @@ typedef uint32_t rf_double_t;
 typedef unsigned char uint8_t;
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
-typedef double rf_double_t; /* TODO 64 bit integer handling */
 #define RF_TARGET 0x000003bd /* QL */
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/ql/default.inc"
+#endif
 #endif
 
 /* modern platforms */
