@@ -665,10 +665,10 @@ SPECTRUMLIBS := \
 	-lspectrum/rf_system \
 	-lspectrum/rf_z80 \
 	-pragma-redirect:fputc_cons=fputc_cons_rom_rst
-# ORG starts at high memory, for performance
-SPECTRUMORG := 32768
+# ORG starts at non-contended memory, 0x8000, for performance
+SPECTRUMORG := 0x8000
 # ORIGIN
-SPECTRUMORIGIN := 35840
+SPECTRUMORIGIN := 0x8A00
 # assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
 # locates inst code at 0xC800
@@ -689,9 +689,9 @@ SPECTRUMLIBS := \
 	-lspectrum/rf_system \
 	-lspectrum/rf_z80
 # ORG starts at non-contended memory, 0x8000, for performance
-SPECTRUMORG := 32768
-# ORIGIN higher, 0x9500, C code is larger as uses z88dk libs
-SPECTRUMORIGIN := 38144
+SPECTRUMORG := 0x8000
+# ORIGIN higher, 0x9200, C code is larger as uses z88dk libs
+SPECTRUMORIGIN := 0x9200
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
 # locates inst code at 0xC800
@@ -711,9 +711,9 @@ SPECTRUMLIBS := \
 	-lspectrum/rf_inst \
 	-lspectrum/rf_system
 # ORG starts at non-contended memory, 0x8000, for performance
-SPECTRUMORG := 32768
-# ORIGIN higher, 0x9EFC, C code is larger as uses z88dk libs and pure C impl
-SPECTRUMORIGIN := 40700
+SPECTRUMORG := 0x8000
+# ORIGIN higher, 0x9B00, C code is larger as uses z88dk libs and pure C impl
+SPECTRUMORIGIN := 0x9B00
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
 # locates inst code at 0xC800
