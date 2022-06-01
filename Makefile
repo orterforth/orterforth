@@ -299,10 +299,10 @@ bbc/%.s : %.c | bbc
 	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
 # find cc65 install dir and copy lib file
-bbc/apple2.lib : $(shell readlink $(shell which ld65))
+bbc/apple2.lib : | bbc
 
-	readlink $$(which ld65)
-	cp -p $(<D)/../lib/apple2.lib $@
+	readlink "$$(which ld65)"
+	cp -p "$$(dirname $$(readlink $$(which ld65)))/../lib/apple2.lib" $@
 
 # custom target lib
 bbc/bbc.lib : bbc/crt0.o bbc/apple2.lib
