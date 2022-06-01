@@ -1,5 +1,5 @@
-(Looking for * Retro *, the excellent non-traditional take on 
-the Forth language? Go here instead: http://www.retroforth.org )
+(Looking for * Retro *, the excellent modern Forth
+implementation? Go here instead: http://www.retroforth.org )
 
 
 orterforth
@@ -13,7 +13,7 @@ platforms. It is closely based on the fig-FORTH Installation
 Manual, Glossary, Model, Editor (1980).
 
 
-# Building it #
+# Building #
 
 To build orterforth for the local system (Linux, macOS, 
 Cygwin), call:
@@ -29,14 +29,14 @@ where <os>   is e.g.: cygwin, darwin, linux
       <arch> is e.g.: armv6l, armv7l, i686, x86_64
 
 
-# Running it #
+# Running #
 
 To build and run the local system build call:
 
  make run
 
 
-# Building it for another platform #
+# Building for another platform #
 
 To build orterforth for a historical platform, you will need 
 prerequisites such as:
@@ -57,7 +57,7 @@ Then to build call:
  make TARGET=<target>
 
 
-# Running it on another platform #
+# Running on another platform #
 
 orterforth can be built and run in an emulator (if installed)
 by calling:
@@ -65,57 +65,60 @@ by calling:
  make run TARGET=<target>
 
 
-# It is implemented in C #
+# orterforth is implemented in C #
 
 A typical Forth implementation rests on a number of base words
 implemented in native machine code. Higher-level words are 
 implemented in terms of these words, making up the rest of the
 Forth vocabulary.
 
-In the Installation Manual, 6502 native code is assembled
-immediately following each base word in memory (using an
-assembler implemented in Forth). The word's code field address
-(CFA) is pointed at this code.
+The Installation Manual contains source code that uses an
+assembler implemented in Forth to assemble 6502 native code
+immediately following each base word in memory. The word's code
+field address (CFA) points at this code.
 
-Instead of this assembly code, orterforth has platform-
-independent implementations of each base word in ANSI C. The
-CFA is set to point to this C code.
-
-
-# It uses a trampoline #
-
-Forth implementations normally rely on jumps from successive 
-native code, rather than subroutine calls. Because C does not 
-properly allow such jumps, orterforth emulates them using a 
-trampoline (a loop that successively calls function pointers).
+Instead of this, orterforth has platform-independent 
+implementations of each base word in C. The CFA is set to point
+to this C code.
 
 
-# It uses a retro disc controller (emulated) #
+# orterforth uses a trampoline to execute code #
 
-orterforth interfaces with the emulated disc drive using the 
-method found in the Installation Manual. The protocol used by 
-the PerSci 1070 Intelligent Diskette Controller is partially 
-implemented in Forth and used to read and write disc sectors 
-directly.
+Forth implementations normally use jump instructions to
+transfer control through successive native code, rather than 
+subroutine calls. Because C does not properly allow such jumps,
+orterforth emulates them using a trampoline - a loop that 
+successively calls function pointers.
+
+
+# orterforth emulates the retro disc controller #
+
+The Installation Manual contains an implementation of the 
+protocol used by the PerSci 1070 Intelligent Diskette
+Controller to communicate with a disc drive. Forth reads and
+writes disc sectors directly rather than using a hierarchical
+file system, providing access to "screens" of source code.
+
+orterforth provides an emulated version of this. It partly
+implements the protocol at the controller end, uses files as
+disc images and reads or writes to to them as necessary.
 
 Unlike in the Installation Manual, though, orterforth uses a 
-serial interface to communicate with the disc drive. These are 
-widely available on many historical platforms and can be 
-generalised about in code.
+serial interface to communicate with the disc drive. Because
+many platforms have serial ports, they can connect to such a 
+disc controller in a common way.
 
-The emulated disc drive uses files as disc images and reads or
-writes to to them as necessary.
-
-Local system builds implement this interface in-process and 
-access the disc files locally, but other target builds use the 
-target's serial port capability and a server executable 
-provides the interface over a serial link.
+The build for the local system implements this serial interface
+in-process and accesses the disc files locally, but builds for
+other targets use the target's serial port capability. A server
+executable provides the interface over a serial link, or via
+a virtual mechanism of some kind for an emulator.
 
 An RS-232 serial port can be added to a modern machine that 
 doesn't have one, using a USB to RS-232 converter.
 
 
-# It can integrate with native machine code #
+# orterforth integrates with native machine code #
 
 orterforth will usually be substantially slower than other 
 Forth implementations written in assembly code, because many 
@@ -133,7 +136,7 @@ the C code. This allows you to benefit from performance
 improvement but keep the practical advantages of C interop.
 
 
-# It has a few additional words #
+# orterforth has a few additional words #
 
 To support different platforms, while making the minimum of 
 changes to the fig-Forth language itself, there are a small 
@@ -156,34 +159,35 @@ system-independent:
                   BASIC prompt or equivalent).
 
  rtgt ( -- d )    Returns a base-36 representation of the
-                  target system (e.g., one of: CYGWIN. DARWIN.
-                  LINUX. SPECTR. etc).
+                  target system (e.g., one of: BBC. CYGWIN.
+                  DARWIN. LINUX. SPECTR. etc).
 
 
 # It starts by installing from Forth source code #
 
-First, "inst" code written in C reads and interprets Forth 
-source code from the emulated disc drive, in the manner 
-described in the Installation Manual. This compiles and builds 
+First, installation code written in C reads and interprets
+Forth source code from the emulated disc drive, in the manner
+described in the Installation Manual. This compiles and builds
 up a complete Forth installation.
 
 The fig-Forth source code comes from the Installation Manual, 
 but is modified to allow for different platforms' processor 
-architectures, word sizes, I/O, and so on.
+architectures, word sizes, I/O, memory layouts, and so on.
 
 
 # It saves the completed Forth installation to disc #
 
-On historical platforms, when "inst" is complete, the memory 
-map containing the installation and the required native code 
-is saved to the emulated disc drive in a hex format (to avoid
-issues with control characters used by the disc controller).
+On historical platforms, when install is complete, the memory
+map containing the installation and the required native code
+is saved to the emulated disc drive. This is in a hex format
+to avoid issues with control characters used by the disc
+controller).
 
-This is used to create completed installation binaries.
+This is then used to create completed installation binaries.
 
-To save space, the original "inst" code is loaded into a 
-memory location outside this area and does not form part of 
-the final binary.
+To save space, the original installation code is loaded into a
+memory location outside this area and does not form part of the
+final binary.
 
 
 # Now Forth is started #
@@ -192,9 +196,7 @@ When installation is complete, or when the final binary is
 loaded, the user is placed at Forth's interactive prompt.
 
 The user can use the emulated disc drive to load programs
-in the same way it was used for "inst" - with Forth commands 
-to load and manipulate "screens" of text (rather than a file 
-system more familiar to modern users).
+in the same way it was used for install.
 
 
 # Acknowledgements #
