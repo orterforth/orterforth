@@ -20,8 +20,10 @@ endif
 UNAME_M := $(shell uname -m)
 PROC := $(UNAME_M)
 ifeq (${OPER},linux)
+ifeq (${PROC},x86_64)
 ifeq ($(shell getconf LONG_BIT),32)
 		PROC := i686
+endif
 endif
 endif
 

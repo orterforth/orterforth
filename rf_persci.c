@@ -32,7 +32,6 @@ static void validate_drive_no(int drive)
 static FILE *rf_persci_open_file(uint8_t drive)
 {
   FILE *ptr;
-  size_t size;
 
   /* already open */
   ptr = rf_persci_files[drive];
@@ -49,7 +48,8 @@ static FILE *rf_persci_open_file(uint8_t drive)
   rf_persci_files[drive] = ptr = fopen(filenames[drive], "r+b");
 
   /* read contents into memory */
-  size = fread(discs[drive], 1, 256256, ptr);
+  fread(discs[drive], 1, 256256, ptr);
+  /* TODO check error */
 
   return ptr;
 }
