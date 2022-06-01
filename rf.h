@@ -328,8 +328,6 @@ uint8_t rf_digit(uint8_t base, uint8_t c);
 
 char *rf_find(char *t, char t_length, char *nfa);
 
-void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s1);
-
 /* COLD START */
 
 extern uintptr_t *rf_cold_forth;

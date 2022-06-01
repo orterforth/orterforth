@@ -219,7 +219,7 @@ ifeq ($(BBCOPTION),assembly)
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := 2400
+	BBCORIGIN := 2300
 	BBCRUN := bbc-run-disk
 endif
 
@@ -241,7 +241,7 @@ ifeq ($(BBCOPTION),tape)
 	BBCINSTMEDIA = bbc/orterforth-inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
 	BBCORG := 1220
-	BBCORIGIN := 1F00
+	BBCORIGIN := 1E00
 	BBCRUN := bbc-run-tape
 endif
 
@@ -446,6 +446,7 @@ c64-run : c64/orterforth-inst
 
 	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc 1.disc" -rsdev4baud 2400 -autostart $<
 
+
 # general assemble rule
 c64/%.o : c64/%.s
 
@@ -514,7 +515,7 @@ ql/hw : hw.c | ql
 
 	qcc -o $@ $<
 
-ql/orterforth : rf.c rf_inst.c orterforth.c | ql
+ql/orterforth : rf.c rf_inst.c target/ql/system.c orterforth.c | ql
 
 	qcc -o $@ $^
 

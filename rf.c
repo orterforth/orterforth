@@ -385,7 +385,8 @@ void rf_code_pfind(void)
 }
 #endif
 
-void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s1)
+#ifndef RF_TARGET_CODE_ENCL
+static void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s1)
 {
   char *hl = addr1;
   uint8_t e = 0xFF;
@@ -424,7 +425,6 @@ void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s1)
 	*s1 = e;
 }
 
-#ifndef RF_TARGET_CODE_ENCL
 void rf_code_encl(void)
 {
   RF_START;
