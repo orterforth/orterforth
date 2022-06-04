@@ -181,7 +181,7 @@ _rf_code_zbran:
 	addl $4, %esi                 # NO, CONTINUE...
 	jmp next
 
-.globl	_rf_code_xloop
+	.globl	_rf_code_xloop
 _rf_code_xloop:
 
 	movl $1, %ebx                 # INCREMENT
@@ -196,6 +196,29 @@ xloo1:
 	addl $8, %ebp                 # ADJ. RETURN STK
 	addl $4, %esi                 # BYPASS BRANCH OFFSET
 	jmp next                      # CONTINUE...
+
+	.globl	_rf_code_xploo
+_rf_code_xploo:
+
+	popl %ebx                     # GET LOOP VALUE
+	jmp xloo1
+
+	.globl	_rf_code_xdo
+_rf_code_xdo:
+
+	popl %edx                     # INITIAL INDEX VALUE
+	popl %eax                     # LIMIT VALUE
+	xchgl %esp, %ebp              # GET RETURN STACK
+	pushl %eax
+	pushl %edx
+	xchgl %esp, %ebp              # GET PARAMETER STACK
+	jmp next
+
+	.globl	_rf_code_rr
+_rf_code_rr:
+
+	movl (%ebp), %eax             # GET INDEX VALUE
+	jmp apush                     # TO PARAMETER STACK
 
 .section __DATA.__data,""
 
