@@ -47,8 +47,8 @@
 # applies (CP/M, 8086 register names, 
 # segmentation).
 
-.globl _rf_trampoline
-.p2align 4, 0x90
+	.globl _rf_trampoline
+	.p2align 4, 0x90
 _rf_trampoline:
 
   pushq %rbp                    # enter stack frame
@@ -76,49 +76,39 @@ trampoline2:
 	popq %rbp                     # leave stack frame
 	retq                          # bye
 
-.globl	_rf_start
-.p2align	4, 0x90
+	# .globl	rf_start
+	.globl _rf_start
+	.p2align 4, 0x90
+# rf_start:
 _rf_start:
 
   movq %rdx, _rf_w(%rip)        # rdx to W
   movq %rsi, _rf_ip(%rip)       # rsi to IP
 
-	# unwind rf_start return address
-	popq %rax
+	popq %rax                     # unwind rf_start return address
 
-	# get difference between rsp and rbp
-	movq %rbp, %rcx
+	movq %rbp, %rcx               # get difference between rsp and rbp
 	subq %rsp, %rcx
 
-	# old SP now in rsi
-	movq %rsp, %rsi
+	movq %rsp, %rsi               # old SP now in rsi
 
-	# empty the stack frame, i.e., make rsp = rbp
-	movq %rbp, %rsp
+	movq %rbp, %rsp	              # empty the stack frame, i.e., make rsp = rbp
 
-	# get the pushed rbp (this is RP)
-	popq %rbp
+	popq %rbp                     # get the pushed rbp (this is RP)
   movq %rbp, _rf_rp(%rip)
 
-	# now rsp is SP
-  movq %rsp, _rf_sp(%rip)
+  movq %rsp, _rf_sp(%rip)	      # now rsp is SP
 
-	# get the saved rsp and rbp from _rf_trampoline
-	# (these are not the same as return addr has been pushed)
-	movq _rf_x86_64_rbp_save(%rip), %rbp
-	movq _rf_x86_64_rsp_save(%rip), %rsp
+	movq _rf_x86_64_rbp_save(%rip), %rbp # get the saved rsp and rbp from _rf_trampoline
+	movq _rf_x86_64_rsp_save(%rip), %rsp # (these are not the same as return addr has been pushed)
 
-	# push rbp as it would have been
-	pushq %rbp
+	pushq %rbp                    # push rbp as it would have been
 
-	# and mov rsp into rbp
-	movq %rsp, %rbp
+	movq %rsp, %rbp               # and mov rsp into rbp
 
-	# sub the difference from rsp
-	subq %rcx, %rsp
+	subq %rcx, %rsp               # sub the difference from rsp
 
-	# this is the new stack frame
-	movq %rsp, %rdi
+	movq %rsp, %rdi               # this is the new stack frame
 
 	# copy old stack frame here
 	# stack spills make this necessary as even if RF_START
@@ -135,41 +125,40 @@ dpush:
 apush:
 	pushq %rax
 
-.globl	_rf_next
-.p2align	4, 0x90
+	.globl _rf_next
+	.p2align 4, 0x90
 _rf_next:
 
 next:
 	lodsq                         # AX<- (IP)
-	movq %rax, %rbx
+	movq %rax, %rdx               # (W) <- (IP)
 next1:
-	movq %rbx, %rdx               # (W) <- (IP)
-	jmpq *(%rbx)                  # TO 'CFA'
+	jmpq *(%rdx)                  # TO 'CFA'
 
-.globl	_rf_code_lit
-.p2align	4, 0x90
+	.globl _rf_code_lit
+	.p2align 4, 0x90
 _rf_code_lit:
 
 	lodsq                         # AX <- LITERAL
 	jmp apush                     # TO TOP OF STACK
 
-.globl	_rf_code_exec
-.p2align	4, 0x90
+	.globl _rf_code_exec
+	.p2align 4, 0x90
 _rf_code_exec:
 
-	popq %rbx                     # GET CFA
+	popq %rdx                     # GET CFA
 	jmp next1                     # EXECUTE NEXT
 
-.globl	_rf_code_bran
-.p2align	4, 0x90
+	.globl _rf_code_bran
+	.p2align 4, 0x90
 _rf_code_bran:
 
 bran1:
 	addq (%rsi), %rsi             # (IP) <- (IP) + ((IP))
 	jmp next                      # JUMP TO OFFSET
 
-.globl	_rf_code_zbran
-.p2align	4, 0x90
+	.globl _rf_code_zbran
+	.p2align 4, 0x90
 _rf_code_zbran:
 
 	popq %rax                     # GET STACK VALUE
@@ -178,8 +167,8 @@ _rf_code_zbran:
 	addq $8, %rsi                 # NO, CONTINUE...
 	jmp next
 
-.globl	_rf_code_xloop
-.p2align	4, 0x90
+	.globl _rf_code_xloop
+	.p2align 4, 0x90
 _rf_code_xloop:
 
 	movq $1, %rbx                 # INCREMENT
@@ -195,15 +184,15 @@ xloo1:
 	addq $8, %rsi                 # BYPASS BRANCH OFFSET
 	jmp next                      # CONTINUE...
 
-.globl	_rf_code_xploo
-.p2align	4, 0x90
+	.globl _rf_code_xploo
+	.p2align 4, 0x90
 _rf_code_xploo:
 
 	popq %rbx                     # GET LOOP VALUE
 	jmp xloo1
 
-.globl	_rf_code_xdo
-.p2align	4, 0x90
+	.globl _rf_code_xdo
+	.p2align 4, 0x90
 _rf_code_xdo:
 
 	popq %rdx                     # INITIAL INDEX VALUE
@@ -214,15 +203,15 @@ _rf_code_xdo:
 	xchgq %rsp, %rbp              # GET PARAMETER STACK
 	jmp next
 
-.globl	_rf_code_rr
-.p2align	4, 0x90
+	.globl _rf_code_rr
+	.p2align 4, 0x90
 _rf_code_rr:
 
 	movq (%rbp), %rax             # GET INDEX VALUE
 	jmp apush                     # TO PARAMETER STACK
 
-.globl	_rf_code_digit
-.p2align	4, 0x90
+	.globl _rf_code_digit
+	.p2align 4, 0x90
 _rf_code_digit:
 
 	popq %rdx                     # NUMBER BASE
@@ -249,8 +238,8 @@ digi2:
 	subq %rax, %rax               # FALSE FLAG
 	jmp apush                     # BYE
 
-.globl	_rf_code_pfind
-.p2align	4, 0x90
+	.globl _rf_code_pfind
+	.p2align 4, 0x90
 _rf_code_pfind:
 
   # mov %ds, %ax
@@ -303,8 +292,8 @@ pfin6:
 	movq $0, %rax                 # FALSE FLAG
 	jmp apush                     # DONE (NO MATCH FOUND)
 
-.globl	_rf_code_encl
-.p2align	4, 0x90
+	.globl _rf_code_encl
+	.p2align 4, 0x90
 _rf_code_encl:
 
 	popq %rax                     # S1 - TERMINATOR CHAR.
@@ -352,8 +341,8 @@ encl4:
 	incq %rax                     # COUNT +1
 	jmp dpush
 
-.globl	_rf_code_cmove
-.p2align	4, 0x90
+	.globl _rf_code_cmove
+	.p2align 4, 0x90
 _rf_code_cmove:
 
 	cld                           # INC DIRECTION
@@ -367,8 +356,8 @@ _rf_code_cmove:
 	movq %rbx, %rsi               # GET BACK IP
 	jmp next
 
-.globl	_rf_code_ustar
-.p2align	4, 0x90
+	.globl _rf_code_ustar
+	.p2align 4, 0x90
 _rf_code_ustar:
 
 	popq %rax
@@ -377,8 +366,8 @@ _rf_code_ustar:
 	xchg %rdx, %rax               # AX NOW = MSW
 	jmp dpush                     # STORE DOUBLE WORD
 
-.globl _rf_code_uslas
-.p2align	4, 0x90
+	.globl _rf_code_uslas
+	.p2align 4, 0x90
 _rf_code_uslas:
 
 	popq %rbx                     # DIVISOR
@@ -396,8 +385,8 @@ dzero:
 	movq %rax, %rdx
 	jmp dpush                     # STORE QUOT/REM
 
-.globl	_rf_code_andd
-.p2align	4, 0x90
+	.globl _rf_code_andd
+	.p2align 4, 0x90
 _rf_code_andd:
 
 	popq %rax
@@ -405,8 +394,8 @@ _rf_code_andd:
 	andq %rbx, %rax
 	jmp apush
 
-.globl	_rf_code_orr
-.p2align	4, 0x90
+	.globl _rf_code_orr
+	.p2align 4, 0x90
 _rf_code_orr:
 
 	popq %rax
@@ -414,8 +403,8 @@ _rf_code_orr:
 	orq %rbx, %rax
 	jmp apush
 
-.globl	_rf_code_xorr
-.p2align	4, 0x90
+	.globl _rf_code_xorr
+	.p2align 4, 0x90
 _rf_code_xorr:
 
 	popq %rax
@@ -423,47 +412,47 @@ _rf_code_xorr:
 	xorq %rbx, %rax
 	jmp apush
 
-.globl	_rf_code_spat
-.p2align	4, 0x90
+	.globl _rf_code_spat
+	.p2align 4, 0x90
 _rf_code_spat:
 
 	movq %rsp, %rax
 	jmp apush
 
-.globl	_rf_code_spsto
-.p2align	4, 0x90
+	.globl _rf_code_spsto
+	.p2align 4, 0x90
 _rf_code_spsto:
 
 	movq _rf_up(%rip), %rbx       # USER VAR BASE ADDR
 	movq 24(%rbx), %rsp           # RESET PARAM. STACK PT.
 	jmp next
 
-.globl	_rf_code_rpsto
-.p2align	4, 0x90
+	.globl _rf_code_rpsto
+	.p2align 4, 0x90
 _rf_code_rpsto:
 
 	movq _rf_up(%rip), %rbx       # USER VAR BASE ADDR
 	movq 32(%rbx), %rbp           # RESET PARAM. STACK PT.
 	jmp next
 
-.globl	_rf_code_semis
-.p2align	4, 0x90
+	.globl _rf_code_semis
+	.p2align 4, 0x90
 _rf_code_semis:
 
 	movq (%rbp), %rsi             # (IP) <- (R1)
 	addq $8, %rbp                 # ADJUST STACK
 	jmp next
 
-.globl	_rf_code_leave
-.p2align	4, 0x90
+	.globl _rf_code_leave
+	.p2align 4, 0x90
 _rf_code_leave:
 
 	movq (%rbp), %rax             # GET INDEX
 	movq %rax, 8(%rbp)            # STORE IT AT LIMIT
 	jmp next
 
-.globl	_rf_code_tor
-.p2align	4, 0x90
+	.globl _rf_code_tor
+	.p2align 4, 0x90
 _rf_code_tor:
 
 	popq %rbx                     # GET STACK PARAMETER
@@ -471,16 +460,16 @@ _rf_code_tor:
 	movq %rbx, (%rbp)             # ADD TO RETURN STACK
 	jmp next
 
-.globl	_rf_code_fromr
-.p2align	4, 0x90
+	.globl _rf_code_fromr
+	.p2align 4, 0x90
 _rf_code_fromr:
 
 	movq (%rbp), %rax             # GET RETURN STACK VALUE
 	addq $8, %rbp                 # DELETE FROM STACK
 	jmp apush
 
-.globl	_rf_code_zequ
-.p2align	4, 0x90
+	.globl _rf_code_zequ
+	.p2align 4, 0x90
 _rf_code_zequ:
 
 	popq %rax
@@ -491,8 +480,8 @@ _rf_code_zequ:
 zequ1:
 	jmp apush
 
-.globl	_rf_code_zless
-.p2align	4, 0x90
+	.globl _rf_code_zless
+	.p2align 4, 0x90
 _rf_code_zless:
 
 	popq %rax
@@ -503,8 +492,8 @@ _rf_code_zless:
 zless1:
 	jmp apush
 
-.globl	_rf_code_plus
-.p2align	4, 0x90
+	.globl _rf_code_plus
+	.p2align 4, 0x90
 _rf_code_plus:
 
 	popq %rax
@@ -512,8 +501,8 @@ _rf_code_plus:
 	addq %rbx, %rax
 	jmp apush
 
-.globl	_rf_code_dplus
-.p2align	4, 0x90
+	.globl _rf_code_dplus
+	.p2align 4, 0x90
 _rf_code_dplus:
 
 	popq %rax                     # YHW
@@ -524,16 +513,16 @@ _rf_code_dplus:
 	adcq %rbx, %rax               # SHW
 	jmp dpush
 
-.globl	_rf_code_minus
-.p2align	4, 0x90
+	.globl _rf_code_minus
+	.p2align 4, 0x90
 _rf_code_minus:
 
 	popq %rax
 	negq %rax
 	jmp apush
 
-.globl	_rf_code_dminu
-.p2align	4, 0x90
+	.globl _rf_code_dminu
+	.p2align 4, 0x90
 _rf_code_dminu:
 
 	popq %rbx
@@ -544,8 +533,8 @@ _rf_code_dminu:
 	sbbq %rbx, %rax               # HIGH WORD
 	jmp dpush
 
-.globl	_rf_code_over
-.p2align	4, 0x90
+	.globl _rf_code_over
+	.p2align 4, 0x90
 _rf_code_over:
 
 	popq %rdx
@@ -553,31 +542,31 @@ _rf_code_over:
 	pushq %rax
 	jmp dpush
 
-.globl	_rf_code_drop
-.p2align	4, 0x90
+	.globl _rf_code_drop
+	.p2align 4, 0x90
 _rf_code_drop:
 
 	popq %rax
 	jmp next
 
-.globl	_rf_code_swap
-.p2align	4, 0x90
+	.globl _rf_code_swap
+	.p2align 4, 0x90
 _rf_code_swap:
 
 	popq %rdx
 	popq %rax
 	jmp dpush
 
-.globl	_rf_code_dup
-.p2align	4, 0x90
+	.globl _rf_code_dup
+	.p2align 4, 0x90
 _rf_code_dup:
 
 	popq %rax
 	pushq %rax
 	jmp apush
 
-.globl	_rf_code_pstor
-.p2align	4, 0x90
+	.globl _rf_code_pstor
+	.p2align 4, 0x90
 _rf_code_pstor:
 
 	popq %rbx                     # ADDRESS
@@ -585,8 +574,8 @@ _rf_code_pstor:
 	addq %rax, (%rbx)
 	jmp next
 
-.globl	_rf_code_toggl
-.p2align	4, 0x90
+	.globl _rf_code_toggl
+	.p2align 4, 0x90
 _rf_code_toggl:
 
 	popq %rax                     # BIT PATTERN
@@ -594,16 +583,16 @@ _rf_code_toggl:
 	xorb %al, (%rbx)
 	jmp next
 
-.globl	_rf_code_at
-.p2align	4, 0x90
+	.globl _rf_code_at
+	.p2align 4, 0x90
 _rf_code_at:
 
 	popq %rbx
 	movq (%rbx), %rax
 	jmp apush
 
-.globl	_rf_code_cat
-.p2align	4, 0x90
+	.globl _rf_code_cat
+	.p2align 4, 0x90
 _rf_code_cat:
 
 	popq %rbx
@@ -611,8 +600,8 @@ _rf_code_cat:
 	andq $0xFF, %rax
 	jmp apush
 
-.globl	_rf_code_store
-.p2align	4, 0x90
+	.globl _rf_code_store
+	.p2align 4, 0x90
 _rf_code_store:
 
 	popq %rbx                     # ADDR
@@ -620,8 +609,8 @@ _rf_code_store:
 	movq %rax, (%rbx)
 	jmp next
 
-.globl	_rf_code_cstor
-.p2align	4, 0x90
+	.globl _rf_code_cstor
+	.p2align 4, 0x90
 _rf_code_cstor:
 
 	popq %rbx                     # ADDR
@@ -629,8 +618,8 @@ _rf_code_cstor:
 	movb %al, (%rbx)
 	jmp next
 
-.globl	_rf_code_docol
-.p2align	4, 0x90
+	.globl _rf_code_docol
+	.p2align 4, 0x90
 _rf_code_docol:
 
 	addq $8, %rdx                 # W=W+1
@@ -639,8 +628,8 @@ _rf_code_docol:
 	movq %rdx, %rsi               # (IP) <- (W)
 	jmp next
 
-.globl	_rf_code_docon
-.p2align	4, 0x90
+	.globl _rf_code_docon
+	.p2align 4, 0x90
 _rf_code_docon:
 
 	addq $8, %rdx                 # PFA
@@ -648,16 +637,16 @@ _rf_code_docon:
 	movq (%rbx), %rax             # GET DATA
 	jmp apush
 
-.globl	_rf_code_dovar
-.p2align	4, 0x90
+	.globl _rf_code_dovar
+	.p2align 4, 0x90
 _rf_code_dovar:
 
 	addq $8, %rdx                 # (DE) <- PFA
 	pushq %rdx                    # (S1) <- PFA
 	jmp next
 
-.globl	_rf_code_douse
-.p2align	4, 0x90
+	.globl _rf_code_douse
+	.p2align 4, 0x90
 _rf_code_douse:
 
 	addq $8, %rdx                 # PFA
@@ -668,8 +657,8 @@ _rf_code_douse:
 	leaq (%rbx, %rdi), %rax       # ADDR OF VARIABLE
 	jmp apush
 
-.globl	_rf_code_dodoe
-.p2align	4, 0x90
+	.globl _rf_code_dodoe
+	.p2align 4, 0x90
 _rf_code_dodoe:
 
 	xchgq %rsp, %rbp              # GET RETURN STACK
@@ -682,8 +671,8 @@ _rf_code_dodoe:
 	pushq %rdx                    # PFA
 	jmp next
 
-.globl	_rf_code_stod
-.p2align	4, 0x90
+	.globl _rf_code_stod
+	.p2align 4, 0x90
 _rf_code_stod:
 
 	popq %rdx                     # S1
@@ -694,33 +683,33 @@ _rf_code_stod:
 stod1:
 	jmp dpush
 
-.globl	_rf_code_rcll
-.p2align	4, 0x90
+	.globl _rf_code_rcll
+	.p2align 4, 0x90
 _rf_code_rcll:
 
 	movq $8, %rax
 	jmp apush
 
-.globl	_rf_code_rcls
-.p2align	4, 0x90
+	.globl _rf_code_rcls
+	.p2align 4, 0x90
 _rf_code_rcls:
 
 	popq %rax
 	shlq $3, %rax
 	jmp apush
 
-.section __DATA.__data,""
+	.section __DATA.__data,""
 
-.data
-.globl _rf_x86_64_rbp_save
-.p2align 3
+	.data
+	.globl _rf_x86_64_rbp_save
+	.p2align 3
 _rf_x86_64_rbp_save:
 
 	.quad	0
 
-.data
-.globl _rf_x86_64_rsp_save
-.p2align 3
+	.data
+	.globl _rf_x86_64_rsp_save
+	.p2align 3
 _rf_x86_64_rsp_save:
 
 	.quad	0
