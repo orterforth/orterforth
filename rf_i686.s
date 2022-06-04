@@ -48,38 +48,46 @@
 # segmentation).
 
 	.text
-	.globl	_rf_trampoline
+	.globl _rf_trampoline
 _rf_trampoline:
 
-	pushl	%ebp
+	pushl	%ebp                    # enter stack frame
 	movl %esp, %ebp
-	pushl %ebx
-	pushl %esi
+
+	pushl %ebx                    # callee save ebx
+	pushl %esi                    # callee save esi
 
 	call __x86.get_pc_thunk.bx
 	addl $_GLOBAL_OFFSET_TABLE_, %ebx
 
 trampoline1:
 
-	movl rf_fp@GOTOFF(%ebx), %eax
-	testl %eax, %eax
+	movl rf_fp@GOTOFF(%ebx), %eax # if FP is null skip to exit
+	# testl %eax, %eax
+	cmpl $0, %eax
 	je trampoline2
 
   movl _rf_ip@GOTOFF(%ebx), %esi # IP to esi
   movl _rf_w@GOTOFF(%ebx), %edx  # W to edx
+	leal trampoline1@GOTOFF(%ebx), %ecx  # push the return address
+	push %ecx
 
-	movl rf_fp@GOTOFF(%ebx), %eax
-	call *%eax
-	jmp trampoline1
+	# movq %rbp, _rf_x86_64_rbp_save(%rip) # save rsp and rbp
+	# movq %rsp, _rf_x86_64_rsp_save(%rip)
+  # movq _rf_rp(%rip), %rbp       # put SP and RP into rsp and rbp
+  # movq _rf_sp(%rip), %rsp
+
+	jmp *%eax                     # jump to FP
+                                # will return to trampoline1
 
 trampoline2:
 
 	popl %esi
 	popl %ebx
-	leave
-	ret
+	leave                         # leave stack frame
+	ret                           # bye
 
-	.globl	_rf_start
+.globl	_rf_start
 _rf_start:
 
 	call	__x86.get_pc_thunk.ax
@@ -88,7 +96,54 @@ _rf_start:
   movl %edx, _rf_w@GOTOFF(%eax)  # edx to W
   movl %esi, _rf_ip@GOTOFF(%eax) # esi to IP
 
-	ret
+	popl %edx                     # unwind rf_start return address
+
+	movl %ebp, %ecx               # get difference between esp and ebp
+	subl %esp, %ecx
+
+	# old SP now in rsi
+#	movq %rsp, %rsi
+
+	# save rcx for later
+#	movq %rcx, %rdx
+
+	# empty the stack frame, i.e., make rsp = rbp
+#	movq %rbp, %rsp
+
+	# get the pushed rbp (this is RP)
+#	popq %rbp
+#  movq %rbp, _rf_rp(%rip)
+
+	# now rsp is SP
+#  movq %rsp, _rf_sp(%rip)
+
+	# get the saved rsp and rbp from _rf_trampoline
+	# (these are not the same as return addr has been pushed)
+#	movq _rf_x86_64_rbp_save(%rip), %rbp
+#	movq _rf_x86_64_rsp_save(%rip), %rsp
+
+	# push rbp as it would have been
+#	pushq %rbp
+
+	# and mov rsp into rbp
+#	movq %rsp, %rbp
+
+	# sub the difference from rsp
+#	subq %rdx, %rsp
+
+	movl %esp, %edi               # this is the new stack frame
+
+	# copy old stack frame here
+	# stack spills make this necessary as even if RF_START
+	# is the first thing in C code, stack spills happen before
+	# _rf_start is called. If a stack value is a reference 
+	# to the address of another this will not work.
+#	cld
+#  rep movsb
+
+	pushl %edx                    # rewind rf_start return address
+
+	ret                           # carry on in C
 
 	.globl _rf_next
 _rf_next:
