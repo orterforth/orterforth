@@ -142,8 +142,9 @@ next:
 
 	lodsl                         # AX<- (IP)
 	movl %eax, %edx               # (W) <- (IP)
-# next1:
-#	movl %ebx, %edx
+	# movl %eax, %ebx
+next1:
+	#	movl %ebx, %edx
 	jmp *(%edx)                   # TO 'CFA'
 
 	.globl	_rf_code_lit
@@ -151,6 +152,29 @@ _rf_code_lit:
 
 	lodsl                         # AX <- LITERAL
 	jmp apush                     # TO TOP OF STACK
+
+	.globl	_rf_code_exec
+_rf_code_exec:
+
+	popl %edx                     # GET CFA
+	jmp next1                     # EXECUTE NEXT
+	# jmp *(%edx)
+
+	.globl	_rf_code_bran
+_rf_code_bran:
+
+bran1:
+	addl (%esi), %esi             # (IP) <- (IP) + ((IP))
+	jmp next                      # JUMP TO OFFSET
+
+	.globl	_rf_code_zbran
+_rf_code_zbran:
+
+	popl %eax                     # GET STACK VALUE
+	orl %eax, %eax                # ZERO?
+	jz bran1                      # YES, BRANCH
+	addl $4, %esi                 # NO, CONTINUE...
+	jmp next
 
 .section __DATA.__data,""
 
