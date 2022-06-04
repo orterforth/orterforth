@@ -650,6 +650,30 @@ _rf_code_dodoe:
 	pushl %edx                    # PFA
 	jmp next
 
+	.globl	_rf_code_stod
+_rf_code_stod:
+
+	popl %edx                     # S1
+	subl %eax, %eax               # AX = 0
+	orl %edx, %edx                # SET FLAGS
+	jns stod1                     # POSITIVE NUMBER
+	decl %eax                     # NEGITIVE NUMBER
+stod1:
+	jmp dpush
+
+	.globl	_rf_code_rcll
+_rf_code_rcll:
+
+	movl $4, %eax
+	jmp apush
+
+	.globl	_rf_code_rcls
+_rf_code_rcls:
+
+	popl %eax
+	shll $2, %eax
+	jmp apush
+
 .section __DATA.__data,""
 
 .data
