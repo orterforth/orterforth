@@ -525,6 +525,34 @@ _rf_code_dminu:
 	sbbl %ebx, %eax               # HIGH WORD
 	jmp dpush
 
+	.globl	_rf_code_over
+_rf_code_over:
+
+	popl %edx
+	popl %eax
+	pushl %eax
+	jmp dpush
+
+	.globl	_rf_code_drop
+_rf_code_drop:
+
+	popl %eax
+	jmp next
+
+	.globl	_rf_code_swap
+_rf_code_swap:
+
+	popl %edx
+	popl %eax
+	jmp dpush
+
+	.globl	_rf_code_dup
+_rf_code_dup:
+
+	popl %eax
+	pushl %eax
+	jmp apush
+
 .section __DATA.__data,""
 
 .data
