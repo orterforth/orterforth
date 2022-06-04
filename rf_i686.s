@@ -220,6 +220,134 @@ _rf_code_rr:
 	movl (%ebp), %eax             # GET INDEX VALUE
 	jmp apush                     # TO PARAMETER STACK
 
+	.globl	_rf_code_digit
+_rf_code_digit:
+
+	popl %edx                     # NUMBER BASE
+	popl %eax                     # ASCII DIGIT
+	sub $48, %al
+	jb digi2                      # NUMBER ERROR
+	cmp $9, %al
+	jbe digi1                     # NUMBER = 0 THRU 9
+	sub $7, %al
+	cmp $10, %al                  # NUMBER 'A' THRU 'Z' ?
+	jb digi2                      # NO
+#
+digi1:
+	cmp %dl, %al                  # COMPARE NUMBER TO BASE
+	jae digi2                     # NUMBER ERROR
+	subl %edx, %edx               # ZERO
+	mov %al, %dl                  # NEW BINARY NUMBER
+	mov $1, %al                   # TRUE FLAG
+	jmp dpush                     # ADD TO STACK
+
+# NUMBER ERROR
+#
+digi2:
+	subl %eax, %eax               # FALSE FLAG
+	jmp apush                     # BYE
+
+	.globl	_rf_code_pfind
+_rf_code_pfind:
+
+  # mov %ds, %ax
+  # mov %ax, %es                  # ES = DS
+	popl %ebx                     # NFA
+	popl %ecx                     # STRING ADDR
+#
+# SEARCH LOOP
+pfin1:
+	movl %ecx, %edi               # GET ADDR
+	movb (%ebx), %al              # GET WORD LENGTH
+	movb %al, %dl                 # SAVE LENGTH
+	xorb (%edi), %al
+	andb $0x3F, %al               # CHECK LENGTHS
+	jnz pfin5                     # LENGTHS DIFFER
+#
+# LENGTH MATCH, CHECK EACH CHARACTER IN NAME
+pfin2:
+	incl %ebx
+	incl %edi                     # NEXT CHAR OF NAME
+	movb (%ebx), %al
+	xorb (%edi), %al              # COMPARE NAMES
+	addb %al, %al                 # THIS WILL TEST BIT-8
+	jnz pfin5                     # NO MATCH
+	jnb pfin2                     # MATCH SO FAR, LOOP
+
+# FOUND END OF NAME (BIT-8 SET); A MATCH
+	addl $9, %ebx                 # BX = PFA
+	pushl %ebx                    # (S3) <- PFA
+	movl $1, %eax                 # TRUE VALUE
+	andl $0xFF, %edx              # CLEAR HIGH LENGTH
+	jmp dpush
+
+# NO NAME FIELD MATCH, TRY ANOTHER
+#
+# GET NEXT LINK FIELD ADDR (LFA)
+# (ZERO = FIRST WORD OF DICTIONARY)
+#
+pfin5:
+	incl %ebx                     # NEXT ADDR
+	jb pfin6                      # END OF NAME
+	movb (%ebx), %al              # GET NEXT CHAR
+	addb %al, %al                 # SET/RESET CARRY
+	jmp pfin5                     # LOOP UNTIL FOUND
+#
+pfin6:
+	movl (%ebx), %ebx             # GET LINK FIELD ADDR
+	orl %ebx, %ebx                # START OF DICT. (0)?
+	jnz pfin1                     # NO, LOOK SOME MORE
+	movl $0, %eax                 # FALSE FLAG
+	jmp apush                     # DONE (NO MATCH FOUND)
+
+	.globl	_rf_code_encl
+_rf_code_encl:
+
+	popl %eax                     # S1 - TERMINATOR CHAR.
+	popl %ebx                     # S2 - TEXT ADDR
+	pushl %ebx                    # ADDR BACK TO STACK
+	andl $0xFF, %edx              # ZERO TODO MOV AH, 0
+	movl $-1, %edx                # CHAR OFFSET COUNTER
+	decl %ebx                     # ADDR -1
+
+# SCAN TO FIRST NON-TERMINATOR CHAR
+#
+encl1:
+	incl %ebx                     # ADDR +1
+	incl %edx                     # COUNT +1
+	cmpb (%ebx), %al
+	jz encl1                      # WAIT FOR NON-TERMINATOR
+	pushl %edx                    # OFFSET TO 1ST TEXT CHR
+	cmpb (%ebx), %ah              # NULL CHAR?
+	jnz encl2                     # NO
+
+# FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
+	movl %edx, %eax               # COPY COUNTER
+	incl %edx                     # +1
+	jmp dpush
+
+# FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
+#
+encl2:
+	incl %ebx                     # ADDR+1
+	incl %edx                     # COUNT +1
+	cmpb (%ebx), %al              # TERMINATOR CHAR?
+	jz encl4                      # YES
+	cmpb (%ebx), %ah              # NULL CHAR
+	jnz encl2                     # NO, LOOP AGAIN
+
+# FOUND NULL AT END OF TEXT
+#
+encl3:
+	movl %edx, %eax               # COUNTERS ARE EQUAL
+	jmp dpush
+
+# FOUND TERINATOR CHARACTER
+encl4:
+	movl %edx, %eax
+	incl %eax                     # COUNT +1
+	jmp dpush
+
 .section __DATA.__data,""
 
 .data
