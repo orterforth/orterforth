@@ -57,7 +57,7 @@ extern char *rf_memory;
 #define RF_TARGET_CODE_PLUS
 #define RF_TARGET_CODE_DPLUS
 #define RF_TARGET_CODE_MINUS
-#define RF_TARGET_CODE_DMINUS
+#define RF_TARGET_CODE_DMINU
 #define RF_TARGET_CODE_OVER
 #define RF_TARGET_CODE_DROP
 #define RF_TARGET_CODE_SWAP
@@ -76,3 +76,6 @@ extern char *rf_memory;
 #define RF_TARGET_CODE_STOD
 #define RF_TARGET_CODE_RCLL
 #define RF_TARGET_CODE_RCLS
+/*#define RF_TARGET_CODE_RCOD*/
+/*#define RF_TARGET_CODE_RXIT*/
+/*#define RF_TARGET_CODE_RTGT*/

@@ -45,7 +45,7 @@
 # Modified for orterforth integration and x86_64
 # in 2022. Some info in the comments no longer 
 # applies (CP/M, 8086 register names, 
-# segmentation).
+# segmentation, byte offsets).
 
 	.globl _rf_trampoline
 	.p2align 4, 0x90
@@ -62,19 +62,19 @@ trampoline1:
   movq _rf_ip(%rip), %rsi       # IP to rsi
   movq _rf_w(%rip), %rdx        # W to rdx
 	leaq trampoline1(%rip), %rax  # push the return address
-	push %rax
+	pushq %rax
 
 	movq %rbp, _rf_x86_64_rbp_save(%rip) # save rsp and rbp
 	movq %rsp, _rf_x86_64_rsp_save(%rip)
   movq _rf_rp(%rip), %rbp       # put SP and RP into rsp and rbp
   movq _rf_sp(%rip), %rsp
 
-	jmpq *_rf_fp(%rip)            # jump to FP
+	jmp *_rf_fp(%rip)             # jump to FP
                                 # will return to trampoline1
 
 trampoline2:
 	popq %rbp                     # leave stack frame
-	retq                          # bye
+	ret                           # bye
 
 	# .globl	rf_start
 	.globl _rf_start
@@ -133,7 +133,7 @@ next:
 	lodsq                         # AX<- (IP)
 	movq %rax, %rdx               # (W) <- (IP)
 next1:
-	jmpq *(%rdx)                  # TO 'CFA'
+	jmp *(%rdx)                   # TO 'CFA'
 
 	.globl _rf_code_lit
 	.p2align 4, 0x90
