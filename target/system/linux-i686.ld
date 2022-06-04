@@ -9,8 +9,8 @@ _rf_w = rf_w;
 /* assembly code has leading underscores, and gcc does not expect them */
 rf_start = _rf_start;
 rf_trampoline = _rf_trampoline;
-/*
 rf_next = _rf_next;
+/*
 rf_code_lit = _rf_code_lit;
 rf_code_exec = _rf_code_exec;
 rf_code_bran = _rf_code_bran;

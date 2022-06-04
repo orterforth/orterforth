@@ -472,20 +472,22 @@ static void __FASTCALL__ rf_dpush(rf_double_t *a);
 
 #ifndef RF_TARGET_CODE_USTAR
 #define RF_DPUSH
+static void rf_ustar(void)
+{
+  uintptr_t a;
+  uintptr_t b;
+  rf_double_t d;
+
+  a = RF_SP_POP;
+  b = RF_SP_POP;
+  d = (rf_double_t) a * b;
+  rf_dpush(&d);
+}
+
 void rf_code_ustar(void)
 {
   RF_START;
-  {
-    uintptr_t a;
-    uintptr_t b;
-    rf_double_t d;
-
-
-    a = RF_SP_POP;
-    b = RF_SP_POP;
-    d = (rf_double_t) a * b;
-    rf_dpush(&d);
-  }
+  rf_ustar();
   RF_JUMP_NEXT;
 }
 #endif
@@ -496,18 +498,21 @@ static void rf_dpop(rf_double_t *a);
 
 #ifndef RF_TARGET_CODE_USLAS
 #define RF_DPOP
+static void rf_uslas(void)
+{
+  rf_double_t b;
+  rf_double_t a;
+
+  b = (rf_double_t) RF_SP_POP;
+  rf_dpop(&a);
+  RF_SP_PUSH((uintptr_t) (a % b));
+  RF_SP_PUSH((uintptr_t) (a / b));
+}
+
 void rf_code_uslas(void)
 {
   RF_START;
-  {
-    rf_double_t b;
-    rf_double_t a;
-
-    b = (rf_double_t) RF_SP_POP;
-    rf_dpop(&a);
-    RF_SP_PUSH((uintptr_t) (a % b));
-    RF_SP_PUSH((uintptr_t) (a / b));
-  }
+  rf_uslas();
   RF_JUMP_NEXT;
 }
 #endif
@@ -682,17 +687,20 @@ void rf_code_plus(void)
 #ifndef RF_TARGET_CODE_DPLUS
 #define RF_DPOP
 #define RF_DPUSH
+static void rf_dplus(void)
+{
+  rf_double_t a, b, c;
+
+  rf_dpop(&a);
+  rf_dpop(&b);
+  c = a + b;
+  rf_dpush(&c);
+}
+
 void rf_code_dplus(void)
 {
   RF_START;
-  {
-    rf_double_t a, b, c;
-
-    rf_dpop(&a);
-    rf_dpop(&b);
-    c = a + b;
-    rf_dpush(&c);
-  }
+  rf_dplus();
   RF_JUMP_NEXT;
 }
 #endif
