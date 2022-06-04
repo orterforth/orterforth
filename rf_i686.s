@@ -444,6 +444,28 @@ _rf_code_semis:
 	addl $4, %ebp                 # ADJUST STACK
 	jmp next
 
+	.globl	_rf_code_leave
+_rf_code_leave:
+
+	movl (%ebp), %eax             # GET INDEX
+	movl %eax, 4(%ebp)            # STORE IT AT LIMIT
+	jmp next
+
+	.globl	_rf_code_tor
+_rf_code_tor:
+
+	popl %ebx                     # GET STACK PARAMETER
+	subl $4, %ebp                 # MOVE RETURN STACK DOWN
+	movl %ebx, (%ebp)             # ADD TO RETURN STACK
+	jmp next
+
+	.globl	_rf_code_fromr
+_rf_code_fromr:
+
+	movl (%ebp), %eax             # GET RETURN STACK VALUE
+	addl $4, %ebp                 # DELETE FROM STACK
+	jmp apush
+
 .section __DATA.__data,""
 
 .data
