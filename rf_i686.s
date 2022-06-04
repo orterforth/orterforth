@@ -348,6 +348,20 @@ encl4:
 	incl %eax                     # COUNT +1
 	jmp dpush
 
+	.globl	_rf_code_cmove
+_rf_code_cmove:
+
+	cld                           # INC DIRECTION
+	movl %esi, %ebx               # SAVE IP
+	popl %ecx                     # COUNT
+	popl %edi                     # DEST.
+	popl %esi                     # SOURCE
+	# mov %ds, %ax
+	# mov %ax, %es                  # ES <- DS
+	rep movsb                     # THATS THE MOVE
+ 	movl %ebx, %esi               # GET BACK IP
+ 	jmp next
+
 .section __DATA.__data,""
 
 .data
