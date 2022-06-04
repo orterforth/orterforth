@@ -569,6 +569,37 @@ _rf_code_toggl:
 	xorb %al, (%ebx)
 	jmp next
 
+	.globl	_rf_code_at
+_rf_code_at:
+
+	popl %ebx
+	movl (%ebx), %eax
+	jmp apush
+
+	.globl	_rf_code_cat
+_rf_code_cat:
+
+	popl %ebx
+	movb (%ebx), %al
+	andl $0xFF, %eax
+	jmp apush
+
+	.globl	_rf_code_store
+_rf_code_store:
+
+	popl %ebx                     # ADDR
+	popl %eax                     # DATA
+	movl %eax, (%ebx)
+	jmp next
+
+	.globl	_rf_code_cstor
+_rf_code_cstor:
+
+	popl %ebx                     # ADDR
+	popl %eax                     # DATA
+	movb %al, (%ebx)
+	jmp next
+
 .section __DATA.__data,""
 
 .data
