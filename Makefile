@@ -88,10 +88,10 @@ SYSTEMDEPS := \
 SYSTEMINC := target/system/assembly.inc
 # to handle leading underscores
 ifeq ($(OPER),cygwin)
-LDFLAGS += -t target/system/linux-$(PROC).ld
+LDFLAGS += -t target/system/linux.ld
 endif
 ifeq ($(OPER),linux)
-LDFLAGS += -t target/system/linux-$(PROC).ld
+LDFLAGS += -t target/system/linux.ld
 endif
 endif
 ifeq ($(SYSTEMOPTION),default)

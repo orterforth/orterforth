@@ -10,7 +10,6 @@ _rf_w = rf_w;
 rf_start = _rf_start;
 rf_trampoline = _rf_trampoline;
 rf_next = _rf_next;
-/*
 rf_code_lit = _rf_code_lit;
 rf_code_exec = _rf_code_exec;
 rf_code_bran = _rf_code_bran;
@@ -26,7 +25,7 @@ rf_code_rpsto = _rf_code_rpsto;
 rf_code_leave = _rf_code_leave;
 rf_code_zequ = _rf_code_zequ;
 rf_code_zless = _rf_code_zless;
-rf_code_dminus = _rf_code_dminus;
+rf_code_dminu = _rf_code_dminu;
 rf_code_dplus = _rf_code_dplus;
 rf_code_docol = _rf_code_docol;
 rf_code_docon = _rf_code_docon;
@@ -60,4 +59,3 @@ rf_code_store = _rf_code_store;
 rf_code_cstor = _rf_code_cstor;
 rf_code_rcll = _rf_code_rcll;
 rf_code_rcls = _rf_code_rcls;
-*/
