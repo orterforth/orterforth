@@ -199,7 +199,7 @@ xloo1:
 .p2align	4, 0x90
 _rf_code_xploo:
 
-	popq %rbx                      # GET LOOP VALUE
+	popq %rbx                     # GET LOOP VALUE
 	jmp xloo1
 
 .globl	_rf_code_xdo
@@ -284,6 +284,25 @@ pfin2:
 	andq $0xFF, %rdx              # CLEAR HIGH LENGTH
 	jmp dpush
 
+# NO NAME FIELD MATCH, TRY ANOTHER
+#
+# GET NEXT LINK FIELD ADDR (LFA)
+# (ZERO = FIRST WORD OF DICTIONARY)
+#
+pfin5:
+	incq %rbx                     # NEXT ADDR
+	jb pfin6                      # END OF NAME
+	movb (%rbx), %al              # GET NEXT CHAR
+	addb %al, %al                 # SET/RESET CARRY
+	jmp pfin5                     # LOOP UNTIL FOUND
+#
+pfin6:
+	movq (%rbx), %rbx             # GET LINK FIELD ADDR
+	orq %rbx, %rbx                # START OF DICT. (0)?
+	jnz pfin1                     # NO, LOOK SOME MORE
+	movq $0, %rax                 # FALSE FLAG
+	jmp apush                     # DONE (NO MATCH FOUND)
+
 .globl	_rf_code_encl
 .p2align	4, 0x90
 _rf_code_encl:
@@ -332,25 +351,6 @@ encl4:
 	movq %rdx, %rax
 	incq %rax                     # COUNT +1
 	jmp dpush
-
-# NO NAME FIELD MATCH, TRY ANOTHER
-#
-# GET NEXT LINK FIELD ADDR (LFA)
-# (ZERO = FIRST WORD OF DICTIONARY)
-#
-pfin5:
-	incq %rbx                     # NEXT ADDR
-	jb pfin6                      # END OF NAME
-	movb (%rbx), %al              # GET NEXT CHAR
-	addb %al, %al                 # SET/RESET CARRY
-	jmp pfin5                     # LOOP UNTIL FOUND
-#
-pfin6:
-	movq (%rbx), %rbx             # GET LINK FIELD ADDR
-	orq %rbx, %rbx                # START OF DICT. (0)?
-	jnz pfin1                     # NO, LOOK SOME MORE
-	movq $0, %rax                 # FALSE FLAG
-	jmp apush                     # DONE (NO MATCH FOUND)
 
 .globl	_rf_code_cmove
 .p2align	4, 0x90
@@ -532,9 +532,9 @@ _rf_code_minus:
 	negq %rax
 	jmp apush
 
-.globl	_rf_code_dminus
+.globl	_rf_code_dminu
 .p2align	4, 0x90
-_rf_code_dminus:
+_rf_code_dminu:
 
 	popq %rbx
 	popq %rcx

@@ -514,8 +514,8 @@ _rf_code_minus:
 	negl %eax
 	jmp apush
 
-	.globl	_rf_code_dminus
-_rf_code_dminus:
+	.globl	_rf_code_dminu
+_rf_code_dminu:
 
 	popl %ebx
 	popl %ecx
