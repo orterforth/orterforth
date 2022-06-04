@@ -553,6 +553,22 @@ _rf_code_dup:
 	pushl %eax
 	jmp apush
 
+	.globl	_rf_code_pstor
+_rf_code_pstor:
+
+	popl %ebx                     # ADDRESS
+	popl %eax                     # INCREMENT
+	addl %eax, (%ebx)
+	jmp next
+
+	.globl	_rf_code_toggl
+_rf_code_toggl:
+
+	popl %eax                     # BIT PATTERN
+	popl %ebx                     # ADDR
+	xorb %al, (%ebx)
+	jmp next
+
 .section __DATA.__data,""
 
 .data
