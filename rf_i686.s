@@ -389,6 +389,30 @@ dzero:
 	movl %eax, %edx
 	jmp dpush                     # STORE QUOT/REM
 
+	.globl	_rf_code_andd
+_rf_code_andd:
+
+	popl %eax
+	popl %ebx
+	andl %ebx, %eax
+	jmp apush
+
+	.globl	_rf_code_orr
+_rf_code_orr:
+
+	popl %eax
+	popl %ebx
+	orl %ebx, %eax
+	jmp apush
+
+	.globl	_rf_code_xorr
+_rf_code_xorr:
+
+	popl %eax
+	popl %ebx
+	xorl %ebx, %eax
+	jmp apush
+
 .section __DATA.__data,""
 
 .data
