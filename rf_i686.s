@@ -69,13 +69,13 @@ trampoline1:
 
   movl _rf_ip@GOTOFF(%ebx), %esi # IP to esi
   movl _rf_w@GOTOFF(%ebx), %edx  # W to edx
-	leal trampoline1@GOTOFF(%ebx), %ecx  # push the return address
+	leal trampoline1@GOTOFF(%ebx), %ecx # push the return address
 	push %ecx
 
-	# movq %rbp, _rf_x86_64_rbp_save(%rip) # save rsp and rbp
-	# movq %rsp, _rf_x86_64_rsp_save(%rip)
-  # movq _rf_rp(%rip), %rbp       # put SP and RP into rsp and rbp
-  # movq _rf_sp(%rip), %rsp
+	movl %ebp, _rf_i686_ebp_save@GOTOFF(%ebx) # save esp and ebp
+	movl %esp, _rf_i686_esp_save@GOTOFF(%ebx)
+  movl _rf_rp@GOTOFF(%ebx), %ebp # put SP and RP into rsp and rbp
+  movl _rf_sp@GOTOFF(%ebx), %esp
 
 	jmp *%eax                     # jump to FP
                                 # will return to trampoline1
@@ -101,35 +101,23 @@ _rf_start:
 	movl %ebp, %ecx               # get difference between esp and ebp
 	subl %esp, %ecx
 
-	# old SP now in rsi
-#	movq %rsp, %rsi
+	movl %esp, %esi               # old SP now in esi
 
-	# save rcx for later
-#	movq %rcx, %rdx
+	movl %ebp, %esp               # empty the stack frame, i.e., make esp = ebp
 
-	# empty the stack frame, i.e., make rsp = rbp
-#	movq %rbp, %rsp
+	popl %ebp                     # get the pushed ebp (this is RP)
+  movl %ebp, _rf_rp@GOTOFF(%eax)
 
-	# get the pushed rbp (this is RP)
-#	popq %rbp
-#  movq %rbp, _rf_rp(%rip)
+  movl %esp, _rf_sp@GOTOFF(%eax) # now esp is SP
 
-	# now rsp is SP
-#  movq %rsp, _rf_sp(%rip)
+	movl _rf_i686_ebp_save@GOTOFF(%eax), %ebp # get the saved esp and ebp from _rf_trampoline
+	movl _rf_i686_esp_save@GOTOFF(%eax), %esp # (these are not the same as return addr has been pushed)
 
-	# get the saved rsp and rbp from _rf_trampoline
-	# (these are not the same as return addr has been pushed)
-#	movq _rf_x86_64_rbp_save(%rip), %rbp
-#	movq _rf_x86_64_rsp_save(%rip), %rsp
+	pushl %ebp                    # push ebp as it would have been
 
-	# push rbp as it would have been
-#	pushq %rbp
+	movl %esp, %ebp               # and mov esp into ebp
 
-	# and mov rsp into rbp
-#	movq %rsp, %rbp
-
-	# sub the difference from rsp
-#	subq %rdx, %rsp
+	subl %ecx, %esp               # sub the difference from esp
 
 	movl %esp, %edi               # this is the new stack frame
 
@@ -138,12 +126,10 @@ _rf_start:
 	# is the first thing in C code, stack spills happen before
 	# _rf_start is called. If a stack value is a reference 
 	# to the address of another this will not work.
-#	cld
-#  rep movsb
+	cld
+  rep movsb
 
-	pushl %edx                    # rewind rf_start return address
-
-	ret                           # carry on in C
+	jmp *%edx                       # carry on in C
 
 	.globl _rf_next
 _rf_next:
@@ -154,3 +140,19 @@ next:
 # next1:
 #	movl %ebx, %edx
 	jmp *(%edx)                   # TO 'CFA'
+
+.section __DATA.__data,""
+
+.data
+.globl _rf_i686_ebp_save
+.p2align 2
+_rf_i686_ebp_save:
+
+	.long	0
+
+.data
+.globl _rf_i686_esp_save
+.p2align 2
+_rf_i686_esp_save:
+
+	.long	0

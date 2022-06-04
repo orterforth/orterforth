@@ -93,9 +93,6 @@ _rf_start:
 	# old SP now in rsi
 	movq %rsp, %rsi
 
-	# save rcx for later
-	movq %rcx, %rdx
-
 	# empty the stack frame, i.e., make rsp = rbp
 	movq %rbp, %rsp
 
@@ -118,7 +115,7 @@ _rf_start:
 	movq %rsp, %rbp
 
 	# sub the difference from rsp
-	subq %rdx, %rsp
+	subq %rcx, %rsp
 
 	# this is the new stack frame
 	movq %rsp, %rdi
@@ -131,10 +128,7 @@ _rf_start:
 	cld
   rep movsb
 
-	# rewind rf_start return address
-	pushq %rax
-
-  retq                          # carry on in C
+	jmp *%rax                     # carry on in C
 
 dpush:
 	pushq %rdx
