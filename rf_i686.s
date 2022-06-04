@@ -362,6 +362,33 @@ _rf_code_cmove:
  	movl %ebx, %esi               # GET BACK IP
  	jmp next
 
+	.globl	_rf_code_ustar
+_rf_code_ustar:
+
+	popl %eax
+	popl %ebx
+	mull %ebx                     # UNSIGNED
+	xchgl %edx, %eax              # AX NOW = MSW
+	jmp dpush                     # STORE DOUBLE WORD
+
+	.globl _rf_code_uslas
+_rf_code_uslas:
+
+	popl %ebx                     # DIVISOR
+	popl %edx                     # MSW OF DIVIDEND
+	popl %eax                     # LSW OF DIVIDEND
+	cmpl %ebx, %edx               # DIVIDE BY ZERO?
+	jnb dzero                     # ZERO DIVIDE, NO WAY
+	divl %ebx                     # 16 BIT DIVIDE
+	jmp dpush                     # STORE QUOT/REM
+
+# DIVIDE BY ZERO ERROR (SHOW MAX NUMBERS)
+#
+dzero:
+	movl $-1, %eax
+	movl %eax, %edx
+	jmp dpush                     # STORE QUOT/REM
+
 .section __DATA.__data,""
 
 .data
