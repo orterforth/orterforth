@@ -413,6 +413,37 @@ _rf_code_xorr:
 	xorl %ebx, %eax
 	jmp apush
 
+	.globl	_rf_code_spat
+_rf_code_spat:
+
+	movl %esp, %eax
+	jmp apush
+
+	.globl	_rf_code_spsto
+_rf_code_spsto:
+
+	call __x86.get_pc_thunk.ax
+	addl $_GLOBAL_OFFSET_TABLE_, %eax
+	movl _rf_up@GOTOFF(%eax), %ebx # USER VAR BASE ADDR
+	movl 12(%ebx), %esp           # RESET PARAM. STACK PT.
+	jmp next
+
+	.globl	_rf_code_rpsto
+_rf_code_rpsto:
+
+	call __x86.get_pc_thunk.ax
+	addl $_GLOBAL_OFFSET_TABLE_, %eax
+	movl _rf_up@GOTOFF(%eax), %ebx # USER VAR BASE ADDR
+	movl 16(%ebx), %ebp           # RESET PARAM. STACK PT.
+	jmp next
+
+	.globl	_rf_code_semis
+_rf_code_semis:
+
+	movl (%ebp), %esi             # (IP) <- (R1)
+	addl $4, %ebp                 # ADJUST STACK
+	jmp next
+
 .section __DATA.__data,""
 
 .data
