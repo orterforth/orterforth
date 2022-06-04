@@ -600,6 +600,56 @@ _rf_code_cstor:
 	movb %al, (%ebx)
 	jmp next
 
+	.globl	_rf_code_docol
+_rf_code_docol:
+
+	addl $4, %edx                 # W=W+1
+	subl $4, %ebp                 # (RP) <- (RP)-2
+	movl %esi, (%ebp)             # R1 <- (RP)
+	movl %edx, %esi               # (IP) <- (W)
+	jmp next
+
+	.globl	_rf_code_docon
+_rf_code_docon:
+
+	addl $4, %edx                 # PFA
+	movl %edx, %ebx
+	movl (%ebx), %eax             # GET DATA
+	jmp apush
+
+	.globl	_rf_code_dovar
+_rf_code_dovar:
+
+	addl $4, %edx                 # (DE) <- PFA
+	pushl %edx                    # (S1) <- PFA
+	jmp next
+
+	.globl	_rf_code_douse
+_rf_code_douse:
+
+	addl $4, %edx                 # PFA
+	movl %edx, %ebx
+	movb (%ebx), %bl
+	andl $0xFF, %ebx
+	call __x86.get_pc_thunk.ax
+	addl $_GLOBAL_OFFSET_TABLE_, %eax
+	movl _rf_up@GOTOFF(%eax), %edi # USER VARIABLE ADDR
+	leal (%ebx, %edi), %eax       # ADDR OF VARIABLE
+	jmp apush
+
+	.globl	_rf_code_dodoe
+_rf_code_dodoe:
+
+	xchgl %esp, %ebp              # GET RETURN STACK
+	pushl %esi                    # (RP) <- (IP)
+	xchgl %esp, %ebp
+	addl $4, %edx                 # PFA
+	movl %edx, %ebx
+	movl (%ebx), %esi             # NEW CFA
+	addl $4, %edx
+	pushl %edx                    # PFA
+	jmp next
+
 .section __DATA.__data,""
 
 .data
