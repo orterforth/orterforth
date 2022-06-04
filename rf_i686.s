@@ -59,8 +59,12 @@ _rf_trampoline:
 
 	call __x86.get_pc_thunk.bx
 	addl $_GLOBAL_OFFSET_TABLE_, %ebx
+	pushl %ebx
 
 trampoline1:
+
+	popl %ebx
+	pushl %ebx
 
 	movl rf_fp@GOTOFF(%ebx), %eax # if FP is null skip to exit
 	# testl %eax, %eax
@@ -82,6 +86,7 @@ trampoline1:
 
 trampoline2:
 
+	popl %ebx
 	popl %esi
 	popl %ebx
 	leave                         # leave stack frame
@@ -175,6 +180,22 @@ _rf_code_zbran:
 	jz bran1                      # YES, BRANCH
 	addl $4, %esi                 # NO, CONTINUE...
 	jmp next
+
+.globl	_rf_code_xloop
+_rf_code_xloop:
+
+	movl $1, %ebx                 # INCREMENT
+xloo1:
+	addl %ebx, (%ebp)             # INDEX=INDEX+INCR
+	movl (%ebp), %eax             # GET NEW INDEX
+	subl 4(%ebp), %eax            # COMPARE WITH LIMIT
+	xorl %ebx, %eax               # TEST SIGN (BIT-16)
+	js bran1                      # KEEP LOOPING...
+
+# END OF 'DO' LOOP
+	addl $8, %ebp                 # ADJ. RETURN STK
+	addl $4, %esi                 # BYPASS BRANCH OFFSET
+	jmp next                      # CONTINUE...
 
 .section __DATA.__data,""
 
