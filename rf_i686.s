@@ -466,6 +466,65 @@ _rf_code_fromr:
 	addl $4, %ebp                 # DELETE FROM STACK
 	jmp apush
 
+	.globl	_rf_code_zequ
+_rf_code_zequ:
+
+	popl %eax
+	orl %eax, %eax                # DO TEST
+	movl $1, %eax                 # TRUE
+	jz zequ1                      # ITS ZERO
+	decl %eax                     # FALSE
+zequ1:
+	jmp apush
+
+	.globl	_rf_code_zless
+_rf_code_zless:
+
+	popl %eax
+	orl %eax, %eax                # DO TEST
+	movl $1, %eax                 # TRUE
+	js zless1                     # ITS ZERO
+	decl %eax                     # FALSE
+zless1:
+	jmp apush
+
+	.globl	_rf_code_plus
+_rf_code_plus:
+
+	popl %eax
+	popl %ebx
+	addl %ebx, %eax
+	jmp apush
+
+	.globl	_rf_code_dplus
+_rf_code_dplus:
+
+	popl %eax                     # YHW
+	popl %edx                     # YLW
+	popl %ebx                     # XHW
+	popl %ecx                     # XLW
+	addl %ecx, %edx               # SLW
+	adcl %ebx, %eax               # SHW
+	jmp dpush
+
+	.globl	_rf_code_minus
+_rf_code_minus:
+
+	popl %eax
+	negl %eax
+	jmp apush
+
+	.globl	_rf_code_dminus
+_rf_code_dminus:
+
+	popl %ebx
+	popl %ecx
+	subl %eax, %eax               # ZERO
+	movl %eax, %edx
+	subl %ecx, %edx               # MAKE 2'S COMPLEMENT
+	sbbl %ebx, %eax               # HIGH WORD
+	jmp dpush
+
 .section __DATA.__data,""
 
 .data
