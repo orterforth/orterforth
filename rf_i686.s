@@ -131,6 +131,11 @@ _rf_start:
 
 	jmp *%edx                       # carry on in C
 
+dpush:
+	pushl %edx
+apush:
+	pushl %eax
+
 	.globl _rf_next
 _rf_next:
 next:
@@ -140,6 +145,12 @@ next:
 # next1:
 #	movl %ebx, %edx
 	jmp *(%edx)                   # TO 'CFA'
+
+	.globl	_rf_code_lit
+_rf_code_lit:
+
+	lodsl                         # AX <- LITERAL
+	jmp apush                     # TO TOP OF STACK
 
 .section __DATA.__data,""
 
