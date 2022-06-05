@@ -189,3 +189,20 @@ digi1:
 digi2:
 	mov r0, #0                  @ FALSE FLAG
 	b apush                     @ BYE
+
+	.align	2
+	.global	rf_code_cmove
+rf_code_cmove:
+	
+	ldr r2, [r8], #4            @ COUNT
+	ldr r1, [r8], #4            @ DEST.
+	ldr r3, [r8], #4            @ SOURCE
+	cmp r2, #0
+	beq cmov2
+cmov1:
+	ldrb r0, [r3], #1           @ THATS THE MOVE
+	strb r0, [r1], #1
+	subs r2, r2, #1
+	bne cmov1
+cmov2:
+	b next
