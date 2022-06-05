@@ -45,6 +45,8 @@ _rf_trampoline:
 	@ str r11, [r0]
 	ldr r0, =rf_sp
 	ldr r8, [r0]                @ SP into r8 (for now)
+	ldr r0, =rf_rp
+	ldr r7, [r0]                @ RP into r7 (for now)
 
 	blx	r3
 	b .trampoline1
@@ -63,9 +65,10 @@ _rf_start:
 	str	r9, [r3]                @ r9 into W
 	ldr r3, =rf_sp
 	str	r8, [r3]                @ r8 into SP
+	ldr r3, =rf_rp
+	str	r7, [r3]                @ r7 into RP
 
-	bx	lr
-	.size	_rf_start, .-_rf_start
+	bx	lr                      @ carry on in C
 
 dpush:
 
@@ -79,9 +82,9 @@ apush:
 	.global	rf_next
 rf_next:
 next:
-	ldr r9, [r10], #4
+	ldr r9, [r10], #4           @ (W) <- (IP)
 next1:
-	ldr	r0, [r9]
+	ldr	r0, [r9]                @ TO 'CFA'
 	bx r0
 
 	.align	2
@@ -116,3 +119,46 @@ rf_code_zbran:
 	beq bran1                   @ YES, BRANCH
 	add r10, r10, #4            @ NO, CONTINUE...
 	b next
+
+	.align	2
+	.global	rf_code_xloop
+rf_code_xloop:
+
+	mov r1, #1                  @ INCREMENT
+xloo1:
+	ldr r0, [r7]                @ INDEX=INDEX+INCR
+	add r0, r0, r1
+	str r0, [r7]                @ GET NEW INDEX
+	ldr r2, [r7,#4]             @ COMPARE WITH LIMIT
+	sub r0, r0, r2
+	eors r0, r1                 @ TEST SIGN (BIT-16)
+	bmi bran1                   @ KEEP LOOPING...
+
+@ END OF 'DO' LOOP
+	add r7, r7, #8              @ ADJ. RETURN STK
+	add r10, r10, #4            @ BYPASS BRANCH OFFSET
+	b next                      @ CONTINUE...
+
+	.align	2
+	.global	rf_code_xploo
+rf_code_xploo:
+
+	ldr r1, [r8], #4            @ GET LOOP VALUE
+	b xloo1
+
+	.align	2
+	.global	rf_code_xdo
+rf_code_xdo:
+
+	ldr r3, [r8], #4            @ INITIAL INDEX VALUE
+	ldr r0, [r8], #4            @ LIMIT VALUE
+	str r0, [r7,#-4]!
+	str r3, [r7,#-4]!
+	b next
+
+	.align	2
+	.global	rf_code_rr
+rf_code_rr:
+
+	ldr r0, [r7]                @ GET INDEX VALUE
+	b apush                     @ TO PARAMETER STACK
