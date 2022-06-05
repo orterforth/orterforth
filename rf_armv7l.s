@@ -206,3 +206,12 @@ cmov1:
 	bne cmov1
 cmov2:
 	b next
+
+	.align	2
+	.global	rf_code_ustar
+rf_code_ustar:
+
+	ldr r2, [r8], #4
+	ldr r3, [r8], #4
+	umull r1, r0, r3, r2
+	b dpush
