@@ -162,3 +162,30 @@ rf_code_rr:
 
 	ldr r0, [r7]                @ GET INDEX VALUE
 	b apush                     @ TO PARAMETER STACK
+
+	.align	2
+	.global	rf_code_digit
+rf_code_digit:
+
+	ldrb r1, [r8], #4           @ NUMBER BASE
+	ldrb r0, [r8], #4           @ ASCII DIGIT
+	subs r0, r0, #48
+	blt digi2                   @ NUMBER ERROR
+	cmp r0, #9
+	ble digi1                   @ NUMBER = 0 THRU 9
+	sub r0, r0, #7
+	cmp r0, #10                 @ NUMBER 'A' THRU 'Z' ?
+	blt digi2                   @ NO
+@
+digi1:
+	cmp r0, r1                  @ COMPARE NUMBER TO BASE
+	bge digi2                   @ NUMBER ERROR
+	mov r1, r0                  @ NEW BINARY NUMBER
+	mov r0, #1                  @ TRUE FLAG
+	b dpush                     @ ADD TO STACK
+
+@ NUMBER ERROR
+@
+digi2:
+	mov r0, #0                  @ FALSE FLAG
+	b apush                     @ BYE
