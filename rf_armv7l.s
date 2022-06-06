@@ -191,6 +191,73 @@ digi2:
 	b apush                     @ BYE
 
 	.align	2
+	.global	rf_code_pfind
+rf_code_pfind:
+
+	@str r4, [r13, #-4]!
+	@str r5, [r13, #-4]!
+
+	ldr r1, [r8], #4              @ NFA
+	ldr r2, [r8], #4              @ STRING ADDR
+@
+@ SEARCH LOOP
+pfin1:
+	mov r4, r2                    @ GET ADDR
+	ldrb r0, [r1]                 @ GET WORD LENGTH
+	mov r3, r0                    @ SAVE LENGTH
+	ldrb r5, [r4]
+	eor r0, r5
+	ands r0, #63                  @ CHECK LENGTHS
+	bne pfin5                     @ LENGTHS DIFFER
+@
+@ LENGTH MATCH, CHECK EACH CHARACTER IN NAME
+pfin2:
+	add r1, r1, #1
+	add r4, r4, #1                @ NEXT CHAR OF NAME
+	ldrb r0, [r1]
+	ldrb r5, [r4]                 @ COMPARE NAMES
+	eor r0, r5
+	tst r0, #127
+	bne pfin5                     @ NO MATCH
+	tst r0, #128                  @ THIS WILL TEST BIT-8
+	beq pfin2                     @ MATCH SO FAR, LOOP
+
+@ FOUND END OF NAME (BIT-8 SET); A MATCH
+	add r1, r1, #9                @ BX = PFA
+	str r1, [r8,#-4]!             @ (S3) <- PFA
+	mov r0, #1                    @ TRUE VALUE
+	and r3, #255                  @ CLEAR HIGH LENGTH
+	mov r1, r3
+
+	@ldr r5, [r13], #4
+	@ldr r4, [r13], #4
+
+	b dpush
+
+@ NO NAME FIELD MATCH, TRY ANOTHER
+@
+@ GET NEXT LINK FIELD ADDR (LFA)
+@ (ZERO = FIRST WORD OF DICTIONARY)
+@
+pfin5:
+	add r1, r1, #1                @ NEXT ADDR
+	tst r0, #128                  @ END OF NAME
+	bne pfin6
+	ldrb r0, [r1]                 @ GET NEXT CHAR
+	b pfin5                       @ LOOP UNTIL FOUND
+@
+pfin6:
+	ldr r1, [r1]                  @ GET LINK FIELD ADDR
+	orrs r1, r1                   @ START OF DICT. (0)?
+	bne pfin1                     @ NO, LOOK SOME MORE
+	mov r0, #0                    @ FALSE FLAG
+
+	@ldr r5, [r13], #4
+	@ldr r4, [r13], #4
+
+	b apush                       @ DONE (NO MATCH FOUND)
+
+	.align	2
 	.global	rf_code_cmove
 rf_code_cmove:
 	
