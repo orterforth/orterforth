@@ -258,6 +258,59 @@ pfin6:
 	b apush                       @ DONE (NO MATCH FOUND)
 
 	.align	2
+	.global	rf_code_encl
+rf_code_encl:
+
+	ldr r0, [r8], #4             @ S1 - TERMINATOR CHAR.
+	ldr r1, [r8]                  @ S2 - TEXT ADDR
+	and r0, #255                  @ ZERO
+	mov r3, #-1                   @ CHAR OFFSET COUNTER
+	sub r1, r1, #1                @ ADDR -1
+
+@ SCAN TO FIRST NON-TERMINATOR CHAR
+@
+encl1:
+	add r1, r1, #1                @ ADDR +1
+	add r3, r3, #1                @ COUNT +1
+	ldrb r2, [r1]
+	cmp r0, r2
+	beq encl1                     @ WAIT FOR NON-TERMINATOR
+	str r3, [r8, #-4]!            @ OFFSET TO 1ST TEXT CHR
+	cmp r2, #0                    @ NULL CHAR?
+	bne encl2                     @ NO
+@
+@ FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
+	mov r0, r3                    @ COPY COUNTER
+	add r3, r3, #1                @ +1
+	mov r1, r3
+	b dpush
+@
+@ FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
+@
+encl2:
+	add r1, r1, #1                @ ADDR+1
+	add r3, r3, #1                @ COUNT +1
+	ldrb r2, [r1]                 @ TERMINATOR CHAR?
+	cmp r0, r2
+	beq encl4                     @ YES
+	cmp r2, #0                    @ NULL CHAR
+	bne encl2                     @ NO, LOOP AGAIN
+@
+@ FOUND NULL AT END OF TEXT
+@
+encl3:
+	mov r0, r3                    @ COUNTERS ARE EQUAL
+	mov r1, r3
+	b dpush
+
+@ FOUND TERINATOR CHARACTER
+encl4:
+	mov r0, r3
+	add r0, r0, #1                @ COUNT +1
+	mov r1, r3
+	b dpush
+
+	.align	2
 	.global	rf_code_cmove
 rf_code_cmove:
 	
