@@ -72,7 +72,7 @@ _rf_start:
 
 dpush:
 
-	str r1, [r8,#-4]!
+	str r3, [r8,#-4]!
 
 apush:
 
@@ -167,7 +167,7 @@ rf_code_rr:
 	.global	rf_code_digit
 rf_code_digit:
 
-	ldrb r1, [r8], #4           @ NUMBER BASE
+	ldrb r3, [r8], #4           @ NUMBER BASE
 	ldrb r0, [r8], #4           @ ASCII DIGIT
 	subs r0, r0, #48
 	blt digi2                   @ NUMBER ERROR
@@ -178,9 +178,9 @@ rf_code_digit:
 	blt digi2                   @ NO
 @
 digi1:
-	cmp r0, r1                  @ COMPARE NUMBER TO BASE
+	cmp r0, r3                  @ COMPARE NUMBER TO BASE
 	bge digi2                   @ NUMBER ERROR
-	mov r1, r0                  @ NEW BINARY NUMBER
+	mov r3, r0                  @ NEW BINARY NUMBER
 	mov r0, #1                  @ TRUE FLAG
 	b dpush                     @ ADD TO STACK
 
@@ -227,7 +227,6 @@ pfin2:
 	str r1, [r8,#-4]!             @ (S3) <- PFA
 	mov r0, #1                    @ TRUE VALUE
 	and r3, #255                  @ CLEAR HIGH LENGTH
-	mov r1, r3
 
 	@ldr r5, [r13], #4
 	@ldr r4, [r13], #4
@@ -282,7 +281,6 @@ encl1:
 @ FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
 	mov r0, r3                    @ COPY COUNTER
 	add r3, r3, #1                @ +1
-	mov r1, r3
 	b dpush
 @
 @ FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
@@ -300,14 +298,12 @@ encl2:
 @
 encl3:
 	mov r0, r3                    @ COUNTERS ARE EQUAL
-	mov r1, r3
 	b dpush
 
 @ FOUND TERINATOR CHARACTER
 encl4:
 	mov r0, r3
 	add r0, r0, #1                @ COUNT +1
-	mov r1, r3
 	b dpush
 
 	.align	2
@@ -332,6 +328,6 @@ cmov2:
 rf_code_ustar:
 
 	ldr r2, [r8], #4
-	ldr r3, [r8], #4
-	umull r1, r0, r3, r2
+	ldr r1, [r8], #4
+	umull r3, r0, r1, r2
 	b dpush
