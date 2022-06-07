@@ -408,3 +408,28 @@ rf_code_xorr:
 	eor r0, r0, r1
 	str r0, [r8, #-4]!
 	b next
+
+	.align	2
+	.global	rf_code_spat
+rf_code_spat:
+
+	mov r0, r8
+	b apush
+
+	.align	2
+	.global	rf_code_spsto
+rf_code_spsto:
+
+	ldr r1, =rf_up              @ USER VAR BASE ADDR
+	ldr r1, [r1]
+	ldr r8, [r1, #12]           @ RESET PARAM. STACK PT.
+	b next
+
+	.align	2
+	.global	rf_code_rpsto
+rf_code_rpsto:
+
+	ldr r1, =rf_up              @ (AX) <- USR VAR. BASE
+	ldr r1, [r1]
+	ldr r7, [r1, #16]           @ RESET RETURN. STACK PT.
+	b next
