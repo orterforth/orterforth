@@ -299,7 +299,7 @@ _rf_code_encl:
 	popq %rax                     # S1 - TERMINATOR CHAR.
 	popq %rbx                     # S2 - TEXT ADDR
 	pushq %rbx                    # ADDR BACK TO STACK
-	andq $0xFF, %rdx              # ZERO TODO MOV AH, 0
+	andq $0xFF, %rax              # ZERO
 	movq $-1, %rdx                # CHAR OFFSET COUNTER
 	decq %rbx                     # ADDR -1
 
@@ -363,7 +363,7 @@ _rf_code_ustar:
 	popq %rax
 	popq %rbx
 	mulq %rbx                     # UNSIGNED
-	xchg %rdx, %rax               # AX NOW = MSW
+	xchgq %rdx, %rax              # AX NOW = MSW
 	jmp dpush                     # STORE DOUBLE WORD
 
 	.globl _rf_code_uslas
@@ -431,9 +431,10 @@ _rf_code_spsto:
 	.p2align 4, 0x90
 _rf_code_rpsto:
 
-	movq _rf_up(%rip), %rbx       # USER VAR BASE ADDR
-	movq 32(%rbx), %rbp           # RESET PARAM. STACK PT.
+	movq _rf_up(%rip), %rbx       # (AX) <- USR VAR. BASE
+	movq 32(%rbx), %rbp           # RESET RETURN STACK PT.
 	jmp next
+
 
 	.globl _rf_code_semis
 	.p2align 4, 0x90
@@ -485,10 +486,10 @@ zequ1:
 _rf_code_zless:
 
 	popq %rax
-	orq %rax, %rax                # DO TEST
+	orq %rax, %rax                # SET FLAGS
 	movq $1, %rax                 # TRUE
-	js zless1                     # ITS ZERO
-	decq %rax                     # FALSE
+	js zless1
+	decq %rax                     # FLASE
 zless1:
 	jmp apush
 
