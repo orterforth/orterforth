@@ -562,3 +562,61 @@ rf_code_dup:
 
 	ldr r0, [r8]
 	b apush
+
+	.align 2
+	.global rf_code_pstor
+rf_code_pstor:
+
+	ldr r1, [r8], #4            @ ADDRESS
+	ldr r0, [r8], #4            @ INCREMENT
+	ldr r2, [r1]
+	add r2, r2, r0
+	str r2, [r1]
+	b next
+
+	.align 2
+	.global rf_code_toggl
+rf_code_toggl:
+
+	ldrb r0, [r8], #4           @ BIT PATTERN
+	ldr r1, [r8], #4            @ ADDR
+	ldr r2, [r1]
+	eor r2, r2, r0
+	str r2, [r1]
+	b next
+
+	.align 2
+	.global rf_code_at
+rf_code_at:
+
+	ldr r1, [r8]
+	ldr r0, [r1]
+	str r0, [r8]
+	b next
+
+	.align 2
+	.global rf_code_cat
+rf_code_cat:
+
+	ldr r1, [r8]
+	ldrb r0, [r1]
+	str r0, [r8]
+	b next
+
+	.align 2
+	.global rf_code_store
+rf_code_store:
+
+	ldr r1, [r8], #4            @ ADDR
+	ldr r0, [r8], #4            @ DATA
+	str r0, [r1]
+	b next
+
+	.align 2
+	.global rf_code_cstor
+rf_code_cstor:
+
+	ldr r1, [r8], #4            @ ADDR
+	ldrb r0, [r8], #4           @ DATA
+	strb r0, [r1]
+	b next
