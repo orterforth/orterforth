@@ -45,7 +45,7 @@
 # Modified for orterforth integration and i686
 # in 2022. Some info in the comments no longer 
 # applies (CP/M, 8086 register names, 
-# segmentation).
+# segmentation, byte offsets).
 
 	.text
 	.globl _rf_trampoline
@@ -92,7 +92,9 @@ trampoline2:
 	leave                         # leave stack frame
 	ret                           # bye
 
-.globl	_rf_start
+	.globl	rf_start
+	.globl	_rf_start
+rf_start:
 _rf_start:
 
 	call	__x86.get_pc_thunk.ax
@@ -306,7 +308,7 @@ _rf_code_encl:
 	popl %eax                     # S1 - TERMINATOR CHAR.
 	popl %ebx                     # S2 - TEXT ADDR
 	pushl %ebx                    # ADDR BACK TO STACK
-	andl $0xFF, %edx              # ZERO TODO MOV AH, 0
+	andl $0xFF, %eax              # ZERO
 	movl $-1, %edx                # CHAR OFFSET COUNTER
 	decl %ebx                     # ADDR -1
 
@@ -433,8 +435,8 @@ _rf_code_rpsto:
 
 	call __x86.get_pc_thunk.ax
 	addl $_GLOBAL_OFFSET_TABLE_, %eax
-	movl _rf_up@GOTOFF(%eax), %ebx # USER VAR BASE ADDR
-	movl 16(%ebx), %ebp           # RESET PARAM. STACK PT.
+	movl _rf_up@GOTOFF(%eax), %ebx # (AX) <- USR VAR. BASE
+	movl 16(%ebx), %ebp           # RESET RETURN STACK PT.
 	jmp next
 
 	.globl	_rf_code_semis
@@ -481,10 +483,10 @@ zequ1:
 _rf_code_zless:
 
 	popl %eax
-	orl %eax, %eax                # DO TEST
+	orl %eax, %eax                # SET FLAGS
 	movl $1, %eax                 # TRUE
-	js zless1                     # ITS ZERO
-	decl %eax                     # FALSE
+	js zless1
+	decl %eax                     # FLASE
 zless1:
 	jmp apush
 
@@ -674,18 +676,18 @@ _rf_code_rcls:
 	shll $2, %eax
 	jmp apush
 
-.section __DATA.__data,""
+	.section __DATA.__data,""
 
-.data
-.globl _rf_i686_ebp_save
-.p2align 2
+	.data
+	.globl _rf_i686_ebp_save
+	.p2align 2
 _rf_i686_ebp_save:
 
 	.long	0
 
-.data
-.globl _rf_i686_esp_save
-.p2align 2
+	.data
+	.globl _rf_i686_esp_save
+	.p2align 2
 _rf_i686_esp_save:
 
 	.long	0
