@@ -531,3 +531,34 @@ rf_code_dminu:
 	subs r3, r3, r2             @ MAKE 2'S COMPLEMENT
 	sbc r0, r0, r1              @ HIGH WORD
 	b dpush
+
+	.align 2
+	.global rf_code_over
+rf_code_over:
+
+	ldr r0, [r8, #4]
+	b apush
+
+	.align 2
+	.global rf_code_drop
+rf_code_drop:
+
+	add r8, r8, #4
+	b next
+
+	.align 2
+	.global rf_code_swap
+rf_code_swap:
+
+	ldr r3, [r8]
+	ldr r0, [r8, #4]
+	str r3, [r8, #4]
+	str r0, [r8]
+	b next
+
+	.align 2
+	.global rf_code_dup
+rf_code_dup:
+
+	ldr r0, [r8]
+	b apush
