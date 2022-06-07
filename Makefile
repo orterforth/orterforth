@@ -78,15 +78,16 @@ $(ORTER) : \
 # SYSTEMOPTION := assembly
 SYSTEMOPTION := default
 
-ifeq ($(SYSTEMOPTION),assembly)
-SYSTEMDEPS := \
+SYSTEMDEPSALL := \
 	$(SYSTEM)/rf.o \
 	$(SYSTEM)/rf_inst.o \
 	$(SYSTEM)/rf_persci.o \
-	$(SYSTEM)/rf_system.o \
-	$(SYSTEM)/rf_$(PROC).o
+	$(SYSTEM)/rf_system.o
+
+ifeq ($(SYSTEMOPTION),assembly)
+SYSTEMDEPS := $(SYSTEMDEPSALL) $(SYSTEM)/rf_$(PROC).o
 SYSTEMINC := target/system/assembly.inc
-# to handle leading underscores
+# linker script to reconcile leading underscore handling
 ifeq ($(OPER),cygwin)
 LDFLAGS += -t target/system/linux.ld
 endif
@@ -94,18 +95,15 @@ ifeq ($(OPER),linux)
 LDFLAGS += -t target/system/linux.ld
 endif
 endif
+
 ifeq ($(SYSTEMOPTION),default)
-SYSTEMDEPS := \
-	$(SYSTEM)/rf.o \
-	$(SYSTEM)/rf_inst.o \
-	$(SYSTEM)/rf_persci.o \
-	$(SYSTEM)/rf_system.o
+SYSTEMDEPS := $(SYSTEMDEPSALL)
 SYSTEMINC := target/system/default.inc
 endif
 
 CPPFLAGS += -DRF_TARGET_INC='"$(SYSTEMINC)"'
 
-# local orterforth executable
+# local system executable
 $(ORTERFORTH) : $(SYSTEMDEPS) orterforth.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
@@ -261,6 +259,7 @@ BBCMAME := mame bbcb -video opengl \
 	-skip_gameinfo -nomax -window \
 	-rs423 null_modem -bitb socket.localhost:5705
 
+# MAME command line for fast inst, no video and timeout
 BBCMAMEFAST := mame bbcb -video none -sound none \
 	-skip_gameinfo -nomax -window \
 	-speed 20 -frameskip 10 -nothrottle -seconds_to_run 640 \
@@ -495,7 +494,7 @@ help : $(TARGET)-help
 .PHONY : iterate
 iterate :
 
-	sh scripts/iterate.sh forth/6502.f
+	sh scripts/iterate.sh todo.f
 
 orterforth.inc : orterforth.disc
 
@@ -968,19 +967,12 @@ spectrum/rf_z80.lib : rf_z80.asm | spectrum
 		-x -o $@ \
 		$<
 
-# test tap
-spectrum/test.tap : \
-	spectrum/rf.lib \
-	test.c
-
-	zcc +zx \
-		-lndos \
-		-lspectrum/rf \
-		-create-app \
-		-o spectrum/test.bin \
-		test.c
-
 .PHONY : test
 test : $(ORTERFORTH)
 
 	$< < test.f
+
+.PHONY : todo
+todo : $(ORTERFORTH)
+
+	$< < todo.f
