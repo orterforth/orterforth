@@ -431,5 +431,62 @@ rf_code_rpsto:
 
 	ldr r1, =rf_up              @ (AX) <- USR VAR. BASE
 	ldr r1, [r1]
-	ldr r7, [r1, #16]           @ RESET RETURN. STACK PT.
+	ldr r7, [r1, #16]           @ RESET RETURN STACK PT.
 	b next
+
+	.align	2
+	.global	rf_code_semis
+rf_code_semis:
+
+	ldr r10, [r7], #4           @ (IP) <- (R1)
+	b next                      @ ADJUST STACK
+
+	.align	2
+	.global	rf_code_leave
+rf_code_leave:
+
+	ldr r0, [r7]                @ GET INDEX
+	str r0, [r7, #4]            @ STORE IT AT LIMIT
+	b next
+
+	.align 2
+	.global rf_code_tor
+rf_code_tor:
+
+	ldr r1, [r8], #4            @ GET STACK PARAMETER
+	str r1, [r7, #-4]!          @ ADD TO RETURN STACK
+	b next
+
+	.align 2
+	.global rf_code_fromr
+rf_code_fromr:
+
+	ldr r1, [r7], #4            @ GET RETURN STACK VALUE
+	str r1, [r8, #-4]!          @ DELETE FROM STACK
+	b next
+
+	.align 2
+	.global rf_code_zequ
+rf_code_zequ:
+
+	ldr r0, [r8], #4
+	orrs r0, r0                 @ DO TEST
+	mov r0, #1                  @ TRUE
+	@beq apush
+	beq zequ1                   @ ITS ZERO
+	sub r0, r0, #1              @ FALSE
+zequ1:
+	b apush
+
+	.align 2
+	.global rf_code_zless
+rf_code_zless:
+
+	ldr r0, [r8], #4
+	orrs r0, r0                 @ SET FLAGS
+	mov r0, #1                  @ TRUE
+	@bmi apush
+	bmi zless1
+	sub r0, r0, #1              @ FLASE
+zless1:
+	b apush
