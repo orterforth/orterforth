@@ -620,3 +620,37 @@ rf_code_cstor:
 	ldrb r0, [r8], #4           @ DATA
 	strb r0, [r1]
 	b next
+
+	.align 2
+	.global rf_code_docol
+rf_code_docol:
+
+	add r9, r9, #4              @ W=W+1 TODO use r3 as W?
+	str r10, [r7, #-4]!         @ R1 <- (RP)
+	mov r10, r9                 @ (IP) <- (W)
+	b next
+
+	.align 2
+	.global rf_code_docon
+rf_code_docon:
+
+	ldr r0, [r9, #4]!           @ PFA @ GET DATA
+	b apush
+
+	.align 2
+	.global rf_code_dovar
+rf_code_dovar:
+
+	add r9, r9, #4              @ (DE) <- PFA
+	str r9, [r8, #-4]!          @ (S1) <- PFA
+	b next
+
+	.align 2
+	.global rf_code_douse
+rf_code_douse:
+
+	ldrb r1, [r9, #4]!          @ PFA
+	ldr r0, =rf_up              @ USER VARIABLE ADDR
+	ldr r0, [r0]
+	add r0, r0, r1
+	b apush
