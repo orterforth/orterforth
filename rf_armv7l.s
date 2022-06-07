@@ -331,3 +331,80 @@ rf_code_ustar:
 	ldr r1, [r8], #4
 	umull r3, r0, r1, r2
 	b dpush
+
+	.align	2
+	.global	rf_code_uslas
+rf_code_uslas:
+
+	@str r4, [r7, #-4]!
+	ldr r2, [r8], #4            @ DIVISOR
+	ldr r1, [r8], #4            @ MSW OF DIVIDEND
+	ldr r0, [r8], #4            @ LSW OF DIVIDEND
+@	bl umdiv
+@umdiv:
+	@str lr, [r7, #-4]!
+	mov r3, #1
+	lsl r3, r3, #31             @ init mask with highest bit set
+	mov r4, #0                  @ init quot
+	cmp r1, r2                  @ test modh - div
+	blo umdiv1                  @ modh < div
+	@ overflow condition ( divide by zero ) - show max numbers
+	asr r4, r3, #31
+	mov r1, r4
+
+	bal umdiv3                  @ return
+
+umdiv1:
+	adds r0, r0, r0             @ double precision shift (modh, modl)
+	adcs r1, r1, r1             @ ADD with carry and set flags again !
+	bcs umdiv4
+	cmp r2, r1                  @ test div - modh
+	bhi umdiv2                  @ div >  modh ?
+umdiv4:
+	add r4, r4, r3              @ add single pecision mask
+	sub r1, r1, r2              @ subtract single precision div
+umdiv2:
+	lsr r3, r3, #1              @ shift mask one bit to the right
+	ands r3, r3, r3
+	bne umdiv1
+umdiv3:
+	@ now R0 and R1 contain quotient and remainder
+	@ldr r2, [r7], #4
+	@bx r2
+
+	str r1, [r8, #-4]!          @ remainder
+	str r4, [r8, #-4]!          @ quotient
+
+	@ldr r4, [r7], #4
+
+	b next
+
+	.align	2
+	.global	rf_code_andd
+rf_code_andd:
+
+	ldr r0, [r8], #4
+	ldr r1, [r8], #4
+	and r0, r0, r1
+	str r0, [r8, #-4]!
+	b next
+
+	.align	2
+	.global	rf_code_orr
+rf_code_orr:
+
+	ldr r0, [r8], #4
+	ldr r1, [r8], #4
+	orr r0, r0, r1
+	str r0, [r8, #-4]!
+	b next
+
+	.align	2
+	.global	rf_code_xorr
+rf_code_xorr:
+
+	ldr r0, [r8], #4
+	ldr r1, [r8], #4
+	eor r0, r0, r1
+	str r0, [r8, #-4]!
+	b next
