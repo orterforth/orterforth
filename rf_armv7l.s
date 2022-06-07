@@ -490,3 +490,44 @@ rf_code_zless:
 	sub r0, r0, #1              @ FLASE
 zless1:
 	b apush
+
+	.align 2
+	.global rf_code_plus
+rf_code_plus:
+
+	ldr r0, [r8], #4
+	ldr r1, [r8], #4
+	add r0, r0, r1
+	b apush
+
+	.align 2
+	.global	rf_code_dplus
+rf_code_dplus:
+
+	ldr r0, [r8], #4            @ YHW
+	ldr r3, [r8], #4            @ YLW
+	ldr r1, [r8], #4            @ XHW
+	ldr r2, [r8], #4            @ XLW
+	adds r3, r3, r2             @ SLW
+	adc r0, r0, r1              @ SHW
+	b dpush
+
+	.align 2
+	.global rf_code_minus
+rf_code_minus:
+
+	ldr r0, [r8], #4
+	neg r0, r0
+	b apush
+
+	.align 2
+	.global	rf_code_dminu
+rf_code_dminu:
+
+	ldr r1, [r8], #4
+	ldr r2, [r8], #4
+	sub r0, r0, r0              @ ZERO
+	mov r3, r0
+	subs r3, r3, r2             @ MAKE 2'S COMPLEMENT
+	sbc r0, r0, r1              @ HIGH WORD
+	b dpush
