@@ -1052,3 +1052,11 @@ _rf_code_rtgt:
   ld de, $E16F                  ; SPECTR
   ld hl, $6774
   jp dpush
+
+PUBLIC _rf_code_rxit
+
+_rf_code_rxit:
+  ld hl, $0000
+  ld (_rf_fp), hl
+  call _rf_start
+  ret
