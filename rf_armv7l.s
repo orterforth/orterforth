@@ -18,20 +18,20 @@ _rf_trampoline:
 
 	push	{fp, lr}
 .trampoline1:
-	ldr	r1, =rf_fp
-	ldr	r1, [r1]
-	cmp	r1, #0
+	ldr	r0, =rf_fp
+	ldr	r0, [r0]
+	cmp	r0, #0
 	beq	.trampoline2
 	ldr	r10, =rf_ip             @ IP into r10
 	ldr	r10, [r10]
 	ldr	r3, =rf_w               @ W into r3
 	ldr	r3, [r3]
-	ldr r0, =rf_sp              @ SP into r8
-	ldr r8, [r0]
-	ldr r0, =rf_rp              @ RP into r7
-	ldr r7, [r0]
+	ldr r8, =rf_sp              @ SP into r8
+	ldr r8, [r8]
+	ldr r7, =rf_rp              @ RP into r7
+	ldr r7, [r7]
 	ldr lr, =.trampoline1       @ tail call
-	bx r1
+	bx r0
 .trampoline2:
 	pop	{fp, pc}
 
@@ -51,9 +51,9 @@ _rf_start:
 
 	.align	2
 dpush:
-	str r3, [r8,#-4]!
+	str r3, [r8, #-4]!
 apush:
-	str r0, [r8,#-4]!
+	str r0, [r8, #-4]!
 
 	.align	2
 	.global	rf_next
@@ -106,7 +106,7 @@ xloo1:
 	ldr r0, [r7]                @ INDEX=INDEX+INCR
 	add r0, r0, r1
 	str r0, [r7]                @ GET NEW INDEX
-	ldr r2, [r7,#4]             @ COMPARE WITH LIMIT
+	ldr r2, [r7, #4]            @ COMPARE WITH LIMIT
 	sub r0, r0, r2
 	eors r0, r1                 @ TEST SIGN (BIT-16)
 	bmi bran1                   @ KEEP LOOPING...
@@ -129,8 +129,8 @@ rf_code_xdo:
 
 	ldr r3, [r8], #4            @ INITIAL INDEX VALUE
 	ldr r0, [r8], #4            @ LIMIT VALUE
-	str r0, [r7,#-4]!
-	str r3, [r7,#-4]!
+	str r0, [r7, #-4]!
+	str r3, [r7, #-4]!
 	b next
 
 	.align	2
@@ -201,7 +201,7 @@ pfin2:
 
 @ FOUND END OF NAME (BIT-8 SET); A MATCH
 	add r1, r1, #9                @ BX = PFA
-	str r1, [r8,#-4]!             @ (S3) <- PFA
+	str r1, [r8, #-4]!            @ (S3) <- PFA
 	mov r0, #1                    @ TRUE VALUE
 	and r3, #255                  @ CLEAR HIGH LENGTH
 
