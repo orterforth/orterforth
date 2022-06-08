@@ -699,6 +699,18 @@ _rf_code_rcls:
 	shlq $3, %rax
 	jmp apush
 
+	.globl _rf_code_rxit
+	.p2align 4, 0x90
+_rf_code_rxit:
+
+  pushq %rbp
+  movq %rsp, %rbp
+	movq $0, %rax
+	movq %rax, _rf_fp(%rip)
+	call _rf_start
+	popq %rbp
+	ret
+
 	.section __DATA.__data,""
 
 	.data

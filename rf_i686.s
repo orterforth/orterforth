@@ -676,6 +676,19 @@ _rf_code_rcls:
 	shll $2, %eax
 	jmp apush
 
+	.globl _rf_code_rxit
+_rf_code_rxit:
+
+  pushl %ebp
+  movl %esp, %ebp
+	movl $0, %eax
+	call __x86.get_pc_thunk.bx
+	addl $_GLOBAL_OFFSET_TABLE_, %ebx
+	movl %eax, _rf_fp@GOTOFF(%ebx)
+	call _rf_start
+	popl %ebp
+	ret
+
 	.section __DATA.__data,""
 
 	.data

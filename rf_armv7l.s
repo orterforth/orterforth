@@ -654,3 +654,14 @@ rf_code_douse:
 	ldr r0, [r0]
 	add r0, r0, r1
 	b apush
+
+	.align 2
+	.global rf_code_rxit
+rf_code_rxit:
+	push	{fp, lr}
+	bl	rf_start
+	ldr	r1, =rf_fp
+	mov	r0, #0
+	str	r0, [r1]
+	pop	{fp, pc}
+
