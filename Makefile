@@ -494,7 +494,7 @@ help : $(TARGET)-help
 .PHONY : iterate
 iterate :
 
-	sh scripts/iterate.sh todo.f
+	sh scripts/iterate.sh test.f
 
 orterforth.inc : orterforth.disc
 
@@ -655,15 +655,18 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 # config option
 SPECTRUMOPTION := a
 
-# minimal ROM-based
-ifeq ($(SPECTRUMOPTION),a)
-# uses Interface 1 ROM for RS232
-SPECTRUMLIBS := \
+SPECTRUMLIBSALL := \
 	-lmzx_tiny \
 	-lndos \
 	-lspectrum/rf \
 	-lspectrum/rf_inst \
-	-lspectrum/rf_system \
+	-lspectrum/rf_system
+
+# minimal ROM-based
+ifeq ($(SPECTRUMOPTION),a)
+# uses Interface 1 ROM for RS232
+SPECTRUMLIBS := \
+	$(SPECTRUMLIBSALL) \
 	-lspectrum/rf_z80 \
 	-pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORG starts at non-contended memory, 0x8000, for performance
@@ -682,13 +685,9 @@ endif
 ifeq ($(SPECTRUMOPTION),b)
 # requires z88dk RS232 library
 SPECTRUMLIBS := \
-	-lmzx_tiny \
-	-lndos \
-	-lrs232if1 \
-	-lspectrum/rf \
-	-lspectrum/rf_inst \
-	-lspectrum/rf_system \
-	-lspectrum/rf_z80
+	$(SPECTRUMLIBSALL) \
+	-lspectrum/rf_z80 \
+	-lrs232if1
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 0x8000
 # ORIGIN higher, 0x9200, C code is larger as uses z88dk libs
@@ -705,12 +704,8 @@ endif
 ifeq ($(SPECTRUMOPTION),c)
 # requires z88dk RS232 library
 SPECTRUMLIBS := \
-	-lmzx_tiny \
-	-lndos \
-	-lrs232if1 \
-	-lspectrum/rf \
-	-lspectrum/rf_inst \
-	-lspectrum/rf_system
+	$(SPECTRUMLIBSALL) \
+	-lrs232if1
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 0x8000
 # ORIGIN higher, 0x9B00, C code is larger as uses z88dk libs and pure C impl
