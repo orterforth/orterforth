@@ -30,8 +30,8 @@ _rf_trampoline:
 	ldr r8, [r0]
 	ldr r0, =rf_rp              @ RP into r7
 	ldr r7, [r0]
-	blx	r1
-	b .trampoline1
+	ldr lr, =.trampoline1       @ tail call
+	bx r1
 .trampoline2:
 	pop	{fp, pc}
 
