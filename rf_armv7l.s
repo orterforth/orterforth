@@ -11,80 +11,57 @@
 	.eabi_attribute 18, 4
 	.text
 
-@	.data
-@	.align	2
-@savefp:
-@	.space	4
-@
-@	.align	2
-@savesp:
-@	.space	4
-
 	.text
 	.align	2
 	.global	_rf_trampoline
 _rf_trampoline:
 
 	push	{fp, lr}
-
 .trampoline1:
-
-	ldr	r3, =rf_fp
-	ldr	r3, [r3]
-	cmp	r3, #0
+	ldr	r1, =rf_fp
+	ldr	r1, [r1]
+	cmp	r1, #0
 	beq	.trampoline2
-
 	ldr	r10, =rf_ip             @ IP into r10
 	ldr	r10, [r10]
-	ldr	r9, =rf_w               @ W into r9
-	ldr	r9, [r9]
-
-	@ ldr r0, =savesp             @ save sp and fp
-	@ str r13, [r0]
-	@ ldr r0, =savefp
-	@ str r11, [r0]
-	ldr r0, =rf_sp
-	ldr r8, [r0]                @ SP into r8 (for now)
-	ldr r0, =rf_rp
-	ldr r7, [r0]                @ RP into r7 (for now)
-
-	blx	r3
+	ldr	r3, =rf_w               @ W into r3
+	ldr	r3, [r3]
+	ldr r0, =rf_sp              @ SP into r8
+	ldr r8, [r0]
+	ldr r0, =rf_rp              @ RP into r7
+	ldr r7, [r0]
+	blx	r1
 	b .trampoline1
-
 .trampoline2:
-
 	pop	{fp, pc}
 
 	.align	2
 	.global	_rf_start
 _rf_start:
 
-	ldr r3, =rf_ip
-	str	r10, [r3]               @ r10 into IP
-	ldr r3, =rf_w
-	str	r9, [r3]                @ r9 into W
-	ldr r3, =rf_sp
-	str	r8, [r3]                @ r8 into SP
-	ldr r3, =rf_rp
-	str	r7, [r3]                @ r7 into RP
-
+	ldr r0, =rf_ip              @ r10 into IP
+	str	r10, [r0]
+	ldr r0, =rf_w               @ r3 into W
+	str	r3, [r0]
+	ldr r0, =rf_sp              @ r8 into SP
+	str	r8, [r0]
+	ldr r0, =rf_rp              @ r7 into RP
+	str	r7, [r0]
 	bx	lr                      @ carry on in C
 
+	.align	2
 dpush:
-
 	str r3, [r8,#-4]!
-
 apush:
-
 	str r0, [r8,#-4]!
 
 	.align	2
 	.global	rf_next
 rf_next:
 next:
-	ldr r9, [r10], #4           @ (W) <- (IP)
+	ldr r3, [r10], #4           @ (W) <- (IP)
 next1:
-	ldr	r0, [r9]                @ TO 'CFA'
+	ldr	r0, [r3]                @ TO 'CFA'
 	bx r0
 
 	.align	2
@@ -98,7 +75,7 @@ rf_code_lit:
 	.global	rf_code_exec
 rf_code_exec:
 
-	ldr r9, [r8], #4            @ GET CFA
+	ldr r3, [r8], #4            @ GET CFA
 	b next1                     @ EXECUTE NEXT
 
 	.align	2
@@ -625,31 +602,31 @@ rf_code_cstor:
 	.global rf_code_docol
 rf_code_docol:
 
-	add r9, r9, #4              @ W=W+1 TODO use r3 as W?
+	add r3, r3, #4              @ W=W+1
 	str r10, [r7, #-4]!         @ R1 <- (RP)
-	mov r10, r9                 @ (IP) <- (W)
+	mov r10, r3                 @ (IP) <- (W)
 	b next
 
 	.align 2
 	.global rf_code_docon
 rf_code_docon:
 
-	ldr r0, [r9, #4]!           @ PFA @ GET DATA
+	ldr r0, [r3, #4]!           @ PFA @ GET DATA
 	b apush
 
 	.align 2
 	.global rf_code_dovar
 rf_code_dovar:
 
-	add r9, r9, #4              @ (DE) <- PFA
-	str r9, [r8, #-4]!          @ (S1) <- PFA
+	add r3, r3, #4              @ (DE) <- PFA
+	str r3, [r8, #-4]!          @ (S1) <- PFA
 	b next
 
 	.align 2
 	.global rf_code_douse
 rf_code_douse:
 
-	ldrb r1, [r9, #4]!          @ PFA
+	ldrb r1, [r3, #4]!          @ PFA
 	ldr r0, =rf_up              @ USER VARIABLE ADDR
 	ldr r0, [r0]
 	add r0, r0, r1
@@ -659,10 +636,10 @@ rf_code_douse:
 	.global rf_code_dodoe
 rf_code_dodoe:
 	str r10, [r7, #-4]!         @ (RP) <- (IP)
-	add r9, r9, #4              @ PFA
-	ldr r10, [r9]               @ NEW CFA
-	add r9, r9, #4
-	str r9, [r8, #-4]!          @ PFA
+	add r3, r3, #4              @ PFA
+	ldr r10, [r3]               @ NEW CFA
+	add r3, r3, #4
+	str r3, [r8, #-4]!          @ PFA
 	b next
 
 	.align 2
