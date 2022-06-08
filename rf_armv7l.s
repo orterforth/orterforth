@@ -656,6 +656,16 @@ rf_code_douse:
 	b apush
 
 	.align 2
+	.global rf_code_dodoe
+rf_code_dodoe:
+	str r10, [r7, #-4]!         @ (RP) <- (IP)
+	add r9, r9, #4              @ PFA
+	ldr r10, [r9]               @ NEW CFA
+	add r9, r9, #4
+	str r9, [r8, #-4]!          @ PFA
+	b next
+
+	.align 2
 	.global rf_code_rxit
 rf_code_rxit:
 	push	{fp, lr}
