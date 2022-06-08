@@ -635,6 +635,7 @@ rf_code_douse:
 	.align 2
 	.global rf_code_dodoe
 rf_code_dodoe:
+
 	str r10, [r7, #-4]!         @ (RP) <- (IP)
 	add r3, r3, #4              @ PFA
 	ldr r10, [r3]               @ NEW CFA
@@ -643,12 +644,39 @@ rf_code_dodoe:
 	b next
 
 	.align 2
+	.global rf_code_stod
+rf_code_stod:
+
+	ldr r3, [r8], #4            @ S1
+	sub r0, r0, r0              @ AX = 0
+	orrs r3, r3                 @ SET FLAGS
+	bpl stod1                   @ POSITIVE NUMBER
+	sub r1, r1, #1              @ NEGITIVE NUMBER
+stod1:
+	b dpush
+
+	.align 2
+	.global rf_code_rcll
+rf_code_rcll:
+
+	mov r0, #4
+	b apush
+
+	.align 2
+	.global rf_code_rcls
+rf_code_rcls:
+
+	ldr r0, [r8], #4
+	lsl r0, #2
+	b apush
+
+	.align 2
 	.global rf_code_rxit
 rf_code_rxit:
-	push	{fp, lr}
-	bl	rf_start
-	ldr	r1, =rf_fp
-	mov	r0, #0
-	str	r0, [r1]
-	pop	{fp, pc}
 
+	push {fp, lr}
+	bl rf_start
+	ldr r1, =rf_fp
+	mov r0, #0
+	str r0, [r1]
+	pop {fp, pc}
