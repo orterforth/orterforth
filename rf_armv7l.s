@@ -384,9 +384,9 @@ umdiv3:
 rf_code_andd:
 
 	ldr r0, [r8], #4
-	ldr r1, [r8], #4
+	ldr r1, [r8]
 	and r0, r0, r1
-	str r0, [r8, #-4]!
+	str r0, [r8]
 	b next
 
 	.align	2
@@ -394,9 +394,9 @@ rf_code_andd:
 rf_code_orr:
 
 	ldr r0, [r8], #4
-	ldr r1, [r8], #4
+	ldr r1, [r8]
 	orr r0, r0, r1
-	str r0, [r8, #-4]!
+	str r0, [r8]
 	b next
 
 	.align	2
@@ -404,9 +404,9 @@ rf_code_orr:
 rf_code_xorr:
 
 	ldr r0, [r8], #4
-	ldr r1, [r8], #4
+	ldr r1, [r8]
 	eor r0, r0, r1
-	str r0, [r8, #-4]!
+	str r0, [r8]
 	b next
 
 	.align	2
