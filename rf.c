@@ -1075,11 +1075,13 @@ void rf_code_rcod(void)
   RF_JUMP_NEXT;
 }
 
+#ifndef RF_TARGET_CODE_RXIT
 void rf_code_rxit(void)
 {
   RF_START;
   rf_fp = 0;
 }
+#endif
 
 #ifndef RF_TARGET_CODE_RCLL
 void rf_code_rcll(void)

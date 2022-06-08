@@ -973,3 +973,12 @@ _rf_code_rtgt:
 	lda #$39
 	sta $03,x
 	jmp _rf_next
+
+.export _rf_code_rxit
+
+_rf_code_rxit:
+
+	sty _rf_fp
+	sty _rf_fp+1
+	jsr _rf_start
+	rts
