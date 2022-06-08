@@ -13,7 +13,9 @@
 
 	.text
 	.align	2
+	.global	rf_trampoline
 	.global	_rf_trampoline
+rf_trampoline:
 _rf_trampoline:
 
 	push {fp, lr}
@@ -36,7 +38,9 @@ trampoline2:
 	pop {fp, pc}
 
 	.align	2
+	.global	rf_start
 	.global	_rf_start
+rf_start:
 _rf_start:
 
 	ldr r0, =rf_ip              @ r10 into IP
