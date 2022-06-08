@@ -16,12 +16,12 @@
 	.global	_rf_trampoline
 _rf_trampoline:
 
-	push	{fp, lr}
-.trampoline1:
+	push {fp, lr}
+trampoline1:
 	ldr	r0, =rf_fp
 	ldr	r0, [r0]
 	cmp	r0, #0
-	beq	.trampoline2
+	beq	trampoline2
 	ldr	r10, =rf_ip             @ IP into r10
 	ldr	r10, [r10]
 	ldr	r3, =rf_w               @ W into r3
@@ -30,10 +30,10 @@ _rf_trampoline:
 	ldr r8, [r8]
 	ldr r7, =rf_rp              @ RP into r7
 	ldr r7, [r7]
-	ldr lr, =.trampoline1       @ tail call
+	ldr lr, =trampoline1        @ tail call
 	bx r0
-.trampoline2:
-	pop	{fp, pc}
+trampoline2:
+	pop {fp, pc}
 
 	.align	2
 	.global	_rf_start
@@ -449,8 +449,8 @@ rf_code_zequ:
 	ldr r0, [r8], #4
 	orrs r0, r0                 @ DO TEST
 	mov r0, #1                  @ TRUE
-	@beq apush
-	beq zequ1                   @ ITS ZERO
+	beq apush
+	@beq zequ1                   @ ITS ZERO
 	sub r0, r0, #1              @ FALSE
 zequ1:
 	b apush
@@ -462,8 +462,8 @@ rf_code_zless:
 	ldr r0, [r8], #4
 	orrs r0, r0                 @ SET FLAGS
 	mov r0, #1                  @ TRUE
-	@bmi apush
-	bmi zless1
+	bmi apush
+	@bmi zless1
 	sub r0, r0, #1              @ FLASE
 zless1:
 	b apush
@@ -638,8 +638,7 @@ rf_code_dodoe:
 
 	str r10, [r7, #-4]!         @ (RP) <- (IP)
 	add r3, r3, #4              @ PFA
-	ldr r10, [r3]               @ NEW CFA
-	add r3, r3, #4
+	ldr r10, [r3], #4           @ NEW CFA
 	str r3, [r8, #-4]!          @ PFA
 	b next
 
