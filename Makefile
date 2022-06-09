@@ -151,7 +151,7 @@ $(SYSTEM)/emulate_spectrum : \
 	$(CC) -o $@ $^
 
 # spectrum emulator
-$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h z80.h | $(SYSTEM)
+$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
@@ -181,7 +181,7 @@ $(SYSTEM)/rf_$(PROC).o : rf_$(PROC).s | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # https://github.com/superzazu/z80.git
-$(SYSTEM)/z80.o : z80.c z80.h | $(SYSTEM)
+$(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
@@ -257,13 +257,13 @@ bbc-clean :
 # MAME command line
 BBCMAME := mame bbcb -video opengl \
 	-skip_gameinfo -nomax -window \
-	-rs423 null_modem -bitb socket.localhost:5705
+	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # MAME command line for fast inst, no video and timeout
 BBCMAMEFAST := mame bbcb -video none -sound none \
 	-skip_gameinfo -nomax -window \
 	-speed 20 -frameskip 10 -nothrottle -seconds_to_run 640 \
-	-rs423 null_modem -bitb socket.localhost:5705
+	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # default is to load from disk
 .PHONY : bbc-run
@@ -390,7 +390,7 @@ bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterfor
 	bbcim -a $@ bbc/orterforth-inst
 
 # inst tape image
-bbc/orterforth-inst.uef : bbc/orterforth-inst
+bbc/orterforth-inst.uef : bbc/orterforth-inst $(ORTER)
 
 	$(ORTER) uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
 	mv $@.io $@
@@ -494,7 +494,7 @@ help : $(TARGET)-help
 .PHONY : iterate
 iterate :
 
-	sh scripts/iterate.sh test.f
+	sh scripts/iterate.sh todo.f
 
 orterforth.inc : orterforth.disc
 
@@ -971,3 +971,13 @@ test : $(ORTERFORTH)
 todo : $(ORTERFORTH)
 
 	$< < todo.f
+
+tools :
+
+	mkdir $@
+
+tools/z80/z80.c : | tools
+
+	cd tools && git clone https://github.com/superzazu/z80.git
+
+tools/z80/z80.h : tools/z80/z80.c
