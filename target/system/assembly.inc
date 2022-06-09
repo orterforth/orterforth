@@ -77,5 +77,5 @@ extern char *rf_memory;
 #define RF_TARGET_CODE_RCLL
 #define RF_TARGET_CODE_RCLS
 /*#define RF_TARGET_CODE_RCOD*/
-/*#define RF_TARGET_CODE_RXIT*/
+#define RF_TARGET_CODE_RXIT
 /*#define RF_TARGET_CODE_RTGT*/

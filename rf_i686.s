@@ -153,9 +153,7 @@ next:
 
 	lodsl                         # AX<- (IP)
 	movl %eax, %edx               # (W) <- (IP)
-	# movl %eax, %ebx
 next1:
-	#	movl %ebx, %edx
 	jmp *(%edx)                   # TO 'CFA'
 
 	.globl	rf_code_lit

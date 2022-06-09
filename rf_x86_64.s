@@ -66,10 +66,10 @@ trampoline1:
 	leaq trampoline1(%rip), %rax  # push the return address
 	pushq %rax
 
-	movq %rbp, _rf_x86_64_rbp_save(%rip) # save rsp and rbp
-	movq %rsp, _rf_x86_64_rsp_save(%rip)
-  movq _rf_rp(%rip), %rbp       # put SP and RP into rsp and rbp
-  movq _rf_sp(%rip), %rsp
+	movq %rbp, _rf_x86_64_rbp_save(%rip) # save rbp
+	movq %rsp, _rf_x86_64_rsp_save(%rip) # save rsp
+  movq _rf_rp(%rip), %rbp       # RP to rbp
+  movq _rf_sp(%rip), %rsp       # SP to rsp
 
 	jmp *_rf_fp(%rip)             # jump to FP
                                 # will return to trampoline1
@@ -84,40 +84,28 @@ trampoline2:
 rf_start:
 _rf_start:
 
+	popq %rax                     # unwind rf_start return address
+
   movq %rdx, _rf_w(%rip)        # rdx to W
   movq %rsi, _rf_ip(%rip)       # rsi to IP
 
-	popq %rax                     # unwind rf_start return address
-
 	movq %rbp, %rcx               # get difference between rsp and rbp
 	subq %rsp, %rcx
-
 	movq %rsp, %rsi               # old SP now in rsi
-
 	movq %rbp, %rsp	              # empty the stack frame, i.e., make rsp = rbp
-
 	popq %rbp                     # get the pushed rbp (this is RP)
-  movq %rbp, _rf_rp(%rip)
 
-  movq %rsp, _rf_sp(%rip)	      # now rsp is SP
+  movq %rbp, _rf_rp(%rip)       # rbp to RP
+  movq %rsp, _rf_sp(%rip)	      # rsp to SP
 
-	movq _rf_x86_64_rbp_save(%rip), %rbp # get the saved rsp and rbp from _rf_trampoline
-	movq _rf_x86_64_rsp_save(%rip), %rsp # (these are not the same as return addr has been pushed)
+	movq _rf_x86_64_rbp_save(%rip), %rbp # restore rbp
+	movq _rf_x86_64_rsp_save(%rip), %rsp # restore rsp
 
 	pushq %rbp                    # push rbp as it would have been
-
 	movq %rsp, %rbp               # and mov rsp into rbp
-
 	subq %rcx, %rsp               # sub the difference from rsp
-
 	movq %rsp, %rdi               # this is the new stack frame
-
-	# copy old stack frame here
-	# stack spills make this necessary as even if RF_START
-	# is the first thing in C code, stack spills happen before
-	# _rf_start is called. If a stack value is a reference 
-	# to the address of another this will not work.
-	cld
+	cld                           # copy old stack frame here including any spill
   rep movsb
 
 	jmp *%rax                     # carry on in C
@@ -478,7 +466,6 @@ _rf_code_rpsto:
 	movq _rf_up(%rip), %rbx       # (AX) <- USR VAR. BASE
 	movq 32(%rbx), %rbp           # RESET RETURN STACK PT.
 	jmp next
-
 
 	.globl rf_code_semis
 	.globl _rf_code_semis

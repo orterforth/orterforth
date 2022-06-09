@@ -22,7 +22,7 @@
 /* for TIB, use the BASIC text input buffer area at 0x0700 */
 #define RF_TIB 0x0700
 
-/* place disc buffers before origin at 0x1300 - 0x1720 */
+/* place disc buffers before origin at 0x0E00 - 0x1220 */
 #define RF_LIMIT 0x1220
 
 /* C code start address */
@@ -87,6 +87,8 @@
 #define RF_TARGET_CODE_DCHAR
 #define RF_TARGET_CODE_BREAD
 #define RF_TARGET_CODE_BWRIT
+/*#define RF_TARGET_CODE_RCOD*/
+#define RF_TARGET_CODE_RXIT
 #define RF_TARGET_CODE_RCLL
 #define RF_TARGET_CODE_RCLS
 #define RF_TARGET_CODE_RTGT
