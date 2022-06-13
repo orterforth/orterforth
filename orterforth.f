@@ -575,7 +575,7 @@ limit   CONSTANT   LIMIT            ( JUST BEYOND TOP OF RAM *)
 -->    
 
 (  USER VARIABLES                                 WFR-78APR29 )
-HEX              ( O THRU 5 RESERVED,    REFERENCED TO $00A0 *)
+HEX              ( 0 THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 ( 06 USER  S0 )             ( TOP OF EMPTY COMPUTATION STACK *)
 ( 08 USER  R0 )                  ( TOP OF EMPTY RETURN STACK *)
 05 rcls USER  TIB                    ( TERMINAL INPUT BUFFER *)
@@ -711,11 +711,11 @@ dodoe rcod ;
         DUP  0  DO  OVER  OVER  +  1  -  C@
         BL  -  IF  LEAVE  ELSE  1  -  ENDIF  LOOP  ;
 : (.")             ( TYPE IN-LINE STRING, ADJUSTING RETURN *)
-        R  COUNT  DUP  1+  R>  +  >R  TYPE  ;
+        R  COUNT  DUP  1+  R>  + rlns >R  TYPE  ;
 
 
 : ."     22  STATE  @       ( COMPILE OR PRINT QUOTED STRING *)
-    IF  COMPILE  (.")        WORD    HERE  C@  1+  ALLOT
+    IF  COMPILE  (.")        WORD    HERE  C@  1+ rlns ALLOT
         ELSE        WORD    HERE   COUNT  TYPE  ENDIF  ;
                IMMEDIATE     -->    
 (  TERMINAL INPUT                                 WFR-79APR29 )
@@ -725,7 +725,7 @@ dodoe rcod ;
     IF  DROP  08  OVER  I  =  DUP  R>  2  -  + >R  -
        ELSE ( NOT BS )  DUP  0D  =
            IF ( RET ) LEAVE  DROP  BL  0  ELSE  DUP  ENDIF
-          I  C!  0  I  1+  !
+          I  C!  0 I 1+ C! 0 I 2+ C!
        ENDIF EMIT  LOOP  DROP  ;
 : QUERY     TIB  @  50  EXPECT  0  IN  !  ;
 81 HERE 80 HERE 1+
@@ -807,7 +807,7 @@ dodoe rcod ;
       IF ( WARN USER )  DROP  NFA  ID.
                         4         MESSAGE    SPACE  ENDIF
       HERE  DUP  C@  WIDTH  @        MIN    1+  ALLOT
-      DP  C@  OFD  =  ALLOT
+      DP  C@  OFD  =  ALLOT HERE rlns DP !
       DUP  A0  TOGGLE HERE  1  -  80  TOGGLE ( DELIMIT BITS )
       LATEST  ,  CURRENT  @  ! 
       HERE  rcll +  ,  ;
@@ -1139,10 +1139,10 @@ bread rcod
 ( 02  BYTE.IN  USER        REPLACED.BY  (;CODE) 
 03 rcls BYTE.IN ?ERROR   REPLACED.BY  ERROR
 08 rcls BYTE.IN ."       REPLACED.BY  WORD
-0F rcls BYTE.IN ."       REPLACED.BY  WORD
+10 rcls BYTE.IN ."       REPLACED.BY  WORD
 00  BYTE.IN  (ABORT)     REPLACED.BY  ABORT
-0A rcls 5 + BYTE.IN ERROR REPLACED.BY MESSAGE
-10 rcls 5 + BYTE.IN ERROR REPLACED.BY QUIT
+0A rcls 5 + BYTE.IN ERROR rlns REPLACED.BY MESSAGE
+10 rcls 5 + BYTE.IN ERROR rlns REPLACED.BY QUIT
 06 rcls BYTE.IN WORD     REPLACED.BY  BLOCK
 10 rcls BYTE.IN CREATE   REPLACED.BY  MESSAGE
 17 rcls BYTE.IN CREATE   REPLACED.BY  MIN 
@@ -1227,7 +1227,7 @@ HEX  ( 3   WIDTH  ! )
 
 : ?      @  .  ;                  ( PRINT CONTENTS OF MEMORY *)
 
-'  . CFA ' MESSAGE 12 rcls + 7 + ! ( PRINT MESSAGE NUMBER )
+' . CFA ' MESSAGE 12 rcls + 7 + rlns ! ( PRINT MESSAGE NUMBER )
 -->    
 
 (  PROGRAM DOCUMENTATION                          WFR-79APR20 )

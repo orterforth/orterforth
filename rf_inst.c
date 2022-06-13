@@ -199,6 +199,13 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
     ++here;
   }
 #endif
+  /* 68000 word alignment */
+  /* TODO more general align support */
+#ifdef RF_ALIGN
+  if ((uintptr_t) here & 0x01) {
+    ++here;
+  }
+#endif
 
   /* terminating bit */
   *(here - 1) |= 0x80;
@@ -576,14 +583,15 @@ static void rf_inst_code_ext(void)
   rf_inst_def_code("rcll", rf_code_rcll);
   rf_inst_def_code("rcls", rf_code_rcls);
   rf_inst_def_code("rcod", rf_code_rcod);
-  rf_inst_def_code("rxit", rf_code_rxit);
+  rf_inst_def_code("rlns", rf_code_rlns);
   rf_inst_def_code("rtgt", rf_code_rtgt);
+  rf_inst_def_code("rxit", rf_code_rxit);
   RF_JUMP_NEXT;
 }
 
 /* list of forward declared words used in inst */
 
-#define RF_INST_CODE_LIST_SIZE 38
+#define RF_INST_CODE_LIST_SIZE 39
 
 static rf_inst_code_t rf_inst_code_list[] = {
   { "LIT", rf_code_lit },
@@ -617,6 +625,7 @@ static rf_inst_code_t rf_inst_code_list[] = {
   { "rxit", rf_code_rxit },
   { "rcll", rf_code_rcll },
   { "rcls", rf_code_rcls },
+  { "rlns", rf_code_rlns },
   { "interpret-word", rf_inst_code_interpret_word },
   { "ext", rf_inst_code_ext },
   { "prev", rf_inst_code_prev },
@@ -770,7 +779,7 @@ static void rf_inst_forward(void)
   /* INTERPRET */
   rf_inst_colon("INTERPRET");
   rf_inst_compile("-FIND interpret-word BRANCH");
-	rf_inst_comma(-3 * RF_WORD_SIZE);
+	rf_inst_comma((uintptr_t) (-3 * RF_WORD_SIZE));
 
   /* CREATE */
   rf_inst_colon("CREATE");
@@ -780,7 +789,11 @@ static void rf_inst_forward(void)
   rf_inst_compile_lit(1);
   rf_inst_compile("+ DP +! DP C@");
   rf_inst_compile_lit(0xFD);
-  rf_inst_compile("- 0= DP +! DUP");
+  rf_inst_compile("- 0= DP +!");
+#ifdef RF_ALIGN
+  rf_inst_compile("HERE rlns DP !");
+#endif
+  rf_inst_compile("DUP");
   rf_inst_compile_lit(0xA0);
   rf_inst_compile("TOGGLE HERE");
   rf_inst_compile_lit(1);

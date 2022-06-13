@@ -1,0 +1,270 @@
+#include <qdos.h>
+#include <stdlib.h>
+
+#include "rf.h"
+
+#define RF_LOG(name)
+
+long _stack = 1024L;
+
+int (*_conread)() = 0;
+
+uint8_t *rf_memory;
+
+typedef uintptr_t uint32_t;
+
+int nlz(uint32_t x)
+{
+   int n;
+
+   if (x == 0) return(32);
+   n = 0;
+   if (x <= 0x0000FFFF) {n = n +16; x = x <<16;}
+   if (x <= 0x00FFFFFF) {n = n + 8; x = x << 8;}
+   if (x <= 0x0FFFFFFF) {n = n + 4; x = x << 4;}
+   if (x <= 0x3FFFFFFF) {n = n + 2; x = x << 2;}
+   if (x <= 0x7FFFFFFF) {n = n + 1;}
+   return n;
+}
+
+uint32_t divlu2(uint32_t u1, uint32_t u0, uint32_t v,
+                uint32_t *r)
+{
+   const uint32_t b = 65536; // Number base (16 bits).
+   uint32_t un1, un0,        // Norm. dividend LSD's.
+            vn1, vn0,        // Norm. divisor digits.
+            q1, q0,          // Quotient digits.
+            un32, un21, un10,// Dividend digit pairs.
+            rhat;            // A remainder.
+   int s;                    // Shift amount for norm.
+
+   if (u1 >= v) {            // If overflow, set rem.
+      if (r != NULL)         // to an impossible value,
+         *r = 0xFFFFFFFF;    // and return the largest
+      return 0xFFFFFFFF;}    // possible quotient.
+
+   s = nlz(v);               // 0 <= s <= 31.
+   v = v << s;               // Normalize divisor.
+   vn1 = v >> 16;            // Break divisor up into
+   vn0 = v & 0xFFFF;         // two 16-bit digits.
+
+   un32 = (u1 << s) | (u0 >> 32 - s) & (-s >> 31);
+   un10 = u0 << s;           // Shift dividend left.
+
+   un1 = un10 >> 16;         // Break right half of
+   un0 = un10 & 0xFFFF;      // dividend into two digits.
+
+   q1 = un32/vn1;            // Compute the first
+   rhat = un32 - q1*vn1;     // quotient digit, q1.
+
+again1:
+   if (q1 >= b || q1*vn0 > b*rhat + un1) {
+     q1 = q1 - 1;
+     rhat = rhat + vn1;
+     if (rhat < b) goto again1;}
+
+   un21 = un32*b + un1 - q1*v;  // Multiply and subtract.
+
+   q0 = un21/vn1;            // Compute the second
+   rhat = un21 - q0*vn1;     // quotient digit, q0.
+
+again2:
+   if (q0 >= b || q0*vn0 > b*rhat + un0) {
+     q0 = q0 - 1;
+     rhat = rhat + vn1;
+     if (rhat < b) goto again2;}
+
+   if (r != NULL)            // If remainder is wanted,
+      *r = (un21*b + un0 - q0*v) >> s;     // return it.
+   return q1*b + q0;
+}
+
+void rf_code_uslas(void)
+{
+  RF_START;
+  RF_LOG("uslas");
+  {
+    uintptr_t ah, al, b, q, r;
+
+    b = RF_SP_POP;
+    ah = RF_SP_POP;
+    al = RF_SP_POP;
+    q = divlu2(ah, al, b, &r);
+    RF_SP_PUSH(r);
+    RF_SP_PUSH(q);
+  }
+  RF_JUMP_NEXT;
+}
+
+static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
+{
+  /* TODO number of bits, max */
+	uintptr_t ahi = a >> 32;
+	uintptr_t alo = a & 0xffffffff;
+	uintptr_t bhi = b >> 32;
+	uintptr_t blo = b & 0xffffffff;
+	uintptr_t lo1 = ((ahi * blo) & 0xffffffff) + ((alo * bhi) & 0xffffffff) + (alo * blo >> 32);
+	uintptr_t lo2 = (alo * blo) & 0xffffffff;
+
+	*ch = ahi * bhi + (ahi * blo >> 32) + (alo * bhi >> 32) + (lo1 >> 32);
+	*cl = (lo1 << 32) + lo2;
+}
+
+void rf_code_ustar(void)
+{
+  RF_START;
+  RF_LOG("ustar");
+  {
+    uintptr_t a, b, ch, cl;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    rf_ustar(a, b, &ch, &cl);
+    RF_SP_PUSH(cl);
+    RF_SP_PUSH(ch);
+  }
+  RF_JUMP_NEXT;
+}
+
+static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
+{
+	*cl = al + bl;
+	*ch = ah + bh;
+	if (*cl < al)
+		(*ch)++;
+}
+
+void rf_code_dplus(void)
+{
+  RF_START;
+  RF_LOG("dplus");
+  {
+    uintptr_t ah, al, bh, bl, ch, cl;
+
+    ah = RF_SP_POP;
+    al = RF_SP_POP;
+    bh = RF_SP_POP;
+    bl = RF_SP_POP;
+    rf_dplus(ah, al, bh, bl, &ch, &cl);
+    RF_SP_PUSH(cl);
+    RF_SP_PUSH(ch);
+  }
+  RF_JUMP_NEXT;
+}
+
+static void rf_dminu(uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
+{
+	*cl = -bl;
+	*ch = -bh;
+	if (bl)
+		(*ch)--;
+}
+
+void rf_code_dminu(void)
+{
+  RF_START;
+  RF_LOG("dminu");
+  {
+    uintptr_t bh, bl, ch, cl;
+    
+    bh = RF_SP_POP;
+    bl = RF_SP_POP;
+    rf_dminu(bh, bl, &ch, &cl);
+    RF_SP_PUSH(cl);
+    RF_SP_PUSH(ch);
+  }
+  RF_JUMP_NEXT;
+}
+
+void rf_code_rtgt(void)
+{
+  RF_START;
+  RF_SP_PUSH(RF_TARGET);
+  RF_SP_PUSH(0);
+  RF_JUMP_NEXT;  
+}
+
+static chanid_t ser;
+
+void rf_init(void)
+{
+  short mode = 4;
+  short type = 1;
+  mt_dmode(&mode, &type);
+  mt_baud(2400);
+  ser = io_open("SER2", 0);
+  if (ser < 0) {
+    exit(ser);
+  }
+}
+
+void rf_code_emit(void)
+{
+  RF_START;
+  {
+    uint8_t c = RF_SP_POP & 0x7F;
+
+    io_sbyte(getchid(1), TIMEOUT_FOREVER, c);
+    RF_USER_OUT++;
+  }
+  RF_JUMP_NEXT;
+}
+
+void rf_code_key(void)
+{
+  RF_START;
+  {
+    uint8_t k;
+    uintptr_t w;
+
+    /* get key */
+    io_fbyte(getchid(0), TIMEOUT_FOREVER, &k);
+    w = k;
+
+    /* LF -> CR */
+    if (w == 0x0A) w = 0x0D;
+    /* 0xC2 -> DEL */
+    if (w == 0xC2) w = 0x7F;
+    /* low 7 bits only */
+    w &= 0x7f;
+
+    /* return key */
+    RF_SP_PUSH(w);
+  }
+  RF_JUMP_NEXT;
+}
+
+void rf_code_qterm(void)
+{
+  RF_START;
+  RF_SP_PUSH(0);
+  RF_JUMP_NEXT;
+}
+
+void rf_code_cr(void)
+{
+  RF_START;
+  io_sbyte(getchid(1), TIMEOUT_FOREVER, '\n');
+  RF_JUMP_NEXT;
+}
+
+void rf_disc_read(char *p, uint8_t len)
+{
+  int i;
+
+  i = io_fstrg(ser, TIMEOUT_FOREVER, p, len);
+}
+
+void rf_disc_write(char *p, uint8_t len)
+{
+  int i;
+
+  i = io_sstrg(ser, TIMEOUT_FOREVER, p, len);
+}
+
+void rf_fin(void)
+{
+  int i;
+
+  i = io_close(ser);
+}

@@ -104,15 +104,19 @@ typedef uint32_t rf_double_t;
 
 /* C68 */
 
-#ifdef QDOS
+#ifdef C68
 #define RF_WORD_SIZE 4
+#define RF_ALIGN 2
 #define RF_BE
+#undef RF_DOUBLE_ARITH
 typedef unsigned char uint8_t;
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
+#ifdef QDOS
 #define RF_TARGET 0x000003bd /* QL */
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/ql/default.inc"
+#endif
 #endif
 #endif
 
@@ -328,6 +332,8 @@ uint8_t rf_digit(uint8_t base, uint8_t c);
 
 char *rf_find(char *t, char t_length, char *nfa);
 
+#define RF_LOG(name)
+
 /* COLD START */
 
 extern uintptr_t *rf_cold_forth;
@@ -460,8 +466,10 @@ void rf_code_rcls(void);
 
 void rf_code_rcod(void);
 
-void rf_code_rxit(void);
+void rf_code_rlns(void);
 
 void rf_code_rtgt(void);
+
+void rf_code_rxit(void);
 
 #endif /* RF_H_ */

@@ -512,18 +512,34 @@ ql-clean :
 
 	rm -rf ql/*
 
+.PHONY : ql-run
+ql-run : orterforth.disc ql/orterforth | $(DISC) $(ORTER)
+
+	sh scripts/ql-run.sh
+
 ql/hw : hw.c | ql
 
-	qcc -o $@ $<
+	qcc -o $@ -c $<
 
-ql/orterforth : rf.c rf_inst.c target/ql/system.c orterforth.c | ql
+ql/orterforth : ql/rf.o ql/rf_inst.o ql/system.o ql/orterforth.o
 
-	qcc -o $@ $^
+	qld -o $@ $^
 
+ql/orterforth.o : orterforth.c rf.h target/ql/default.inc rf_inst.h | ql
 
-ql/%.o : %.c | ql
+	qcc -o $@ -c $<
 
-	qcc -o $@ $^
+ql/rf.o : rf.c rf.h target/ql/default.inc | ql
+
+	qcc -o $@ -c $<
+
+ql/rf_inst.o : rf_inst.c rf.h target/ql/default.inc | ql
+
+	qcc -o $@ -c $<
+
+ql/system.o : target/ql/system.c rf.h target/ql/default.inc | ql
+
+	qcc -o $@ -c $<
 
 # RC2014
 
@@ -824,11 +840,16 @@ spectrum/orterforth-inst-2.bin : \
 	spectrum/orterforth-inst-1.bin \
 	spectrum/orterforth-inst_INST.bin
 
-	z88dk-appmake +inject \
-		-b spectrum/orterforth-inst-1.bin \
-		-i spectrum/orterforth-inst_INST.bin \
-		-s $(SPECTRUMINSTOFFSET) \
-		-o $@
+	# z88dk-appmake +inject \
+	# 	-b spectrum/orterforth-inst-1.bin \
+	# 	-i spectrum/orterforth-inst_INST.bin \
+	# 	-s $(SPECTRUMINSTOFFSET) \
+	# 	-o $@
+	cat $< > $@.io
+	head -c 32768 /dev/null >> $@.io
+	head -c $(SPECTRUMINSTOFFSET) $@.io > $@
+	cat spectrum/orterforth-inst_INST.bin >> $@
+
 
 # make inst serial load file from inst bin
 spectrum/orterforth-inst-2.ser : spectrum/orterforth-inst-2.bin | $(ORTER)
