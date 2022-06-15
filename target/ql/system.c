@@ -191,7 +191,7 @@ void rf_init(void)
   short mode = 4;
   short type = 1;
   mt_dmode(&mode, &type);
-  mt_baud(2400);
+  mt_baud(4800);
   ser = io_open("SER2", 0);
   if (ser < 0) {
     exit(ser);
@@ -218,7 +218,9 @@ void rf_code_key(void)
     uintptr_t w;
 
     /* get key */
+    sd_cure(getchid(1), TIMEOUT_FOREVER);
     io_fbyte(getchid(0), TIMEOUT_FOREVER, &k);
+    sd_curs(getchid(1), TIMEOUT_FOREVER);
     w = k;
 
     /* LF -> CR */

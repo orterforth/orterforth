@@ -155,6 +155,10 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
+$(SYSTEM)/orter_ql : orter/ql.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $<
+
 # main lib
 $(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
 
@@ -430,6 +434,8 @@ build : $(TARGET)-build
 build-all : $(SYSTEM)-build spectrum-build
 
 
+# === Commodore 64 ===
+
 c64 :
 
 	mkdir $@
@@ -500,6 +506,9 @@ orterforth.inc : orterforth.disc
 
 	xxd -i $< > $@
 
+
+# === Sinclair QL ===
+
 ql :
 
 	mkdir $@
@@ -512,22 +521,40 @@ ql-clean :
 
 	rm -rf ql/*
 
-.PHONY : ql-run
-ql-run : orterforth.disc ql/orterforth | $(DISC) $(ORTER)
+# load from serial
+.PHONY : ql-load-serial
+ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
-	sh scripts/ql-run.sh
+	@echo "On the QL type: baud 4800:lrun ser2z"
+	@read -p "Then press enter to start: " LINE
 
-ql/hw : hw.c | ql
+	@echo "* Loading loader..."
+	@$(ORTER) serial write -w 2 $(SERIALPORT) 4800 < ql/loader.ser
 
-	qcc -o $@ -c $<
+	@echo "* Loading orterforth..."
+	@$(ORTER) serial write -w 21 $(SERIALPORT) 4800 < ql/orterforth.ser
+
+	@echo "* Starting disc..."
+	@touch 1.disc
+	@$(DISC) serial $(SERIALPORT) 4800 orterforth.disc 1.disc
+
+ql/loader.ser : target/ql/loader.bas
+
+	cat $< > $@.io
+	printf '\x1A' >> $@.io
+	mv $@.io $@
 
 ql/orterforth : ql/rf.o ql/rf_inst.o ql/system.o ql/orterforth.o
 
-	qld -o $@ $^
+	qld -ms -o $@ $^
 
 ql/orterforth.o : orterforth.c rf.h target/ql/default.inc rf_inst.h | ql
 
 	qcc -o $@ -c $<
+
+ql/orterforth.ser : ql/orterforth
+
+	$(SYSTEM)/orter_ql serial-xtcc $< > $@
 
 ql/rf.o : rf.c rf.h target/ql/default.inc | ql
 
@@ -541,7 +568,8 @@ ql/system.o : target/ql/system.c rf.h target/ql/default.inc | ql
 
 	qcc -o $@ -c $<
 
-# RC2014
+
+# === RC2014 ===
 
 .PHONY : rc2014-build
 rc2014-build : rc2014/orterforth-inst.ihx | rc2014
@@ -549,6 +577,19 @@ rc2014-build : rc2014/orterforth-inst.ihx | rc2014
 rc2014 :
 
 	mkdir $@
+
+# inst executable
+rc2014/orterforth-inst.ihx : \
+	rc2014/rf.lib \
+	rc2014/rf_inst.lib \
+	rc2014/rf_system.lib \
+	orterforth.c
+
+	zcc +rc2014 -subtype=basic \
+		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
+		-m \
+		-o $@ \
+		orterforth.c -create-app
 
 # base orterforth code
 rc2014/rf.lib : rf.c rf.h | rc2014
@@ -565,24 +606,6 @@ rc2014/rf_system.lib : target/rc2014.c | rc2014
 
 	zcc +rc2014 -x -o $@ $<
 
-# inst executable
-rc2014/orterforth-inst.ihx : \
-	rc2014/rf.lib \
-	rc2014/rf_inst.lib \
-	rc2014/rf_system.lib \
-	orterforth.c
-
-	zcc +rc2014 -subtype=basic \
-		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
-		-m \
-		-o $@ \
-		orterforth.c -create-app
-
-
-rf_arith : rf_arith.c
-
-	$(CC) -o $@ $^
-
 # ROM file dir
 roms : 
 
@@ -595,6 +618,16 @@ roms/bbcb : | roms
 
 # BBC Micro ROM files
 roms/bbcb/% : | roms/bbcb
+
+	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
+
+# ZX Spectrum ROM files dir
+roms/spectrum : | roms
+
+	mkdir $@
+
+# ZX Spectrum ROM files
+roms/spectrum/% : | roms/spectrum
 
 	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
 
