@@ -67,6 +67,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
+	$(SYSTEM)/orter_serial2.o \
 	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/orter_uef.o \
 	orter.c
@@ -160,9 +161,9 @@ $(SYSTEM)/orter_ql.o : orter/ql.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-$(SYSTEM)/orter_serial : orter/serial.c | $(SYSTEM)
+$(SYSTEM)/orter_serial2.o : orter/serial.c | $(SYSTEM)
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # main lib
 $(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
@@ -528,18 +529,18 @@ ql-clean :
 
 # load from serial
 .PHONY : ql-load-serial
-ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER) $(SYSTEM)/orter_serial
+ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
 	@echo "On the QL type: baud 4800:lrun ser2z"
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
 	#@$(ORTER) serial write -w 2 $(SERIALPORT) 4800 < ql/loader.ser
-	$(SYSTEM)/orter_serial -e 2 $(SERIALPORT) 4800 < ql/loader.ser
+	$(ORTER) serial2 -e 2 $(SERIALPORT) 4800 < ql/loader.ser
 
 	@echo "* Loading orterforth..."
 	#@$(ORTER) serial write -w 21 $(SERIALPORT) 4800 < ql/orterforth.ser
-	$(SYSTEM)/orter_serial -e 31 $(SERIALPORT) 4800 < ql/orterforth.ser
+	$(ORTER) serial2 -e 29 $(SERIALPORT) 4800 < ql/orterforth.ser
 
 	@echo "* Starting disc..."
 	@touch 1.disc

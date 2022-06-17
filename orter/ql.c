@@ -99,7 +99,6 @@ int orter_ql_serial_xtcc(int argc, char **argv)
     return errno;
   }
 
-  fprintf(stderr, "len=%u dsp=%u\n", len, dsp);
   serial_header(len, 1, dsp, 0, header);
   fwrite(header, 1, 15, stdout);
 

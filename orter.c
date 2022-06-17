@@ -20,6 +20,7 @@
 
 #include "orter_fuse.h"
 #include "orter/ql.h"
+#include "orter/serial.h"
 #include "orter_serial.h"
 #include "orter_spectrum.h"
 #include "orter_uef.h"
@@ -306,6 +307,9 @@ int main(int argc, char *argv[])
     }
     if (!strcmp("serial", arg)) {
       return serial(argc, argv);
+    }
+    if (!strcmp("serial2", arg)) {
+      return orter_serial2(argc, argv);
     }
     if (!strcmp("spectrum", arg)) {
       return spectrum(argc, argv);

@@ -470,11 +470,11 @@ static void opts(int argc, char **argv)
   }
 }
 
-int main(int argc, char **argv)
+int orter_serial2(int argc, char **argv)
 {
   /* command line options */
+  optind = 2;
   opts(argc, argv);
-  if (optind < 1) optind = 1;
   argv += optind;
   argc -= optind;
   if (argc != 2) {
