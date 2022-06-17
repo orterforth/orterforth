@@ -43,7 +43,7 @@ ifeq ($(OPER),cygwin)
 SERIALPORT := /dev/ttyS2
 endif
 ifeq ($(OPER),darwin)
-SERIALPORT := /dev/tty.usbserial-FT2XIBOF
+SERIALPORT := /dev/cu.usbserial-FT2XIBOF
 endif
 ifeq ($(OPER),linux)
 SERIALPORT := /dev/ttyUSB0
@@ -65,6 +65,7 @@ $(DISC) : \
 # orter - retrocomputing multitool
 $(ORTER) : \
 	$(SYSTEM)/orter_fuse.o \
+	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/orter_uef.o \
@@ -155,7 +156,11 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
-$(SYSTEM)/orter_ql : orter/ql.c | $(SYSTEM)
+$(SYSTEM)/orter_ql.o : orter/ql.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+$(SYSTEM)/orter_serial : orter/serial.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
@@ -523,16 +528,18 @@ ql-clean :
 
 # load from serial
 .PHONY : ql-load-serial
-ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
+ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER) $(SYSTEM)/orter_serial
 
 	@echo "On the QL type: baud 4800:lrun ser2z"
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial write -w 2 $(SERIALPORT) 4800 < ql/loader.ser
+	#@$(ORTER) serial write -w 2 $(SERIALPORT) 4800 < ql/loader.ser
+	$(SYSTEM)/orter_serial -e 2 $(SERIALPORT) 4800 < ql/loader.ser
 
 	@echo "* Loading orterforth..."
-	@$(ORTER) serial write -w 21 $(SERIALPORT) 4800 < ql/orterforth.ser
+	#@$(ORTER) serial write -w 21 $(SERIALPORT) 4800 < ql/orterforth.ser
+	$(SYSTEM)/orter_serial -e 31 $(SERIALPORT) 4800 < ql/orterforth.ser
 
 	@echo "* Starting disc..."
 	@touch 1.disc
@@ -552,9 +559,9 @@ ql/orterforth.o : orterforth.c rf.h target/ql/default.inc rf_inst.h | ql
 
 	qcc -o $@ -c $<
 
-ql/orterforth.ser : ql/orterforth
+ql/orterforth.ser : ql/orterforth | $(ORTER)
 
-	$(SYSTEM)/orter_ql serial-xtcc $< > $@
+	$(ORTER) ql serial-xtcc $< > $@
 
 ql/rf.o : rf.c rf.h target/ql/default.inc | ql
 

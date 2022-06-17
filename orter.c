@@ -19,6 +19,7 @@
 #endif
 
 #include "orter_fuse.h"
+#include "orter/ql.h"
 #include "orter_serial.h"
 #include "orter_spectrum.h"
 #include "orter_uef.h"
@@ -30,6 +31,7 @@ static int usage()
   /* an entry for each subcommand */
   fprintf(stderr, "             fuse ...\n");
   fprintf(stderr, "             hex ...\n");
+  fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
   fprintf(stderr, "             spectrum ...\n");
 
@@ -66,6 +68,22 @@ static int fuse(int argc, char *argv[])
   }
 
   return usage();
+}
+
+
+static int ql(int argc, char **argv)
+{
+  if (argc == 7 && !strcmp(argv[2], "serial-header")) {
+    return orter_ql_serial_header(argc, argv);
+  }
+
+  if (argc == 4 && !strcmp(argv[2], "serial-xtcc")) {
+    return orter_ql_serial_xtcc(argc, argv);
+  }
+
+  fprintf(stderr, "Usage: orter ql serial-header <len> <typ> <dsp> <ext>\n");
+  fprintf(stderr, "                serial-xtcc <filename>\n");
+  return 1;
 }
 
 static int serial_getopt(int *argc, char **argv[], int *wait)
@@ -282,6 +300,9 @@ int main(int argc, char *argv[])
     }
     if (argc > 2 && !strcmp("hex", arg) && !strcmp("read", argv[2])) {
       return hex_read();
+    }
+    if (!strcmp("ql", arg)) {
+      return ql(argc, argv);
     }
     if (!strcmp("serial", arg)) {
       return serial(argc, argv);

@@ -1,5 +1,4 @@
 #include <qdos.h>
-#include <stdlib.h>
 
 #include "rf.h"
 
@@ -193,9 +192,6 @@ void rf_init(void)
   mt_dmode(&mode, &type);
   mt_baud(4800);
   ser = io_open("SER2", 0);
-  if (ser < 0) {
-    exit(ser);
-  }
 }
 
 void rf_code_emit(void)
@@ -204,7 +200,11 @@ void rf_code_emit(void)
   {
     uint8_t c = RF_SP_POP & 0x7F;
 
-    io_sbyte(getchid(1), TIMEOUT_FOREVER, c);
+    if (c == 8) {
+      sd_pcol(getchid(1), TIMEOUT_FOREVER);
+    } else {
+      io_sbyte(getchid(1), TIMEOUT_FOREVER, c);
+    }
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
@@ -215,23 +215,21 @@ void rf_code_key(void)
   RF_START;
   {
     uint8_t k;
-    uintptr_t w;
 
     /* get key */
     sd_cure(getchid(1), TIMEOUT_FOREVER);
-    io_fbyte(getchid(0), TIMEOUT_FOREVER, &k);
+    io_fbyte(getchid(0), TIMEOUT_FOREVER, (char *) &k);
     sd_curs(getchid(1), TIMEOUT_FOREVER);
-    w = k;
 
     /* LF -> CR */
-    if (w == 0x0A) w = 0x0D;
+    if (k == 0x0A) k = 0x0D;
     /* 0xC2 -> DEL */
-    if (w == 0xC2) w = 0x7F;
+    if (k == 0xC2) k = 0x7F;
     /* low 7 bits only */
-    w &= 0x7f;
+    k &= 0x7f;
 
     /* return key */
-    RF_SP_PUSH(w);
+    RF_SP_PUSH(k);
   }
   RF_JUMP_NEXT;
 }
@@ -246,27 +244,21 @@ void rf_code_qterm(void)
 void rf_code_cr(void)
 {
   RF_START;
-  io_sbyte(getchid(1), TIMEOUT_FOREVER, '\n');
+  io_sbyte(getchid(1), TIMEOUT_FOREVER, 10);
   RF_JUMP_NEXT;
 }
 
 void rf_disc_read(char *p, uint8_t len)
 {
-  int i;
-
-  i = io_fstrg(ser, TIMEOUT_FOREVER, p, len);
+  io_fstrg(ser, TIMEOUT_FOREVER, p, len);
 }
 
 void rf_disc_write(char *p, uint8_t len)
 {
-  int i;
-
-  i = io_sstrg(ser, TIMEOUT_FOREVER, p, len);
+  io_sstrg(ser, TIMEOUT_FOREVER, p, len);
 }
 
 void rf_fin(void)
 {
-  int i;
-
-  i = io_close(ser);
+  io_close(ser);
 }
