@@ -70,7 +70,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_serial2.o \
 	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/orter_uef.o \
-	orter.c
+	orter/main.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
 
