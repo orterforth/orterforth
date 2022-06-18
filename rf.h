@@ -86,7 +86,7 @@ typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __RC2014
 #define RF_TARGET 0x628444a8 /* RC2014 */
-#define RF_TARGET_INC "target/rc2014.inc"
+#define RF_TARGET_INC "target/rc2014/default.inc"
 #endif
 #ifdef SPECTRUM
 #define RF_TARGET 0x6774e16f /* SPECTR */

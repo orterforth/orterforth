@@ -578,11 +578,33 @@ ql/system.o : target/ql/system.c rf.h target/ql/default.inc | ql
 # === RC2014 ===
 
 .PHONY : rc2014-build
-rc2014-build : rc2014/orterforth-inst.ihx | rc2014
+rc2014-build : rc2014/orterforth-inst.ihx
+
+.PHONY : rc2014-clean
+rc2014-clean :
+
+	rm -rf rc2014/*
+
+.PHONY : rc2014-hw
+rc2014-hw : target/rc2014/hexload.bas rc2014/hw.ihx
+
+	$(ORTER) serial -o olfcr -e 5 /dev/cu.usbserial-A50285BI 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr -e 20 /dev/cu.usbserial-A50285BI 115200 < rc2014/hw.ihx
+
+.PHONY : rc2014-run
+rc2014-run : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx
+
+	$(ORTER) serial -o olfcr -e 5 /dev/cu.usbserial-A50285BI 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr -e 60 /dev/cu.usbserial-A50285BI 115200 < rc2014/orterforth-inst.ihx
 
 rc2014 :
 
 	mkdir $@
+
+# hw
+rc2014/hw.ihx : hw.c
+
+	zcc +rc2014 -subtype=basic -o rc2014/hw hw.c -create-app
 
 # inst executable
 rc2014/orterforth-inst.ihx : \
@@ -608,7 +630,7 @@ rc2014/rf_inst.lib : rf_inst.c rf.h rf_inst.h | rc2014
 	zcc +rc2014 -x -o $@ $<
 
 # system code
-rc2014/rf_system.lib : target/rc2014.c | rc2014
+rc2014/rf_system.lib : target/rc2014/rc2014.c | rc2014
 
 	zcc +rc2014 -x -o $@ $<
 
