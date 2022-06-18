@@ -597,17 +597,28 @@ rc2014-clean :
 
 	rm -rf rc2014/*
 
-.PHONY : rc2014-hw
-rc2014-hw : target/rc2014/hexload.bas rc2014/hw.ihx
+# RC2014 serial port name
+ifeq ($(OPER),cygwin)
+RC2014SERIALPORT := /dev/ttyS2
+endif
+ifeq ($(OPER),darwin)
+RC2014SERIALPORT := /dev/cu.usbserial-A50285BI
+endif
+ifeq ($(OPER),linux)
+RC2014SERIALPORT := /dev/ttyUSB0
+endif
 
-	$(ORTER) serial -o olfcr -e 5 /dev/cu.usbserial-A50285BI 115200 < target/rc2014/hexload.bas
-	$(ORTER) serial -o olfcr -e 20 /dev/cu.usbserial-A50285BI 115200 < rc2014/hw.ihx
+.PHONY : rc2014-hw
+rc2014-hw : target/rc2014/hexload.bas rc2014/hw.ihx | $(ORTER)
+
+	$(ORTER) serial -o olfcr -e 5 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr -e 20 $(RC2014SERIALPORT) 115200 < rc2014/hw.ihx
 
 .PHONY : rc2014-run
-rc2014-run : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx
+rc2014-run : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $(ORTER)
 
-	$(ORTER) serial -o olfcr -e 5 /dev/cu.usbserial-A50285BI 115200 < target/rc2014/hexload.bas
-	$(ORTER) serial -o olfcr -e 60 /dev/cu.usbserial-A50285BI 115200 < rc2014/orterforth-inst.ihx
+	$(ORTER) serial -o olfcr -e 5 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr -e 60 $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
 
 rc2014 :
 

@@ -2,6 +2,8 @@
 #define ORTER_PLATFORM_UNIX
 #endif
 #ifdef __unix__
+/* to get CRTSCTS */
+#define _DEFAULT_SOURCE
 #define ORTER_PLATFORM_UNIX
 #endif
 
@@ -14,12 +16,11 @@
 #ifdef __linux__
 #include <sys/file.h>
 #endif
-#ifdef ORTER_PLATFORM_UNIX
 #include <fcntl.h>
+#include <getopt.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-#endif
 
 /* opts */
 static int            olfcr = 0;
@@ -507,13 +508,7 @@ int orter_serial2(int argc, char **argv)
     /* serial to stdout */
     bufread(serial_rd, out_buf, &out_offset, &out_pending);
     bufwrite(out_wr, out_buf, &out_offset, &out_pending);
-/*
-    if (eof) {
-      int n = 9999;
-      ioctl(serial_fd, TIOCOUTQ, &n);
-      fprintf(stderr, "TIOCOUTQ=%d\n", n);
-    }
-*/
+
     /* terminate after eof and timer */
     if (eof_wait_done()) {
       break;
