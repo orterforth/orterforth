@@ -119,7 +119,8 @@ static int serial_getopt(int *argc, char **argv[], int *wait)
   return 0;
 }
 
-static int serial(int argc, char *argv[])
+/* TODO remove once serial2 bedded in */
+int serial(int argc, char *argv[])
 {
   /* read options */
   int wait = 0; /* wait before close */
@@ -306,9 +307,6 @@ int main(int argc, char *argv[])
       return ql(argc, argv);
     }
     if (!strcmp("serial", arg)) {
-      return serial(argc, argv);
-    }
-    if (!strcmp("serial2", arg)) {
       return orter_serial2(argc, argv);
     }
     if (!strcmp("spectrum", arg)) {

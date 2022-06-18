@@ -535,12 +535,10 @@ ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	#@$(ORTER) serial write -w 2 $(SERIALPORT) 4800 < ql/loader.ser
-	$(ORTER) serial2 -e 2 $(SERIALPORT) 4800 < ql/loader.ser
+	$(ORTER) serial -e 2 $(SERIALPORT) 4800 < ql/loader.ser
 
 	@echo "* Loading orterforth..."
-	#@$(ORTER) serial write -w 21 $(SERIALPORT) 4800 < ql/orterforth.ser
-	$(ORTER) serial2 -e 29 $(SERIALPORT) 4800 < ql/orterforth.ser
+	$(ORTER) serial -e 27 $(SERIALPORT) 4800 < ql/orterforth.ser
 
 	@echo "* Starting disc..."
 	@touch 1.disc
@@ -700,10 +698,10 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial write -w 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
+	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
 	@echo "* Loading orterforth..."
-	@$(ORTER) serial write -w 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
+	$(ORTER) serial -e 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 
 	@echo "* Starting disc..."
 	touch 1.disc
@@ -963,10 +961,10 @@ ifeq ($(SPECTRUMIMPL),real)
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial write -w 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
+	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
 	@echo "* Loading inst..."
-	@$(ORTER) serial write -w 22 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth-inst-2.ser
+	@$(ORTER) serial -e 21 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth-inst-2.ser
 
 	@echo "* Starting disc and waiting for completion..."
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io & pid=$$! ; \

@@ -436,11 +436,11 @@ void init_std(void)
 /* usage message */
 static void usage(void)
 {
-  fprintf(stderr, "Usage: serial [-e wait] [-o option...] <name> <baud>\n\n"
-                  "e.g.   serial -o olfcr -o odelbs /dev/cu.usbserial-A50285BI 115200\n"
+  fprintf(stderr, "Usage: orter serial [-e wait] [-o option...] <name> <baud>\n\n"
+                  "e.g.   orter serial -o olfcr -o odelbs /dev/cu.usbserial-A50285BI 115200\n"
                   "        - connect translate 0x0a->0x0d, 0x7f->0x08\n"
-                  "       echo 'run' | serial -e 5 /dev/cu.usbserial-A50285BI 115200\n"
-                  "        - write the string and stay connected for 5 s\n");
+                  "       echo 'run' | orter serial -e 5 /dev/cu.usbserial-A50285BI 115200\n"
+                  "        - write the string and keep open for 5 s\n");
   exit(1);
 }
 
