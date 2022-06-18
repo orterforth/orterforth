@@ -8,6 +8,17 @@ long _stack = 1024L;
 
 int (*_conread)() = 0;
 
+struct WINDOWDEF _condetails = {
+  0,
+  0,
+  0,
+  7,
+  480,
+  256,
+  16,
+  0
+};
+
 uint8_t *rf_memory;
 
 typedef uintptr_t uint32_t;
