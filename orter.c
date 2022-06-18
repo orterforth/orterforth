@@ -18,11 +18,11 @@
 #include <unistd.h>
 #endif
 
-#include "orter_fuse.h"
+#include "orter/fuse.h"
 #include "orter/ql.h"
 #include "orter/serial.h"
-#include "orter_spectrum.h"
-#include "orter_uef.h"
+#include "orter/spectrum.h"
+#include "orter/uef.h"
 
 static int usage()
 {
@@ -34,6 +34,7 @@ static int usage()
   fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
   fprintf(stderr, "             spectrum ...\n");
+  fprintf(stderr, "             uef ...\n");
 
   return 1;
 }

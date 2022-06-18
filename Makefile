@@ -157,11 +157,23 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
+$(SYSTEM)/orter_fuse.o : orter/fuse.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
 $(SYSTEM)/orter_ql.o : orter/ql.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 $(SYSTEM)/orter_serial2.o : orter/serial.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+$(SYSTEM)/orter_spectrum.o : orter/spectrum.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+$(SYSTEM)/orter_uef.o : orter/uef.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
