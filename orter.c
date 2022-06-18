@@ -21,7 +21,6 @@
 #include "orter_fuse.h"
 #include "orter/ql.h"
 #include "orter/serial.h"
-#include "orter_serial.h"
 #include "orter_spectrum.h"
 #include "orter_uef.h"
 
@@ -84,123 +83,6 @@ static int ql(int argc, char **argv)
 
   fprintf(stderr, "Usage: orter ql serial-header <len> <typ> <dsp> <ext>\n");
   fprintf(stderr, "                serial-xtcc <filename>\n");
-  return 1;
-}
-
-static int serial_getopt(int *argc, char **argv[], int *wait)
-{
-  signed char o;
-
-  /* do getopt loop */
-  opterr = 1;
-  while ((o = getopt(*argc, *argv, "+w:")) != -1) {
-    switch (o) {
-      case 'w':
-        *wait = atoi(optarg);
-        break;
-      case '?':
-        if (optopt == 'w') {
-          fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-        } else {
-          fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-        }
-        return 1;
-      default:
-        abort();
-    }
-  }
-
-  /* shift args to optind */
-  *argv += optind;
-  (*argv)--;
-  *argc -= optind;
-  (*argc)++;
-
-  return 0;
-}
-
-/* TODO remove once serial2 bedded in */
-int serial(int argc, char *argv[])
-{
-  /* read options */
-  int wait = 0; /* wait before close */
-
-  /* shift args to subcommand */
-  argc--;
-  argv++;
-
-  if (argc > 3) {
-    /* read from serial and write to stdout */
-    if (!strcmp("read", argv[1])) {
-      int c;
-
-      /* shift args past "read" */
-      argc--;
-      argv++;
-
-      /* do getopt for -w */
-      serial_getopt(&argc, &argv, &wait);
-
-      /* don't buffer output */
-      setvbuf(stdout, NULL, _IONBF, 0);
-
-      /* open */
-      orter_serial_open(argv[1], atoi(argv[2]));
-
-      /* pipe from port to stdout */
-      while ((c = orter_serial_getc()) != -1) {
-        if (fputc(c, stdout) == -1) {
-          fprintf(stderr, "write failed\n");
-          exit(1);
-        }
-      };
-
-      /* wait for specified time then finish */
-      fflush(stdout);
-      sleep(wait);
-      orter_serial_close();
-
-      return 0;
-    }
-
-    /* read from stdin and write to serial */
-    if (!strcmp("write", argv[1])) {
-      char buffer[256];
-
-      /* shift args past "write" */
-      argc--;
-      argv++;
-
-      /* do getopt for -w */
-      serial_getopt(&argc, &argv, &wait);
-
-      /* no input buffering */
-      setvbuf(stdin, NULL, _IONBF, 0);
-
-      /* open */
-      orter_serial_open(argv[1], atoi(argv[2]));
-
-      /* pipe from stdin to port */
-      for (;;) {
-        size_t s = fread(buffer, 1, 256, stdin);
-        orter_serial_write(buffer, s);
-        if (s < 256) {
-          break;
-        }
-      }
-
-      /* wait for specified time then finish */
-      orter_serial_flush();
-      sleep(wait);
-      orter_serial_close();
-
-      return 0;
-    }
-  }
-
-  /* usage */
-  fprintf(stderr, "Usage: orter serial read  [-w <wait>] <port> <baud>\n");
-  fprintf(stderr, "                    write [-w <wait>] <port> <baud>\n");
   return 1;
 }
 
