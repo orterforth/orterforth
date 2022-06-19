@@ -473,6 +473,10 @@ static void opts(int argc, char **argv)
 
 int orter_serial2(int argc, char **argv)
 {
+  static fd_set readfds, writefds, exceptfds;
+  static struct timeval timeout;
+  static int nfds;
+
   /* command line options */
   optind = 2;
   opts(argc, argv);
@@ -491,11 +495,62 @@ int orter_serial2(int argc, char **argv)
   /* stdin/stdout */
   init_std();
 
+  /* set up select */
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 100000;
+  nfds = 0;
+  if (in_fd > nfds) nfds = in_fd;
+  if (out_fd > nfds) nfds = out_fd;
+  if (serial_fd > nfds) nfds = serial_fd;
+  nfds++;
+
   for (;;) {
 
-    /* TODO wait with pselect */
-    /* TODO select/poll */
-    usleep(10000);
+    /* init fd sets */
+    FD_ZERO(&readfds);
+    FD_ZERO(&writefds);
+    FD_ZERO(&exceptfds);
+
+    /* add in to in, err set */
+    FD_SET(in_fd, &readfds);
+    FD_SET(in_fd, &exceptfds);
+
+    /* add out to out, err set */
+    FD_SET(out_fd, &writefds);
+    FD_SET(out_fd, &exceptfds);
+
+    /* add port to read, write and err sets */
+    FD_SET(serial_fd, &readfds);
+    FD_SET(serial_fd, &writefds);
+    FD_SET(serial_fd, &exceptfds);
+
+    /* select */
+    if (select(nfds, &readfds, &writefds, &exceptfds, &timeout) < 0) {
+      switch (errno) {
+        case EINTR: break;
+        default:
+          restore();
+          perror("select failed");
+          return errno;
+      }
+    }
+
+    /* check for exceptions */
+    if (FD_ISSET(out_fd, &exceptfds)) {
+      restore();
+      perror("out error");
+      return errno;
+    }
+    if (FD_ISSET(in_fd, &exceptfds)) {
+      restore();
+      perror("in error");
+      return errno;
+    }
+    if (FD_ISSET(serial_fd, &exceptfds)) {
+      restore();
+      perror("serial error");
+      return errno;
+    }
 
     /* stdin to mapped */
     bufread(in_rd, in_buf, &in_offset, &in_pending);
