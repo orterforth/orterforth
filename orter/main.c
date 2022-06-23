@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
       return ql(argc, argv);
     }
     if (!strcmp("serial", arg)) {
-      return orter_serial2(argc, argv);
+      return orter_serial(argc, argv);
     }
     if (!strcmp("spectrum", arg)) {
       return spectrum(argc, argv);

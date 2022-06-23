@@ -11,7 +11,7 @@
 #define RF_ORG 0x9000
 
 /* TODO */
-#define RF_ORIGIN 0xC300
+#define RF_ORIGIN 0xBD00
 
 /* disc buffers leave space for stack in high memory */
-#define RF_LIMIT 0xFF00
+#define RF_LIMIT 0xFE00

@@ -1,8 +1,10 @@
+#define _DEFAULT_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-#include "orter_serial.h"
+#include "orter/serial.h"
 #include "rf_persci.h"
 
 #define RF_BBLK 128
@@ -83,30 +85,16 @@ static int create_disc(void)
 
 /* DISPATCH SERIAL READ/WRITE TO FUNCTION POINTERS */
 
-static int (*serial_getc)(void);
+static rdwr_t rd;
 
-static int (*serial_putc)(int c);
-
-static void (*serial_flush)(void);
-
-static void (*serial_close)(void);
+static rdwr_t wr;
 
 /* Real serial port to connect to physical machine */
 static void serial_init_physical(char *name, unsigned int baud)
 {
   orter_serial_open(name, baud);
-  serial_getc = orter_serial_getc;
-  serial_putc = orter_serial_putc;
-  serial_flush = orter_serial_flush;
-  serial_close = orter_serial_close;
-}
-
-static void serial_standard_flush(void)
-{
-  if (fflush(stdout)) {
-    perror("fflush failed");
-    exit(1);
-  }
+  rd = orter_serial_rd;
+  wr = orter_serial_wr;
 }
 
 /* Stdin and stdout */
@@ -122,78 +110,90 @@ static void serial_init_standard(void)
     exit(1);
   }
 
-  serial_getc = getchar;
-  serial_putc = putchar;
-  serial_flush = serial_standard_flush;
-  serial_close = serial_standard_flush;
+  rd = orter_serial_stdin_rd;
+  wr = orter_serial_stdout_wr;
+}
+
+static char eof = 0;
+
+static char fetch = 0;
+
+static size_t disc_wr(char *off, size_t len)
+{
+  char c;
+  size_t i;
+
+  fputs("\033[0;33m", stderr);
+  for (i = 0; i < len; i++) {
+    c = *(off++);
+    rf_persci_putc(c);
+    if (c == RF_ASCII_EOT) {
+      i++;
+      fetch = 1;
+      fputs("\033[0m\n", stderr);
+      break;
+    }
+    fputc(c, stderr);
+  }
+
+  return i;
+}
+
+static size_t disc_rd(char *off, size_t len)
+{
+  char c;
+  size_t i;
+
+  if (!fetch) {
+    return 0;
+  }
+
+  for (i = 0; i < len; i++) {
+    c = rf_persci_getc();
+    *(off++) = c;
+    if (c == RF_ASCII_EOT) {
+      i++;
+      fetch = 0;
+      fputc('\n', stderr);
+      break;
+    }
+    fputc(c, stderr);
+  }
+
+  return i;
 }
 
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
-  unsigned int len = 0;
-  int result = 1;
+  char           in_buf[256];
+  size_t         in_pending = 0;
+  char *         in_offset = in_buf;
+
+  char           out_buf[256];
+  size_t         out_pending = 0;
+  char *         out_offset = out_buf;
 
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
 
   for (;;) {
-    int c;
 
-    /* validate length */
-    if (len >= 131) {
-      fputs("buffer full\n", stderr);
+    /* TODO use select */
+    usleep(100000);
+
+    orter_serial_relay(rd, disc_wr, in_buf, &in_offset, &in_pending);
+    orter_serial_relay(disc_rd, wr, out_buf, &out_offset, &out_pending);
+
+    /* EOF */
+    if (eof) {
       break;
     }
-
-    /* read input */
-    c = serial_getc();
-    if (c == -1) {
-      result = 0;
-      break;
-    }
-
-    /* log input line in yellow */
-    if (len == 0) {
-      fputs("\033[0;33m", stderr);
-    }
-
-    rf_persci_putc(c);
-    fputc(c, stderr);
-
-    /* read until EOT */
-    if (c != RF_ASCII_EOT) {
-      continue;
-    }
-    fputs("\033[0m\n", stderr);
-
-    /* now write response */
-    len = 0;
-    for (;;) {
-      char c;
-
-      /* read char and write out */      
-      c = rf_persci_getc();
-      serial_putc(c);
-
-      /* log output in white */
-      fputc(c, stderr);
-
-      /* on EOT flush */
-      if (c == RF_ASCII_EOT) {
-        serial_flush();
-        fputc('\n', stderr);
-        break;
-      }
-    }
-
-    /* reset buffer */
-    len = 0;
   }
 
   /* finished */
-  serial_close();
-  return result;
+  orter_serial_close();
+  return 0;
 }
 
 int main(int argc, char *argv[])

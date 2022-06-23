@@ -67,7 +67,6 @@ $(ORTER) : \
 	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
-	$(SYSTEM)/orter_serial2.o \
 	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/orter_uef.o \
 	orter/main.c
@@ -165,7 +164,7 @@ $(SYSTEM)/orter_ql.o : orter/ql.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-$(SYSTEM)/orter_serial2.o : orter/serial.c | $(SYSTEM)
+$(SYSTEM)/orter_serial.o : orter/serial.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -506,10 +505,10 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 
 # run disc on physical serial port
 .PHONY : disc
-disc : $(DISC)
+disc : $(DISC) orterforth.disc
 
 	touch 1.disc
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) 0.disc 1.disc
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc 1.disc
 
 # help
 .PHONY : help
@@ -540,21 +539,23 @@ ql-clean :
 	rm -rf ql/*
 
 # load from serial
+QLSERIALBAUD := 4800
 .PHONY : ql-load-serial
 ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
-	@echo "On the QL type: baud 4800:lrun ser2z"
+	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	$(ORTER) serial -e 2 $(SERIALPORT) 4800 < ql/loader.ser
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.ser
 
 	@echo "* Loading orterforth..."
-	$(ORTER) serial -e 27 $(SERIALPORT) 4800 < ql/orterforth.ser
+	@sleep 1
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.ser
 
 	@echo "* Starting disc..."
 	@touch 1.disc
-	@$(DISC) serial $(SERIALPORT) 4800 orterforth.disc 1.disc
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
 
 ql/loader.ser : target/ql/loader.bas
 
@@ -608,26 +609,17 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
-.PHONY : rc2014-hw
-rc2014-hw : target/rc2014/hexload.bas rc2014/hw.ihx | $(ORTER)
-
-	$(ORTER) serial -o olfcr -e 5 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
-	$(ORTER) serial -o olfcr -e 20 $(RC2014SERIALPORT) 115200 < rc2014/hw.ihx
-
 .PHONY : rc2014-run
 rc2014-run : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $(ORTER)
 
-	$(ORTER) serial -o olfcr -e 5 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
-	$(ORTER) serial -o olfcr -e 60 $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
+	#echo "C35071" | $(ORTER) serial -o olfcr -e 2 $(RC2014SERIALPORT) 115200
+	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
+	$(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc 1.disc
 
 rc2014 :
 
 	mkdir $@
-
-# hw
-rc2014/hw.ihx : hw.c
-
-	zcc +rc2014 -subtype=basic -o rc2014/hw hw.c -create-app
 
 # inst executable
 rc2014/orterforth-inst.ihx : \
@@ -643,17 +635,17 @@ rc2014/orterforth-inst.ihx : \
 		orterforth.c -create-app
 
 # base orterforth code
-rc2014/rf.lib : rf.c rf.h | rc2014
+rc2014/rf.lib : rf.c rf.h target/rc2014/default.inc | rc2014
 
 	zcc +rc2014 -x -o $@ $<
 
 # inst code
-rc2014/rf_inst.lib : rf_inst.c rf.h rf_inst.h | rc2014
+rc2014/rf_inst.lib : rf_inst.c rf.h target/rc2014/default.inc rf_inst.h | rc2014
 
 	zcc +rc2014 -x -o $@ $<
 
 # system code
-rc2014/rf_system.lib : target/rc2014/rc2014.c | rc2014
+rc2014/rf_system.lib : target/rc2014/rc2014.c rf.h target/rc2014/default.inc | rc2014
 
 	zcc +rc2014 -x -o $@ $<
 

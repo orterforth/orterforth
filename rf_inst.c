@@ -897,9 +897,8 @@ static void rf_inst_save(void)
 
 void rf_inst(void)
 {
-#ifdef SPECTRUM
+#ifndef RF_INST_LOCAL_DISC
   /* wait for disc server to init */
-  /* TODO Fix the underlying issue with spectrum serial */
   sleep(5);
 #endif
 

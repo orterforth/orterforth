@@ -4,10 +4,13 @@
 
 #define RF_LOG(name)
 
+/* stack can be smaller */
 long _stack = 1024L;
 
+/* no char translation */
 int (*_conread)() = 0;
 
+/* MODE 4, 80 columns, 25 rows */
 struct WINDOWDEF _condetails = {
   0,
   0,
@@ -200,9 +203,15 @@ void rf_init(void)
 {
   short mode = 4;
   short type = 1;
+  uint8_t p = 6; /* ACK */
+
+  /* MODE 4, TV */
   mt_dmode(&mode, &type);
+  /* open serial */
   mt_baud(4800);
   ser = io_open("SER2", 0);
+  /* send ack to close serial load */
+  io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);
 }
 
 void rf_code_emit(void)
@@ -211,11 +220,13 @@ void rf_code_emit(void)
   {
     uint8_t c = RF_SP_POP & 0x7F;
 
+    /* move cursor for backspace */
     if (c == 8) {
       sd_pcol(getchid(1), TIMEOUT_FOREVER);
     } else {
       io_sbyte(getchid(1), TIMEOUT_FOREVER, c);
     }
+
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
