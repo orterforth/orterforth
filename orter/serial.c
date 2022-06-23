@@ -264,8 +264,11 @@ static void restore(void)
 /* signal handler */
 static void handler(int signum)
 {
-#ifdef __linux__
+#ifdef __CYGWIN__
   const char *name = strsignal(signum);
+#endif
+#ifdef __linux__
+  char *name = strsignal(signum);
 #endif
 #ifdef __MACH__
   const char *name = sys_signame[signum];
