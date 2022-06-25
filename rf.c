@@ -291,7 +291,10 @@ uint8_t rf_digit(uint8_t base, uint8_t c)
 {
   if (c >= 0x30) {
     c -= 0x30;
-    if (c >= 10) {
+    if (c > 9) {
+      if (c < 17) {
+        return 0xFF;
+      }
       c -= 7;
     }
     if (c < base) {
