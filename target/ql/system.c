@@ -24,9 +24,6 @@ int main(int argc, char *argv[]);
 /* no C environnment setup */
 extern (*_Cstart)() = main;
 
-/* points to RF_ORIGIN */
-uint8_t *rf_memory;
-
 /* 64 BIT ARITHMETIC */
 
 typedef uintptr_t uint32_t;
@@ -114,18 +111,18 @@ void rf_code_uslas(void)
   RF_JUMP_NEXT;
 }
 
-static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
+static void rf_ustar(uint32_t a, uint32_t b, uint32_t *ch, uint32_t *cl)
 {
   /* TODO number of bits, max */
-	uintptr_t ahi = a >> 32;
-	uintptr_t alo = a & 0xffffffff;
-	uintptr_t bhi = b >> 32;
-	uintptr_t blo = b & 0xffffffff;
-	uintptr_t lo1 = ((ahi * blo) & 0xffffffff) + ((alo * bhi) & 0xffffffff) + (alo * blo >> 32);
-	uintptr_t lo2 = (alo * blo) & 0xffffffff;
+	uint32_t ahi = a >> 16;
+	uint32_t alo = a & 0xFFFF;
+	uint32_t bhi = b >> 16;
+	uint32_t blo = b & 0xFFFF;
+	uint32_t lo1 = ((ahi * blo) & 0xFFFF) + ((alo * bhi) & 0xFFFF) + (alo * blo >> 16);
+	uint32_t lo2 = (alo * blo) & 0xFFFF;
 
-	*ch = ahi * bhi + (ahi * blo >> 32) + (alo * bhi >> 32) + (lo1 >> 32);
-	*cl = (lo1 << 32) + lo2;
+	*ch = ahi * bhi + (ahi * blo >> 16) + (alo * bhi >> 16) + (lo1 >> 16);
+	*cl = (lo1 << 16) + lo2;
 }
 
 void rf_code_ustar(void)
