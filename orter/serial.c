@@ -496,33 +496,42 @@ int orter_serial(int argc, char **argv)
   init_serial(argv[0], atoi(argv[1]));
 
   /* set up select */
-  timeout.tv_sec = 10;
-  timeout.tv_usec = 100000;
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
   nfds = 0;
   if (0 > nfds) nfds = 0;
   if (1 > nfds) nfds = 1;
   if (serial_fd > nfds) nfds = serial_fd;
   nfds++;
 
-  /* init fd sets */
-  FD_ZERO(&readfds);
-  FD_ZERO(&writefds);
-  FD_ZERO(&exceptfds);
-
-  /* add in to read, err set */
-  FD_SET(0, &readfds);
-  FD_SET(0, &exceptfds);
-
-  /* add out to write, err set */
-  FD_SET(1, &writefds);
-  FD_SET(1, &exceptfds);
-
-  /* add port to read, write and err sets */
-  FD_SET(serial_fd, &readfds);
-  FD_SET(serial_fd, &writefds);
-  FD_SET(serial_fd, &exceptfds);
-
   for (;;) {
+
+    /* init fd sets */
+    FD_ZERO(&readfds);
+    FD_ZERO(&writefds);
+    FD_ZERO(&exceptfds);
+
+    /* add in to read, err set */
+    if (!in_pending && !eof) {
+      FD_SET(0, &readfds);
+      FD_SET(0, &exceptfds);
+    }
+
+    /* add out to write, err set */
+    if (out_pending) {
+      FD_SET(1, &writefds);
+      FD_SET(1, &exceptfds);
+    }
+
+    /* add port to read, write and err sets */
+    if (!out_pending) {
+      FD_SET(serial_fd, &readfds);
+      FD_SET(serial_fd, &exceptfds);
+    }
+    if (in_pending) {
+      FD_SET(serial_fd, &writefds);
+      FD_SET(serial_fd, &exceptfds);
+    }
 
     /* select */
     if (select(nfds, &readfds, &writefds, &exceptfds, &timeout) < 0) {
@@ -540,18 +549,18 @@ int orter_serial(int argc, char **argv)
 
     /* check for exceptions */
     if (isatty(1) && FD_ISSET(1, &exceptfds)) {
-      restore();
       perror("out error");
+      restore();
       return errno;
     }
     if (isatty(0) && FD_ISSET(0, &exceptfds)) {
-      restore();
       perror("in error");
+      restore();
       return errno;
     }
     if (FD_ISSET(serial_fd, &exceptfds)) {
-      restore();
       perror("serial error");
+      restore();
       return errno;
     }
 
@@ -564,15 +573,13 @@ int orter_serial(int argc, char **argv)
     /* serial to stdout */
     orter_serial_relay(orter_serial_rd, orter_serial_stdout_wr, out_buf, &out_offset, &out_pending);
 
-    if (eof) {
-      /* terminate after EOF and ACK */
-      if (ack && out_buf[0] == 6) {
-        break;
-      }
-      /* terminate after EOF and timer */
-      if (wai && time(0) > eof_timer) {
-        break;
-      }
+    /* terminate after ACK */
+    if (ack && out_buf[0] == 6) {
+      break;
+    }
+    /* terminate after EOF and timer */
+    if (wai && eof && time(0) > eof_timer) {
+      break;
     }
   }
 

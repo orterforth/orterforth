@@ -538,8 +538,9 @@ ql-clean :
 
 	rm -rf ql/*
 
-# load from serial
 QLSERIALBAUD := 4800
+
+# load from serial
 .PHONY : ql-load-serial
 ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
@@ -557,6 +558,7 @@ ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 	@touch 1.disc
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
 
+# loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader.ser : target/ql/loader.bas
 
 	cat $< > $@.io

@@ -5,24 +5,29 @@
 #define RF_LOG(name)
 
 /* stack can be smaller */
-long _stack = 1024L;
+long _stack = 512L;
+
+/* no channel redirection */
+long (*_cmdchannels)() = 0;
+
+/* no parameters */
+int (*_cmdparams)() = 0;
 
 /* no char translation */
 int (*_conread)() = 0;
 
-/* MODE 4, 80 columns, 25 rows */
-struct WINDOWDEF _condetails = {
-  0,
-  0,
-  0,
-  7,
-  480,
-  256,
-  16,
-  0
-};
+/* no console setup */
+void (*_consetup)() = 0;
 
+int main(int argc, char *argv[]);
+
+/* no C environnment setup */
+extern (*_Cstart)() = main;
+
+/* points to RF_ORIGIN */
 uint8_t *rf_memory;
+
+/* 64 BIT ARITHMETIC */
 
 typedef uintptr_t uint32_t;
 
@@ -197,6 +202,8 @@ void rf_code_rtgt(void)
   RF_JUMP_NEXT;  
 }
 
+static chanid_t con;
+
 static chanid_t ser;
 
 void rf_init(void)
@@ -210,8 +217,12 @@ void rf_init(void)
   /* open serial */
   mt_baud(4800);
   ser = io_open("SER2", 0);
-  /* send ack to close serial load */
+  /* send ACK to close serial load */
   io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);
+  /* 80 columns, 25 rows, white on black */
+  con = io_open("CON_480X256A16X0", 0);
+  sd_setpa(con, TIMEOUT_FOREVER, 0);
+  sd_setin(con, TIMEOUT_FOREVER, 7);
 }
 
 void rf_code_emit(void)
@@ -222,9 +233,9 @@ void rf_code_emit(void)
 
     /* move cursor for backspace */
     if (c == 8) {
-      sd_pcol(getchid(1), TIMEOUT_FOREVER);
+      sd_pcol(con, TIMEOUT_FOREVER);
     } else {
-      io_sbyte(getchid(1), TIMEOUT_FOREVER, c);
+      io_sbyte(con, TIMEOUT_FOREVER, c);
     }
 
     RF_USER_OUT++;
@@ -239,9 +250,9 @@ void rf_code_key(void)
     uint8_t k;
 
     /* get key */
-    sd_cure(getchid(1), TIMEOUT_FOREVER);
-    io_fbyte(getchid(0), TIMEOUT_FOREVER, (char *) &k);
-    sd_curs(getchid(1), TIMEOUT_FOREVER);
+    sd_cure(con, TIMEOUT_FOREVER);
+    io_fbyte(con, TIMEOUT_FOREVER, (char *) &k);
+    sd_curs(con, TIMEOUT_FOREVER);
 
     /* LF -> CR */
     if (k == 0x0A) k = 0x0D;
@@ -266,7 +277,7 @@ void rf_code_qterm(void)
 void rf_code_cr(void)
 {
   RF_START;
-  io_sbyte(getchid(1), TIMEOUT_FOREVER, 10);
+  io_sbyte(con, TIMEOUT_FOREVER, 10);
   RF_JUMP_NEXT;
 }
 
@@ -283,4 +294,6 @@ void rf_disc_write(char *p, uint8_t len)
 void rf_fin(void)
 {
   io_close(ser);
+
+  io_close(con);
 }

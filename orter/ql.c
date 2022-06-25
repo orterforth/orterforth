@@ -81,6 +81,7 @@ int orter_ql_serial_xtcc(int argc, char **argv)
     return errno;
   }
   dsp = getu32be(buf);
+
   /* get file size */
   if (fseek(ptr, 0, SEEK_END)) {
     perror("fseek failed");
