@@ -520,8 +520,13 @@ static void rf_uslas(void)
 
   b = (rf_double_t) RF_SP_POP;
   rf_dpop(&a);
-  RF_SP_PUSH((uintptr_t) (a % b));
-  RF_SP_PUSH((uintptr_t) (a / b));
+  if ((a >> RF_WORD_SIZE_BITS) >= b) {
+    RF_SP_PUSH(-1);
+    RF_SP_PUSH(-1);
+  } else {
+    RF_SP_PUSH((uintptr_t) (a % b));
+    RF_SP_PUSH((uintptr_t) (a / b));
+  }
 }
 
 void rf_code_uslas(void)
