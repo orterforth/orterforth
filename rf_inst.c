@@ -877,7 +877,11 @@ static void rf_inst_save(void)
   /* write to DR1 */
   unsigned int blk = 2000;
   /* start from ORG */
+#ifdef RF_INST_RELINK
+  char *i = (char *) RF_ORIGIN;
+#else
   char *i = (char *) RF_ORG;
+#endif
   /* write blocks to disc until HERE */
   char buf[128];
   uint8_t j;

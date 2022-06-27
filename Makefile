@@ -210,7 +210,7 @@ $(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
 .PHONY : $(TARGET)-help
 $(TARGET)-help :
 
-	@if [ "$(TARGET)" == "$(SYSTEM)" ] ; then cat help/system.txt ; else more help/$(TARGET).txt ; fi
+	@if [ "$(TARGET)" == "$(SYSTEM)" ] ; then cat help.txt ; else more target/$(TARGET)/help.txt ; fi
 
 # disc images from %.f files including orterforth.f
 %.disc : %.f | $(DISC)
@@ -562,18 +562,46 @@ ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 ql/loader.ser : target/ql/loader.bas
 
 	cat $< > $@.io
-	printf '\x1A' >> $@.io
+	printf '\032' >> $@.io
 	mv $@.io $@
 
-ql/orterforth : ql/rf.o ql/rf_inst.o ql/system.o ql/orterforth.o
+# inst executable
+ql/orterforth-inst : ql/rf.o ql/rf_inst.o ql/system.o ql/orterforth.o
 
 	qld -ms -o $@ $^
+
+# saved binary
+ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
+
+	$(ORTER) hex read < $< > $@
+
+# saved hex (with relink table)
+ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader.ser | $(DISC) $(ORTER)
+
+	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
+	@read -p "Then press enter to start: " LINE
+
+	@echo "* Loading loader..."
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.ser
+
+	@echo "* Loading orterforth..."
+	@sleep 1
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth-inst.ser
+
+	@echo "* Starting disc and waiting for completion..."
+	@touch $@.io
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc $@.io & pid=$$! ; \
+		scripts/waitforhex $@.io ; \
+		kill -9 $$pid
+
+	@mv $@.io $@
 
 ql/orterforth.o : orterforth.c rf.h target/ql/default.inc rf_inst.h | ql
 
 	qcc -o $@ -c $<
 
-ql/orterforth.ser : ql/orterforth | $(ORTER)
+# inst binary with serial header
+ql/orterforth-inst.ser : ql/orterforth-inst | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
@@ -582,6 +610,10 @@ ql/rf.o : rf.c rf.h target/ql/default.inc | ql
 	qcc -o $@ -c $<
 
 ql/rf_inst.o : rf_inst.c rf.h target/ql/default.inc | ql
+
+	qcc -o $@ -c $<
+
+ql/relink.o : target/ql/relink.c rf.h target/ql/default.inc | ql
 
 	qcc -o $@ -c $<
 

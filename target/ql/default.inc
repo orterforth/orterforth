@@ -1,8 +1,10 @@
 #define RF_INST_OVERWRITE
 
+#define RF_INST_SAVE
+
+#define RF_INST_RELINK
+
 #define RF_ORIGIN 196608
-/*#define RF_ORIGIN 229376*/
-/*#define RF_ORIGIN 237568*/
 #define RF_LIMIT 262144
 #define RF_STACK_SIZE 64
 #define RF_RETURN_STACK_SIZE 64

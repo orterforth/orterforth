@@ -28,70 +28,27 @@ extern (*_Cstart)() = main;
 
 typedef uintptr_t uint32_t;
 
-int nlz(uint32_t x)
+uint32_t div64(uint32_t numhi, uint32_t numlo, uint32_t divis, uint32_t *r)
 {
-   int n;
-
-   if (x == 0) return(32);
-   n = 0;
-   if (x <= 0x0000FFFF) {n = n +16; x = x <<16;}
-   if (x <= 0x00FFFFFF) {n = n + 8; x = x << 8;}
-   if (x <= 0x0FFFFFFF) {n = n + 4; x = x << 4;}
-   if (x <= 0x3FFFFFFF) {n = n + 2; x = x << 2;}
-   if (x <= 0x7FFFFFFF) {n = n + 1;}
-   return n;
-}
-
-uint32_t divlu2(uint32_t u1, uint32_t u0, uint32_t v,
-                uint32_t *r)
-{
-   const uint32_t b = 65536; // Number base (16 bits).
-   uint32_t un1, un0,        // Norm. dividend LSD's.
-            vn1, vn0,        // Norm. divisor digits.
-            q1, q0,          // Quotient digits.
-            un32, un21, un10,// Dividend digit pairs.
-            rhat;            // A remainder.
-   int s;                    // Shift amount for norm.
-
-   if (u1 >= v) {            // If overflow, set rem.
-      if (r != NULL)         // to an impossible value,
-         *r = 0xFFFFFFFF;    // and return the largest
-      return 0xFFFFFFFF;}    // possible quotient.
-
-   s = nlz(v);               // 0 <= s <= 31.
-   v = v << s;               // Normalize divisor.
-   vn1 = v >> 16;            // Break divisor up into
-   vn0 = v & 0xFFFF;         // two 16-bit digits.
-
-   un32 = (u1 << s) | (u0 >> 32 - s) & (-s >> 31);
-   un10 = u0 << s;           // Shift dividend left.
-
-   un1 = un10 >> 16;         // Break right half of
-   un0 = un10 & 0xFFFF;      // dividend into two digits.
-
-   q1 = un32/vn1;            // Compute the first
-   rhat = un32 - q1*vn1;     // quotient digit, q1.
-
-again1:
-   if (q1 >= b || q1*vn0 > b*rhat + un1) {
-     q1 = q1 - 1;
-     rhat = rhat + vn1;
-     if (rhat < b) goto again1;}
-
-   un21 = un32*b + un1 - q1*v;  // Multiply and subtract.
-
-   q0 = un21/vn1;            // Compute the second
-   rhat = un21 - q0*vn1;     // quotient digit, q0.
-
-again2:
-   if (q0 >= b || q0*vn0 > b*rhat + un0) {
-     q0 = q0 - 1;
-     rhat = rhat + vn1;
-     if (rhat < b) goto again2;}
-
-   if (r != NULL)            // If remainder is wanted,
-      *r = (un21*b + un0 - q0*v) >> s;     // return it.
-   return q1*b + q0;
+  uint32_t topbit = 0x80000000;
+	int pass = 0				; /*Pre-set the error marker*/
+	if (divis >= topbit || numhi >= divis) {
+    *r = 0xFFFFFFFF;
+    return 0xFFFFFFFF;
+  }
+	for (pass = 0; pass < 32; pass++) {
+    numhi <<= 1; /*Start to shift numerator left (top bit is lost)*/
+    if (numlo >= topbit) { 	/*; Carry bit from low word is '1'*/
+      numhi++	; /*Add the carry to hi word*/
+    }
+    numlo <<= 1		; /* End of Shift*/
+    if (numhi >= divis) { /*Jump if can't subtract*/
+      numhi -= divis		; /*Subtract divisor and ...		*/		
+      numlo++		; /*Add the flag to result (in low word)*/
+    }
+  }
+  *r = numhi;
+  return numlo;
 }
 
 void rf_code_uslas(void)
@@ -104,25 +61,34 @@ void rf_code_uslas(void)
     b = RF_SP_POP;
     ah = RF_SP_POP;
     al = RF_SP_POP;
-    q = divlu2(ah, al, b, &r);
+    q = div64(ah, al, b, &r);
     RF_SP_PUSH(r);
     RF_SP_PUSH(q);
   }
   RF_JUMP_NEXT;
 }
 
-static void rf_ustar(uint32_t a, uint32_t b, uint32_t *ch, uint32_t *cl)
+static void mul64(uint32_t a, uint32_t b, uint32_t *ch, uint32_t *cl)
 {
-  /* TODO number of bits, max */
-	uint32_t ahi = a >> 16;
-	uint32_t alo = a & 0xFFFF;
-	uint32_t bhi = b >> 16;
-	uint32_t blo = b & 0xFFFF;
-	uint32_t lo1 = ((ahi * blo) & 0xFFFF) + ((alo * bhi) & 0xFFFF) + (alo * blo >> 16);
-	uint32_t lo2 = (alo * blo) & 0xFFFF;
+  uint32_t ah = a >> 16;
+  uint32_t al = a & 0xFFFFU;
+  uint32_t bh = b >> 16;
+  uint32_t bl = b & 0xFFFFU;
+  uint32_t rl = al * bl;
+  uint32_t rm1 = ah * bl;
+  uint32_t rm2 = al * bh;
+  uint32_t rh = ah * bh;
+  uint32_t rml = (rm1 & 0xFFFFU) + (rm2 & 0xFFFFU);
+  uint32_t rmh = (rm1 >> 16) + (rm2 >> 16);
 
-	*ch = ahi * bhi + (ahi * blo >> 16) + (alo * bhi >> 16) + (lo1 >> 16);
-	*cl = (lo1 << 16) + lo2;
+  rl += rml << 16;
+  if (rml & 0xFFFF0000U) {
+    rmh++;
+  }
+  rh += rmh;
+
+  *cl = rl;
+  *ch = rh;
 }
 
 void rf_code_ustar(void)
@@ -134,7 +100,10 @@ void rf_code_ustar(void)
 
     a = RF_SP_POP;
     b = RF_SP_POP;
+/*
     rf_ustar(a, b, &ch, &cl);
+*/
+    mul64(a, b, &ch, &cl);
     RF_SP_PUSH(cl);
     RF_SP_PUSH(ch);
   }
