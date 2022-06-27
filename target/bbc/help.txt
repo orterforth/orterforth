@@ -3,7 +3,8 @@ Building for the BBC Micro Model B
 You will need:
 
  * cc65 compiler    : https://cc65.github.io
- * bbcim            : http://wouter.bbcmicro.net/bbc/pc-software-whs.html
+ * bbcim            :
+   http://wouter.bbcmicro.net/bbc/pc-software-whs.html
  * MAME emulator    : https://www.mamedev.org
  * BBC ROM files at : roms/bbcb/os12.rom 
                       roms/bbcb/basic2.rom 
@@ -11,15 +12,22 @@ You will need:
                       roms/bbcb/saa5050 
                       roms/bbcb/dnfs120.rom
 
-To build, call:
+To build in MAME, call:
 
- make TARGET=bbc (to build in MAME)
+ make TARGET=bbc                    (C code, slower)
+ make TARGET=bbc BBCOPTION=assembly (assembly code)
+ make TARGET=bbc BBCOPTION=tape     (assembly code, no disk
+                                     buffers, so starts at
+                                     &0E00)
 
 Target files are:
 
  bbc/orterforth     (pure binary)
  bbc/orterforth.ssd (disc image)
+ bbc/orterforth.uef (tape image)
 
 To run in MAME, call:
 
- make run TARGET=bbc
+ make run TARGET=bbc                    (loads .ssd)
+ make run TARGET=bbc BBCOPTION=assembly (loads .ssd)
+ make run TARGET=bbc BBCOPTION=tape     (loads .uef)

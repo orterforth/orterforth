@@ -312,8 +312,8 @@ static size_t nbread(int fd, char *off, size_t len)
   /* read bytes */
   n = read(fd, off, len);
   if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    restore();
     perror("read failed");
+    restore();
     exit(errno);
   }
 

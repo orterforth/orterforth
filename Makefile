@@ -270,6 +270,9 @@ bbc :
 
 	mkdir $@
 
+.PHONY : bbc-build
+bbc-build : bbc/orterforth.ssd bbc/orterforth.uef
+
 .PHONY : bbc-clean
 bbc-clean : 
 
@@ -283,7 +286,7 @@ BBCMAME := mame bbcb -video opengl \
 # MAME command line for fast inst, no video and timeout
 BBCMAMEFAST := mame bbcb -video none -sound none \
 	-skip_gameinfo -nomax -window \
-	-speed 20 -frameskip 10 -nothrottle -seconds_to_run 640 \
+	-speed 20 -frameskip 10 -nothrottle -seconds_to_run 800 \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # default is to load from disk
@@ -364,7 +367,6 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 	touch $@.io
 
 	# serve disc
-
 	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard orterforth.disc $@.io &
 
 	# run emulator, wait for result

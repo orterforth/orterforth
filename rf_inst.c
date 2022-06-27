@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
@@ -903,7 +904,7 @@ void rf_inst(void)
 {
 #ifndef RF_INST_LOCAL_DISC
   /* wait for disc server to init */
-  sleep(5);
+  /*sleep(5);*/
 #endif
 
   /* cold start */
