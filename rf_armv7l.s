@@ -12,7 +12,7 @@
 	.text
 
 	.text
-	.align	2
+	.p2align 2
 	.global	rf_trampoline
 	.global	_rf_trampoline
 rf_trampoline:
@@ -37,7 +37,7 @@ trampoline1:
 trampoline2:
 	pop {fp, pc}
 
-	.align	2
+	.p2align 2
 	.global	rf_start
 	.global	_rf_start
 rf_start:
@@ -53,13 +53,13 @@ _rf_start:
 	str	r7, [r0]
 	bx	lr                      @ carry on in C
 
-	.align	2
+	.p2align 2
 dpush:
 	str r3, [r8, #-4]!
 apush:
 	str r0, [r8, #-4]!
 
-	.align	2
+	.p2align 2
 	.global	rf_next
 rf_next:
 next:
@@ -68,21 +68,21 @@ next1:
 	ldr	r0, [r3]                @ TO 'CFA'
 	bx r0
 
-	.align	2
+	.p2align 2
 	.global	rf_code_lit
 rf_code_lit:
 
 	ldr r0, [r10], #4           @ AX <- LITERAL
 	b apush                     @ TO TOP OF STACK
 
-	.align	2
+	.p2align 2
 	.global	rf_code_exec
 rf_code_exec:
 
 	ldr r3, [r8], #4            @ GET CFA
 	b next1                     @ EXECUTE NEXT
 
-	.align	2
+	.p2align 2
 	.global	rf_code_bran
 rf_code_bran:
 
@@ -91,7 +91,7 @@ bran1:
 	add r10, r10, r0            @ (IP) <- (IP) + ((IP))
 	b next                      @ JUMP TO OFFSET
 
-	.align	2
+	.p2align 2
 	.global	rf_code_zbran
 rf_code_zbran:
 
@@ -101,7 +101,7 @@ rf_code_zbran:
 	add r10, r10, #4            @ NO, CONTINUE...
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_xloop
 rf_code_xloop:
 
@@ -120,14 +120,14 @@ xloo1:
 	add r10, r10, #4            @ BYPASS BRANCH OFFSET
 	b next                      @ CONTINUE...
 
-	.align	2
+	.p2align 2
 	.global	rf_code_xploo
 rf_code_xploo:
 
 	ldr r1, [r8], #4            @ GET LOOP VALUE
 	b xloo1
 
-	.align	2
+	.p2align 2
 	.global	rf_code_xdo
 rf_code_xdo:
 
@@ -137,14 +137,14 @@ rf_code_xdo:
 	str r3, [r7, #-4]!
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_rr
 rf_code_rr:
 
 	ldr r0, [r7]                @ GET INDEX VALUE
 	b apush                     @ TO PARAMETER STACK
 
-	.align	2
+	.p2align 2
 	.global	rf_code_digit
 rf_code_digit:
 
@@ -171,7 +171,7 @@ digi2:
 	mov r0, #0                  @ FALSE FLAG
 	b apush                     @ BYE
 
-	.align	2
+	.p2align 2
 	.global	rf_code_pfind
 rf_code_pfind:
 
@@ -237,7 +237,7 @@ pfin6:
 
 	b apush                       @ DONE (NO MATCH FOUND)
 
-	.align	2
+	.p2align 2
 	.global	rf_code_encl
 rf_code_encl:
 
@@ -287,7 +287,7 @@ encl4:
 	add r0, r0, #1                @ COUNT +1
 	b dpush
 
-	.align	2
+	.p2align 2
 	.global	rf_code_cmove
 rf_code_cmove:
 	
@@ -304,7 +304,7 @@ cmov1:
 cmov2:
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_ustar
 rf_code_ustar:
 
@@ -313,7 +313,7 @@ rf_code_ustar:
 	umull r3, r0, r1, r2
 	b dpush
 
-	.align	2
+	.p2align 2
 	.global	rf_code_uslas
 rf_code_uslas:
 
@@ -360,7 +360,7 @@ umdiv3:
 
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_andd
 rf_code_andd:
 
@@ -370,7 +370,7 @@ rf_code_andd:
 	str r0, [r8]
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_orr
 rf_code_orr:
 
@@ -380,7 +380,7 @@ rf_code_orr:
 	str r0, [r8]
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_xorr
 rf_code_xorr:
 
@@ -390,14 +390,14 @@ rf_code_xorr:
 	str r0, [r8]
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_spat
 rf_code_spat:
 
 	mov r0, r8
 	b apush
 
-	.align	2
+	.p2align 2
 	.global	rf_code_spsto
 rf_code_spsto:
 
@@ -406,7 +406,7 @@ rf_code_spsto:
 	ldr r8, [r1, #12]           @ RESET PARAM. STACK PT.
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_rpsto
 rf_code_rpsto:
 
@@ -415,14 +415,14 @@ rf_code_rpsto:
 	ldr r7, [r1, #16]           @ RESET RETURN STACK PT.
 	b next
 
-	.align	2
+	.p2align 2
 	.global	rf_code_semis
 rf_code_semis:
 
 	ldr r10, [r7], #4           @ (IP) <- (R1)
 	b next                      @ ADJUST STACK
 
-	.align	2
+	.p2align 2
 	.global	rf_code_leave
 rf_code_leave:
 
@@ -430,7 +430,7 @@ rf_code_leave:
 	str r0, [r7, #4]            @ STORE IT AT LIMIT
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_tor
 rf_code_tor:
 
@@ -438,7 +438,7 @@ rf_code_tor:
 	str r1, [r7, #-4]!          @ ADD TO RETURN STACK
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_fromr
 rf_code_fromr:
 
@@ -446,7 +446,7 @@ rf_code_fromr:
 	str r1, [r8, #-4]!          @ DELETE FROM STACK
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_zequ
 rf_code_zequ:
 
@@ -459,7 +459,7 @@ rf_code_zequ:
 zequ1:
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_zless
 rf_code_zless:
 
@@ -472,7 +472,7 @@ rf_code_zless:
 zless1:
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_plus
 rf_code_plus:
 
@@ -481,7 +481,7 @@ rf_code_plus:
 	add r0, r0, r1
 	b apush
 
-	.align 2
+	.p2align 2
 	.global	rf_code_dplus
 rf_code_dplus:
 
@@ -493,7 +493,7 @@ rf_code_dplus:
 	adc r0, r0, r1              @ SHW
 	b dpush
 
-	.align 2
+	.p2align 2
 	.global rf_code_minus
 rf_code_minus:
 
@@ -501,7 +501,7 @@ rf_code_minus:
 	neg r0, r0
 	b apush
 
-	.align 2
+	.p2align 2
 	.global	rf_code_dminu
 rf_code_dminu:
 
@@ -513,21 +513,21 @@ rf_code_dminu:
 	sbc r0, r0, r1              @ HIGH WORD
 	b dpush
 
-	.align 2
+	.p2align 2
 	.global rf_code_over
 rf_code_over:
 
 	ldr r0, [r8, #4]
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_drop
 rf_code_drop:
 
 	add r8, r8, #4
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_swap
 rf_code_swap:
 
@@ -537,14 +537,14 @@ rf_code_swap:
 	str r0, [r8]
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_dup
 rf_code_dup:
 
 	ldr r0, [r8]
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_pstor
 rf_code_pstor:
 
@@ -555,7 +555,7 @@ rf_code_pstor:
 	str r2, [r1]
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_toggl
 rf_code_toggl:
 
@@ -566,7 +566,7 @@ rf_code_toggl:
 	str r2, [r1]
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_at
 rf_code_at:
 
@@ -575,7 +575,7 @@ rf_code_at:
 	str r0, [r8]
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_cat
 rf_code_cat:
 
@@ -584,7 +584,7 @@ rf_code_cat:
 	str r0, [r8]
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_store
 rf_code_store:
 
@@ -593,7 +593,7 @@ rf_code_store:
 	str r0, [r1]
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_cstor
 rf_code_cstor:
 
@@ -602,7 +602,7 @@ rf_code_cstor:
 	strb r0, [r1]
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_docol
 rf_code_docol:
 
@@ -611,14 +611,14 @@ rf_code_docol:
 	mov r10, r3                 @ (IP) <- (W)
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_docon
 rf_code_docon:
 
 	ldr r0, [r3, #4]!           @ PFA @ GET DATA
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_dovar
 rf_code_dovar:
 
@@ -626,7 +626,7 @@ rf_code_dovar:
 	str r3, [r8, #-4]!          @ (S1) <- PFA
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_douse
 rf_code_douse:
 
@@ -636,7 +636,7 @@ rf_code_douse:
 	add r0, r0, r1
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_dodoe
 rf_code_dodoe:
 
@@ -646,7 +646,7 @@ rf_code_dodoe:
 	str r3, [r8, #-4]!          @ PFA
 	b next
 
-	.align 2
+	.p2align 2
 	.global rf_code_stod
 rf_code_stod:
 
@@ -658,14 +658,14 @@ rf_code_stod:
 stod1:
 	b dpush
 
-	.align 2
+	.p2align 2
 	.global rf_code_rcll
 rf_code_rcll:
 
 	mov r0, #4
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_rcls
 rf_code_rcls:
 
@@ -673,7 +673,7 @@ rf_code_rcls:
 	lsl r0, #2
 	b apush
 
-	.align 2
+	.p2align 2
 	.global rf_code_rxit
 rf_code_rxit:
 
