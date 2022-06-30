@@ -521,6 +521,17 @@ iterate :
 
 	sh scripts/iterate.sh todo.f
 
+
+# === TRS-80 Model 100 ===
+
+m100 :
+
+	mkdir $@
+
+m100/hw.co : | m100
+
+	zcc +m100 -subtype=default hw.c -o $@ -create-app
+
 orterforth.inc : orterforth.disc
 
 	xxd -i $< > $@
@@ -552,16 +563,27 @@ ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 	@echo "* Loading loader..."
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.ser
 
-	@echo "* Loading orterforth..."
+	@echo "* Loading install..."
 	@sleep 1
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.ser
 
-	@echo "* Starting disc..."
-	@touch 1.disc
-	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
+	@echo "* Loading job..."
+	@sleep 1
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.ser
+
+	#@echo "* Starting disc..."
+	#@touch 1.disc
+	#@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
 
 # loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader.ser : target/ql/loader.bas
+
+	cat $< > $@.io
+	printf '\032' >> $@.io
+	mv $@.io $@
+
+# loader terminated with Ctrl+Z, to load via SER2Z
+ql/loader-inst.ser : target/ql/loader-inst.bas
 
 	cat $< > $@.io
 	printf '\032' >> $@.io
@@ -571,6 +593,16 @@ ql/loader.ser : target/ql/loader.bas
 ql/orterforth-inst : ql/rf.o ql/rf_inst.o ql/system.o ql/orterforth.o
 
 	qld -ms -o $@ $^
+
+# final executable
+ql/orterforth : ql/rf.o ql/relink.o ql/system.o ql/orterforth.o
+
+	qld -ms -o $@ $^
+
+# final binary with serial header
+ql/orterforth.ser : ql/orterforth | $(ORTER)
+
+	$(ORTER) ql serial-xtcc $< > $@
 
 # saved binary
 ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
