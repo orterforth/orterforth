@@ -1,2 +1,10 @@
-5 OPEN #4,SER2R:PRINT #4, CHR$(6);:CLOSE #4
-10 PRINT "loading orterforth at location "; RESPR(RESPR(0)-196608):EXEC_W SER2R
+1000 ack
+1010 A=RESPR(RESPR(0)-196608)
+1020 PRINT "loading orterforth at location "; A
+1030 LBYTES SER2R, A
+1040 ack
+1050 EXEC_W SER2R
+1090 STOP
+1100 DEFine PROCedure ack
+1110 OPEN #4,SER2R:PRINT #4, CHR$(6);:CLOSE #4
+1120 END DEFine ack

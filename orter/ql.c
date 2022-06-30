@@ -52,6 +52,68 @@ int orter_ql_serial_header(int argc, char **argv)
   return 0;
 }
 
+int orter_ql_serial_bytes(int argc, char **argv)
+{
+  uint8_t header[15];
+  uint32_t len;
+  /*uint32_t dsp;*/
+
+  int c;
+  int size;
+  /*uint8_t buf[4];*/
+  char *filename = argv[3];
+
+  /* open file */
+  FILE *ptr = fopen(filename, "rb");
+  if (!ptr) {
+    perror("fopen failed");
+    return errno;
+  }
+
+  /* get file size */
+  if (fseek(ptr, 0, SEEK_END)) {
+    perror("fseek failed");
+    return errno;
+  }
+  size = ftell(ptr);
+  if (size == -1) {
+    perror("ftell failed");
+    return errno;
+  }
+  len = size;
+
+  /* return to start */
+  if (fseek(ptr, 0L, SEEK_SET)) {
+    perror("fseek failed");
+    return errno;
+  }
+
+  serial_header(len, 0, 0, 0, header);
+  fwrite(header, 1, 15, stdout);
+
+  /* write data */
+  while ((c = fgetc(ptr)) != -1) {
+    if (putchar(c) == -1) {
+      perror("putchar failed");
+      return 1;
+    }
+  };
+
+  /* close file */
+  if (fclose(ptr)) {
+    perror("fclose failed");
+    return errno;
+  }
+
+  /* flush output */
+  if (fflush(stdout)) {
+    perror("fflush failed");
+    return errno;
+  }
+
+  return 0;
+}
+
 int orter_ql_serial_xtcc(int argc, char **argv)
 {
   uint8_t header[15];
@@ -106,7 +168,7 @@ int orter_ql_serial_xtcc(int argc, char **argv)
   /* write data */
   while ((c = fgetc(ptr)) != -1) {
     if (putchar(c) == -1) {
-      perror("write failed");
+      perror("putchar failed");
       return 1;
     }
   };
@@ -119,7 +181,7 @@ int orter_ql_serial_xtcc(int argc, char **argv)
 
   /* flush output */
   if (fflush(stdout)) {
-    perror("fclose failed");
+    perror("fflush failed");
     return errno;
   }
 

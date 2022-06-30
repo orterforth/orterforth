@@ -555,7 +555,7 @@ QLSERIALBAUD := 4800
 
 # load from serial
 .PHONY : ql-load-serial
-ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
+ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE
@@ -565,7 +565,7 @@ ql-load-serial : ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
 	@echo "* Loading install..."
 	@sleep 1
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.ser
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.bin.ser
 
 	@echo "* Loading job..."
 	@sleep 1
@@ -610,13 +610,13 @@ ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # saved hex (with relink table)
-ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader.ser | $(DISC) $(ORTER)
+ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.ser
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader-inst.ser
 
 	@echo "* Loading orterforth..."
 	@sleep 1
@@ -629,6 +629,11 @@ ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader.ser | $(DISC) $(ORTER)
 		kill -9 $$pid
 
 	@mv $@.io $@
+
+# saved binary with serial header
+ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
+
+	$(ORTER) ql serial-bytes $< > $@
 
 ql/orterforth.o : orterforth.c rf.h target/ql/default.inc rf_inst.h | ql
 
