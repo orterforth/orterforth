@@ -16,9 +16,12 @@
 #ifdef __linux__
 #include <sys/file.h>
 #endif
+/* TODO Windows */
 #include <fcntl.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -34,27 +37,26 @@ static struct termios serial_attr;
 static struct termios serial_attr_save;
 
 /* stdin */
-static int            in_init = 0;
 static struct termios in_attr;
 static struct termios in_attr_save;
 
 /* stdout */
-static int            out_init = 0;
 
 /* ACK received */
-static int            ack = 0;
+static char           ack = 0;
 
 /* EOF indicator */
-static int            wai = 0;
+static char           wai = 0;
+static int            wai_wait = 1;
 static int            eof = 0;
-static time_t         eof_timer = 0;
-static int            eof_wait = 1;
+static time_t         wai_timer = 0;
 
 /* buffers */
 static char           in_buf[256];
 static size_t         in_pending = 0;
 static char *         in_offset = in_buf;
 
+/* TODO mapping behaviour, naming, should map operation live in a rdwr_t? */
 static char           omap_buf[256];
 static size_t         omap_pending = 0;
 static char *         omap_offset = omap_buf;
@@ -262,6 +264,7 @@ static void restore(void)
 }
 
 /* signal handler */
+/* TODO lives in main? */
 static void handler(int signum)
 {
 #ifdef __CYGWIN__
@@ -320,7 +323,7 @@ static size_t nbread(int fd, char *off, size_t len)
   /* mark EOF */
   if (n == 0 && !eof) {
     eof = 1;
-    eof_timer = time(0) + eof_wait;
+    wai_timer = time(0) + wai_wait;
   }
 
   /* return actual length */
@@ -329,36 +332,11 @@ static size_t nbread(int fd, char *off, size_t len)
 
 size_t orter_serial_stdin_rd(char *off, size_t len)
 {
-  if (!in_init) {
-    if (fcntl(0, F_SETFL, O_NONBLOCK)) {
-      perror("stdin fcntl failed");
-      restore();
-      exit(errno);
-    }
-    if (isatty(0)) {
-      tcgetattr(0, &in_attr_save);
-      in_attr = in_attr_save;
-      in_attr.c_lflag &= ~(ECHO|ICANON);
-      in_attr.c_cc[VTIME] = 0;
-      in_attr.c_cc[VMIN] = 1;
-      in_attr.c_iflag |= BRKINT;
-      tcsetattr(0, TCSANOW, &in_attr);
-    }
-    in_init = 1;
-  }
   return nbread(0, off, len);
 }
 
 size_t orter_serial_stdout_wr(char *off, size_t len)
 {
-  if (!out_init) {
-    if (fcntl(1, F_SETFL, O_NONBLOCK)) {
-      perror("stdout fcntl failed");
-      restore();
-      exit(errno);
-    }
-    out_init = 1;
-  }
   return nbwrite(1, off, len);
 }
 
@@ -407,12 +385,14 @@ static void bufwrite(rdwr_t wr, char *buf, char **offset, size_t *pending)
   }
 }
 
+/* TODO rdwr stuff to separate module? */
 void orter_serial_relay(rdwr_t rd, rdwr_t wr, char *buf, char **offset, size_t *pending)
 {
   bufread(rd, buf, offset, pending);
   bufwrite(wr, buf, offset, pending);
 }
 
+/* TODO lives in main? */
 void init_signal(void)
 {
   signal(SIGHUP, handler);
@@ -425,10 +405,42 @@ void init_signal(void)
   signal(SIGSYS, handler);
 }
 
+/* TODO lose */
 void init_serial(char *name, int baud)
 {
   if (orter_serial_open(name, baud)) {
     perror("serial open failed");
+    exit(errno);
+  }
+}
+
+void init_std()
+{
+  if (fcntl(0, F_SETFL, O_NONBLOCK)) {
+    perror("stdin fcntl failed");
+    restore();
+    exit(errno);
+  }
+  if (isatty(0)) {
+    if (tcgetattr(0, &in_attr_save)) {
+      perror("stdin tcgetattr failed");
+      restore();
+      exit(errno);
+    }
+    in_attr = in_attr_save;
+    in_attr.c_lflag &= ~(ECHO|ICANON);
+    in_attr.c_cc[VTIME] = 0;
+    in_attr.c_cc[VMIN] = 1;
+    in_attr.c_iflag |= BRKINT;
+    if (tcsetattr(0, TCSANOW, &in_attr)) {
+      perror("stdin tcsetattr failed");
+      restore();
+      exit(errno);
+    }
+  }
+  if (fcntl(1, F_SETFL, O_NONBLOCK)) {
+    perror("stdout fcntl failed");
+    restore();
     exit(errno);
   }
 }
@@ -456,7 +468,7 @@ static void opts(int argc, char **argv)
         break;
       case 'e':
         wai = 1;
-        eof_wait = atoi(optarg);
+        wai_wait = atoi(optarg);
         break;
       case 'h': usage(); break;
       case 'o':
@@ -494,6 +506,9 @@ int orter_serial(int argc, char **argv)
 
   /* serial */
   init_serial(argv[0], atoi(argv[1]));
+
+  /* stdin/stdout */
+  init_std();
 
   /* set up select */
   timeout.tv_sec = 1;
@@ -548,16 +563,20 @@ int orter_serial(int argc, char **argv)
     }
 
     /* check for exceptions */
-    if (isatty(1) && FD_ISSET(1, &exceptfds)) {
+    if (FD_ISSET(1, &exceptfds)) {
       perror("out error");
       restore();
       return errno;
     }
-    if (isatty(0) && FD_ISSET(0, &exceptfds)) {
+
+    /* exceptions expected from stdin until pipe attached */
+/*
+    if (FD_ISSET(0, &exceptfds)) {
       perror("in error");
       restore();
       return errno;
     }
+*/
     if (FD_ISSET(serial_fd, &exceptfds)) {
       perror("serial error");
       restore();
@@ -578,7 +597,7 @@ int orter_serial(int argc, char **argv)
       break;
     }
     /* terminate after EOF and timer */
-    if (wai && eof && time(0) > eof_timer) {
+    if (wai && eof && time(0) > wai_timer) {
       break;
     }
   }
