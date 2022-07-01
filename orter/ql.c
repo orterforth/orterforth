@@ -93,9 +93,13 @@ static int writeheader(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext)
 {
   uint8_t header[15];
 
-  serial_header(len, 1, dsp, 0, header);
+  serial_header(len, typ, dsp, ext, header);
   if (fwrite(header, 1, 15, stdout) != 15) {
     perror("fwrite failed");
+    return errno;
+  }
+  if (fflush(stdout)) {
+    perror("fflush failed");
     return errno;
   }
 
@@ -104,11 +108,14 @@ static int writeheader(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext)
 
 int orter_ql_serial_header(int argc, char **argv)
 {
-  uint8_t header[15];
+  if (writeheader(
+    strtol(argv[2], 0, 0),
+    strtol(argv[3], 0, 0),
+    strtol(argv[4], 0, 0),
+    strtol(argv[5], 0, 0))) {
+    return errno;
+  }
 
-  serial_header(strtol(argv[2], 0, 0), strtol(argv[3], 0, 0), strtol(argv[4], 0, 0), strtol(argv[5], 0, 0), header);
-  fwrite(header, 1, 15, stdout);
-  fflush(stdout);
   return 0;
 }
 
