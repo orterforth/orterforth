@@ -28,6 +28,53 @@ static void setu32be(uint32_t n, uint8_t *p)
   setu16be((uint16_t) n & 0x0000FFFF, p + 2);
 }
 
+static int getfilesize(FILE *ptr, long *size)
+{
+  /* get file size */
+  if (fseek(ptr, 0, SEEK_END)) {
+    perror("fseek failed");
+    return errno;
+  }
+  *size = ftell(ptr);
+  if (*size == -1) {
+    perror("ftell failed");
+    return errno;
+  }
+  /* return to start */
+  if (fseek(ptr, 0L, SEEK_SET)) {
+    perror("fseek failed");
+    return errno;
+  }
+
+  return 0;
+}
+
+static int writefile(FILE *ptr)
+{
+  int c;
+
+  while ((c = fgetc(ptr)) != -1) {
+    if (putchar(c) == -1) {
+      perror("putchar failed");
+      return 1;
+    }
+  };
+
+  /* close file */
+  if (fclose(ptr)) {
+    perror("fclose failed");
+    return errno;
+  }
+
+  /* flush output */
+  if (fflush(stdout)) {
+    perror("fflush failed");
+    return errno;
+  }
+
+  return 0;
+}
+
 /* 15-byte QL file header for serial and net */
 static void serial_header(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext, uint8_t *header)
 {
@@ -42,6 +89,19 @@ static void serial_header(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext,
   header += 4;
 }
 
+static int writeheader(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext)
+{
+  uint8_t header[15];
+
+  serial_header(len, 1, dsp, 0, header);
+  if (fwrite(header, 1, 15, stdout) != 15) {
+    perror("fwrite failed");
+    return errno;
+  }
+
+  return 0;
+}
+
 int orter_ql_serial_header(int argc, char **argv)
 {
   uint8_t header[15];
@@ -54,13 +114,8 @@ int orter_ql_serial_header(int argc, char **argv)
 
 int orter_ql_serial_bytes(int argc, char **argv)
 {
-  uint8_t header[15];
   uint32_t len;
-  /*uint32_t dsp;*/
-
-  int c;
-  int size;
-  /*uint8_t buf[4];*/
+  long size;
   char *filename = argv[3];
 
   /* open file */
@@ -70,44 +125,19 @@ int orter_ql_serial_bytes(int argc, char **argv)
     return errno;
   }
 
-  /* get file size */
-  if (fseek(ptr, 0, SEEK_END)) {
-    perror("fseek failed");
-    return errno;
-  }
-  size = ftell(ptr);
-  if (size == -1) {
-    perror("ftell failed");
+  /* size */
+  if (getfilesize(ptr, &size)) {
     return errno;
   }
   len = size;
 
-  /* return to start */
-  if (fseek(ptr, 0L, SEEK_SET)) {
-    perror("fseek failed");
+  /* header */
+  if (writeheader(len, 0, 0, 0)) {
     return errno;
   }
 
-  serial_header(len, 0, 0, 0, header);
-  fwrite(header, 1, 15, stdout);
-
-  /* write data */
-  while ((c = fgetc(ptr)) != -1) {
-    if (putchar(c) == -1) {
-      perror("putchar failed");
-      return 1;
-    }
-  };
-
-  /* close file */
-  if (fclose(ptr)) {
-    perror("fclose failed");
-    return errno;
-  }
-
-  /* flush output */
-  if (fflush(stdout)) {
-    perror("fflush failed");
+  /* body */
+  if (writefile(ptr)) {
     return errno;
   }
 
@@ -116,13 +146,10 @@ int orter_ql_serial_bytes(int argc, char **argv)
 
 int orter_ql_serial_xtcc(int argc, char **argv)
 {
-  uint8_t header[15];
   uint32_t len;
   uint32_t dsp;
-
-  int c;
-  int size;
-  uint8_t buf[4];
+  long size;
+  uint8_t buf[8];
   char *filename = argv[3];
 
   /* open file */
@@ -132,56 +159,34 @@ int orter_ql_serial_xtcc(int argc, char **argv)
     return errno;
   }
 
-  /* TODO validate XTcc field is present */
   /* get xtcc field */
-  if (fseek(ptr, -4L, SEEK_END)) {
+  if (fseek(ptr, -8L, SEEK_END)) {
     perror("fseek failed");
     return errno;
   }
-  if (fread(buf, 1, 4, ptr) != 4) {
+  if (fread(buf, 1, 8, ptr) != 8) {
     perror("fread failed");
     return errno;
   }
-  dsp = getu32be(buf);
-
-  /* get file size */
-  if (fseek(ptr, 0, SEEK_END)) {
-    perror("fseek failed");
-    return errno;
+  if (memcmp(buf, "XTcc", 4)) {
+    fprintf(stderr, "XTcc field not found\n");
+    return 1;
   }
-  size = ftell(ptr);
-  if (size == -1) {
-    perror("ftell failed");
+  dsp = getu32be(buf + 4);
+
+  /* size */
+  if (getfilesize(ptr, &size)) {
     return errno;
   }
   len = size;
 
-  /* return to start */
-  if (fseek(ptr, 0L, SEEK_SET)) {
-    perror("fseek failed");
+  /* header */
+  if (writeheader(len, 1, dsp, 0)) {
     return errno;
   }
 
-  serial_header(len, 1, dsp, 0, header);
-  fwrite(header, 1, 15, stdout);
-
-  /* write data */
-  while ((c = fgetc(ptr)) != -1) {
-    if (putchar(c) == -1) {
-      perror("putchar failed");
-      return 1;
-    }
-  };
-
-  /* close file */
-  if (fclose(ptr)) {
-    perror("fclose failed");
-    return errno;
-  }
-
-  /* flush output */
-  if (fflush(stdout)) {
-    perror("fflush failed");
+  /* body */
+  if (writefile(ptr)) {
     return errno;
   }
 
