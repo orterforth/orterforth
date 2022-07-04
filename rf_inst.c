@@ -509,9 +509,15 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 56
+#define RF_INST_CODE_LIT_LIST_SIZE 62
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
+  { 0, rf_code_rcll },
+  { 0, rf_code_rcls },
+  { 0, rf_code_rcod },
+  { 0, rf_code_rlns },
+  { 0, rf_code_rtgt },
+  { 0, rf_code_rxit },
   { "lit", rf_code_lit },
   { "exec", rf_code_exec },
   { "bran", rf_code_bran },
@@ -673,7 +679,9 @@ static void rf_inst_forward(void)
   /* code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    rf_inst_def_literal(code->name, (uintptr_t) code->value);
+    if (code->name) {
+      rf_inst_def_literal(code->name, (uintptr_t) code->value);
+    }
   }
 
   /* for +ORIGIN */
@@ -880,13 +888,27 @@ static void rf_inst_save(void)
   /* start from ORG */
 #ifdef RF_INST_RELINK
   char *i = (char *) RF_ORIGIN;
+  char *e = (char *) RF_USER_DP;
 #else
   char *i = (char *) RF_ORG;
+  char *e = (char *) RF_USER_DP;
 #endif
   /* write blocks to disc until HERE */
   char buf[128];
   uint8_t j;
-  while (i < (char *) RF_USER_DP) {
+#ifdef RF_INST_RELINK
+  /* write table of code addresses */
+  for (j = 0; j < RF_INST_CODE_LIT_LIST_SIZE; j++) {
+    *((rf_code_t *) e) = rf_inst_code_lit_list[j].value;
+    e += RF_WORD_SIZE;
+  }
+  /* write two links used in COLD */
+  *((rf_code_t *) e) = rf_cold_forth;
+  e += RF_WORD_SIZE;
+  *((rf_code_t *) e) = rf_cold_abort;
+  e += RF_WORD_SIZE;
+#endif
+  while (i < e) {
     for (j = 0; j < 128;) {
       uint8_t b = *i++;
       buf[j++] = rf_inst_hex(b >> 4);

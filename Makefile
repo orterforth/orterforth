@@ -562,18 +562,21 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 
 	@echo "* Loading loader..."
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.ser
+	@sleep 3
 
 	@echo "* Loading install..."
 	@sleep 1
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.bin.ser
+	@sleep 3
 
 	@echo "* Loading job..."
 	@sleep 1
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.ser
+	@sleep 3
 
-	#@echo "* Starting disc..."
-	#@touch 1.disc
-	#@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
+	@echo "* Starting disc..."
+	@touch 1.disc
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
 
 # loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader.ser : target/ql/loader.bas
@@ -618,7 +621,7 @@ ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader-inst.ser | $(DISC) $(OR
 	@echo "* Loading loader..."
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader-inst.ser
 
-	@echo "* Loading orterforth..."
+	@echo "* Loading installer..."
 	@sleep 1
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth-inst.ser
 
@@ -629,6 +632,8 @@ ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader-inst.ser | $(DISC) $(OR
 		kill -9 $$pid
 
 	@mv $@.io $@
+	@echo "* Done"
+	@sleep 1
 
 # saved binary with serial header
 ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)

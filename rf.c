@@ -51,7 +51,7 @@ uintptr_t *rf_up = 0;
 
 /* TRAMPOLINE */
 
-/* trampoline function pointer pointer */
+/* trampoline function pointer */
 rf_code_t rf_fp = 0;
 
 #ifndef RF_TARGET_TRAMPOLINE

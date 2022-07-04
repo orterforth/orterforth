@@ -114,8 +114,10 @@ static void serial_init_standard(void)
   wr = orter_serial_stdout_wr;
 }
 
+/* TODO move globals up to top */
 static char eof = 0;
 
+/* TODO replace fetch check with nonblocking operations */
 static char fetch = 0;
 
 static size_t disc_wr(char *off, size_t len)
@@ -123,6 +125,7 @@ static size_t disc_wr(char *off, size_t len)
   char c;
   size_t i;
 
+  /* TODO relay to logging */
   fputs("\033[0;33m", stderr);
   for (i = 0; i < len; i++) {
     c = *(off++);
@@ -148,6 +151,7 @@ static size_t disc_rd(char *off, size_t len)
     return 0;
   }
 
+  /* TODO relay to logging */
   for (i = 0; i < len; i++) {
     c = rf_persci_getc();
     *(off++) = c;
@@ -200,17 +204,20 @@ int main(int argc, char *argv[])
 {
   /* Text file to Forth block disc image */
   if (argc == 2 && !strcmp("create", argv[1])) {
+    /* TODO name disc write */
     return create_disc();
   }
 
   /* Physical serial port */
   if (argc == 6 && !strcmp("serial", argv[1])) {
+    /* TODO single call "serial" */
     serial_init_physical(argv[2], atoi(argv[3]));
     return serve(argv[4], argv[5]);
   }
 
   /* Console */
   if (argc == 4 && !strcmp("standard", argv[1])) {
+    /* TODO single call "standard" */
     serial_init_standard();
     return serve(argv[2], argv[3]);
   }
