@@ -28,6 +28,7 @@ extern (*_Cstart)() = main;
 
 typedef uintptr_t uint32_t;
 
+#ifndef RF_TARGET_CODE_USLAS
 uint32_t div64(uint32_t numhi, uint32_t numlo, uint32_t divis, uint32_t *r)
 {
   uint32_t topbit = 0x80000000;
@@ -67,7 +68,9 @@ void rf_code_uslas(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifndef RF_TARGET_CODE_USTAR
 static void mul64(uint32_t a, uint32_t b, uint32_t *ch, uint32_t *cl)
 {
   uint32_t ah = a >> 16;
@@ -100,16 +103,15 @@ void rf_code_ustar(void)
 
     a = RF_SP_POP;
     b = RF_SP_POP;
-/*
-    rf_ustar(a, b, &ch, &cl);
-*/
     mul64(a, b, &ch, &cl);
     RF_SP_PUSH(cl);
     RF_SP_PUSH(ch);
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifndef RF_TARGET_CODE_DPLUS
 static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
 {
 	*cl = al + bl;
@@ -135,7 +137,9 @@ void rf_code_dplus(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifndef RF_TARGET_CODE_DMINU
 static void rf_dminu(uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
 {
 	*cl = -bl;
@@ -159,6 +163,7 @@ void rf_code_dminu(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
 void rf_code_rtgt(void)
 {

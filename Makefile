@@ -593,12 +593,12 @@ ql/loader-inst.ser : target/ql/loader-inst.bas
 	mv $@.io $@
 
 # inst executable
-ql/orterforth-inst : ql/rf.o ql/rf_inst.o ql/system.o ql/orterforth.o
+ql/orterforth-inst : ql/rf.o ql/rf_inst.o ql/rf_m68k.o ql/system.o ql/orterforth.o
 
 	qld -ms -o $@ $^
 
 # final executable
-ql/orterforth : ql/rf.o ql/relink.o ql/system.o ql/orterforth.o
+ql/orterforth : ql/relink.o ql/rf.o ql/rf_m68k.o ql/system.o ql/orterforth.o
 
 	qld -ms -o $@ $^
 
@@ -649,15 +649,19 @@ ql/orterforth-inst.ser : ql/orterforth-inst | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
+ql/relink.o : target/ql/relink.c rf.h target/ql/default.inc | ql
+
+	qcc -o $@ -c $<
+
 ql/rf.o : rf.c rf.h target/ql/default.inc | ql
 
 	qcc -o $@ -c $<
 
+ql/rf_m68k.o : rf_m68k.s | ql
+
+	qcc -V -o $@ -c $<
+
 ql/rf_inst.o : rf_inst.c rf.h target/ql/default.inc | ql
-
-	qcc -o $@ -c $<
-
-ql/relink.o : target/ql/relink.c rf.h target/ql/default.inc | ql
 
 	qcc -o $@ -c $<
 

@@ -439,23 +439,26 @@ static void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s
 	*s1 = e;
 }
 
+void rf_encl(void)
+{
+  char c;
+  char *addr1;
+  uint8_t n1, n2, n3;
+
+  c = (char) RF_SP_POP;
+  addr1 = (char *) RF_SP_POP;
+  rf_enclose(c, addr1, &n1, &n2, &n3);
+  RF_SP_PUSH((uintptr_t) addr1);
+  RF_SP_PUSH(n1);
+  RF_SP_PUSH(n2);
+  RF_SP_PUSH(n3);
+}
+
 void rf_code_encl(void)
 {
   RF_START;
   RF_LOG("encl");
-  {
-    char c;
-    char *addr1;
-    uint8_t n1, n2, n3;
-
-    c = (char) RF_SP_POP;
-    addr1 = (char *) RF_SP_POP;
-    rf_enclose(c, addr1, &n1, &n2, &n3);
-    RF_SP_PUSH((uintptr_t) addr1);
-    RF_SP_PUSH(n1);
-    RF_SP_PUSH(n2);
-    RF_SP_PUSH(n3);
-  }
+  rf_encl();
   RF_JUMP_NEXT;
 }
 #endif
@@ -482,6 +485,7 @@ void rf_code_cmove(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_USTAR
 #ifndef RF_DPUSH
 #define RF_DPUSH
@@ -507,7 +511,9 @@ void rf_code_ustar(void)
   RF_JUMP_NEXT;
 }
 #endif
+#endif
 
+#ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_USLAS
 #ifndef RF_DPOP
 static void rf_dpop(rf_double_t *a);
@@ -536,6 +542,7 @@ void rf_code_uslas(void)
   rf_uslas();
   RF_JUMP_NEXT;
 }
+#endif
 #endif
 
 #ifndef RF_TARGET_CODE_ANDD
@@ -761,6 +768,7 @@ void rf_code_minus(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_DMINU
 #ifndef RF_DPOP
 static void rf_dpop(rf_double_t *a);
@@ -783,6 +791,7 @@ void rf_code_dminu(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 #endif
 
 #ifdef RF_DOUBLE_ARITH
@@ -1028,49 +1037,53 @@ void rf_code_stod(void)
 uintptr_t *rf_cold_forth = (uintptr_t *) 1;
 uintptr_t *rf_cold_abort = (uintptr_t *) 1;
 
+void rf_cold(void)
+{
+  /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
+  uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
+
+  /* FORTH vocabulary */
+  /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
+  /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
+  *rf_cold_forth = origin[6];
+
+  /* UP and USER vars */
+
+  /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
+  /* 11 +ORIGIN LDA, UP 1+ STA, */
+  rf_up = (uintptr_t *) origin[8];
+
+  /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
+  /* UP )Y STA, ( TO USER AREA ) */
+  /* DEY, 0< END, */
+
+  rf_up[0] = origin[6];
+  rf_up[1] = origin[7];
+  rf_up[2] = origin[8];
+  RF_USER_S0 = origin[9];
+  RF_USER_R0 = origin[10];
+  RF_USER_TIB = origin[11];
+  RF_USER_WIDTH = origin[12];
+  RF_USER_WARNING = origin[13];
+
+  RF_USER_FENCE = origin[14];
+  RF_USER_DP = origin[15];
+  RF_USER_VOCLINK = origin[16];
+
+  /* jump to RP! then to ABORT */
+  /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
+  /* # LDA, IP STA, */
+  RF_IP_SET(rf_cold_abort);
+  /* 6C # LDA, W 1 - STA,  */
+  /* 'T RP! JMP, ( RUN )  */
+  RF_RP_SET((uintptr_t *) RF_USER_R0);
+}
+
 void rf_code_cold(void)
 {
   RF_START;
-  {
-    /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
-    uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
-
-    /* FORTH vocabulary */
-    /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
-    /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
-    *rf_cold_forth = origin[6];
-
-    /* UP and USER vars */
-
-    /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
-    /* 11 +ORIGIN LDA, UP 1+ STA, */
-    rf_up = (uintptr_t *) origin[8];
-
-    /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
-    /* UP )Y STA, ( TO USER AREA ) */
-    /* DEY, 0< END, */
-
-    rf_up[0] = origin[6];
-    rf_up[1] = origin[7];
-    rf_up[2] = origin[8];
-    RF_USER_S0 = origin[9];
-    RF_USER_R0 = origin[10];
-    RF_USER_TIB = origin[11];
-    RF_USER_WIDTH = origin[12];
-    RF_USER_WARNING = origin[13];
-
-    RF_USER_FENCE = origin[14];
-    RF_USER_DP = origin[15];
-    RF_USER_VOCLINK = origin[16];
-
-    /* jump to RP! then to ABORT */
-    /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
-    /* # LDA, IP STA, */
-    RF_IP_SET(rf_cold_abort);
-    /* 6C # LDA, W 1 - STA,  */
-    /* 'T RP! JMP, ( RUN )  */
-    RF_RP_SET((uintptr_t *) RF_USER_R0);
-  }
+  RF_LOG("cold");
+  rf_cold();
   RF_JUMP_NEXT;
 }
 #endif
