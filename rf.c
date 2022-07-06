@@ -1180,15 +1180,12 @@ void rf_code_rlns(void)
 {
   RF_START;
   RF_LOG("rlns");
-/* TODO more general support for RF_ALIGN (4, 8) */
 #ifdef RF_ALIGN
   {
     uintptr_t a;
 
     a = RF_SP_POP;
-    if (a & 0x01) {
-      ++a;
-    }
+    if (a % RF_ALIGN) a += RF_ALIGN - (a % RF_ALIGN);
     RF_SP_PUSH(a);
   }
 #endif

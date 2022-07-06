@@ -194,18 +194,15 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
   here += length;
   *here = 0x20;
 
-  /* 6502 bug workaround */
 #ifdef __CC65__
+  /* 6502 bug workaround */
   if (((uintptr_t) here & 0xFF) == 0xFD) {
     ++here;
   }
 #endif
-  /* 68000 word alignment */
-  /* TODO more general align support */
 #ifdef RF_ALIGN
-  if ((uintptr_t) here & 0x01) {
-    ++here;
-  }
+  /* word alignment */
+  if (here % RF_ALIGN) here += RF_ALIGN - (here % RF_ALIGN);
 #endif
 
   /* terminating bit */

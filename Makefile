@@ -928,17 +928,6 @@ spectrum-run-mame : spectrum/orterforth.tap
 		-autoboot_command 'j""\n' \
 		-cassette $<
 
-.PHONY : spectrum-test
-spectrum-test : spectrum/test.tap | roms/spectrum/if1-2.rom
-
-	$(FUSE) \
-		--speed=100 \
-		--machine 48 \
-		--graphics-filter 2x \
-		--interface1 \
-		--rom-interface-1 roms/spectrum/if1-2.rom \
-		$<
-
 # other Spectrum libs
 spectrum/%.lib : %.c | spectrum
 

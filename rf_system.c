@@ -36,8 +36,6 @@ void rf_init(void)
 #endif
 }
 
-extern char rf_installed;
-
 void rf_code_emit(void)
 {
   RF_START;
