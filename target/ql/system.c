@@ -29,27 +29,40 @@ extern (*_Cstart)() = main;
 typedef uintptr_t uint32_t;
 
 #ifndef RF_TARGET_CODE_USLAS
-uint32_t div64(uint32_t numhi, uint32_t numlo, uint32_t divis, uint32_t *r)
+
+#define TOPBIT 0x80000000
+uint32_t div64(uint32_t uh, uint32_t ul, uint32_t v, uint32_t *r)
 {
-  uint32_t topbit = 0x80000000;
-	int pass = 0				; /*Pre-set the error marker*/
-	if (divis >= topbit || numhi >= divis) {
+	int i;
+
+  /* overflow or divide by zero */
+  /* TODO is this TOPBIT check correct */
+	if (v >= TOPBIT || uh >= v) {
     *r = 0xFFFFFFFF;
     return 0xFFFFFFFF;
   }
-	for (pass = 0; pass < 32; pass++) {
-    numhi <<= 1; /*Start to shift numerator left (top bit is lost)*/
-    if (numlo >= topbit) { 	/*; Carry bit from low word is '1'*/
-      numhi++	; /*Add the carry to hi word*/
+
+	for (i = 0; i < 32; i++) {
+    /* Start to shift numerator left (top bit is lost) */
+    uh <<= 1;
+    /* Add the carry to high word */
+    if (ul & TOPBIT) {
+      uh++;
     }
-    numlo <<= 1		; /* End of Shift*/
-    if (numhi >= divis) { /*Jump if can't subtract*/
-      numhi -= divis		; /*Subtract divisor and ...		*/		
-      numlo++		; /*Add the flag to result (in low word)*/
+    /* End of shift */
+    ul <<= 1;
+
+    /* Jump if can't subtract */
+    if (uh >= v) {
+      /* Subtract v and add the flag to result (in low word) */
+      uh -= v;
+      ul++;
     }
   }
-  *r = numhi;
-  return numlo;
+
+  /* result */
+  *r = uh;
+  return ul;
 }
 
 void rf_code_uslas(void)

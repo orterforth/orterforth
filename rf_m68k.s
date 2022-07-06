@@ -190,6 +190,54 @@ movfw1:
   jmp    (a0)
 
 	.align	2
+	.extern _rf_code_ustar
+_rf_code_ustar:
+	move.l (a3)+, d0
+	move.l (a3)+, d1
+
+  move.w  d0,d3
+  mulu.w  d1,d3 ;d3.l is Al*Bl now
+
+  swap    d0
+  swap    d1
+  move.w  d0,d2
+  mulu.w  d1,d2 ;d2.l is Ah*Bh now
+
+  swap    d0
+  move.w  d0,d4
+  mulu.w  d1,d4 ;d4 is Al*Bh
+
+  swap    d4
+  moveq   #0,d5
+  move.w  d4,d5
+  clr.w   d4      ; d5:d4 is 0x0000:Nh:Nl:0x0000, where N is Al*Bh
+
+  add.l   d4,d3
+  addx.l  d5,d2   ;add Al*Bh*0x10000 to the partial result in d2:d3
+
+  swap    d0
+  swap    d1
+
+  move.w  d0,d4
+  mulu.w  d1,d4 ;d4 is Ah*Bl
+
+  swap    d4
+  moveq   #0,d5
+  move.w  d4,d5
+  clr.w   d4      ; d5:d4 is 0x0000:Nh:Nl:0x0000, where N is Ah*Bl
+
+  add.l   d4,d3
+  addx.l  d5,d2   ;add Ah*Bl*0x10000 to the partial result
+
+  ;d2:d3 is now the result
+  move.l d3, -(a3)
+  move.l d2, -(a3)
+  !;bra    _rf_next
+  move.l (a4)+, a5
+  move.l (a5)+, a0
+  jmp    (a0)
+
+	.align	2
 	.extern _rf_code_semis
 _rf_code_semis:
   move.l (a1)+, a4
