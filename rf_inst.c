@@ -202,7 +202,7 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
 #endif
 #ifdef RF_ALIGN
   /* word alignment */
-  if (here % RF_ALIGN) here += RF_ALIGN - (here % RF_ALIGN);
+  if ((uintptr_t) here % RF_ALIGN) here += RF_ALIGN - ((uintptr_t) here % RF_ALIGN);
 #endif
 
   /* terminating bit */
