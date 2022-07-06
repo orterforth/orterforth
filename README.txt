@@ -155,6 +155,12 @@ system-independent:
                   of ;CODE and during installation instead of
                   inline assembler definitions.
 
+ rlns ( n -- n )  Aligns the stack value according to CPU
+                  requirements. Used in CREATE when adding the
+                  name field and in other non-aligned
+                  dictionary operations. (ALIGNED is not part
+                  of this version of fig-Forth.)
+
  rxit ( -- )      Exits orterforth (and returns to the shell,
                   BASIC prompt or equivalent).
 
