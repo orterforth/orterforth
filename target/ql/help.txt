@@ -1,0 +1,24 @@
+Building for the Sinclair QL
+============================
+
+You will need:
+
+* xtc68 https://github.com/stronnag/xtc68
+* C68 runtime binary distribution
+        http://www.dilwyn.me.uk/c/index.html
+* There is no emulator build so you need a Sinclair QL
+  (unexpanded)
+* and a SER2 serial cable to connect to the host system.
+
+To install and run on a physical machine, connect to your host
+system via RS-232 and call:
+
+ make ql-load-serial
+
+Follow the instructions to load the installer. When install is
+complete, you will need to reset the QL and follow further
+instructions to load the final build.
+
+QL orterforth is installed in resident procedure space, but
+the code itself is run as a job. The job starts by relinking 
+code fields to the correct memory addresses in the job.

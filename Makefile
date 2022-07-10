@@ -539,6 +539,19 @@ orterforth.inc : orterforth.disc
 
 # === Sinclair QL ===
 
+# QLOPTION := assembly
+QLOPTION := default
+
+ifeq ($(QLOPTION),assembly)
+QLDEPS := ql/rf.o ql/rf_m68k.o ql/system.o ql/orterforth.o
+QLINC := target/ql/assembly.inc
+endif
+
+ifeq ($(QLOPTION),default)
+QLDEPS := ql/rf.o ql/system.o ql/orterforth.o
+QLINC := target/ql/default.inc
+endif
+
 ql :
 
 	mkdir $@
@@ -579,31 +592,31 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
 
 # loader terminated with Ctrl+Z, to load via SER2Z
-ql/loader.ser : target/ql/loader.bas
-
-	cat $< > $@.io
-	printf '\032' >> $@.io
-	mv $@.io $@
-
-# loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader-inst.ser : target/ql/loader-inst.bas
 
 	cat $< > $@.io
 	printf '\032' >> $@.io
 	mv $@.io $@
 
-# inst executable
-ql/orterforth-inst : ql/rf.o ql/rf_inst.o ql/rf_m68k.o ql/system.o ql/orterforth.o
+# loader terminated with Ctrl+Z, to load via SER2Z
+ql/loader.ser : target/ql/loader.bas
 
-	qld -ms -o $@ $^
+	cat $< > $@.io
+	printf '\032' >> $@.io
+	mv $@.io $@
 
 # final executable
-ql/orterforth : ql/relink.o ql/rf.o ql/rf_m68k.o ql/system.o ql/orterforth.o
+ql/orterforth : ql/relink.o $(QLDEPS)
 
 	qld -ms -o $@ $^
 
-# final binary with serial header
-ql/orterforth.ser : ql/orterforth | $(ORTER)
+# inst executable
+ql/orterforth-inst : ql/rf_inst.o $(QLDEPS)
+
+	qld -ms -o $@ $^
+
+# inst executable with serial header
+ql/orterforth-inst.ser : ql/orterforth-inst | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
@@ -612,7 +625,7 @@ ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-# saved hex (with relink table)
+# saved binary as hex
 ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
@@ -640,34 +653,40 @@ ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
 
 	$(ORTER) ql serial-bytes $< > $@
 
-ql/orterforth.o : orterforth.c rf.h target/ql/default.inc rf_inst.h | ql
+# main program
+ql/orterforth.o : orterforth.c rf.h $(QLINC) rf_inst.h | ql
 
 	qcc -o $@ -c $<
 
-# inst binary with serial header
-ql/orterforth-inst.ser : ql/orterforth-inst | $(ORTER)
+# final binary with serial header
+ql/orterforth.ser : ql/orterforth | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
-ql/relink.o : target/ql/relink.c rf.h target/ql/default.inc | ql
+# relinker
+ql/relink.o : target/ql/relink.c rf.h $(QLINC) | ql
 
-	qcc -o $@ -c $<
+	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
-ql/rf.o : rf.c rf.h target/ql/default.inc | ql
+# machine and code
+ql/rf.o : rf.c rf.h $(QLINC) | ql
 
-	qcc -o $@ -c $<
+	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
+# assembly code
 ql/rf_m68k.o : rf_m68k.s | ql
 
-	qcc -V -o $@ -c $<
-
-ql/rf_inst.o : rf_inst.c rf.h target/ql/default.inc | ql
-
 	qcc -o $@ -c $<
 
-ql/system.o : target/ql/system.c rf.h target/ql/default.inc | ql
+# installer
+ql/rf_inst.o : rf_inst.c rf.h $(QLINC) | ql
 
-	qcc -o $@ -c $<
+	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
+
+# system support
+ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
+
+	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
 
 # === RC2014 ===

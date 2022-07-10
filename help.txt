@@ -2,4 +2,8 @@ For help on specific targets, run:
 
  make help TARGET=<target>
 
-where <target> is one of: bbc, spectrum
+where <target> is one of:
+
+  bbc
+  ql
+  spectrum

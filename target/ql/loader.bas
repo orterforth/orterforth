@@ -1,5 +1,5 @@
 1000 ack
-1010 A=RESPR(RESPR(0)-188416)
+1010 A=RESPR(RESPR(0)-196608)
 1020 PRINT "loading orterforth at location "; A
 1030 LBYTES SER2R, A
 1040 ack

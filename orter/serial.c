@@ -414,7 +414,7 @@ void init_serial(char *name, int baud)
   }
 }
 
-void init_std()
+void init_std(void)
 {
   if (fcntl(0, F_SETFL, O_NONBLOCK)) {
     perror("stdin fcntl failed");

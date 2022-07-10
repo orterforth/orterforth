@@ -161,13 +161,12 @@ system-independent:
                   dictionary operations. (ALIGNED is not part
                   of this version of fig-Forth.)
 
- rxit ( -- )      Exits orterforth (and returns to the shell,
-                  BASIC prompt or equivalent).
-
  rtgt ( -- d )    Returns a base-36 representation of the
                   target system (e.g., one of: BBC. CYGWIN.
                   DARWIN. LINUX. SPECTR. etc).
 
+ rxit ( -- )      Exits orterforth (and returns to the shell,
+                  BASIC prompt or equivalent).
 
 # It starts by installing from Forth source code #
 

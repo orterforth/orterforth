@@ -900,9 +900,9 @@ static void rf_inst_save(void)
     e += RF_WORD_SIZE;
   }
   /* write two links used in COLD */
-  *((rf_code_t *) e) = rf_cold_forth;
+  *((rf_code_t *) e) = (rf_code_t) rf_cold_forth;
   e += RF_WORD_SIZE;
-  *((rf_code_t *) e) = rf_cold_abort;
+  *((rf_code_t *) e) = (rf_code_t) rf_cold_abort;
   e += RF_WORD_SIZE;
 #endif
   while (i < e) {

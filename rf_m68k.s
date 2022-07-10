@@ -190,8 +190,8 @@ movfw1:
   jmp    (a0)
 
 	.align	2
-	.extern _rf_code_ustar
-_rf_code_ustar:
+	.extern _rf_code_ustarz
+_rf_code_ustarz:
 	move.l (a3)+, d0
 	move.l (a3)+, d1
 

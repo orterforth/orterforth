@@ -725,6 +725,8 @@ void rf_code_plus(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
+
 #ifndef RF_TARGET_CODE_DPLUS
 #ifndef RF_DPOP
 static void rf_dpop(rf_double_t *a);
@@ -751,6 +753,7 @@ void rf_code_dplus(void)
   rf_dplus();
   RF_JUMP_NEXT;
 }
+#endif
 #endif
 
 #ifndef RF_TARGET_CODE_MINUS
@@ -1185,7 +1188,10 @@ void rf_code_rlns(void)
     uintptr_t a;
 
     a = RF_SP_POP;
-    if (a % RF_ALIGN) a += RF_ALIGN - (a % RF_ALIGN);
+    /*if (a % RF_ALIGN) a += RF_ALIGN - (a % RF_ALIGN);*/
+    if (a & 0x01) {
+       ++a;
+    }
     RF_SP_PUSH(a);
   }
 #endif
@@ -1193,6 +1199,7 @@ void rf_code_rlns(void)
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_RTGT
 #ifndef RF_DPUSH
 #define RF_DPUSH
@@ -1211,7 +1218,6 @@ void rf_code_rtgt(void)
 }
 #endif
 
-#ifdef RF_DOUBLE_ARITH
 #ifdef RF_DPUSH
 static void __FASTCALL__ rf_dpush(rf_double_t *a)
 {
