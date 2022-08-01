@@ -182,7 +182,7 @@ $(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # inst lib
-$(SYSTEM)/rf_inst.o : rf_inst.c rf.h rf_persci.h | $(SYSTEM)
+$(SYSTEM)/rf_inst.o : rf_inst.c orterforth.inc rf.h rf_persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -568,7 +568,8 @@ QLSERIALBAUD := 4800
 
 # load from serial
 .PHONY : ql-load-serial
-ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
+ql-load-serial :  ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
+# ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE

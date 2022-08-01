@@ -6,6 +6,11 @@
 #include "rf_persci.h"
 #endif
 
+/* fig-Forth source compiled into C array */
+#ifdef RF_INST_LOCAL_DISC
+#include "orterforth.inc"
+#endif
+
 /* INST TIME DISC OPERATIONS */
 
 /* convert block number into drive, track and sector */
@@ -202,7 +207,13 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
 #endif
 #ifdef RF_ALIGN
   /* word alignment */
+/*
   if ((uintptr_t) here % RF_ALIGN) here += RF_ALIGN - ((uintptr_t) here % RF_ALIGN);
+*/
+  if ((uintptr_t) here & 0x01) {
+      ++here;
+  }
+
 #endif
 
   /* terminating bit */
@@ -933,7 +944,7 @@ void rf_inst(void)
   rf_inst_forward();
 
 #ifdef RF_INST_LOCAL_DISC
-  rf_persci_insert(0, "orterforth.disc");
+  rf_persci_insert_bytes(0, "orterforth.disc", orterforth_disc, orterforth_disc_len);
 #endif
 
   rf_inst_load();

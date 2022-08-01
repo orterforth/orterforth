@@ -13,6 +13,8 @@
 
 void rf_persci_insert(int drive, char *filename);
 
+void rf_persci_insert_bytes(int drive, char *filename, uint8_t *bytes, unsigned int len);
+
 void rf_persci_eject(int drive);
 
 char rf_persci_getc(void);
