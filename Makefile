@@ -516,6 +516,12 @@ disc : $(DISC) orterforth.disc
 .PHONY : help
 help : $(TARGET)-help
 
+# install to local
+.PHONY : install
+install : $(ORTERFORTH)
+
+	cp $< /usr/local/bin/orterforth
+
 .PHONY : iterate
 iterate :
 
