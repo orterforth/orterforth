@@ -1189,8 +1189,12 @@ void rf_code_rlns(void)
 
     a = RF_SP_POP;
     /*if (a % RF_ALIGN) a += RF_ALIGN - (a % RF_ALIGN);*/
+/*
     if (a & 0x01) {
-       ++a;
+*/
+    if (a % RF_ALIGN) {
+/*       ++a;*/
+      a += RF_ALIGN - (a % RF_ALIGN);
     }
     RF_SP_PUSH(a);
   }
