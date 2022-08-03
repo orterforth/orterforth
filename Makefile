@@ -522,12 +522,6 @@ install : $(ORTERFORTH)
 
 	cp $< /usr/local/bin/orterforth
 
-.PHONY : iterate
-iterate :
-
-	sh scripts/iterate.sh todo.f
-
-
 # === TRS-80 Model 100 ===
 
 m100 :
@@ -574,8 +568,8 @@ QLSERIALBAUD := 4800
 
 # load from serial
 .PHONY : ql-load-serial
-ql-load-serial :  ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
-# ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
+#ql-load-serial :  ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
+ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC) $(ORTER)
 
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE
@@ -720,9 +714,12 @@ endif
 .PHONY : rc2014-run
 rc2014-run : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $(ORTER)
 
-	#echo "C35071" | $(ORTER) serial -o olfcr -e 2 $(RC2014SERIALPORT) 115200
+	#echo "C35071" | $(ORTER) serial -o olfcr -e 5 $(RC2014SERIALPORT) 115200
+	echo "A"
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
-	$(ORTER) serial -o olfcr $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
+	echo "B"
+	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
+	echo "C"
 	$(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc 1.disc
 
 rc2014 :
@@ -785,6 +782,12 @@ roms/spectrum/% : | roms/spectrum
 # run local build
 .PHONY : run
 run : $(TARGET)-run
+
+# run utility script
+.PHONY : script
+script :
+
+	sh scripts/script.sh
 
 
 # === ZX Spectrum ===
