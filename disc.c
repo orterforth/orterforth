@@ -9,6 +9,8 @@
 
 #define RF_BBLK 128
 
+static char eof = 0;
+
 static char *read_line(char *line, int *lineno, FILE *stream)
 {
   /* read line from input file (null if at end) */
@@ -45,7 +47,7 @@ static char *line_to_block(char *line, int *lineno, FILE *stream, char *block)
   return r;
 }
 
-static int create_disc(void)
+static int disc_write(void)
 {
   int lineno = 0;
 	char line[82]; 
@@ -88,34 +90,6 @@ static int create_disc(void)
 static rdwr_t rd;
 
 static rdwr_t wr;
-
-/* Real serial port to connect to physical machine */
-static void serial_init_physical(char *name, unsigned int baud)
-{
-  orter_serial_open(name, baud);
-  rd = orter_serial_rd;
-  wr = orter_serial_wr;
-}
-
-/* Stdin and stdout */
-static void serial_init_standard(void)
-{
-  /* no buffering */
-  if (setvbuf(stdin, NULL, _IONBF, 0)) {
-    perror("setvbuf stdin failed");
-    exit(1);
-  }
-  if (setvbuf(stdout, NULL, _IONBF, 0)) {
-    perror("setvbuf stdout failed");
-    exit(1);
-  }
-
-  rd = orter_serial_stdin_rd;
-  wr = orter_serial_stdout_wr;
-}
-
-/* TODO move globals up to top */
-static char eof = 0;
 
 /* TODO replace fetch check with nonblocking operations */
 static char fetch = 0;
@@ -200,26 +174,46 @@ static int serve(char *dr0, char *dr1)
   return 0;
 }
 
+static int disc_serial(int argc, char **argv)
+{
+  orter_serial_open(argv[2], atoi(argv[3]));
+  rd = orter_serial_rd;
+  wr = orter_serial_wr;
+
+  return serve(argv[4], argv[5]);
+}
+
+static int disc_standard(int argc, char **argv)
+{
+  if (setvbuf(stdin, NULL, _IONBF, 0)) {
+    perror("setvbuf stdin failed");
+    exit(1);
+  }
+  rd = orter_serial_stdin_rd;
+  if (setvbuf(stdout, NULL, _IONBF, 0)) {
+    perror("setvbuf stdout failed");
+    exit(1);
+  }
+  wr = orter_serial_stdout_wr;
+
+  return serve(argv[2], argv[3]);
+}
+
 int main(int argc, char *argv[])
 {
   /* Text file to Forth block disc image */
   if (argc == 2 && !strcmp("create", argv[1])) {
-    /* TODO name disc write */
-    return create_disc();
+    return disc_write();
   }
 
   /* Physical serial port */
   if (argc == 6 && !strcmp("serial", argv[1])) {
-    /* TODO single call "serial" */
-    serial_init_physical(argv[2], atoi(argv[3]));
-    return serve(argv[4], argv[5]);
+    return disc_serial(argc, argv);
   }
 
   /* Console */
   if (argc == 4 && !strcmp("standard", argv[1])) {
-    /* TODO single call "standard" */
-    serial_init_standard();
-    return serve(argv[2], argv[3]);
+    return disc_standard(argc, argv);
   }
 
   /* Usage */
