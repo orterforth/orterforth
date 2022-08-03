@@ -31,19 +31,21 @@ static FILE *rf_persci_open_file(uint8_t drive, char *filename)
   FILE *ptr;
 
   /* already open */
-  /* TODO validate and fail instead */
   ptr = files[drive];
   if (ptr) {
-    return ptr;
+    fprintf(stderr, "file already open: drive %d\n", drive);
+    exit(1);
   }
 
   /* disc */
   files[drive] = ptr = fopen(filename, "r+b");
-  /* TODO check error */
+  if (!ptr) {
+    perror("fopen failed");
+    exit(1);
+  }
 
   /* read contents into memory */
   fread(discs[drive], 1, 256256, ptr);
-  /* TODO check error */
 
   return ptr;
 }
