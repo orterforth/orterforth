@@ -26,11 +26,12 @@ static void validate_drive_no(int drive)
   }
 }
 
-static FILE *rf_persci_open_file(uint8_t drive, char *filename)
+void rf_persci_insert(int drive, char *filename)
 {
   FILE *ptr;
 
-  /* already open */
+  validate_drive_no(drive);
+
   ptr = files[drive];
   if (ptr) {
     fprintf(stderr, "file already open: drive %d\n", drive);
@@ -46,23 +47,6 @@ static FILE *rf_persci_open_file(uint8_t drive, char *filename)
 
   /* read contents into memory */
   fread(discs[drive], 1, 256256, ptr);
-
-  return ptr;
-}
-
-void rf_persci_insert(int drive, char *filename)
-{
-  FILE *ptr;
-
-  validate_drive_no(drive);
-
-  /* open the file */
-  ptr = rf_persci_open_file(drive, filename);
-  if (!ptr) {
-    fprintf(stderr, "file %s\n", filename);
-    perror("fopen failed");
-    exit(1);
-  }
 
   rf_persci_state = RF_PERSCI_STATE_COMMAND;
 }
