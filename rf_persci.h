@@ -1,6 +1,8 @@
 #ifndef RF_PERSCI_H_
 #define RF_PERSCI_H_
 
+#include <stdint.h>
+
 /* ASCII CONTROL CHARS */
 
 #define RF_ASCII_SOH 1
