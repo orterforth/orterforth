@@ -9,8 +9,6 @@
 
 #define RF_BBLK 128
 
-static char eof = 0;
-
 static char *read_line(char *line, int *lineno, FILE *stream)
 {
   /* read line from input file (null if at end) */
@@ -99,18 +97,21 @@ static size_t disc_wr(char *off, size_t len)
   char c;
   size_t i;
 
-  /* TODO relay to logging */
+  /* log */
   fputs("\033[0;33m", stderr);
+  fwrite(off, 1, len, stderr);
+
   for (i = 0; i < len; i++) {
     c = *(off++);
     rf_persci_putc(c);
     if (c == RF_ASCII_EOT) {
       i++;
       fetch = 1;
+      /* log line */
       fputs("\033[0m\n", stderr);
+      fflush(stderr);
       break;
     }
-    fputc(c, stderr);
   }
 
   return i;
@@ -125,18 +126,20 @@ static size_t disc_rd(char *off, size_t len)
     return 0;
   }
 
-  /* TODO relay to logging */
   for (i = 0; i < len; i++) {
     c = rf_persci_getc();
     *(off++) = c;
     if (c == RF_ASCII_EOT) {
       i++;
       fetch = 0;
-      fputc('\n', stderr);
       break;
     }
-    fputc(c, stderr);
   }
+
+  /* log */
+  fwrite(off - i, 1, i, stderr);
+  fputc('\n', stderr);
+  fflush(stderr);
 
   return i;
 }
@@ -162,11 +165,6 @@ static int serve(char *dr0, char *dr1)
 
     orter_serial_relay(rd, disc_wr, in_buf, &in_offset, &in_pending);
     orter_serial_relay(disc_rd, wr, out_buf, &out_offset, &out_pending);
-
-    /* EOF */
-    if (eof) {
-      break;
-    }
   }
 
   /* finished */
