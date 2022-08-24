@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "orter/fuse.h"
 #include "orter/serial.h"
 #include "rf_persci.h"
 
@@ -132,6 +133,37 @@ static size_t disc_rd(char *off, size_t len)
   return i;
 }
 
+static size_t fuse_rd(char *off, size_t len)
+{
+  size_t i;
+  int c;
+
+  for (i = 0; i < len; i++) {
+    c = orter_fuse_serial_getc(stdin);
+    if (c == -1) {
+      break;
+    }
+    off[i] = c;
+    if (c == RF_ASCII_EOT) {
+      i++;
+      break;
+    }
+  }
+
+  return i;
+}
+
+static size_t fuse_wr(char *off, size_t len)
+{
+  size_t i;
+
+  for (i = 0; i < len; i++) {
+    orter_fuse_serial_putc(off[i], stdout);
+  }  
+
+  return len;
+}
+
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
@@ -158,6 +190,22 @@ static int serve(char *dr0, char *dr1)
   /* finished */
   orter_serial_close();
   return 0;
+}
+
+int disc_fuse(int argc, char **argv)
+{
+  if (setvbuf(stdin, NULL, _IONBF, 0)) {
+    perror("setvbuf stdin failed");
+    exit(1);
+  }
+  rd = fuse_rd;
+  if (setvbuf(stdout, NULL, _IONBF, 0)) {
+    perror("setvbuf stdout failed");
+    exit(1);
+  }
+  wr = fuse_wr;
+
+  return serve(argv[2], argv[3]);
 }
 
 static int disc_serial(int argc, char **argv)
@@ -192,6 +240,11 @@ int main(int argc, char *argv[])
     return discwrite();
   }
 
+  /* Fuse Emulator RS232 fifo escape */
+  if (argc == 4 && !strcmp("fuse", argv[1])) {
+    return disc_fuse(argc, argv);
+  }
+
   /* Physical serial port */
   if (argc == 6 && !strcmp("serial", argv[1])) {
     return disc_serial(argc, argv);
@@ -204,6 +257,7 @@ int main(int argc, char *argv[])
 
   /* Usage */
   fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n", stderr);
+  fputs("       disc fuse <dr0> <dr1>                 Run disc controller over stdin/stdout with Fuse Emulator escape\n", stderr);
   fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n", stderr);
   fputs("       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n", stderr);
   return 1;

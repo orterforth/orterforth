@@ -56,6 +56,7 @@ default : build
 
 # local disc server executable
 $(DISC) : \
+	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/rf_persci.o \
 	disc.c
@@ -809,11 +810,7 @@ spectrum-clean :
 spectrum-fuse-disc : | $(DISC) $(ORTER) spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
 
 	touch 1.disc
-	$(ORTER) fuse serial read \
-		< spectrum/fuse-rs232-tx \
-		| $(DISC) standard messages.disc 1.disc \
-		| $(ORTER) fuse serial write \
-		> spectrum/fuse-rs232-rx &
+	$(DISC) fuse messages.disc 1.disc < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
 
 # locate Fuse Emulator
 ifeq ($(OPER),cygwin)
@@ -1067,11 +1064,7 @@ spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
 
 ifeq ($(SPECTRUMIMPL),fuse)
 	# start disc
-	$(ORTER) fuse serial read \
-		< spectrum/fuse-rs232-tx \
-		| $(DISC) standard orterforth.disc $@.io \
-		| $(ORTER) fuse serial write \
-		> spectrum/fuse-rs232-rx &
+	$(DISC) fuse orterforth.disc $@.io < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
 
 	# start Fuse, install, stop Fuse
 	sh scripts/fuse-start.sh \
