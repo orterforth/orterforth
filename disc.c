@@ -1,4 +1,5 @@
 #define _DEFAULT_SOURCE
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,37 +10,32 @@
 
 #define RF_BBLK 128
 
-static char *discreadline(char *line, int *lineno, FILE *stream)
+static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
 {
-  /* read line from input file (null if at end) */
+  size_t len;
+
+  /* read line from input file */
   if (!fgets(line, 80, stream)) {
     if (feof(stream)) {
       return 0;
     }
     perror("fgets failed");
-    exit(1);
+    return errno;
   }
 
   /* fail if too long */
   (*lineno)++;
-  if (strlen(line) > 65) {
+  len = strlen(line);
+  if (len > 65) {
     fprintf(stderr, "line %u too long\n", *lineno);
-    exit(1);
-  }
-
-  /* return non-null, the line read */
-  return line;
-}
-
-static void disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
-{
-  /* read the line */
-  if (!discreadline(line, lineno, stream)) {
-    return;
+    return 1;
   }
 
   /* write to the block */
-  memcpy(block, line, strlen(line) - 1);
+  memcpy(block, line, len - 1);
+
+  /* ok */
+  return 0;
 }
 
 static int discwrite(void)
@@ -47,25 +43,30 @@ static int discwrite(void)
 	char line[82]; 
   int lineno = 0;
   char block[RF_BBLK];
+  int i, status;
 
-  int i;
-
+  /* 77 tracks x 26 sectors */
   for (i = 0; i < 2002; i++) {
 
     /* clear buffer with spaces */
     memset(&block, ' ', RF_BBLK);
 
     /* read two lines */
-    disclinetoblock(line, &lineno, stdin, block);
-    disclinetoblock(line, &lineno, stdin, block + 64);
+    if ((status = disclinetoblock(line, &lineno, stdin, block))) {
+      return status;
+    }
+    if ((status = disclinetoblock(line, &lineno, stdin, block + 64))) {
+      return status;
+    }
 
     /* write block to stdout */
     if (fwrite(block, 1, RF_BBLK, stdout) != RF_BBLK) {
       perror("fwrite failed");
-      return 1; /* TODO errno */
+      return errno;
     }
   }
 
+  /* ok */
   return 0;
 }
 
