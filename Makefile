@@ -805,33 +805,12 @@ spectrum-clean :
 
 	rm -rf spectrum/*
 
-# connect disc to Fuse named pipes
-.PHONY : spectrum-fuse-disc
-spectrum-fuse-disc : | $(DISC) $(ORTER) spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
-
-	touch 1.disc
-	$(DISC) fuse messages.disc 1.disc < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
-
 # locate Fuse Emulator
 ifeq ($(OPER),cygwin)
 FUSE := "/cygdrive/c/Program Files/Fuse/fuse.exe"
 else
 FUSE := $(shell which fuse)
 endif
-
-# run Fuse emulator and load TAP
-.PHONY : spectrum-fuse-tap
-spectrum-fuse-tap : spectrum/orterforth.tap | roms/spectrum/if1-2.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
-
-	$(FUSE) \
-		--speed=100 \
-		--machine 48 \
-		--graphics-filter 2x \
-		--interface1 \
-		--rom-interface-1 roms/spectrum/if1-2.rom \
-		--rs232-rx spectrum/fuse-rs232-rx \
-		--rs232-tx spectrum/fuse-rs232-tx \
-		$< &
 
 # load from serial
 # TODO should not rebuild orterforth-inst-2.tap via dependency chain
@@ -933,7 +912,26 @@ endif
 
 # run Fuse emulator, load TAP, connect disc
 .PHONY : spectrum-run-fuse
-spectrum-run-fuse : spectrum-fuse-tap | spectrum-fuse-disc
+spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
+
+	# start disc
+	touch 1.disc
+	# $(DISC) fuse messages.disc 1.disc < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
+	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse messages.disc 1.disc
+
+	# run fuse
+	$(FUSE) \
+		--speed=100 \
+		--machine 48 \
+		--graphics-filter 2x \
+		--interface1 \
+		--rom-interface-1 roms/spectrum/if1-2.rom \
+		--rs232-rx spectrum/fuse-rs232-rx \
+		--rs232-tx spectrum/fuse-rs232-tx \
+		$<
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
 
 # run Mame emulator, load TAP
 .PHONY: spectrum-run-mame
@@ -1064,7 +1062,8 @@ spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
 
 ifeq ($(SPECTRUMIMPL),fuse)
 	# start disc
-	$(DISC) fuse orterforth.disc $@.io < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
+	# $(DISC) fuse orterforth.disc $@.io < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
+	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse orterforth.disc $@.io
 
 	# start Fuse, install, stop Fuse
 	sh scripts/fuse-start.sh \
@@ -1078,6 +1077,8 @@ ifeq ($(SPECTRUMIMPL),fuse)
 	sh scripts/waitforhex $@.io
 	sh scripts/fuse-stop.sh
 
+	# stop disc
+	sh scripts/stop.sh disc.pid
 endif
 
 ifeq ($(SPECTRUMIMPL),superzazu)
