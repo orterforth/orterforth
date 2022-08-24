@@ -9,7 +9,7 @@
 
 #define RF_BBLK 128
 
-static char *read_line(char *line, int *lineno, FILE *stream)
+static char *discreadline(char *line, int *lineno, FILE *stream)
 {
   /* read line from input file (null if at end) */
   if (!fgets(line, 80, stream)) {
@@ -31,52 +31,38 @@ static char *read_line(char *line, int *lineno, FILE *stream)
   return line;
 }
 
-static char *line_to_block(char *line, int *lineno, FILE *stream, char *block)
+static void disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
 {
   /* read the line */
-  char *r = read_line(line, lineno, stream);
-
-  /* write the line into the block, maybe offset by 64 chars */
-  if (r) {
-    memcpy(block, line, strlen(line) - 1);
+  if (!discreadline(line, lineno, stream)) {
+    return;
   }
 
-  /* return non-null */
-  return r;
+  /* write to the block */
+  memcpy(block, line, strlen(line) - 1);
 }
 
-static int disc_write(void)
+static int discwrite(void)
 {
-  int lineno = 0;
 	char line[82]; 
+  int lineno = 0;
   char block[RF_BBLK];
-  char *read;
 
-  /* read from stdin */
-  FILE *stream = stdin;
+  int i;
 
-  for (;;) {
+  for (i = 0; i < 2002; i++) {
 
     /* clear buffer with spaces */
     memset(&block, ' ', RF_BBLK);
 
-    /* read first line into block, finish if no more */
-    if (!line_to_block(line, &lineno, stream, block)) {
-      break;
-    }
-
-    /* read second line into block */
-    read = line_to_block(line, &lineno, stream, block + 64);
+    /* read two lines */
+    disclinetoblock(line, &lineno, stdin, block);
+    disclinetoblock(line, &lineno, stdin, block + 64);
 
     /* write block to stdout */
     if (fwrite(block, 1, RF_BBLK, stdout) != RF_BBLK) {
       perror("fwrite failed");
-      exit(1);
-    }
-
-    /* finish if first line was final line */
-    if (!read) {
-      break;
+      return 1; /* TODO errno */
     }
   }
 
@@ -122,6 +108,7 @@ static size_t disc_rd(char *off, size_t len)
   char c;
   size_t i;
 
+  /* only attempt to read after EOT sent */
   if (!fetch) {
     return 0;
   }
@@ -201,7 +188,7 @@ int main(int argc, char *argv[])
 {
   /* Text file to Forth block disc image */
   if (argc == 2 && !strcmp("create", argv[1])) {
-    return disc_write();
+    return discwrite();
   }
 
   /* Physical serial port */
