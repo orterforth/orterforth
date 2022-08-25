@@ -298,10 +298,16 @@ bbc-run : $(BBCRUN)
 .PHONY : bbc-run-disk
 bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 
+	# start disc
 	touch 1.disc
-	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc &
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc
 
+	# run mame
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
+
 
 # load from tape and run
 .PHONY : bbc-run-tape
@@ -1062,20 +1068,23 @@ spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
 
 ifeq ($(SPECTRUMIMPL),fuse)
 	# start disc
-	# $(DISC) fuse orterforth.disc $@.io < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
 	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse orterforth.disc $@.io
 
-	# start Fuse, install, stop Fuse
-	sh scripts/fuse-start.sh \
-		--speed=5000 \
+	# start Fuse
+	sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) \
+		--speed=1000 \
 		--machine 48 \
 		--interface1 \
 		--rom-interface-1 roms/spectrum/if1-2.rom \
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
 		spectrum/orterforth-inst-2.tap
+
+	# wait for install and save
 	sh scripts/waitforhex $@.io
-	sh scripts/fuse-stop.sh
+
+	# stop Fuse
+	sh scripts/stop.sh fuse.pid
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
