@@ -28,6 +28,9 @@
 #include "serial.h"
 
 /* opts */
+static int            echo = 0;
+static int            icrnl = 0;
+static int            ocrnl = 0;
 static int            olfcr = 0;
 static int            odelbs = 0;
 
@@ -86,6 +89,17 @@ static void serial_makeraw(struct termios *attr)
 
   /* rtscts */
   attr->c_cflag |= CRTSCTS;
+
+  /* options */
+  if (echo) {
+    attr->c_lflag |= ECHO;
+  }
+  if (icrnl) {
+    attr->c_iflag |= ICRNL;
+  }
+  if (ocrnl) {
+    attr->c_oflag |= OCRNL;
+  }
 
   /* timing */
   attr->c_cc[VTIME] = 5;
@@ -472,11 +486,20 @@ static void opts(int argc, char **argv)
         break;
       case 'h': usage(); break;
       case 'o':
+        if (!strcmp(optarg, "echo")) {
+          echo = 1;
+        }
+        if (!strcmp(optarg, "icrnl")) {
+          icrnl = 1;
+        }
         if (!strcmp(optarg, "odelbs")) {
           odelbs = 1;
         }
         if (!strcmp(optarg, "olfcr")) {
           olfcr = 1;
+        }
+        if (!strcmp(optarg, "ocrnl")) {
+          ocrnl = 1;
         }
         break;
       default:
@@ -488,6 +511,7 @@ static void opts(int argc, char **argv)
 
 int orter_serial(int argc, char **argv)
 {
+  /* select parameters */
   fd_set readfds, writefds, exceptfds;
   struct timeval timeout;
   int nfds;
