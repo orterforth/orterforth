@@ -39,7 +39,7 @@ static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
   return 0;
 }
 
-static int discwrite(void)
+static int disc_create(void)
 {
 	char line[82]; 
   int lineno = 0;
@@ -140,10 +140,12 @@ static size_t fuse_rd(char *off, size_t len)
 
   for (i = 0; i < len; i++) {
     c = orter_fuse_serial_getc(stdin);
+    /* EOF */
     if (c == -1) {
       break;
     }
     off[i] = c;
+    /* blocking, but EOT as a terminator */
     if (c == RF_ASCII_EOT) {
       i++;
       break;
@@ -192,17 +194,25 @@ static int serve(char *dr0, char *dr1)
   return 0;
 }
 
-int disc_fuse(int argc, char **argv)
+static int setconsoleunbuffered(void)
 {
   if (setvbuf(stdin, NULL, _IONBF, 0)) {
     perror("setvbuf stdin failed");
-    exit(1);
+    return errno;
   }
-  rd = fuse_rd;
   if (setvbuf(stdout, NULL, _IONBF, 0)) {
     perror("setvbuf stdout failed");
-    exit(1);
+    return errno;
   }
+  return 0;
+}
+
+static int disc_fuse(int argc, char **argv)
+{
+  if (setconsoleunbuffered()) {
+    return 1;
+  }
+  rd = fuse_rd;
   wr = fuse_wr;
 
   return serve(argv[2], argv[3]);
@@ -219,15 +229,10 @@ static int disc_serial(int argc, char **argv)
 
 static int disc_standard(int argc, char **argv)
 {
-  if (setvbuf(stdin, NULL, _IONBF, 0)) {
-    perror("setvbuf stdin failed");
-    exit(1);
+  if (setconsoleunbuffered()) {
+    return 1;
   }
   rd = orter_serial_stdin_rd;
-  if (setvbuf(stdout, NULL, _IONBF, 0)) {
-    perror("setvbuf stdout failed");
-    exit(1);
-  }
   wr = orter_serial_stdout_wr;
 
   return serve(argv[2], argv[3]);
@@ -237,10 +242,10 @@ int main(int argc, char *argv[])
 {
   /* Text file to Forth block disc image */
   if (argc == 2 && !strcmp("create", argv[1])) {
-    return discwrite();
+    return disc_create();
   }
 
-  /* Fuse Emulator RS232 fifo escape */
+  /* Console with Fuse Emulator RS232 fifo escape */
   if (argc == 4 && !strcmp("fuse", argv[1])) {
     return disc_fuse(argc, argv);
   }
