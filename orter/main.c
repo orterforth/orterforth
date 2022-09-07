@@ -133,6 +133,39 @@ static int hex_getdigit()
   return c;
 }
 
+int hex_include(char *name)
+{
+  unsigned int i;
+  int c;
+
+  /* unbuffered */
+  setvbuf(stdin, NULL, _IONBF, 0);
+  setvbuf(stdout, NULL, _IONBF, 0);
+
+  printf("unsigned char %s[] = {", name);
+
+  /* loop until EOF */
+  for (i = 0;;i++) {
+    c = getchar();
+    if (c == -1) {
+      break;
+    }
+    if (i) {
+      putchar(',');
+    }
+    if (i % 12 == 0) {
+      printf("\n  ");
+    } else {
+      putchar(' ');
+    }
+    printf("0x%02x", c);
+  }
+
+  printf("\n};\nunsigned int %s_len = %u;\n", name, i);
+
+  return 0;
+}
+
 /* read hex, write binary */
 static int hex_read()
 {
@@ -190,6 +223,9 @@ int main(int argc, char *argv[])
     }
     if (argc > 2 && !strcmp("hex", arg) && !strcmp("read", argv[2])) {
       return hex_read();
+    }
+    if (argc > 3 && !strcmp("hex", arg) && !strcmp("include", argv[2])) {
+      return hex_include(argv[3]);
     }
     if (!strcmp("ql", arg)) {
       return ql(argc, argv);

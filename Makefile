@@ -529,6 +529,7 @@ install : $(ORTERFORTH)
 
 	cp $< /usr/local/bin/orterforth
 
+
 # === TRS-80 Model 100 ===
 
 m100 :
@@ -539,9 +540,11 @@ m100/hw.co : | m100
 
 	zcc +m100 -subtype=default hw.c -o $@ -create-app
 
+# disc image as C include
 orterforth.inc : orterforth.disc
 
-	xxd -i $< > $@
+	# xxd -i $< > $@
+	$(ORTER) hex include orterforth_disc <$< >$@
 
 
 # === Sinclair QL ===
