@@ -108,9 +108,6 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
 /* flag to indicate completion of install */
 extern char rf_installed;
 
-/* PREV */
-static uintptr_t *rf_inst_prev;
-
 /* do nothing */
 static void rf_inst_code_noop(void)
 {
@@ -118,11 +115,11 @@ static void rf_inst_code_noop(void)
   RF_JUMP_NEXT;
 }
 
-/* prev */
+/* PREV */
 static void rf_inst_code_prev(void)
 {
   RF_START;
-  RF_SP_PUSH((uintptr_t) rf_inst_prev);
+  RF_SP_PUSH((uintptr_t) RF_FIRST);
   RF_JUMP_NEXT;
 }
 
@@ -870,7 +867,6 @@ static void rf_inst_load(void)
   char *nfa;
 
   /* initialise buffers */
-  rf_inst_prev = (uintptr_t *) RF_FIRST;
   rf_inst_emptybuffers();
 
   /* load is the starting point */
