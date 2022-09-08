@@ -279,13 +279,40 @@ static char __FASTCALL__ *rf_inst_find_string(char *t)
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
   char *p;
+  char *nfa;
 
   for (;;) {
     /* read until space or null */
     for (p = name; *p != ' ' && *p != '\0'; p++) { }
 
-    /* compile word */
-    rf_inst_comma((uintptr_t) rf_cfa(rf_find(name, p - name, rf_inst_latest())));
+    /* find in dictionary */ nfa = rf_find(name, p - name, rf_inst_latest());
+
+    if (nfa) {
+      /* compile word */
+      rf_inst_comma((uintptr_t) rf_cfa(nfa));
+    } else {
+      /* compile number */
+      intptr_t sign = 1;
+      intptr_t accum = 0;
+      char *q = name;
+
+      if (*q == '^') {
+        q++;
+        sign *= RF_WORD_SIZE;
+      }
+      if (*q == '-') {
+        q++;
+        sign = -sign;
+      }
+      while (*q >= '0' && *q <= '9') {
+        accum *= 10;
+        accum += *q - 48;
+        q++;
+      }
+
+      /* prefix with LIT, BRANCH or 0BRANCH */
+      rf_inst_comma((uintptr_t) (sign * accum));
+    }
 
     /* look for more */
     if (!*p) break;
@@ -729,129 +756,68 @@ static void rf_inst_forward(void)
 
   /* BLANKS */
   rf_inst_colon("BLANKS");
-  rf_inst_compile_lit(0x20);
-  rf_inst_compile("SWAP >R OVER C! DUP");
-  rf_inst_compile_lit(1);
-  rf_inst_compile("+ R>");
-  rf_inst_compile_lit(1);
-  rf_inst_compile("- CMOVE ;S");
+  rf_inst_compile(
+    "LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S");
 
   /* ?DISC */
   rf_inst_colon("?DISC");
-  /* SOH */
-  rf_inst_compile_lit(RF_ASCII_SOH);
-  rf_inst_compile("D/CHAR DROP 0BRANCH");
-  rf_inst_comma(2 * RF_WORD_SIZE);
-  rf_inst_compile(";S");
-  /* ACK EOT, ENQ EOT */
-  rf_inst_compile_lit(0);
-  rf_inst_compile("D/CHAR DROP DROP ;S");
+  rf_inst_compile(
+    "LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 0 D/CHAR DROP DROP ;S");
 
   /* BLOCK */
   rf_inst_colon("BLOCK");
-  /* prev */
-  rf_inst_compile("DUP prev @ - 0BRANCH");
-	rf_inst_comma(15 * RF_WORD_SIZE);
-  /* not prev */
-  rf_inst_compile("DUP");
-  /* I tt ss /dr */
-  rf_inst_compile("block-cmd");
-  rf_inst_compile_lit(11);
-  rf_inst_compile("BLOCK-WRITE");
-  /* SOH */
-  rf_inst_compile("?DISC");
-  /* 128 bytes */
-  rf_inst_compile("prev rcll + BLOCK-READ");
-  /* ACK EOT */
-  rf_inst_compile("?DISC");
-  /* prev = new */
-  rf_inst_compile("DUP prev !");
-  /* return addr */
-  rf_inst_compile("DROP prev rcll + ;S");
+  rf_inst_compile(
+    "DUP prev @ - 0BRANCH ^15 DUP block-cmd LIT 11 BLOCK-WRITE ?DISC prev "
+    "rcll + BLOCK-READ ?DISC DUP prev ! DROP prev rcll + ;S");
 
   /* WORD */
   rf_inst_colon("WORD");
-  /* block addr */
-  rf_inst_compile("BLK @ BLOCK");
-  /* offset by IN */
-  rf_inst_compile("IN @ +");
-  /* parse word */
-  rf_inst_compile("SWAP ENCLOSE");
-  /* clear field */
-  rf_inst_compile("HERE");
-  rf_inst_compile_lit(0x22);
-  rf_inst_compile("BLANKS");
-  /* advance IN */
-  rf_inst_compile("IN +!");
-  /* length */
-  rf_inst_compile("OVER - >R R HERE C!");
-  /* move word to field */
-  rf_inst_compile("+ HERE");
-  rf_inst_compile_lit(1);
-  rf_inst_compile("+ R> CMOVE ;S");
+  rf_inst_compile(
+    "BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +! "
+    "OVER - >R R HERE C! + HERE LIT 1 + R> CMOVE ;S");
  
   /* -FIND */
   rf_inst_colon("-FIND");
-  rf_inst_compile_lit(32);
-  rf_inst_compile("WORD HERE CONTEXT @ @ (FIND) ;S");
+  rf_inst_compile("LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S");
 
   /* INTERPRET */
   rf_inst_colon("INTERPRET");
-  rf_inst_compile("-FIND interpret-word BRANCH");
-	rf_inst_comma((uintptr_t) (-3 * RF_WORD_SIZE));
+  rf_inst_compile("-FIND interpret-word BRANCH ^-3");
 
   /* CREATE */
   rf_inst_colon("CREATE");
-  rf_inst_compile("-FIND 0BRANCH");
-	rf_inst_comma(3 * RF_WORD_SIZE);
-  rf_inst_compile("DROP DROP HERE DUP C@");
-  rf_inst_compile_lit(1);
-  rf_inst_compile("+ DP +! DP C@");
-  rf_inst_compile_lit(0xFD);
-  rf_inst_compile("- 0= DP +!");
+  rf_inst_compile(
+    "-FIND 0BRANCH ^3 DROP DROP HERE DUP C@ LIT 1 + DP +! DP C@ "
+    "LIT 253 - 0= DP +!");
 #ifdef RF_ALIGN
   rf_inst_compile("HERE rlns DP !");
 #endif
-  rf_inst_compile("DUP");
-  rf_inst_compile_lit(0xA0);
-  rf_inst_compile("TOGGLE HERE");
-  rf_inst_compile_lit(1);
-  rf_inst_compile("-");
-  rf_inst_compile_lit(0x80);
-  rf_inst_compile("TOGGLE CURRENT @ @ HERE ! rcll DP +! CURRENT @ ! HERE rcll + HERE ! rcll DP +! ;S");
+  rf_inst_compile(
+    "DUP LIT 160 TOGGLE HERE LIT 1 - LIT 128 TOGGLE CURRENT @ @ "
+    "HERE ! rcll DP +! CURRENT @ ! HERE rcll + HERE ! rcll DP +! ;S");
 
   /* LOAD */
   rf_inst_colon("LOAD");
-  rf_inst_compile("BLK @ >R IN @ >R");
-  rf_inst_compile_lit(0);
-  rf_inst_compile("IN !");
-  rf_inst_compile_lit(RF_BSCR);
-  rf_inst_compile("U* DROP BLK ! INTERPRET R> IN ! R> BLK ! ;S");
+  rf_inst_compile(
+    "BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET R> IN ! R> BLK "
+    "! ;S");
 
   /* inst load sequence */
   rf_inst_colon("load");
-  rf_inst_compile_lit(80);
-  rf_inst_compile("LOAD rxit");
+  rf_inst_compile("LIT 80 LOAD rxit");
 
   /* X */  
   here = (uint8_t *) RF_USER_DP;
   rf_inst_colon("X");
-  rf_inst_compile_lit(1);
-  rf_inst_compile("BLK +!");
-  rf_inst_compile_lit(0);
-  rf_inst_compile("IN ! BLK @");
-  rf_inst_compile_lit(7);
-  rf_inst_compile("AND 0= 0BRANCH");
-  rf_inst_comma(3 * RF_WORD_SIZE);
-  rf_inst_compile("R> DROP ;S");
+  rf_inst_compile(
+    "LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
   here[0] = 0x81;
   here[1] = 0x80;
   rf_inst_immediate();
 
   /* [ */
   rf_inst_colon("[");
-  rf_inst_compile_lit(0);
-  rf_inst_compile("STATE ! ;S");
+  rf_inst_compile("LIT 0 STATE ! ;S");
   rf_inst_immediate();
 }
 
