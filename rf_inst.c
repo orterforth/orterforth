@@ -235,13 +235,29 @@ static void __FASTCALL__ rf_inst_def(char *name)
 }
 
 /* NUMBER */
-static intptr_t __FASTCALL__ rf_inst_number(char *t) {
+static uint8_t rf_inst_digit(uint8_t base, uint8_t c)
+{
+  if (c >= 0x30) {
+    c -= 0x30;
+    if (c > 9) {
+      if (c < 17) {
+        return 0xFF;
+      }
+      c -= 7;
+    }
+    if (c < base) {
+      return c;
+    }
+  }
+  return 0xFF;
+}
+
+static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
 
   intptr_t l;
   uint8_t sign;
   uint8_t c;
   uint8_t d;
-  uint8_t b = RF_USER_BASE;
 
   sign = 0;
   l = 0;
@@ -255,7 +271,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t) {
     }
 
     /* digit */
-    if ((d = rf_digit(b, c)) == 0xFF) {
+    if ((d = rf_inst_digit(b, c)) == 0xFF) {
       break;
     }
 
@@ -290,26 +306,19 @@ static void __FASTCALL__ rf_inst_compile(char *name)
       rf_inst_comma((uintptr_t) rf_cfa(nfa));
     } else {
       /* compile number */
-      intptr_t sign = 1;
+      intptr_t factor = 1;
       intptr_t accum = 0;
       char *q = name;
 
+      /* ^ to * by word size */
       if (*q == '^') {
         q++;
-        sign *= RF_WORD_SIZE;
+        factor = RF_WORD_SIZE;
       }
-      if (*q == '-') {
-        q++;
-        sign = -sign;
-      }
-      while (*q >= '0' && *q <= '9') {
-        accum *= 10;
-        accum += *q - 48;
-        q++;
-      }
+      accum = rf_inst_number(q, 10);
 
       /* prefix with LIT, BRANCH or 0BRANCH */
-      rf_inst_comma((uintptr_t) (sign * accum));
+      rf_inst_comma((uintptr_t) (factor * accum));
     }
 
     /* look for more */
@@ -378,7 +387,7 @@ static void rf_inst_code_interpret_word(void)
     } else {
       /* ELSE */
       /* HERE NUMBER */
-      number = rf_inst_number((char *) RF_USER_DP + 1);
+      number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
       /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
       if (RF_USER_STATE) {
         rf_inst_compile("LIT");
@@ -800,6 +809,7 @@ static void rf_inst_forward(void)
   rf_inst_colon("X");
   rf_inst_compile(
     "LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
+  /* TODO deal with wider align */
   here[0] = 0x81;
   here[1] = 0x80;
   rf_inst_immediate();

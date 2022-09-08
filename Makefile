@@ -127,6 +127,8 @@ $(SYSTEM)-build : \
 $(SYSTEM)-clean :
 
 	rm -rf $(SYSTEM)/*
+	rm -f orterforth.disc
+	rm -f orterforth.inc
 
 # run local build
 .PHONY : $(SYSTEM)-run
@@ -541,11 +543,11 @@ m100/hw.co : | m100
 	zcc +m100 -subtype=default hw.c -o $@ -create-app
 
 # disc image as C include
-orterforth.inc : orterforth.disc
+orterforth.inc : orterforth.disc | $(ORTER)
 
 	# xxd -i $< > $@
-	$(ORTER) hex include orterforth_disc <$< >$@
-
+	$(ORTER) hex include orterforth_disc <$< >$@.io
+	mv $@.io $@
 
 # === Sinclair QL ===
 

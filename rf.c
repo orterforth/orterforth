@@ -287,7 +287,8 @@ void rf_code_rr(void)
 }
 #endif
 
-uint8_t rf_digit(uint8_t base, uint8_t c)
+#ifndef RF_TARGET_CODE_DIGIT
+static uint8_t rf_digit(uint8_t base, uint8_t c)
 {
   if (c >= 0x30) {
     c -= 0x30;
@@ -304,7 +305,6 @@ uint8_t rf_digit(uint8_t base, uint8_t c)
   return 0xFF;
 }
 
-#ifndef RF_TARGET_CODE_DIGIT
 void rf_code_digit(void)
 {
   RF_START;
