@@ -69,7 +69,9 @@ typedef __uint128_t rf_double_t;
 typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __BBC__
-#define RF_TARGET 0x00003948 /* BBC */
+/* BBC */
+#define RF_TARGET_HI 0x0000
+#define RF_TARGET_LO 0x3948
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/bbc/default.inc"
 #endif
@@ -85,17 +87,23 @@ typedef uint32_t rf_double_t;
 typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __RC2014
-#define RF_TARGET 0x628444a8 /* RC2014 */
+/* RC2014 */
+#define RF_TARGET_HI 0x6284
+#define RF_TARGET_LO 0x44a8
 #define RF_TARGET_INC "target/rc2014/default.inc"
 #endif
 #ifdef SPECTRUM
-#define RF_TARGET 0x6774e16f /* SPECTR */
+/* SPECTR */
+#define RF_TARGET_HI 0x6774
+#define RF_TARGET_LO 0xe16f
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/spectrum/default.inc"
 #endif
 #endif
 #ifdef ZX81
-#define RF_TARGET 0x001992f1 /* ZX81 */
+/* ZX81 */
+#define RF_TARGET_HI 0x0019
+#define RF_TARGET_LO 0x92f1
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/zx81.inc"
 #endif
@@ -113,7 +121,9 @@ typedef unsigned char uint8_t;
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
 #ifdef QDOS
-#define RF_TARGET 0x000003bd /* QL */
+/* QL */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x000003bd
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/ql/default.inc"
 #endif
@@ -133,23 +143,39 @@ typedef unsigned long uintptr_t;
 #endif
 
 #ifdef __CYGWIN__
-#define RF_TARGET 0x2eb31a9f /* CYGWIN */
+/* CYGWIN */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x2eb31a9f
 #endif
 
 #ifdef __MACH__
-#define RF_TARGET 0x2fee7b5f /* DARWIN */
+/* DARWIN */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x2fee7b5f
 #endif
 
 #ifdef __linux__
-#define RF_TARGET 0x02277e49 /* LINUX */
+/* LINUX */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x02277e49
 #endif
 
 #ifdef __MINGW32__
-#define RF_TARGET 0x02411d50 /* MINGW */
+/* MINGW */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x02411d50
 #endif
 
 #ifdef _WIN32
-#define RF_TARGET 0x75327710 /* WINDOW */
+/* WINDOW */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x75327710
+#endif
+
+#ifdef PICO
+/* PICO */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x00122928
 #endif
 
 /* DERIVED WORD AND DOUBLE SIZE */

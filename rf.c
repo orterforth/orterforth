@@ -1194,6 +1194,7 @@ void rf_code_rlns(void)
 */
     if (a % RF_ALIGN) {
 /*       ++a;*/
+      /* TODO support wider align */
       a += RF_ALIGN - (a % RF_ALIGN);
     }
     RF_SP_PUSH(a);
@@ -1203,25 +1204,17 @@ void rf_code_rlns(void)
 }
 #endif
 
-#ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_RTGT
-#ifndef RF_DPUSH
-#define RF_DPUSH
-static void __FASTCALL__ rf_dpush(rf_double_t *a);
-#endif
 void rf_code_rtgt(void)
 {
   RF_START;
-  {
-    rf_double_t d;
-
-    d = RF_TARGET;
-    rf_dpush(&d);
-  }
+  RF_SP_PUSH(RF_TARGET_LO);
+  RF_SP_PUSH(RF_TARGET_HI);
   RF_JUMP_NEXT;
 }
 #endif
 
+#ifdef RF_DOUBLE_ARITH
 #ifdef RF_DPUSH
 static void __FASTCALL__ rf_dpush(rf_double_t *a)
 {
