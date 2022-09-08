@@ -26,6 +26,7 @@ static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint
 
 /* ASCII CONTROL CHARS */
 
+/* TODO check which are used/needed */
 #define RF_ASCII_SOH 1
 #define RF_ASCII_EOT 4
 #define RF_ASCII_ENQ 5
@@ -34,6 +35,7 @@ static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint
 #define RF_ASCII_CR 13
 #define RF_ASCII_NAK 21
 
+/* inst time disc command buffer */
 static uint8_t cmd[12] = {
   'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '0', '\x04'
 };
@@ -142,6 +144,7 @@ static void rf_inst_code_block_cmd(void)
 }
 
 /* replaces strlen */
+/* TODO could this return a uint8_t */
 static int __FASTCALL__ rf_inst_strlen(const char *s)
 {
   int i;
@@ -160,6 +163,7 @@ static void rf_inst_memcpy(uint8_t *dst, uint8_t *src, uint8_t length)
 }
 
 /* replaces memset */
+/* TODO could this use uint8_t */
 static void rf_inst_memset(char *ptr, char value, unsigned int num)
 {
   while (num--) {
@@ -207,6 +211,7 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
 #endif
 #ifdef RF_ALIGN
   /* word alignment */
+  /* TODO support larger align word sizes */
 /*
   if ((uintptr_t) here % RF_ALIGN) here += RF_ALIGN - ((uintptr_t) here % RF_ALIGN);
 */
