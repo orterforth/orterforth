@@ -177,11 +177,8 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
   RF_USER_DP = (uintptr_t) (dp + 1);
 }
 
-/* LATEST */
-static char *rf_inst_latest(void)
-{
-  return *((char **) RF_USER_CURRENT);
-}
+/* CURRENT and CONTEXT vocabulary during inst */
+static char *rf_inst_vocabulary = 0;
 
 /* CREATE */
 static void rf_inst_create(uint8_t length, uint8_t *address)
@@ -223,7 +220,7 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
 
   /* link field */
   RF_USER_DP = (uintptr_t) here;
-  rf_inst_comma((uintptr_t) rf_inst_latest());
+  rf_inst_comma((uintptr_t) rf_inst_vocabulary);
 
   /* vocabulary */
   *((uint8_t **) RF_USER_CURRENT) = there;
@@ -234,7 +231,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
 {
   rf_inst_create(rf_inst_strlen(name), (uint8_t *) name);
   /* un-smudge */
-  *(rf_inst_latest()) ^= 0x20;
+  *rf_inst_vocabulary ^= 0x20;
 }
 
 /* NUMBER */
@@ -272,10 +269,10 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t) {
 /* find a definition */
 static char __FASTCALL__ *rf_inst_find_string(char *t)
 {
-  return rf_find(t, rf_inst_strlen(t), rf_inst_latest());
+  return rf_find(t, rf_inst_strlen(t), rf_inst_vocabulary);
 }
 
-/* COMPILE */
+/* proto outer interpreter */
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
   char *p;
@@ -285,7 +282,8 @@ static void __FASTCALL__ rf_inst_compile(char *name)
     /* read until space or null */
     for (p = name; *p != ' ' && *p != '\0'; p++) { }
 
-    /* find in dictionary */ nfa = rf_find(name, p - name, rf_inst_latest());
+    /* find in dictionary */
+    nfa = rf_find(name, p - name, rf_inst_vocabulary);
 
     if (nfa) {
       /* compile word */
@@ -341,7 +339,7 @@ static void rf_inst_code_compile(void)
 /* IMMEDIATE */
 static void rf_inst_immediate(void)
 {
-  *(rf_inst_latest()) ^= 0x40;
+  *rf_inst_vocabulary ^= 0x40;
 }
 
 #define rf_inst_qstack()
@@ -358,10 +356,8 @@ static void rf_inst_code_interpret_word(void)
 
     /* BEGIN (outside this in inst time version of INTERPRET) */
     
-    /* -FIND  */
+    /* -FIND IF */
     found = RF_SP_POP;
-
-    /* IF  */
     if (found) {
       len = RF_SP_POP;
       pfa = (uintptr_t *) RF_SP_POP;
@@ -383,11 +379,7 @@ static void rf_inst_code_interpret_word(void)
       /* ELSE */
       /* HERE NUMBER */
       number = rf_inst_number((char *) RF_USER_DP + 1);
-
-      /* DPL @ 1+ IF */
-      /* [COMPILE] DLITERAL  */
-      /* ELSE  */
-      /* DROP [COMPILE] LITERAL  */
+      /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
       if (RF_USER_STATE) {
         rf_inst_compile("LIT");
         rf_inst_comma((uintptr_t) number);
@@ -486,9 +478,6 @@ static void rf_inst_def_user(char *name, unsigned int idx)
 #define RF_USRVERATTR 0x0C72
 #endif
 
-/* location for CURRENT and CONTEXT during inst */
-static uintptr_t *rf_inst_vocabulary = 0;
-
 static void rf_inst_cold(void)
 {
   /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
@@ -532,9 +521,9 @@ static void rf_inst_cold(void)
   /* DEFINITIONS */
   RF_USER_CURRENT = RF_USER_CONTEXT;
   /* QUIT */
-  /*  0 BLK ! */
+  /* 0 BLK ! */
   RF_USER_BLK = 0;
-  /*  [COMPILE] [ */
+  /* [COMPILE] [ */
   RF_USER_STATE = 0;
   /* ...etc */
 }
