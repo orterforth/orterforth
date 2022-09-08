@@ -855,8 +855,6 @@ static void rf_inst_forward(void)
   rf_inst_immediate();
 }
 
-static rf_code_t *rf_inst_load_cfa = 0;
-
 static void rf_inst_emptybuffers(void)
 {
   rf_inst_memset((char *) RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
@@ -865,19 +863,20 @@ static void rf_inst_emptybuffers(void)
 static void rf_inst_load(void)
 {
   char *nfa;
+  rf_code_t *cfa;
 
   /* initialise buffers */
   rf_inst_emptybuffers();
 
-  /* load is the starting point */
+  /* "load" is the starting point */
   nfa = rf_inst_find_string("load");
-  rf_inst_load_cfa = rf_cfa(nfa);
+  cfa = rf_cfa(nfa);
 
   /* initialise RP */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
-  /* jump to load */
-  RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
+  /* jump to "load" */
+  RF_IP_SET((uintptr_t *) &cfa);
   RF_JUMP(rf_next);
   rf_trampoline();
 }
@@ -945,12 +944,15 @@ void rf_inst(void)
   rf_inst_forward();
 
 #ifdef RF_INST_LOCAL_DISC
+  /* "insert" the inst disc */
   rf_persci_insert_bytes(0, "orterforth.disc", orterforth_disc, orterforth_disc_len);
 #endif
 
+  /* LOAD all Forth model source from disc */
   rf_inst_load();
 
 #ifdef RF_INST_LOCAL_DISC
+  /* now "eject" the inst disc */
   rf_persci_eject(0);
 #endif
 
