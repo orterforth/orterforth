@@ -16,7 +16,7 @@ static char rf_persci_state = RF_PERSCI_STATE_COMMAND;
 
 static FILE *files[4] = { 0, 0, 0, 0 };
 
-static uint8_t discs[4][256256];
+static uint8_t *discs[4];
 
 static void validate_drive_no(int drive)
 {
@@ -32,13 +32,14 @@ void rf_persci_insert(int drive, char *filename)
 
   validate_drive_no(drive);
 
+  /* disc must be not already inserted */
   ptr = files[drive];
   if (ptr) {
     fprintf(stderr, "file already open: drive %d\n", drive);
     exit(1);
   }
 
-  /* disc */
+  /* open disc file */
   files[drive] = ptr = fopen(filename, "r+b");
   if (!ptr) {
     perror("fopen failed");
@@ -46,18 +47,25 @@ void rf_persci_insert(int drive, char *filename)
   }
 
   /* read contents into memory */
+  if (!(discs[drive] = malloc(256256))) {
+    fprintf(stderr, "malloc failed: drive %d\n", drive);
+    exit(1);
+  }
   fread(discs[drive], 1, 256256, ptr);
+  /* TODO handle error */
 
+  /* reset controller state */
   rf_persci_state = RF_PERSCI_STATE_COMMAND;
 }
 
-void rf_persci_insert_bytes(int drive, char *filename, uint8_t *bytes, unsigned int len)
+void rf_persci_insert_bytes(int drive, char *filename, const uint8_t *bytes, unsigned int len)
 {
   validate_drive_no(drive);
 
-  /* byte array passed in */
-  memcpy(&discs[drive], bytes, len);
+  /* point at byte array */
+  discs[drive] = (uint8_t *) bytes;
 
+  /* reset controller state */
   rf_persci_state = RF_PERSCI_STATE_COMMAND;
 }
 
@@ -69,7 +77,14 @@ void rf_persci_eject(int drive)
   if (files[drive]) {
     fclose(files[drive]);
     files[drive] = 0;
+
+    /* assume malloc was used */
+    if (discs[drive]) {
+      free(discs[drive]);
+    }
   }
+
+  discs[drive] = 0;
 }
 
 /* BUFFER */
@@ -139,6 +154,7 @@ static void rf_persci_error_on_drive(const char *message, uint8_t drive)
 /* READING AND WRITING */
 
 /* validate drive track and sector are within ranges */
+/* TODO reverse return code so 0 is success */
 static char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
 {
   /* validate drive number */
@@ -238,10 +254,12 @@ static void rf_persci_write()
   FILE *ptr;
   size_t s;
   long off;
+  size_t len;
 
   /* get size of data */
   for (; rf_persci_r_buf[rf_persci_r_idx] != RF_ASCII_EOT; rf_persci_r_idx++) {
   }
+  len = rf_persci_r_idx > 128 ? 128 : rf_persci_r_idx;
 
   /* open file */
   ptr = files[rf_persci_drive];
@@ -257,8 +275,8 @@ static void rf_persci_write()
     return;
   }
 
-  /* write data */
-  s = fwrite(rf_persci_r_buf, 1, rf_persci_r_idx > 128 ? 128 : rf_persci_r_idx, ptr);
+  /* write data to file */
+  s = fwrite(rf_persci_r_buf, 1, len, ptr);
   fflush(ptr);
 
   /* handle write failure */
@@ -269,18 +287,18 @@ static void rf_persci_write()
     return;
   }
 
-  /* cache in memory */
+  /* write data to memory */
   memcpy(
     discs[rf_persci_drive] + off, 
     rf_persci_r_buf, 
-    rf_persci_r_idx > 128 ? 128 : rf_persci_r_idx);
+    len);
 
   /* ACK EOT */
   rf_persci_reset();
   rf_persci_w(RF_ASCII_ACK);
   rf_persci_w(RF_ASCII_EOT);
 
-  /* set state */
+  /* reset controller state */
   rf_persci_state = RF_PERSCI_STATE_COMMAND;
 }
 
