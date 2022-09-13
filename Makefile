@@ -167,7 +167,7 @@ $(SYSTEM)/orter_ql.o : orter/ql.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-$(SYSTEM)/orter_serial.o : orter/serial.c | $(SYSTEM)
+$(SYSTEM)/orter_serial.o : orter/serial.c orter/serial.h orter/io.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

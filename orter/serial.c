@@ -16,7 +16,6 @@
 #ifdef __linux__
 #include <sys/file.h>
 #endif
-/* TODO Windows */
 #include <fcntl.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
@@ -59,7 +58,6 @@ static char           in_buf[256];
 static size_t         in_pending = 0;
 static char *         in_offset = in_buf;
 
-/* TODO mapping behaviour, naming, should map operation live in a rdwr_t? */
 static char           omap_buf[256];
 static size_t         omap_pending = 0;
 static char *         omap_offset = omap_buf;
@@ -229,7 +227,7 @@ static void omaps(char *buf, int n)
 
 static size_t omap_rd(char *off, size_t len)
 {
-  int n;
+  int n = 0;
 
   /* no op if empty buffer */
   if (!omap_pending) {
@@ -237,10 +235,32 @@ static size_t omap_rd(char *off, size_t len)
   }
 
   /* copy into buffer */
+/*
   n = omap_pending < len ? omap_pending : len;
   memcpy(off, omap_offset, n);
   omap_offset += n;
   omap_pending -= n;
+*/
+  while (omap_pending && len) {
+/*
+    if (*omap_offset == 13) {
+      if (len < 2) {
+        return n;
+      }
+      *off++ = *(omap_offset++);
+      *off++ = 10;
+      omap_pending--;
+      len -= 2;
+      n += 2;
+      continue;
+    }
+*/
+    *off++ = *(omap_offset++);
+    omap_pending--;
+    len--;
+    n++;
+  }
+
 
   return n;
 }
@@ -364,7 +384,7 @@ size_t orter_serial_wr(char *off, size_t len)
   return nbwrite(serial_fd, off, len);
 }
 
-static void bufread(rdwr_t rd, char *buf, char **offset, size_t *pending)
+static void bufread(orter_io_rdwr_t rd, char *buf, char **offset, size_t *pending)
 {
   size_t n;
 
@@ -379,7 +399,7 @@ static void bufread(rdwr_t rd, char *buf, char **offset, size_t *pending)
   *pending = n;
 }
 
-static void bufwrite(rdwr_t wr, char *buf, char **offset, size_t *pending)
+static void bufwrite(orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending)
 {
   size_t n;
 
@@ -400,7 +420,7 @@ static void bufwrite(rdwr_t wr, char *buf, char **offset, size_t *pending)
 }
 
 /* TODO rdwr stuff to separate module? */
-void orter_serial_relay(rdwr_t rd, rdwr_t wr, char *buf, char **offset, size_t *pending)
+void orter_serial_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending)
 {
   bufread(rd, buf, offset, pending);
   bufwrite(wr, buf, offset, pending);
@@ -535,8 +555,6 @@ int orter_serial(int argc, char **argv)
   init_std();
 
   /* set up select */
-  timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
   nfds = 0;
   if (0 > nfds) nfds = 0;
   if (1 > nfds) nfds = 1;
@@ -571,6 +589,9 @@ int orter_serial(int argc, char **argv)
       FD_SET(serial_fd, &writefds);
       FD_SET(serial_fd, &exceptfds);
     }
+
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
 
     /* select */
     if (select(nfds, &readfds, &writefds, &exceptfds, &timeout) < 0) {

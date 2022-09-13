@@ -139,9 +139,10 @@ int hex_include(char *name)
   int c;
 
   /* unbuffered */
+/*
   setvbuf(stdin, NULL, _IONBF, 0);
   setvbuf(stdout, NULL, _IONBF, 0);
-
+*/
   printf("unsigned char %s[] = {", name);
 
   /* loop until EOF */

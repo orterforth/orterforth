@@ -12,10 +12,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-
-
-
 #include "orter/fuse.h"
+#include "orter/io.h"
 #include "orter/serial.h"
 #include "rf_persci.h"
 
@@ -83,9 +81,9 @@ static int disc_create(void)
 
 /* DISPATCH SERIAL READ/WRITE TO FUNCTION POINTERS */
 
-static rdwr_t rd;
+static orter_io_rdwr_t rd;
 
-static rdwr_t wr;
+static orter_io_rdwr_t wr;
 
 static char fetch = 0;
 
@@ -175,17 +173,25 @@ static size_t fuse_wr(char *off, size_t len)
   return len;
 }
 
-int tcp_fd;
+static int tcp_fd;
 
-size_t tcp_rd(char *off, size_t len)
+static size_t tcp_rd(char *off, size_t len)
 {
   ssize_t n = read(tcp_fd, off, len);
+  if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
+    perror("read failed");
+    exit(errno);
+  }
   return (n < 0) ? 0 : n;
 }
 
-size_t tcp_wr(char *off, size_t len)
+static size_t tcp_wr(char *off, size_t len)
 {
   ssize_t n = write(tcp_fd, off, len);
+  if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
+    perror("write failed");
+    exit(errno);
+  }
   return (n < 0) ? 0 : n;
 }
 
