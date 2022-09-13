@@ -255,7 +255,7 @@ ifeq ($(BBCOPTION),default)
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := 2E00
+	BBCORIGIN := 2F00
 	BBCRUN := bbc-run-disk
 endif
 

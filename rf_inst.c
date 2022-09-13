@@ -537,88 +537,6 @@ static void rf_inst_cold(void)
   /* ...etc */
 }
 
-/* Table of inst time code addresses */
-
-typedef struct rf_inst_code_t {
-  char *name;
-  rf_code_t value;
-} rf_inst_code_t;
-
-#define RF_INST_CODE_LIT_LIST_SIZE 62
-
-static rf_inst_code_t rf_inst_code_lit_list[] = {
-  { 0, rf_code_rcll },
-  { 0, rf_code_rcls },
-  { 0, rf_code_rcod },
-  { 0, rf_code_rlns },
-  { 0, rf_code_rtgt },
-  { 0, rf_code_rxit },
-  { "lit", rf_code_lit },
-  { "exec", rf_code_exec },
-  { "bran", rf_code_bran },
-  { "zbran", rf_code_zbran },
-  { "xloop", rf_code_xloop },
-  { "xploo", rf_code_xploo },
-  { "xdo", rf_code_xdo },
-  { "digit", rf_code_digit },
-  { "pfind", rf_code_pfind },
-  { "encl", rf_code_encl },
-  { "emit", rf_code_emit },
-#ifdef RF_INST_SILENT
-  { "emitsilent", rf_code_drop },
-#else
-  { "emitsilent", rf_code_emit },
-#endif
-  { "key", rf_code_key },
-  { "qterm", rf_code_qterm },
-  { "cr", rf_code_cr },
-#ifdef RF_INST_SILENT
-  { "crsilent", rf_inst_code_noop },
-#else
-  { "crsilent", rf_code_cr },
-#endif
-  { "cmove", rf_code_cmove },
-  { "ustar", rf_code_ustar },
-  { "uslas", rf_code_uslas },
-  { "andd", rf_code_andd },
-  { "orr", rf_code_orr },
-  { "xorr", rf_code_xorr },
-  { "spat", rf_code_spat },
-  { "spsto", rf_code_spsto },
-  { "rpsto", rf_code_rpsto },
-  { "semis", rf_code_semis },
-  { "leave", rf_code_leave },
-  { "tor", rf_code_tor },
-  { "fromr", rf_code_fromr },
-  { "rr", rf_code_rr },
-  { "zequ", rf_code_zequ },
-  { "zless", rf_code_zless },
-  { "plus", rf_code_plus },
-  { "dplus", rf_code_dplus },
-  { "minus", rf_code_minus },
-  { "dminu", rf_code_dminu },
-  { "over", rf_code_over },
-  { "drop", rf_code_drop },
-  { "swap", rf_code_swap },
-  { "dup", rf_code_dup },
-  { "pstor", rf_code_pstor },
-  { "toggl", rf_code_toggl },
-  { "at", rf_code_at },
-  { "cat", rf_code_cat },
-  { "store", rf_code_store },
-  { "cstor", rf_code_cstor },
-  { "docol", rf_code_docol },
-  { "docon", rf_code_docon },
-  { "dovar", rf_code_dovar },
-  { "douse", rf_code_douse },
-  { "dodoe", rf_code_dodoe },
-  { "cold", rf_code_cold },
-  { "stod", rf_code_stod },
-  { "dchar", rf_code_dchar },
-  { "bwrit", rf_code_bwrit },
-  { "bread", rf_code_bread }
-};
-
 static void rf_inst_code_ext(void)
 {
   RF_START;
@@ -631,50 +549,93 @@ static void rf_inst_code_ext(void)
   RF_JUMP_NEXT;
 }
 
-/* list of forward declared words used in inst */
+/* Table of inst time code addresses */
 
-#define RF_INST_CODE_LIST_SIZE 39
+typedef struct rf_inst_code_t {
+  char *name;
+  char *word;
+  rf_code_t value;
+} rf_inst_code_t;
 
-static rf_inst_code_t rf_inst_code_list[] = {
-  { "LIT", rf_code_lit },
-  { "BRANCH", rf_code_bran },
-  { "0BRANCH", rf_code_zbran },
-  { "(FIND)", rf_code_pfind },
-  { "ENCLOSE", rf_code_encl },
-  { "CMOVE", rf_code_cmove },
-  { "U*", rf_code_ustar },
-  { "AND", rf_code_andd },
-  { "SP@", rf_code_spat },
-  { ";S", rf_code_semis },
-  { ">R", rf_code_tor },
-  { "R>", rf_code_fromr },
-  { "R", rf_code_rr },
-  { "0=", rf_code_zequ },
-  { "+", rf_code_plus },
-  { "MINUS", rf_code_minus },
-  { "OVER", rf_code_over },
-  { "DROP", rf_code_drop },
-  { "SWAP", rf_code_swap },
-  { "DUP", rf_code_dup },
-  { "+!", rf_code_pstor },
-  { "TOGGLE", rf_code_toggl },
-  { "@", rf_code_at },
-  { "C@", rf_code_cat },
-  { "!", rf_code_store },
-  { "C!", rf_code_cstor },
-  { "DECIMAL", rf_inst_code_decimal },
-  { "COMPILE", rf_inst_code_compile },
-  { "rxit", rf_code_rxit },
-  { "rcll", rf_code_rcll },
-  { "rcls", rf_code_rcls },
-  { "rlns", rf_code_rlns },
-  { "interpret-word", rf_inst_code_interpret_word },
-  { "ext", rf_inst_code_ext },
-  { "prev", rf_inst_code_prev },
-  { "block-cmd", rf_inst_code_block_cmd },
-  { "D/CHAR", rf_code_dchar },
-  { "BLOCK-READ", rf_code_bread },
-  { "BLOCK-WRITE", rf_code_bwrit }
+#define RF_INST_CODE_LIT_LIST_SIZE 68
+
+static rf_inst_code_t rf_inst_code_lit_list[] = {
+  { 0, "rcll", rf_code_rcll },
+  { 0, "rcls", rf_code_rcls },
+  { 0, 0, rf_code_rcod },
+  { 0, "rlns", rf_code_rlns },
+  { 0, 0, rf_code_rtgt },
+  { 0, "rxit", rf_code_rxit },
+  { "lit", "LIT", rf_code_lit },
+  { "exec", 0, rf_code_exec },
+  { "bran", "BRANCH", rf_code_bran },
+  { "zbran", "0BRANCH", rf_code_zbran },
+  { "xloop", 0, rf_code_xloop },
+  { "xploo", 0, rf_code_xploo },
+  { "xdo", 0, rf_code_xdo },
+  { "digit", 0, rf_code_digit },
+  { "pfind", "(FIND)", rf_code_pfind },
+  { "encl", "ENCLOSE", rf_code_encl },
+  { "emit", 0, rf_code_emit },
+#ifdef RF_INST_SILENT
+  { "emitsilent", 0, rf_code_drop },
+#else
+  { "emitsilent", 0, rf_code_emit },
+#endif
+  { "key", 0, rf_code_key },
+  { "qterm", 0, rf_code_qterm },
+  { "cr", 0, rf_code_cr },
+#ifdef RF_INST_SILENT
+  { "crsilent", 0, rf_inst_code_noop },
+#else
+  { "crsilent", 0, rf_code_cr },
+#endif
+  { "cmove", "CMOVE", rf_code_cmove },
+  { "ustar", "U*", rf_code_ustar },
+  { "uslas", 0, rf_code_uslas },
+  { "andd", "AND", rf_code_andd },
+  { "orr", 0, rf_code_orr },
+  { "xorr", 0, rf_code_xorr },
+  { "spat", "SP@", rf_code_spat },
+  { "spsto", 0, rf_code_spsto },
+  { "rpsto", 0, rf_code_rpsto },
+  { "semis", ";S", rf_code_semis },
+  { "leave", 0, rf_code_leave },
+  { "tor", ">R", rf_code_tor },
+  { "fromr", "R>", rf_code_fromr },
+  { "rr", "R", rf_code_rr },
+  { "zequ", "0=", rf_code_zequ },
+  { "zless", 0, rf_code_zless },
+  { "plus", "+", rf_code_plus },
+  { "dplus", 0, rf_code_dplus },
+  { "minus", "MINUS", rf_code_minus },
+  { "dminu", 0, rf_code_dminu },
+  { "over", "OVER", rf_code_over },
+  { "drop", "DROP", rf_code_drop },
+  { "swap", "SWAP", rf_code_swap },
+  { "dup", "DUP", rf_code_dup },
+  { "pstor", "+!", rf_code_pstor },
+  { "toggl", "TOGGLE", rf_code_toggl },
+  { "at", "@", rf_code_at },
+  { "cat", "C@", rf_code_cat },
+  { "store", "!", rf_code_store },
+  { "cstor", "C!", rf_code_cstor },
+  { "docol", 0, rf_code_docol },
+  { "docon", 0, rf_code_docon },
+  { "dovar", 0, rf_code_dovar },
+  { "douse", 0, rf_code_douse },
+  { "dodoe", 0, rf_code_dodoe },
+  { "cold", 0, rf_code_cold },
+  { "stod", 0, rf_code_stod },
+  { "dchar", "D/CHAR", rf_code_dchar },
+  { "bwrit", "BLOCK-WRITE", rf_code_bwrit },
+  { "bread", "BLOCK-READ", rf_code_bread },
+  { 0, "DECIMAL", rf_inst_code_decimal },
+  { 0, "COMPILE", rf_inst_code_compile },
+  { 0, "interpret-word", rf_inst_code_interpret_word },
+  { 0, "ext", rf_inst_code_ext },
+  { 0, "prev", rf_inst_code_prev },
+  { 0, "block-cmd", rf_inst_code_block_cmd }
 };
 
 #ifndef RF_BS
@@ -696,12 +657,6 @@ static void rf_inst_forward(void)
   rf_inst_def_user("BASE", RF_USER_BASE_IDX);
   rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
-  /* inst time code field declarations */
-  for (i = 0; i < RF_INST_CODE_LIST_SIZE; ++i) {
-    rf_inst_code_t *code = &rf_inst_code_list[i];
-    rf_inst_def_code(code->name, code->value);
-  }
-
   /* boot time literals */
   rf_inst_def_literal("relrev", (uintptr_t) RF_FIGRELFIGREV);
   rf_inst_def_literal("ver", (uintptr_t) RF_USRVERATTR);
@@ -714,8 +669,13 @@ static void rf_inst_forward(void)
   /* code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
+    /* model source builds code word with the address*/
     if (code->name) {
       rf_inst_def_literal(code->name, (uintptr_t) code->value);
+    }
+    /* model source requires these to be defined already */
+    if (code->word) {
+      rf_inst_def_code(code->word, code->value);
     }
   }
 
