@@ -218,7 +218,8 @@ $(TARGET)-help :
 # disc images from %.f files including orterforth.f
 %.disc : %.f | $(DISC)
 
-	$(DISC) create <$< >$@
+	$(DISC) create <$< >$@.io
+	mv $@.io $@
 
 
 # === BBC Micro ===
@@ -282,14 +283,14 @@ bbc-clean :
 	rm -f bbc/*
 
 # MAME command line
-BBCMAME := mame bbcb -video opengl \
+BBCMAME := mame bbcb -rompath roms -video opengl \
 	-skip_gameinfo -nomax -window \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # MAME command line for fast inst, no video and timeout
-BBCMAMEFAST := mame bbcb -video none -sound none \
+BBCMAMEFAST := mame bbcb -rompath roms -video none -sound none \
 	-skip_gameinfo -nomax -window \
-	-speed 20 -frameskip 10 -nothrottle -seconds_to_run 800 \
+	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # default is to load from disk
@@ -302,7 +303,7 @@ bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 
 	# start disc
 	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp messages.disc 1.disc
 
 	# run mame
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
@@ -310,15 +311,18 @@ bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 	# stop disc
 	sh scripts/stop.sh disc.pid
 
-
 # load from tape and run
 .PHONY : bbc-run-tape
 bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 
+	# start disc
 	touch 1.disc
-	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc &
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp messages.disc 1.disc
 
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
 
 # general assemble rule
 bbc/%.o : bbc/%.s
@@ -333,8 +337,10 @@ bbc/%.s : %.c | bbc
 # find cc65 install dir and copy lib file
 bbc/apple2.lib : | bbc
 
-	readlink "$$(which ld65)"
-	cp -p "$$(dirname $$(readlink $$(which ld65)))/../lib/apple2.lib" $@
+	# TODO script to search likely paths
+	#readlink "$$(which ld65)"
+	#cp -p "$$(dirname $$(readlink -f $$(which ld65)))/../lib/apple2.lib" $@
+	cp -p /usr/share/cc65/lib/apple2.lib $@
 
 # custom target lib
 bbc/bbc.lib : bbc/crt0.o bbc/apple2.lib
@@ -371,12 +377,10 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # final binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 
-	# empty disc
+	# start disc
 	rm -f $@.io
 	touch $@.io
-
-	# serve disc
-	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard orterforth.disc $@.io &
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp orterforth.disc $@.io
 
 	# run emulator, wait for result
 	$(BBCMAMEFAST) $(BBCMAMEINST) & pid=$$! ; \
@@ -385,6 +389,9 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 
 	# copy result
 	mv $@.io $@
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
 
 # final disc inf
 bbc/orterforth.inf : | bbc
@@ -936,6 +943,7 @@ spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom sp
 		--machine 48 \
 		--graphics-filter 2x \
 		--interface1 \
+		--rom-48 roms/spectrum/spectrum.rom \
 		--rom-interface-1 roms/spectrum/if1-2.rom \
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
@@ -1056,7 +1064,7 @@ spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
 
 # run inst which writes hex file to disc 01
 ifeq ($(SPECTRUMIMPL),fuse)
-SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(DISC) $(ORTER) $(FUSE) roms/spectrum/if1-2.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
+SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(DISC) $(ORTER) $(FUSE) roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
 endif
 ifeq ($(SPECTRUMIMPL),superzazu)
 SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(SYSTEM)/emulate_spectrum roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom
@@ -1080,6 +1088,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--speed=1000 \
 		--machine 48 \
 		--interface1 \
+		--rom-48 roms/spectrum/spectrum.rom \
 		--rom-interface-1 roms/spectrum/if1-2.rom \
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \

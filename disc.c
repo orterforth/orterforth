@@ -1,9 +1,19 @@
 #define _DEFAULT_SOURCE
+#include <arpa/inet.h>
+#include <err.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h> 
+#include <sys/socket.h>
 #include <unistd.h>
+
+
+
 
 #include "orter/fuse.h"
 #include "orter/serial.h"
@@ -77,7 +87,6 @@ static rdwr_t rd;
 
 static rdwr_t wr;
 
-/* TODO replace fetch check with nonblocking operations */
 static char fetch = 0;
 
 static size_t disc_wr(char *off, size_t len)
@@ -166,6 +175,20 @@ static size_t fuse_wr(char *off, size_t len)
   return len;
 }
 
+int tcp_fd;
+
+size_t tcp_rd(char *off, size_t len)
+{
+  ssize_t n = read(tcp_fd, off, len);
+  return (n < 0) ? 0 : n;
+}
+
+size_t tcp_wr(char *off, size_t len)
+{
+  ssize_t n = write(tcp_fd, off, len);
+  return (n < 0) ? 0 : n;
+}
+
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
@@ -183,6 +206,9 @@ static int serve(char *dr0, char *dr1)
   for (;;) {
 
     /* TODO use select */
+    /* don't wait on write fd if input buffer empty */
+    /* don't wait on read fd if output buffer full */
+    /* sleep if no fds to wait on */
     usleep(100000);
 
     orter_serial_relay(rd, disc_wr, in_buf, &in_offset, &in_pending);
@@ -238,6 +264,64 @@ static int disc_standard(int argc, char **argv)
   return serve(argv[2], argv[3]);
 }
 
+static int disc_tcp(int argc, char **argv)
+{
+  int optval = 1;
+  int sock;
+  int port;
+  int status;
+  struct sockaddr_in svr_addr, cli_addr;
+  socklen_t sin_len = sizeof(cli_addr);
+
+  /* socket */
+  sock = socket(AF_INET, SOCK_STREAM, 0);
+  if (sock < 0) {
+    perror("socket failed");
+    return 1;
+  }
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) {
+    perror("setsockopt failed");
+    close(sock);
+    return 1;
+  }
+
+  /* bind, listen, accept */
+  port = 5705;
+  svr_addr.sin_family = AF_INET;
+  svr_addr.sin_addr.s_addr = INADDR_ANY;
+  svr_addr.sin_port = htons(port);
+  if (bind(sock, (struct sockaddr *) &svr_addr, sizeof(svr_addr)) == -1) {
+    perror("bind failed");
+    close(sock);
+    return 1;
+  }
+  if (listen(sock, 2)) {
+    perror("listen failed");
+    close(sock);
+    return 1;
+  }
+  tcp_fd = accept(sock, (struct sockaddr *) &cli_addr, &sin_len);
+  if (tcp_fd == -1) {
+    perror("accept failed");
+    close(sock);
+    return 1;
+  }
+
+  /* nonblocking */
+  status = fcntl(tcp_fd, F_SETFL, fcntl(tcp_fd, F_GETFL, 0) | O_NONBLOCK);
+  if (status == -1) {
+    perror("fcntl failed");
+    close(sock);
+    return 1;
+  }
+
+  /* bind the fps */
+  rd = tcp_rd;
+  wr = tcp_wr;
+
+  return serve(argv[2], argv[3]);
+}
+
 int main(int argc, char *argv[])
 {
   /* Text file to Forth block disc image */
@@ -258,6 +342,11 @@ int main(int argc, char *argv[])
   /* Console */
   if (argc == 4 && !strcmp("standard", argv[1])) {
     return disc_standard(argc, argv);
+  }
+
+  /* TCP */
+  if (argc == 4 && !strcmp("tcp", argv[1])) {
+    return disc_tcp(argc, argv);
   }
 
   /* Usage */

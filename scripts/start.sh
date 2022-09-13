@@ -20,7 +20,7 @@ shift
 shift
 
 # redirect stdin and stdout
-$@ < "$IN" 1> "$OUT" &
+"$@" < "$IN" 1> "$OUT" &
 
 # write pidfile
 echo $! > "$PIDFILE"
