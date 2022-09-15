@@ -762,7 +762,7 @@ static void rf_inst_forward(void)
 
   /* inst load sequence */
   rf_inst_colon("load");
-  rf_inst_compile("LIT 80 LOAD rxit");
+  rf_inst_compile("LIT 1 LOAD rxit");
 
   /* X */  
   here = (uint8_t *) RF_USER_DP;
