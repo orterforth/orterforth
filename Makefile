@@ -334,18 +334,10 @@ bbc/%.s : %.c | bbc
 
 	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
-# find cc65 install dir and copy lib file
-bbc/apple2.lib : | bbc
-
-	# TODO script to search likely paths
-	#readlink "$$(which ld65)"
-	#cp -p "$$(dirname $$(readlink -f $$(which ld65)))/../lib/apple2.lib" $@
-	cp -p /usr/share/cc65/lib/apple2.lib $@
-
 # custom target lib
-bbc/bbc.lib : bbc/crt0.o bbc/apple2.lib
+bbc/bbc.lib : bbc/crt0.o
 
-	cp bbc/apple2.lib $@.io
+	cp $$(sh target/bbc/find-apple2.lib.sh) $@.io
 	ar65 a $@.io bbc/crt0.o
 	mv $@.io $@
 
