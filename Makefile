@@ -255,7 +255,7 @@ ifeq ($(BBCOPTION),default)
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := 2F00
+	BBCORIGIN := 2E00
 	BBCRUN := bbc-run-disk
 endif
 
@@ -948,13 +948,13 @@ spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom sp
 .PHONY: spectrum-run-mame
 spectrum-run-mame : spectrum/orterforth.tap
 
-	# serve disc
+	# start disc
 	touch 1.disc
-	bash scripts/tcp-redirect.sh 127.0.0.1 5705 $(DISC) standard messages.disc 1.disc &
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp messages.disc 1.disc
 
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
-	@mame spectrum -video opengl \
+	@mame spectrum -rompath roms -video opengl \
 		-exp intf1 \
 		-exp:intf1:rs232 null_modem \
 		-bitb socket.localhost:5705 \
@@ -962,6 +962,9 @@ spectrum-run-mame : spectrum/orterforth.tap
 		-autoboot_delay 5 \
 		-autoboot_command 'j""\n' \
 		-cassette $<
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
 
 # other Spectrum libs
 spectrum/%.lib : %.c | spectrum
@@ -1022,15 +1025,15 @@ spectrum/orterforth-inst-2.bin : \
 	spectrum/orterforth-inst-1.bin \
 	spectrum/orterforth-inst_INST.bin
 
-	# z88dk-appmake +inject \
-	# 	-b spectrum/orterforth-inst-1.bin \
-	# 	-i spectrum/orterforth-inst_INST.bin \
-	# 	-s $(SPECTRUMINSTOFFSET) \
-	# 	-o $@
-	cat $< > $@.io
-	head -c 32768 /dev/null >> $@.io
-	head -c $(SPECTRUMINSTOFFSET) $@.io > $@
-	cat spectrum/orterforth-inst_INST.bin >> $@
+	z88dk-appmake +inject \
+		-b spectrum/orterforth-inst-1.bin \
+		-i spectrum/orterforth-inst_INST.bin \
+		-s $(SPECTRUMINSTOFFSET) \
+		-o $@
+	# cat $< > $@.io
+	# head -c 32768 /dev/null >> $@.io
+	# head -c $(SPECTRUMINSTOFFSET) $@.io > $@
+	# cat spectrum/orterforth-inst_INST.bin >> $@
 
 
 # make inst serial load file from inst bin
