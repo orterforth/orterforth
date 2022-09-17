@@ -133,7 +133,6 @@ static void rf_inst_code_block_cmd(void)
 }
 
 /* replaces strlen */
-/* TODO could this return a uint8_t */
 static uint8_t __FASTCALL__ rf_inst_strlen(const char *s)
 {
   uint8_t i;
@@ -152,11 +151,10 @@ static void rf_inst_memcpy(uint8_t *dst, uint8_t *src, uint8_t length)
 }
 
 /* replaces memset */
-/* TODO could this use uint8_t */
-static void rf_inst_memset(char *ptr, char value, unsigned int num)
+static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
 {
   while (num--) {
-    *((char *) ptr++) = value;
+    *(ptr++) = value;
   }
 }
 
@@ -774,7 +772,7 @@ static void rf_inst_forward(void)
 
 static void rf_inst_emptybuffers(void)
 {
-  rf_inst_memset((char *) RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
+  rf_inst_memset((uint8_t *) RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
 }
 
 static void rf_inst_load(void)
