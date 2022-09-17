@@ -439,7 +439,7 @@ static void rf_enclose(char c, char *addr1, uint8_t *s3, uint8_t *s2, uint8_t *s
 	*s1 = e;
 }
 
-void rf_encl(void)
+static void rf_encl(void)
 {
   char c;
   char *addr1;
