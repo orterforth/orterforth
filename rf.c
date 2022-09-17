@@ -326,9 +326,9 @@ void rf_code_digit(void)
 }
 #endif
 
-char *rf_find(char *t, char length, char *nfa)
+char *rf_find(char *t, uint8_t length, char *nfa)
 {
-  char l;
+  uint8_t l;
   uint8_t i;
 
   while (nfa) {

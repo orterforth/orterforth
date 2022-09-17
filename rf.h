@@ -354,7 +354,7 @@ void rf_fin(void);
 
 rf_code_t __FASTCALL__ *rf_cfa(char *nfa);
 
-char *rf_find(char *t, char t_length, char *nfa);
+char *rf_find(char *t, uint8_t t_length, char *nfa);
 
 #define RF_LOG(name)
 

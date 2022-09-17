@@ -3,13 +3,16 @@
 
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
+/* disc controller runs in process */
 #include "rf_persci.h"
-#endif
-
 /* fig-Forth source compiled into C array */
-#ifdef RF_INST_LOCAL_DISC
 #include "orterforth.inc"
 #endif
+
+/* ASCII CONTROL CHARS */
+#define RF_ASCII_EOT 4
+#define RF_ASCII_ENQ 5
+#define RF_ASCII_ACK 6
 
 /* INST TIME DISC OPERATIONS */
 
@@ -23,17 +26,6 @@ static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint
   *track = blk_offset / 26;
   *sector = (blk_offset % 26) + 1;
 }
-
-/* ASCII CONTROL CHARS */
-
-/* TODO check which are used/needed */
-#define RF_ASCII_SOH 1
-#define RF_ASCII_EOT 4
-#define RF_ASCII_ENQ 5
-#define RF_ASCII_ACK 6
-#define RF_ASCII_LF 10
-#define RF_ASCII_CR 13
-#define RF_ASCII_NAK 21
 
 /* inst time disc command buffer */
 static uint8_t cmd[12] = {
@@ -142,9 +134,9 @@ static void rf_inst_code_block_cmd(void)
 
 /* replaces strlen */
 /* TODO could this return a uint8_t */
-static int __FASTCALL__ rf_inst_strlen(const char *s)
+static uint8_t __FASTCALL__ rf_inst_strlen(const char *s)
 {
-  int i;
+  uint8_t i;
 
   for (i = 0; *(s++); ++i) {
   }
