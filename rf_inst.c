@@ -341,57 +341,56 @@ static void rf_inst_immediate(void)
   *rf_inst_vocabulary ^= 0x40;
 }
 
+/* INTERPRET */
+
 #define rf_inst_qstack()
 
-/* INTERPRET */
 static void rf_inst_code_interpret_word(void)
 {
   RF_START;
   {
-    uintptr_t found;
     uintptr_t len;
     uintptr_t *pfa;
+
+    len = RF_SP_POP;
+    pfa = (uintptr_t *) RF_SP_POP;
+    /* STATE @ < IF  */
+    if (len < RF_USER_STATE) {
+      /* CFA , */
+      rf_inst_comma((uintptr_t) ((uintptr_t *) pfa - 1));
+      RF_JUMP_NEXT;
+    } else {
+      /* ELSE CFA EXECUTE */
+      rf_w = (rf_code_t *) ((uintptr_t *) pfa - 1);
+      RF_JUMP(*rf_w);
+    }
+    /* ENDIF */
+    /* ?STACK */
+    rf_inst_qstack();
+  }
+}
+
+static void rf_inst_code_interpret_number(void)
+{
+  RF_START;
+  {
     intptr_t number;
 
-    /* BEGIN (outside this in inst time version of INTERPRET) */
-    
-    /* -FIND IF */
-    found = RF_SP_POP;
-    if (found) {
-      len = RF_SP_POP;
-      pfa = (uintptr_t *) RF_SP_POP;
-
-      /* STATE @ < IF  */
-      if (len < RF_USER_STATE) {
-        /* CFA , */
-        rf_inst_comma((uintptr_t) ((uintptr_t *) pfa - 1));
-      } else {
-        /* ELSE CFA EXECUTE */
-        rf_w = (rf_code_t *) ((uintptr_t *) pfa - 1);
-        RF_JUMP(*rf_w);
-        return;
-      }
-      /* ENDIF */
-      /* ?STACK */
-      rf_inst_qstack();
+    /* ELSE */
+    /* HERE NUMBER */
+    number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
+    /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
+    if (RF_USER_STATE) {
+      rf_inst_compile("LIT");
+      rf_inst_comma((uintptr_t) number);
     } else {
-      /* ELSE */
-      /* HERE NUMBER */
-      number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
-      /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
-      if (RF_USER_STATE) {
-        rf_inst_compile("LIT");
-        rf_inst_comma((uintptr_t) number);
-      } else {
-        RF_SP_PUSH(number); 
-      }
-      /* ENDIF  */
-      /* ?STACK  */
-      rf_inst_qstack();
+      RF_SP_PUSH(number); 
     }
-    /* ENDIF AGAIN */
+    /* ENDIF  */
+    /* ?STACK  */
+    rf_inst_qstack();
+    RF_JUMP_NEXT;
   }
-  RF_JUMP_NEXT;
 }
 
 /* DECIMAL */
@@ -547,7 +546,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 68
+#define RF_INST_CODE_LIT_LIST_SIZE 69
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "rcll", rf_code_rcll },
@@ -623,6 +622,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "DECIMAL", rf_inst_code_decimal },
   { 0, "COMPILE", rf_inst_code_compile },
   { 0, "interpret-word", rf_inst_code_interpret_word },
+  { 0, "interpret-number", rf_inst_code_interpret_number },
   { 0, "ext", rf_inst_code_ext },
   { 0, "prev", rf_inst_code_prev },
   { 0, "block-cmd", rf_inst_code_block_cmd }
@@ -730,7 +730,7 @@ static void rf_inst_forward(void)
 
   /* INTERPRET */
   rf_inst_colon("INTERPRET");
-  rf_inst_compile("-FIND interpret-word BRANCH ^-3");
+  rf_inst_compile("-FIND 0BRANCH ^4 interpret-word BRANCH ^-5 interpret-number BRANCH ^-8");
 
   /* CREATE */
   rf_inst_colon("CREATE");
