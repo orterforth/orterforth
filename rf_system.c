@@ -27,13 +27,11 @@ void rf_init(void)
     exit(1);
   }
 
-#ifdef RF_SYSTEM_POSIX
   /* make sure any output is written before a seg fault */
   if (setvbuf(stdout, NULL, _IONBF, 0)) {
     perror("setvbuf failed");
     exit(1);
   }
-#endif
 }
 
 void rf_code_emit(void)
@@ -43,6 +41,10 @@ void rf_code_emit(void)
     uint8_t c = RF_SP_POP & 0x7F;
 
     putchar(c);
+    if (c == 0x08) {
+      putchar(' ');
+      putchar(c);
+    }
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
