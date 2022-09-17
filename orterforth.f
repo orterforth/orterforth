@@ -14,7 +14,7 @@
 
 
 
-80 LOAD ;S
+81 LOAD ;S
 
 
 
@@ -1266,8 +1266,8 @@ HEX
 HEX
 
 CREATE MON          ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
-       ( 0  C,     4C C,   ' LIT 18 + ,    SMUDGE )
        SMUDGE ' rxit CFA @ LATEST PFA CFA !
+
 
 
 
@@ -1278,6 +1278,22 @@ HERE 14 rcls    +ORIGIN  !   ( COLD START FENCE )
 HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
 LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
+( orterforth inst                                             )
+
+( Code to load the fig-Forth Model source follows. Some words )
+( are forward defined as they are used in the fig source.     )
+( Some contain forward references which are resolved once the )
+( fig source has created the required definitions. Finally    )
+( we modify a few settings.                                   )
+
+
+
+
+
+
+
+
+
 DECIMAL
 CREATE : docol DP @ rcll MINUS + ! 192 STATE !
 CREATE 192 STATE ! docol DP @ rcll MINUS + !
@@ -1295,29 +1311,13 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 
 
 ( forward reference words                                     )
-: noop ;
-: ?EXEC ;
-: !CSP SP@ CSP ! ;
-: ] 192 STATE ! ;
-: ?CSP ;
-: SMUDGE CURRENT @ @ 32 TOGGLE ;
-: ERROR ;
-: ABORT ;
-: MESSAGE ;
-: QUIT ;
-: MIN ;
-: DR0 ;
-: R/W ;
-: . DROP ;
--->
+: noop ; : ?EXEC ; : !CSP SP@ CSP ! ; : ] 192 STATE ! ;
+: ?CSP ; : SMUDGE CURRENT @ @ 32 TOGGLE ; : ERROR ; : ABORT ;
+: MESSAGE ; : QUIT ; : MIN ; : DR0 ; : R/W ; : . DROP ;
 ( required by the model source                                )
-: HEX 16 BASE ! ;
-: HERE DP @ ;
-: CODE CREATE SMUDGE ;
-: , HERE ! rcll DP +! ;
-: LITERAL COMPILE noop , ; IMMEDIATE
-: +ORIGIN origin + ;
-: -FIND 32 WORD HERE CONTEXT @ @ (FIND) ;
+: HEX 16 BASE ! ; : HERE DP @ ; : CODE CREATE SMUDGE ;
+: , HERE ! rcll DP +! ; : LITERAL COMPILE noop , ; IMMEDIATE
+: +ORIGIN origin + ; : -FIND 32 WORD HERE CONTEXT @ @ (FIND) ;
 : [COMPILE] -FIND DROP DROP rcll - , ; IMMEDIATE
 : BYTE.IN -FIND DROP DROP + ;
 : REPLACED.BY -FIND DROP DROP rcll - SWAP ! ;
