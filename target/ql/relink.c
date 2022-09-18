@@ -1,11 +1,10 @@
 #include "rf.h"
-
-#define SIZE 62
+/* TODO revalidate this against updated rf_inst */
+#define SIZE 61
 
 static rf_code_t codes[] = {
   rf_code_rcll,
   rf_code_rcls,
-  rf_code_rcod,
   rf_code_rlns,
   rf_code_rtgt,
   rf_code_rxit,

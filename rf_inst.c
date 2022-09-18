@@ -531,7 +531,6 @@ static void rf_inst_code_ext(void)
   RF_START;
   rf_inst_def_code("rcll", rf_code_rcll);
   rf_inst_def_code("rcls", rf_code_rcls);
-  rf_inst_def_code("rcod", rf_code_rcod);
   rf_inst_def_code("rlns", rf_code_rlns);
   rf_inst_def_code("rtgt", rf_code_rtgt);
   rf_inst_def_code("rxit", rf_code_rxit);
@@ -546,12 +545,11 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 69
+#define RF_INST_CODE_LIT_LIST_SIZE 68
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "rcll", rf_code_rcll },
   { 0, "rcls", rf_code_rcls },
-  { 0, 0, rf_code_rcod },
   { 0, "rlns", rf_code_rlns },
   { 0, 0, rf_code_rtgt },
   { 0, "rxit", rf_code_rxit },

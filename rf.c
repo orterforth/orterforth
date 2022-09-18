@@ -1133,18 +1133,6 @@ void rf_code_bwrit(void)
 }
 #endif
 
-void rf_code_rcod(void)
-{
-  RF_START;
-  {
-    rf_code_t *cfa;
-
-    cfa = rf_cfa(*((char **) RF_USER_CURRENT));
-    *cfa = (rf_code_t) RF_SP_POP;
-  }
-  RF_JUMP_NEXT;
-}
-
 #ifndef RF_TARGET_CODE_RXIT
 void rf_code_rxit(void)
 {

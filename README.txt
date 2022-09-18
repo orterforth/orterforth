@@ -150,11 +150,6 @@ system-independent:
                   size. (CELLS is not part of this version of
                   fig-Forth.)
 
- rcod ( addr -- ) Sets the code field of the most recent
-                  definition. Used by defining words instead
-                  of ;CODE and during installation instead of
-                  inline assembler definitions.
-
  rlns ( n -- n )  Aligns the stack value according to CPU
                   requirements. Used in CREATE when adding the
                   name field and in other non-aligned

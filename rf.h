@@ -488,8 +488,6 @@ void rf_code_rcll(void);
 
 void rf_code_rcls(void);
 
-void rf_code_rcod(void);
-
 void rf_code_rlns(void);
 
 void rf_code_rtgt(void);

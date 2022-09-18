@@ -531,7 +531,7 @@ DECIMAL     ;S
 : :                  ( CREATE NEW COLON-DEFINITION UNTIL ';' *)
                     ?EXEC !CSP CURRENT   @         CONTEXT    !
                 CREATE  ]
-docol rcod ; IMMEDIATE
+docol HERE rcll MINUS + ! ; IMMEDIATE
 
 
 
@@ -545,15 +545,15 @@ docol rcod ; IMMEDIATE
 (  CONSTANT,  VARIABLE, USER                      WFR-79MAR30 )
 : CONSTANT              ( WORD WHICH LATER CREATES CONSTANTS *)
                       CREATE  SMUDGE  ,
-docon rcod ;
+docon HERE rcll DUP + MINUS + ! ;
 
 : VARIABLE              ( WORD WHICH LATER CREATES VARIABLES *)
      CONSTANT
-dovar rcod ;
+dovar HERE rcll DUP + MINUS + ! ;
 
 : USER                                ( CREATE USER VARIABLE *)
      CONSTANT
-douse rcod ;
+douse HERE rcll DUP + MINUS + ! ;
 
 
 
@@ -698,7 +698,7 @@ HEX              ( 0 THRU 5 RESERVED,    REFERENCED TO $00A0 *)
       ( INY,  W (Y LDA,  IP 1+ STA, )    ( AS NEXT INTERP. PTR )
       ( CLC,  W LDA,  4 # ADC,  PHA,) ( PUSH ADDRESS OF PARAMS )
       ( W 1+ LDA,  00 # ADC,  PUSH JMP, )
-dodoe rcod ;
+dodoe LATEST PFA CFA ! ;
 -->
 
 
@@ -880,7 +880,7 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
-cold rcod
+cold HERE rcll - !
 rcll 2+ BYTE.IN FORTH coldforth !
 0 BYTE.IN ABORT coldabort !
 
@@ -896,7 +896,7 @@ rcll 2+ BYTE.IN FORTH coldforth !
                                                     -->    
 (  MATH UTILITY                               DJK-WFR-79APR29 )
 CODE S->D                  ( EXTEND SINGLE INTEGER TO DOUBLE *)
-stod rcod
+stod HERE rcll - !
 
 : +-    0< IF MINUS ENDIF ;   ( APPLY SIGN TO NUMBER BENEATH *)
 
@@ -1000,11 +1000,11 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
      ?LOADING  0  IN  !  B/SCR  BLK  @  OVER
      MOD  -  BLK  +!  ;    IMMEDIATE
 
--->    
-
-
-
-
+0A rcls BYTE.IN :        REPLACED.BY HERE
+05 rcls BYTE.IN CONSTANT REPLACED.BY HERE
+03 rcls BYTE.IN VARIABLE REPLACED.BY HERE
+03 rcls BYTE.IN USER     REPLACED.BY HERE
+-->
 
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR26 )
 ( EMIT )
@@ -1056,7 +1056,7 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 (  D/CHAR,  ?DISC,                                WFR-79MAR23 )
 CODE D/CHAR      ( TEST CHAR-1. EXIT TEST BOOL-2, NEW CHAR-1 *)
-dchar rcod
+dchar HERE rcll - !
 
 
 
@@ -1072,7 +1072,7 @@ dchar rcod
      ENDIF  R>  DROP  ;   -->    
 (  BLOCK-WRITE                                     WFR-790103 )
 CODE BLOCK-WRITE     ( SEND TO DISC FROM ADDRESS-2,  COUNT-1 *)
-bwrit rcod                                 ( WITH EOT AT END *)
+bwrit HERE rcll - !                        ( WITH EOT AT END *)
 
 
 
@@ -1089,7 +1089,7 @@ bwrit rcod                                 ( WITH EOT AT END *)
 (  BLOCK-READ,                                     WFR-790103 )
 
 CODE BLOCK-READ   ( BUF.ADDR-1. EXIT AT 128 CHAR OR CONTROL *)
-bread rcod
+bread HERE rcll - !
 
 
 
@@ -1125,7 +1125,7 @@ bread rcod
 04 rcls BYTE.IN :      REPLACED.BY  CONTEXT
 06 rcls BYTE.IN :      REPLACED.BY  CREATE
 07 rcls BYTE.IN :      REPLACED.BY  ]
-0B rcls BYTE.IN :      REPLACED.BY  ;S
+0F rcls BYTE.IN :      REPLACED.BY  ;S
 00  BYTE.IN  ;         REPLACED.BY  ?CSP
 01 rcls BYTE.IN ;      REPLACED.BY  COMPILE
 03 rcls BYTE.IN ;      REPLACED.BY  SMUDGE
@@ -1135,8 +1135,8 @@ bread rcod
 01 rcls BYTE.IN CONSTANT REPLACED.BY SMUDGE
 02 rcls BYTE.IN CONSTANT REPLACED.BY , -->    
 (  FORWARD REFERENCES                             WFR-79APR29 )
-( 02  BYTE.IN  VARIABLE    REPLACED.BY  (;CODE)
-( 02  BYTE.IN  USER        REPLACED.BY  (;CODE) 
+( 02  BYTE.IN VARIABLE   REPLACED.BY  (;CODE)
+( 02  BYTE.IN USER       REPLACED.BY  (;CODE)
 03 rcls BYTE.IN ?ERROR   REPLACED.BY  ERROR
 08 rcls BYTE.IN ."       REPLACED.BY  WORD
 10 rcls BYTE.IN ."       REPLACED.BY  WORD
