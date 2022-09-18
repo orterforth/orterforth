@@ -340,13 +340,13 @@ encl HERE rcll - !
 (  INSTALLATION SPECIFIC CODE.                                )
 
 CODE EMIT             ( PRINT ASCII VALUE ON BOTTOM OF STACK *)
-emitsilent HERE rcll - !
+
 CODE KEY        ( ACCEPT ONE TERMINAL CHARACTER TO THE STACK *)
-key HERE rcll - !
+
 CODE ?TERMINAL      ( 'BREAK' LEAVES 1 ON STACK; OTHERWISE 0 *)
-qterm HERE rcll - !
+
 CODE CR         ( EXECUTE CAR. RETURN, LINE FEED ON TERMINAL *)
-crsilent HERE rcll - !
+
 -->
 
 
@@ -519,7 +519,7 @@ CODE C@      ( REPLACE STACK ADDRESS WITH POINTED 8 BIT BYTE *)
 cat HERE rcll - !
 
 CREATE !       ( STORE SECOND AT 16 BITS ADDRESSED BY BOTTOM *)
-store HERE rcll - !
+store HERE rcll - ! SMUDGE
 
 
 CODE C!           ( STORE SECOND AT BYTE ADDRESSED BY BOTTOM *)
@@ -1008,13 +1008,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR26 )
 ( EMIT )
+  emitsilent rcll MINUS BYTE.IN EMIT !
 
 
 
 
-
-
-
+( KEY )
+      key rcll MINUS BYTE.IN KEY !
 
 
 
@@ -1024,14 +1024,14 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
                                    -->    
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR02 )
 
+( ?TERMINAL )
+     qterm rcll MINUS BYTE.IN ?TERMINAL !
 
 
 
 
-
-
-
-
+( CR )
+    crsilent rcll MINUS BYTE.IN CR !
 
 
 -->    
