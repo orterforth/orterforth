@@ -232,18 +232,11 @@ void rf_code_xdo(void)
 }
 #endif
 
-static uintptr_t __FASTCALL__ *rf_lfa(char *nfa)
+uintptr_t __FASTCALL__ *rf_lfa(char *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
   }
   return (uintptr_t *) ++nfa;
-}
-
-rf_code_t __FASTCALL__ *rf_cfa(char *nfa)
-{
-  uintptr_t *lfa = rf_lfa(nfa);
-  uintptr_t *cfa = lfa + 1;
-  return (rf_code_t *) cfa;
 }
 
 #ifndef RF_TARGET_CODE_DODOE

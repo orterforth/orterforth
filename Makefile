@@ -266,7 +266,7 @@ ifeq ($(BBCOPTION),tape)
 	BBCINSTMEDIA = bbc/orterforth-inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
 	BBCORG := 1220
-	BBCORIGIN := 1E00
+	BBCORIGIN := 1D00
 	BBCRUN := bbc-run-tape
 endif
 

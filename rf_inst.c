@@ -278,6 +278,13 @@ static char __FASTCALL__ *rf_inst_find_string(char *t)
   return rf_find(t, rf_inst_strlen(t), rf_inst_vocabulary);
 }
 
+static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
+{
+  uintptr_t *lfa = rf_lfa(nfa);
+  uintptr_t *cfa = lfa + 1;
+  return (rf_code_t *) cfa;
+}
+
 /* proto outer interpreter */
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
@@ -293,7 +300,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
 
     if (nfa) {
       /* compile word */
-      rf_inst_comma((uintptr_t) rf_cfa(nfa));
+      rf_inst_comma((uintptr_t) rf_inst_cfa(nfa));
     } else {
       /* compile number */
       intptr_t factor = 1;
@@ -783,7 +790,7 @@ static void rf_inst_load(void)
 
   /* "load" is the starting point */
   nfa = rf_inst_find_string("load");
-  cfa = rf_cfa(nfa);
+  cfa = rf_inst_cfa(nfa);
 
   /* initialise RP */
   RF_RP_SET((uintptr_t *) RF_USER_R0);

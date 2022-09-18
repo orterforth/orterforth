@@ -352,7 +352,7 @@ void rf_fin(void);
 
 /* UTILITIES */
 
-rf_code_t __FASTCALL__ *rf_cfa(char *nfa);
+uintptr_t __FASTCALL__ *rf_lfa(char *nfa);
 
 char *rf_find(char *t, uint8_t t_length, char *nfa);
 
