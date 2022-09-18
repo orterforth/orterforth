@@ -208,7 +208,7 @@ tib    ,        ( TERMINAL INPUT BUFFER )
 0000   ,        ( COLD START VALUE FOR VOC-LINK ) ext -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
-lit rcod
+lit HERE rcll - !
 
 
 
@@ -233,19 +233,19 @@ lit rcod
 
 CODE EXECUTE              ( EXECUTE A WORD BY ITS CODE FIELD *)
                                       ( ADDRESS ON THE STACK *)
-exec rcod
+exec HERE rcll - !
 
 
 
 -->    
 (  BRANCH, 0BRANCH     W/16-BIT OFFSET            WFR-79APR01 )
 CODE BRANCH            ( ADJUST IP BY IN-LINE 16 BIT LITERAL *)
-bran rcod
+bran HERE rcll - !
 
 
 
 CODE 0BRANCH           ( IF BOT IS ZERO, BRANCH FROM LITERAL *)
-zbran rcod
+zbran HERE rcll - !
 
 
 
@@ -256,14 +256,14 @@ zbran rcod
 
 (  LOOP CONTROL                                   WFR-79MAR20 )
 CODE (LOOP)      ( INCREMENT LOOP INDEX, LOOP UNTIL => LIMIT *)
-xloop rcod
+xloop HERE rcll - !
 
 
 
 
 
 CODE (+LOOP)          ( INCREMENT INDEX BY STACK VALUE +/-   *)
-xploo rcod
+xploo HERE rcll - !
 
 
 
@@ -273,14 +273,14 @@ xploo rcod
 (  (DO-                                           WFR-79MAR30 )
 
 CODE (DO)             ( MOVE TWO STACK ITEMS TO RETURN STACK *)
-xdo rcod
+xdo HERE rcll - !
 
 
 
 
 
 CODE I                    ( COPY CURRENT LOOP INDEX TO STACK *)
-rr rcod                   ( THIS WILL LATER BE POINTED TO 'R' )
+rr HERE rcll - !          ( THIS WILL LATER BE POINTED TO 'R' )
 
 -->    
 
@@ -290,7 +290,7 @@ rr rcod                   ( THIS WILL LATER BE POINTED TO 'R' )
 CODE DIGIT     ( CONVERT ASCII CHAR-SECOND, WITH BASE-BOTTOM *)
                    ( IF OK RETURN DIGIT-SECOND, TRUE-BOTTOM; *)
                                    ( OTHERWISE FALSE-BOTTOM. *)
-digit rcod
+digit HERE rcll - !
 
 
 
@@ -304,7 +304,7 @@ digit rcod
 -->    
 (  FIND FOR VARIABLE LENGTH NAMES                  WFR-790225 )
 CODE (FIND)  ( HERE, NFA ... PFA, LEN BYTE, TRUE; ELSE FALSE *)
-pfind rcod
+pfind HERE rcll - !
 
 
 
@@ -321,7 +321,7 @@ pfind rcod
 (  ENCLOSE                                         WFR-780926 )
 CODE ENCLOSE   ( ENTER WITH ADDRESS-2, DELIM-1.  RETURN WITH *)
     ( ADDR-4, AND OFFST TO FIRST CH-3, END WORD-2, NEXT CH-1 *)
-encl rcod
+encl HERE rcll - !
 
 
 
@@ -340,19 +340,19 @@ encl rcod
 (  INSTALLATION SPECIFIC CODE.                                )
 
 CODE EMIT             ( PRINT ASCII VALUE ON BOTTOM OF STACK *)
-emitsilent rcod
+emitsilent HERE rcll - !
 CODE KEY        ( ACCEPT ONE TERMINAL CHARACTER TO THE STACK *)
-key rcod
+key HERE rcll - !
 CODE ?TERMINAL      ( 'BREAK' LEAVES 1 ON STACK; OTHERWISE 0 *)
-qterm rcod
+qterm HERE rcll - !
 CODE CR         ( EXECUTE CAR. RETURN, LINE FEED ON TERMINAL *)
-crsilent rcod
--->    
+crsilent HERE rcll - !
+-->
 
 
 (  CMOVE,                                         WFR-79MAR20 )
 CODE CMOVE   ( WITHIN MEMORY; ENTER W/  FROM-3, TO-2, QUAN-1 *)
-cmove rcod
+cmove HERE rcll - !
 
 
 
@@ -369,7 +369,7 @@ cmove rcod
 (  U*,  UNSIGNED MULTIPLY FOR 16 BITS             WFR-79APR08 )
 CODE U*        ( 16 BIT MULTIPLICAND-2,  16 BIT MULTIPLIER-1 *)
              ( 32 BIT UNSIGNED PRODUCT: LO WORD-2, HI WORD-1 *)
-ustar rcod
+ustar HERE rcll - !
 
 
 
@@ -381,11 +381,11 @@ ustar rcod
 
 
 
--->    
+-->
 (  U/,  UNSIGNED DIVIDE FOR 31 BITS               WFR-79APR29 )
 CODE U/          ( 31 BIT DIVIDEND-2, -3,  16 BIT DIVISOR-1  *)
                  ( 16 BIT REMAINDER-2,  16 BIT QUOTIENT-1    *)
-uslas rcod
+uslas HERE rcll - !
 
 
 
@@ -401,59 +401,59 @@ uslas rcod
 (  LOGICALS                                       WFR-79APR20 )
 
 CODE AND           ( LOGICAL BITWISE AND OF BOTTOM TWO ITEMS *)
-andd rcod
+andd HERE rcll - !
 
 
 CODE OR           ( LOGICAL BITWISE 'OR' OF BOTTOM TWO ITEMS *)
-orr rcod
+orr HERE rcll - !
 
 
 CODE XOR        ( LOGICAL 'EXCLUSIVE OR' OF BOTTOM TWO ITEMS *)
-xorr rcod
+xorr HERE rcll - !
 
 
 -->    
 
 (  STACK INITIALIZATION                           WFR-79MAR30 )
 CODE SP@                      ( FETCH STACK POINTER TO STACK *)
-spat rcod
+spat HERE rcll - !
 
 
 CODE SP!                                 ( LOAD SP FROM 'S0' *)
-spsto rcod
+spsto HERE rcll - !
 
 CODE RP!                                   ( LOAD RP FROM R0 *)
-rpsto rcod
+rpsto HERE rcll - !
 
 
 CODE ;S              ( RESTORE IP REGISTER FROM RETURN STACK *)
-semis rcod
+semis HERE rcll - !
 
 -->    
 (  RETURN STACK WORDS                             WFR-79MAR29 )
 CODE LEAVE          ( FORCE EXIT OF DO-LOOP BY SETTING LIMIT *)
                                                   ( TO INDEX *)
-leave rcod
+leave HERE rcll - !
 
 CODE >R              ( MOVE FROM COMP. STACK TO RETURN STACK *)
-tor rcod
+tor HERE rcll - !
 
 CODE R>              ( MOVE FROM RETURN STACK TO COMP. STACK *)
-fromr rcod
+fromr HERE rcll - !
 
 CODE R  ( COPY THE BOTTOM OF THE RETURN STACK TO COMP. STACK *)
-rr rcod
+rr HERE rcll - !
 
 ( '   R    -2  BYTE.IN  I  ! )
 -->    
 (  TESTS AND LOGICALS                             WFR-79MAR19 )
 
 CODE 0=           ( REVERSE LOGICAL STATE OF BOTTOM OF STACK *)
-zequ rcod
+zequ HERE rcll - !
 
 
 CODE 0<            ( LEAVE TRUE IF NEGATIVE; OTHERWISE FALSE *)
-zless rcod
+zless HERE rcll - !
 
 
 -->    
@@ -464,45 +464,45 @@ zless rcod
 
 (  MATH                                           WFR-79MAR19 )
 CODE +         ( LEAVE THE SUM OF THE BOTTOM TWO STACK ITEMS *)
-plus rcod
+plus HERE rcll - !
 
 CODE D+            ( ADD TWO DOUBLE INTEGERS, LEAVING DOUBLE *)
-dplus rcod
+dplus HERE rcll - !
 
 
 
 CODE MINUS         ( TWOS COMPLEMENT OF BOTTOM SINGLE NUMBER *)
-minus rcod
+minus HERE rcll - !
 
 CODE DMINUS        ( TWOS COMPLEMENT OF BOTTOM DOUBLE NUMBER *)
-dminu rcod
+dminu HERE rcll - !
 
                                            -->    
 (  STACK MANIPULATION                             WFR-79MAR29 )
 CODE OVER              ( DUPLICATE SECOND ITEM AS NEW BOTTOM *)
-over rcod
+over HERE rcll - !
 
 CODE DROP                           ( DROP BOTTOM STACK ITEM *)
-drop rcod                    ( C.F. VECTORS DIRECTLY TO 'POP' )
+drop HERE rcll - !           ( C.F. VECTORS DIRECTLY TO 'POP' )
 
 CODE SWAP        ( EXCHANGE BOTTOM AND SECOND ITEMS ON STACK *)
-swap rcod
+swap HERE rcll - !
 
 
 CODE DUP                    ( DUPLICATE BOTTOM ITEM ON STACK *)
-dup rcod
+dup HERE rcll - !
 
 -->    
 
 (  MEMORY INCREMENT,                              WFR-79MAR30 )
 
 CODE +!   ( ADD SECOND TO MEMORY 16 BITS ADDRESSED BY BOTTOM *)
-pstor rcod
+pstor HERE rcll - !
 
 
 
 CODE TOGGLE           ( BYTE AT ADDRESS-2, BIT PATTERN-1 ... *)
-toggl rcod
+toggl HERE rcll - !
 
 -->    
 
@@ -512,18 +512,18 @@ toggl rcod
 
 (  MEMORY FETCH AND STORE                          WFR-781202 )
 CODE @                   ( REPLACE STACK ADDRESS WITH 16 BIT *)
-at rcod                           ( CONTENTS OF THAT ADDRESS *)
+at HERE rcll - !                  ( CONTENTS OF THAT ADDRESS *)
 
 
 CODE C@      ( REPLACE STACK ADDRESS WITH POINTED 8 BIT BYTE *)
-cat rcod
+cat HERE rcll - !
 
-CODE !         ( STORE SECOND AT 16 BITS ADDRESSED BY BOTTOM *)
-store rcod
+CREATE !       ( STORE SECOND AT 16 BITS ADDRESSED BY BOTTOM *)
+store HERE rcll - !
 
 
 CODE C!           ( STORE SECOND AT BYTE ADDRESSED BY BOTTOM *)
-cstor rcod
+cstor HERE rcll - !
 
 DECIMAL     ;S    
 (  :,  ;,                                         WFR-79MAR30 )
