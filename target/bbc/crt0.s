@@ -1,4 +1,4 @@
-.import initlib, donelib
+; .import initlib, donelib
 .import callmain	
 .importzp sp
 
@@ -36,7 +36,7 @@ __Cstart:
 	jsr	osbyte
 	stx	enable_save
 
-	jsr	initlib                   ; run constructors
+;	jsr	initlib                   ; run constructors
 
 	tsx                           ; save S
 	stx	s_save
@@ -49,7 +49,7 @@ doexit:
 	lda	#$01
 	jsr	osbyte
 
-	jsr donelib
+;	jsr donelib
 
 	lda	enable_save               ; reset escape event state
 	bne	doexit1
