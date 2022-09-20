@@ -551,14 +551,19 @@ orterforth.inc : orterforth.disc | $(ORTER)
 # === Raspberry Pi Pico ===
 
 .PHONY : pico-build
-pico-build : orterforth.inc
+pico-build : orterforth.inc | pico
 
-	cd target/pico/build && PICO_SDK_PATH=~/pico-sdk cmake .. && make
+	cd pico && PICO_SDK_PATH=~/pico-sdk cmake ../target/pico && make
 
 .PHONY : pico-clean
 pico-clean :
 
-	rm -rf target/pico/build/*
+	rm -rf pico/*
+
+pico :
+
+	mkdir $@
+
 
 # === Sinclair QL ===
 
