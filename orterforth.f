@@ -728,12 +728,12 @@ dodoe LATEST PFA CFA ! ;
           I  C!  0 I 1+ C! 0 I 2+ C!
        ENDIF EMIT  LOOP  DROP  ;
 : QUERY     TIB  @  50  EXPECT  0  IN  !  ;
-81 HERE HERE 1+
+HERE 1+
 : X  BLK @                            ( END-OF-TEXT IS NULL *)
       IF ( DISC ) 1 BLK +!  0 IN !  BLK @  7  AND  0=
          IF ( SCR END )  ?EXEC  R>  DROP  ENDIF
        ELSE  ( TERMINAL )    R>  DROP
-         ENDIF  ; 58 TOGGLE C! IMMEDIATE  -->    
+         ENDIF  ; 58 TOGGLE IMMEDIATE  -->
 (  FILL, ERASE, BLANKS, HOLD, PAD                 WFR-79APR02 )
 : FILL               ( FILL MEMORY BEGIN-3,  QUAN-2,  BYTE-1 *)
         SWAP  >R  OVER  C!  DUP  1+  R>  1  -  CMOVE  ;
@@ -881,7 +881,7 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
 cold HERE rcll - !
-rcll rcll + BYTE.IN FORTH coldforth !
+2 rcls BYTE.IN FORTH coldforth !
 0 BYTE.IN ABORT coldabort !
 
 
