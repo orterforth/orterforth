@@ -728,12 +728,12 @@ dodoe LATEST PFA CFA ! ;
           I  C!  0 I 1+ C! 0 I 2+ C!
        ENDIF EMIT  LOOP  DROP  ;
 : QUERY     TIB  @  50  EXPECT  0  IN  !  ;
-81 HERE 80 HERE 1+
+81 HERE HERE 1+
 : X  BLK @                            ( END-OF-TEXT IS NULL *)
       IF ( DISC ) 1 BLK +!  0 IN !  BLK @  7  AND  0=
          IF ( SCR END )  ?EXEC  R>  DROP  ENDIF
        ELSE  ( TERMINAL )    R>  DROP
-         ENDIF  ; C! C! IMMEDIATE  -->    
+         ENDIF  ; 58 TOGGLE C! IMMEDIATE  -->    
 (  FILL, ERASE, BLANKS, HOLD, PAD                 WFR-79APR02 )
 : FILL               ( FILL MEMORY BEGIN-3,  QUAN-2,  BYTE-1 *)
         SWAP  >R  OVER  C!  DUP  1+  R>  1  -  CMOVE  ;
@@ -851,10 +851,10 @@ dodoe LATEST PFA CFA ! ;
          LATEST  40  TOGGLE  ;
 
 : VOCABULARY  ( CREATE VOCAB WITH 'V-HEAD' AT VOC INTERSECT. *) 
-       <BUILDS  81 C, A0 C,  CURRENT  @  2 -  ,
+       <BUILDS HERE rcll BLANKS 81 C, rcll 2 - ALLOT A0 C,
+       CURRENT  @  rcll -  ,
        HERE  VOC-LINK  @  ,  VOC-LINK  !
-       DOES>  2+  CONTEXT  !  ;
-
+       DOES>  rcll +  CONTEXT  !  ;
 VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *) 
 
 : DEFINITIONS        ( SET THE CONTEXT ALSO AS CURRENT VOCAB *)
@@ -881,7 +881,7 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
 cold HERE rcll - !
-rcll 2+ BYTE.IN FORTH coldforth !
+rcll rcll + BYTE.IN FORTH coldforth !
 0 BYTE.IN ABORT coldabort !
 
 
@@ -931,7 +931,7 @@ FIRST  VARIABLE  USE           ( NEXT BUFFER TO USE, STALEST *)
 FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 : +BUF     ( ADVANCE ADDRESS-1 TO NEXT BUFFER. RETURNS FALSE *)
-      82 rcll +            +  DUP  LIMIT  =     ( IF AT PREV *)
+      80 2 rcls +          +  DUP  LIMIT  =     ( IF AT PREV *)
       IF  DROP  FIRST  ENDIF  DUP  PREV  @  -  ;
 
 : UPDATE     ( MARK THE BUFFER POINTED TO BY PREV AS ALTERED *)
@@ -1277,7 +1277,7 @@ HERE              FENCE  !
 HERE 14 rcls    +ORIGIN  !   ( COLD START FENCE )
 HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
 LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
-' FORTH 2+ 2 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
+' FORTH 3 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
 ( orterforth inst                                             )
 
 ( Code to load the fig-Forth Model source follows. Some words )
@@ -1365,7 +1365,7 @@ IMMEDIATE
 ( set EMIT and CR CFAs after silent install                   )
 emit ' EMIT CFA ! cr ' CR CFA !
 ( installed = 1                                               )
-1 installed !
+1 installed C!
 ( break link with inst time code                              )
 ' rcll LFA overwrite 0= OVER @ * SWAP !
 ( WARNING = 1                                                 )

@@ -3,6 +3,11 @@
 /* disc impl is process local; insert and eject the inst disc */
 #define RF_INST_LOCAL_DISC
 
+/* accept command line arguments */
+#ifndef PICO
+#define RF_ARGS
+#endif
+
 /* RP and SP operations inline, code is larger but faster */
 #define RF_INLINE_RP
 #define RF_INLINE_SP
@@ -14,7 +19,7 @@
 #define RF_INST_OVERWRITE
 
 /* allocated memory is proportional to word size */
-#define RF_MEMORY_SIZE (65536*RF_WORD_SIZE)
+#define RF_MEMORY_SIZE (32768*RF_WORD_SIZE)
 
 /* points to start of memory, whether heap or static */
 extern char *rf_memory;

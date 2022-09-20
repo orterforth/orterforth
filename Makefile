@@ -548,6 +548,18 @@ orterforth.inc : orterforth.disc | $(ORTER)
 	$(ORTER) hex include orterforth_disc <$< >$@.io
 	mv $@.io $@
 
+# === Raspberry Pi Pico ===
+
+.PHONY : pico-build
+pico-build : orterforth.inc
+
+	cd target/pico/build && PICO_SDK_PATH=~/pico-sdk cmake .. && make
+
+.PHONY : pico-clean
+pico-clean :
+
+	rm -rf target/pico/build/*
+
 # === Sinclair QL ===
 
 # QLOPTION := assembly

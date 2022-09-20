@@ -6,6 +6,7 @@
 /* disc controller runs in process */
 #include "rf_persci.h"
 /* fig-Forth source compiled into C array */
+const
 #include "orterforth.inc"
 #endif
 
@@ -164,6 +165,7 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 
   dp = (uintptr_t *) RF_USER_DP;
   *dp = word;
+
   RF_USER_DP = (uintptr_t) (dp + 1);
 }
 
@@ -178,13 +180,14 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
   here = (uint8_t *) RF_USER_DP;
   there = here;
 
-  /* length byte */
+  /* length byte with smudge */
   *here = length | 0xA0;
   ++here;
 
   /* name */
   rf_inst_memcpy(here, address, length);
   here += length;
+  /* TODO move this to 6502 workaround? */
   *here = 0x20;
 
 #ifdef __CC65__
@@ -195,14 +198,10 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
 #endif
 #ifdef RF_ALIGN
   /* word alignment */
-  /* TODO support larger align word sizes */
-/*
-  if ((uintptr_t) here % RF_ALIGN) here += RF_ALIGN - ((uintptr_t) here % RF_ALIGN);
-*/
-  if ((uintptr_t) here & 0x01) {
-      ++here;
+  while ((uintptr_t) here % RF_ALIGN) {
+    *here = 0x20;
+    ++here;
   }
-
 #endif
 
   /* terminating bit */
@@ -213,14 +212,13 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
   rf_inst_comma((uintptr_t) rf_inst_vocabulary);
 
   /* vocabulary */
-  *((uint8_t **) RF_USER_CURRENT) = there;
+  rf_inst_vocabulary = (char *) there;
 }
 
-/* create and smudge */
+/* create and un-smudge */
 static void __FASTCALL__ rf_inst_def(char *name)
 {
   rf_inst_create(rf_inst_strlen(name), (uint8_t *) name);
-  /* un-smudge */
   *rf_inst_vocabulary ^= 0x20;
 }
 
@@ -361,6 +359,7 @@ static void rf_inst_code_interpret_word(void)
 
     len = RF_SP_POP;
     pfa = (uintptr_t *) RF_SP_POP;
+
     /* STATE @ < IF  */
     if (len < RF_USER_STATE) {
       /* CFA , */
@@ -386,8 +385,10 @@ static void rf_inst_code_interpret_number(void)
     /* ELSE */
     /* HERE NUMBER */
     number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
+
     /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
     if (RF_USER_STATE) {
+/* TODO this is the proto interpreter at the moment */
       rf_inst_compile("LIT");
       rf_inst_comma((uintptr_t) number);
     } else {
@@ -725,6 +726,8 @@ static void rf_inst_forward(void)
 
   /* WORD */
   rf_inst_colon("WORD");
+  /* TODO wider align may need more blanks in edge case of long words */
+  /* maybe not here but in final model source version of WORD */
   rf_inst_compile(
     "BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +! "
     "OVER - >R R HERE C! + HERE LIT 1 + R> CMOVE ;S");
@@ -764,9 +767,8 @@ static void rf_inst_forward(void)
   rf_inst_colon("X");
   rf_inst_compile(
     "LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
-  /* TODO deal with wider align */
   here[0] = 0x81;
-  here[1] = 0x80;
+  here[1] ^= 0x58;
   rf_inst_immediate();
 
   /* [ */
@@ -874,6 +876,7 @@ void rf_inst(void)
 #ifdef RF_INST_LOCAL_DISC
   /* now "eject" the inst disc */
   rf_persci_eject(0);
+
 #endif
 
 #ifdef RF_INST_SAVE

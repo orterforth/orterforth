@@ -323,11 +323,11 @@ char *rf_find(char *t, uint8_t length, char *nfa)
 {
   uint8_t l;
   uint8_t i;
+  uintptr_t *lfa;
 
   while (nfa) {
     /* length from name field incl smudge bit */
     l = nfa[0] & 0x3F;
-
     /* try and match the name */
     if (l == length) {
       for (i = 0; i < l; i++) {
@@ -343,7 +343,8 @@ char *rf_find(char *t, uint8_t length, char *nfa)
     }
 
     /* if no match, follow link */
-    nfa = (char *) *(rf_lfa(nfa));
+    lfa = rf_lfa(nfa);
+    nfa = (char *) *(lfa);
   }
 
   /* not found */
@@ -1169,14 +1170,8 @@ void rf_code_rlns(void)
     uintptr_t a;
 
     a = RF_SP_POP;
-    /*if (a % RF_ALIGN) a += RF_ALIGN - (a % RF_ALIGN);*/
-/*
-    if (a & 0x01) {
-*/
-    if (a % RF_ALIGN) {
-/*       ++a;*/
-      /* TODO support wider align */
-      a += RF_ALIGN - (a % RF_ALIGN);
+    while (a % RF_ALIGN) {
+      ++a;
     }
     RF_SP_PUSH(a);
   }

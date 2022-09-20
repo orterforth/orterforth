@@ -176,6 +176,7 @@ typedef unsigned long uintptr_t;
 /* PICO */
 #define RF_TARGET_HI 0x00000000
 #define RF_TARGET_LO 0x00122928
+#define RF_ALIGN 4
 #endif
 
 /* DERIVED WORD AND DOUBLE SIZE */
@@ -208,7 +209,7 @@ typedef unsigned long uintptr_t;
 
 #define RF_BBLK 128
 #define RF_BSCR 8
-#define RF_DISC_BUFFER_SIZE (RF_BBLK+2+RF_WORD_SIZE)
+#define RF_DISC_BUFFER_SIZE (RF_BBLK+(2*RF_WORD_SIZE))
 #define RF_DISC_BUFFERS_SIZE (8*RF_DISC_BUFFER_SIZE)
 
 /* S0, TIB, R0, USER, FIRST defined in relation to LIMIT by default */

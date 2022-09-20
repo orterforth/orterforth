@@ -20,6 +20,11 @@ char *rf_memory = 0;
 
 void rf_init(void)
 {
+#ifdef PICO
+  /* init UART */
+  stdio_init_all();
+#endif
+
   /* allocate memory */
   rf_memory = malloc(RF_MEMORY_SIZE);
   if (!rf_memory) {
