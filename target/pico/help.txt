@@ -1,0 +1,18 @@
+Building for the Raspberry Pi Pico
+==================================
+
+You will need:
+
+ * CMake                 : https://cmake.org/
+ * Raspberry Pi Pico SDK :
+   https://github.com/raspberrypi/pico-sdk
+   and its dependencies (Makefile expects this to be located
+   at: ~/pico-sdk)
+
+To build, call:
+
+ make TARGET=pico
+
+Target file is:
+
+ pico/orterforth.uf2

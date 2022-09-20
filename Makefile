@@ -213,7 +213,7 @@ $(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
 .PHONY : $(TARGET)-help
 $(TARGET)-help :
 
-	@if [ "$(TARGET)" == "$(SYSTEM)" ] ; then cat help.txt ; else more target/$(TARGET)/help.txt ; fi
+	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then cat help.txt ; else more target/$(TARGET)/help.txt ; fi
 
 # disc images from %.f files including orterforth.f
 %.disc : %.f | $(DISC)
