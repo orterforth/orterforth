@@ -956,6 +956,10 @@ _rf_code_rcls:
 	rol $01,x
 	jmp _rf_next
 
+.export _rf_code_rlns
+
+_rf_code_rlns := _rf_next
+
 .export _rf_code_rtgt
 
 _rf_code_rtgt:
