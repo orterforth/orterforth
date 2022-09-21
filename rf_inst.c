@@ -244,22 +244,18 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
 
   intptr_t l;
   uint8_t sign;
-  uint8_t c;
   uint8_t d;
 
-  sign = 0;
+  /* - */
+  sign = (*t == '-');
+  if (sign) {
+    t++;
+  }
+
+  /* digits */
   l = 0;
   for (;;) {
-    c = *(t++);
-
-    /* sign */
-    if (c == '-') {
-      ++sign;
-      continue;
-    }
-
-    /* digit */
-    if ((d = rf_inst_digit(b, c)) == 0xFF) {
+    if ((d = rf_inst_digit(b, *(t++))) == 0xFF) {
       break;
     }
 
@@ -767,7 +763,6 @@ static void rf_inst_forward(void)
   rf_inst_colon("X");
   rf_inst_compile(
     "LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
-  here[0] = 0x81;
   here[1] ^= 0x58;
   rf_inst_immediate();
 

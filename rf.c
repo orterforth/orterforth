@@ -324,20 +324,21 @@ char *rf_find(char *t, uint8_t length, char *nfa)
   uint8_t l;
   uint8_t i;
   uintptr_t *lfa;
+  char *n;
 
   while (nfa) {
     /* length from name field incl smudge bit */
-    l = nfa[0] & 0x3F;
-    /* try and match the name */
+    l = *nfa & 0x3F;
+    /* start of name */
+    n = nfa + 1;
+    /* match name */
     if (l == length) {
       for (i = 0; i < l; i++) {
-        if (t[i] != (nfa[i + 1] & 0x7F)) {
-          l = 0;
+        if (t[i] != (*(n++) & 0x7F)) {
           break;
         }
       }
-
-      if (l) {
+      if (i == l) {
         return nfa;
       }
     }
