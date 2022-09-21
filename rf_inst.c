@@ -366,6 +366,14 @@ static void rf_inst_code_interpret_word(void)
   }
 }
 
+/* compile a LIT value */
+static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
+{
+  /* TODO this is the proto interpreter at the moment */
+  rf_inst_compile("LIT");
+	rf_inst_comma(literal);
+}
+
 static void rf_inst_code_interpret_number(void)
 {
   RF_START;
@@ -378,9 +386,7 @@ static void rf_inst_code_interpret_number(void)
 
     /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
     if (RF_USER_STATE) {
-/* TODO this is the proto interpreter at the moment */
-      rf_inst_compile("LIT");
-      rf_inst_comma((uintptr_t) number);
+      rf_inst_compile_lit((uintptr_t) number);
     } else {
       RF_SP_PUSH(number); 
     }
@@ -397,13 +403,6 @@ static void rf_inst_code_decimal(void)
   RF_START;
   RF_USER_BASE = 10;
   RF_JUMP_NEXT;
-}
-
-/* compile a LIT value */
-static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
-{
-  rf_inst_compile("LIT");
-	rf_inst_comma(literal);
 }
 
 /* compile a definition and set CFA */
