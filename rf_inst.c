@@ -266,12 +266,6 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
   return sign ? -l : l;
 }
 
-/* find a definition */
-static char __FASTCALL__ *rf_inst_find_string(char *t)
-{
-  return rf_find(t, rf_inst_strlen(t), rf_inst_vocabulary);
-}
-
 static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
 {
   uintptr_t *lfa = rf_lfa(nfa);
@@ -634,6 +628,8 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 #define RF_BS 0x007F
 #endif
 
+static rf_code_t *rf_inst_load_cfa = 0;
+
 static void rf_inst_forward(void)
 {
   int i;
@@ -756,6 +752,7 @@ static void rf_inst_forward(void)
 
   /* inst load sequence */
   rf_inst_colon("load");
+  rf_inst_load_cfa = (rf_code_t *) RF_USER_DP - 1;
   rf_inst_compile("LIT 1 LOAD rxit");
 
   /* X */  
@@ -779,21 +776,14 @@ static void rf_inst_emptybuffers(void)
 
 static void rf_inst_load(void)
 {
-  char *nfa;
-  rf_code_t *cfa;
-
   /* initialise buffers */
   rf_inst_emptybuffers();
-
-  /* "load" is the starting point */
-  nfa = rf_inst_find_string("load");
-  cfa = rf_inst_cfa(nfa);
 
   /* initialise RP */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
   /* jump to "load" */
-  RF_IP_SET((uintptr_t *) &cfa);
+  RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
   RF_JUMP(rf_next);
   rf_trampoline();
 }
