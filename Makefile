@@ -943,7 +943,6 @@ spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom sp
 
 	# start disc
 	touch 1.disc
-	# $(DISC) fuse messages.disc 1.disc < spectrum/fuse-rs232-tx > spectrum/fuse-rs232-rx &
 	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse messages.disc 1.disc
 
 	# run fuse
@@ -954,9 +953,11 @@ spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom sp
 		--interface1 \
 		--rom-48 roms/spectrum/spectrum.rom \
 		--rom-interface-1 roms/spectrum/if1-2.rom \
+		--auto-load \
+		--phantom-typist-mode keyword \
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
-		$<
+		--tape $<
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
@@ -1102,9 +1103,11 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--interface1 \
 		--rom-48 roms/spectrum/spectrum.rom \
 		--rom-interface-1 roms/spectrum/if1-2.rom \
+		--auto-load \
+		--phantom-typist-mode keyword \
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
-		spectrum/orterforth-inst-2.tap
+		--tape spectrum/orterforth-inst-2.tap
 
 	# wait for install and save
 	sh scripts/waitforhex $@.io
@@ -1189,9 +1192,9 @@ spectrum/rf_z80.lib : rf_z80.asm | spectrum
 		$<
 
 .PHONY : test
-test : $(ORTERFORTH)
+test : $(ORTERFORTH) test.disc
 
-	$< < test.f
+	echo "1 LOAD" | $< test.disc
 
 .PHONY : todo
 todo : $(ORTERFORTH)
