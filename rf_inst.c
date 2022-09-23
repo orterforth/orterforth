@@ -563,19 +563,19 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "digit", 0, rf_code_digit },
   { "pfind", "(FIND)", rf_code_pfind },
   { "encl", "ENCLOSE", rf_code_encl },
-  { "emit", 0, rf_code_emit },
+  { "emit2", 0, rf_code_emit },
 #ifdef RF_INST_SILENT
-  { "emitsilent", 0, rf_code_drop },
+  { "emit", 0, rf_code_drop },
 #else
-  { "emitsilent", 0, rf_code_emit },
+  { "emit", 0, rf_code_emit },
 #endif
   { "key", 0, rf_code_key },
   { "qterm", 0, rf_code_qterm },
-  { "cr", 0, rf_code_cr },
+  { "cr2", 0, rf_code_cr },
 #ifdef RF_INST_SILENT
-  { "crsilent", 0, rf_inst_code_noop },
+  { "cr", 0, rf_inst_code_noop },
 #else
-  { "crsilent", 0, rf_code_cr },
+  { "cr", 0, rf_code_cr },
 #endif
   { "cmove", "CMOVE", rf_code_cmove },
   { "ustar", "U*", rf_code_ustar },

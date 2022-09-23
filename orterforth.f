@@ -1008,7 +1008,7 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR26 )
 ( EMIT )
-  emitsilent rcll MINUS BYTE.IN EMIT !
+  emit rcll MINUS BYTE.IN EMIT !
 
 
 
@@ -1031,7 +1031,7 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 
 ( CR )
-    crsilent rcll MINUS BYTE.IN CR !
+    cr rcll MINUS BYTE.IN CR !
 
 
 -->    
@@ -1363,7 +1363,7 @@ IMMEDIATE
 ( load high level definitions                                 )
 72 LOAD
 ( set EMIT and CR CFAs after silent install                   )
-emit ' EMIT CFA ! cr ' CR CFA !
+emit2 ' EMIT CFA ! cr2 ' CR CFA !
 ( installed = 1                                               )
 1 installed C!
 ( break link with inst time code                              )
