@@ -454,13 +454,9 @@ static void rf_inst_def_user(char *name, unsigned int idx)
   rf_inst_comma(idx * RF_WORD_SIZE);
 }
 
-/* If required, put inst time definitions in spare memory and unlink them when finished */
-#ifdef RF_INST_OVERWRITE
+/* put inst time definitions in spare memory and unlink them when finished */
 /* NB 3000 may be tight with more extensions */
 #define RF_INST_DICTIONARY (RF_ORIGIN + (3000*RF_WORD_SIZE))
-#else
-#define RF_INST_DICTIONARY (RF_ORIGIN)
-#endif
 
 #define RF_FIGRELFIGREV 0x0101 /* 1.1 */
 /* IMPLEMENTATION ATTRIBUTES */
@@ -683,13 +679,6 @@ static void rf_inst_forward(void)
   /* stack limit literals */
   rf_inst_def_literal("s0", (uintptr_t) RF_S0);
   rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
-
-  /* inst switch literals */
-#ifdef RF_INST_OVERWRITE
-  rf_inst_def_literal("overwrite", 1);
-#else
-  rf_inst_def_literal("overwrite", 0);
-#endif
 
   /* COLD routine forward references */
   rf_inst_def_literal("coldforth", (uintptr_t) &rf_cold_forth);

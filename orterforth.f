@@ -1343,7 +1343,7 @@ IMMEDIATE
 -->
 
 ( move DP back to origin                                      )
-0 +ORIGIN DP @ - overwrite U* DROP DP +!
+0 +ORIGIN DP !
 ( load boot-up parameters and machine code definitions        )
 12 LOAD
 ( resolve forward references in control words                 )
@@ -1367,7 +1367,7 @@ emit ' EMIT CFA ! cr ' CR CFA !
 ( installed = 1                                               )
 1 installed C!
 ( break link with inst time code                              )
-' rcll LFA overwrite 0= OVER @ * SWAP !
+0 ' rcll LFA !
 ( WARNING = 1                                                 )
 1 13 rcls +ORIGIN !             
 ;S

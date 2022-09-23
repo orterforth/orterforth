@@ -15,9 +15,6 @@
 /* hide output during inst time */
 #define RF_INST_SILENT
 
-/* uncouple inst time code */
-#define RF_INST_OVERWRITE
-
 /* allocated memory is proportional to word size */
 #define RF_MEMORY_SIZE (32768*RF_WORD_SIZE)
 

@@ -1,5 +1,3 @@
-#define RF_INST_OVERWRITE
-
 /* saves the install to disc 1 */
 #define RF_INST_SAVE
 

@@ -2,9 +2,6 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
-/* Unlink inst time dictionary entries and leave them to be overwritten */
-#define RF_INST_OVERWRITE
-
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
 
