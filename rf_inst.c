@@ -101,12 +101,14 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
 /* flag to indicate completion of install */
 extern char rf_installed;
 
-/* do nothing */
+/* do nothing - only used to create a no op CR */
+#ifdef RF_INST_SILENT
 static void rf_inst_code_noop(void)
 {
   RF_START;
   RF_JUMP_NEXT;
 }
+#endif
 
 /* PREV */
 static void rf_inst_code_prev(void)
@@ -165,8 +167,10 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 
   dp = (uintptr_t *) RF_USER_DP;
   *dp = word;
-
+/*
   RF_USER_DP = (uintptr_t) (dp + 1);
+*/
+  RF_USER_DP += RF_WORD_SIZE;
 }
 
 /* CURRENT and CONTEXT vocabulary during inst */
@@ -516,6 +520,8 @@ static void rf_inst_cold(void)
   /* DEFINITIONS */
   RF_USER_CURRENT = RF_USER_CONTEXT;
   /* QUIT */
+
+  /* : QUIT */
   /* 0 BLK ! */
   RF_USER_BLK = 0;
   /* [COMPILE] [ */
@@ -523,6 +529,7 @@ static void rf_inst_cold(void)
   /* ...etc */
 }
 
+/* compile additional words after boot time literals */
 static void rf_inst_code_ext(void)
 {
   RF_START;
@@ -860,7 +867,6 @@ void rf_inst(void)
 #ifdef RF_INST_LOCAL_DISC
   /* now "eject" the inst disc */
   rf_persci_eject(0);
-
 #endif
 
 #ifdef RF_INST_SAVE
