@@ -526,7 +526,7 @@ static void rf_inst_cold(void)
 }
 
 /* compile additional words after boot time literals */
-static void rf_inst_code_ext(void)
+static void rf_inst_code_add(void)
 {
   RF_START;
   rf_inst_def_code("cl", rf_code_cl);
@@ -621,7 +621,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "COMPILE", rf_inst_code_compile },
   { 0, "interpret-word", rf_inst_code_interpret_word },
   { 0, "interpret-number", rf_inst_code_interpret_number },
-  { 0, "ext", rf_inst_code_ext },
+  { 0, "add", rf_inst_code_add },
   { 0, "prev", rf_inst_code_prev },
   { 0, "block-cmd", rf_inst_code_block_cmd }
 };

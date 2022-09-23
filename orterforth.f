@@ -205,7 +205,7 @@ tib    ,        ( TERMINAL INPUT BUFFER )
 0000   ,        ( INITIAL WARNING = 1 )
 0000   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
-0000   ,        ( COLD START VALUE FOR VOC-LINK ) ext -->
+0000   ,        ( COLD START VALUE FOR VOC-LINK ) add -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
 lit HERE cl - !
