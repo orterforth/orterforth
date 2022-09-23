@@ -303,7 +303,7 @@ bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 
 	# start disc
 	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp messages.disc 1.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc 1.disc
 
 	# run mame
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
@@ -317,7 +317,7 @@ bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 
 	# start disc
 	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp messages.disc 1.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc 1.disc
 
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
@@ -372,7 +372,7 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 	# start disc
 	rm -f $@.io
 	touch $@.io
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp orterforth.disc $@.io
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 orterforth.disc $@.io
 
 	# run emulator, wait for result
 	$(BBCMAMEFAST) $(BBCMAMEINST) & pid=$$! ; \
@@ -968,7 +968,7 @@ spectrum-run-mame : spectrum/orterforth.tap
 
 	# start disc
 	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp messages.disc 1.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc 1.disc
 
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'

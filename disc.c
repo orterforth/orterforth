@@ -292,7 +292,7 @@ static int disc_tcp(int argc, char **argv)
   }
 
   /* bind, listen, accept */
-  port = 5705;
+  port = atoi(argv[2]);
   svr_addr.sin_family = AF_INET;
   svr_addr.sin_addr.s_addr = INADDR_ANY;
   svr_addr.sin_port = htons(port);
@@ -325,7 +325,7 @@ static int disc_tcp(int argc, char **argv)
   rd = tcp_rd;
   wr = tcp_wr;
 
-  return serve(argv[2], argv[3]);
+  return serve(argv[3], argv[4]);
 }
 
 int main(int argc, char *argv[])
@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
   }
 
   /* TCP */
-  if (argc == 4 && !strcmp("tcp", argv[1])) {
+  if (argc == 5 && !strcmp("tcp", argv[1])) {
     return disc_tcp(argc, argv);
   }
 
@@ -360,5 +360,6 @@ int main(int argc, char *argv[])
   fputs("       disc fuse <dr0> <dr1>                 Run disc controller over stdin/stdout with Fuse Emulator escape\n", stderr);
   fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n", stderr);
   fputs("       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n", stderr);
+  fputs("       disc tcp <port> <dr0> <dr1>           Run disc controller over tcp port\n", stderr);
   return 1;
 }
