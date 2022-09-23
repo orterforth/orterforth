@@ -659,23 +659,23 @@ stod1:
 	b dpush
 
 	.p2align 2
-	.global rf_code_rcll
-rf_code_rcll:
+	.global rf_code_cl
+rf_code_cl:
 
 	mov r0, #4
 	b apush
 
 	.p2align 2
-	.global rf_code_rcls
-rf_code_rcls:
+	.global rf_code_cs
+rf_code_cs:
 
 	ldr r0, [r8], #4
 	lsl r0, #2
 	b apush
 
 	.p2align 2
-	.global rf_code_rxit
-rf_code_rxit:
+	.global rf_code_xt
+rf_code_xt:
 
 	push {fp, lr}
 	bl rf_start

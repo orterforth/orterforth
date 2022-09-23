@@ -143,25 +143,25 @@ changes to the fig-Forth language itself, there are a small
 number of words added to the Forth dictionary to help make code
 system-independent:
 
- rcll ( -- n )    Returns the word size in bytes. (CELL is not
-                  part of this version of fig-Forth.)
+ cl ( -- n )    Returns the word size in bytes. (CELL is not
+                part of this version of fig-Forth.)
 
- rcls ( n -- n )  Multiplies the value on the stack by the word
-                  size. (CELLS is not part of this version of
-                  fig-Forth.)
+ cs ( n -- n )  Multiplies the value on the stack by the word
+                size. (CELLS is not part of this version of
+                fig-Forth.)
 
- rlns ( n -- n )  Aligns the stack value according to CPU
-                  requirements. Used in CREATE when adding the
-                  name field and in other non-aligned
-                  dictionary operations. (ALIGNED is not part
-                  of this version of fig-Forth.)
+ ln ( n -- n )  Aligns the stack value according to CPU
+                requirements. Used in CREATE when adding the
+                name field and in other non-aligned dictionary
+                operations. (ALIGNED is not part of this 
+                version of fig-Forth.)
 
- rtgt ( -- d )    Returns a base-36 representation of the
-                  target system (e.g., one of: BBC. CYGWIN.
-                  DARWIN. LINUX. SPECTR. etc).
+ tg ( -- d )    Returns a base-36 representation of the target
+                system (e.g., one of: BBC. CYGWIN. DARWIN. 
+                LINUX. PICO. SPECTR. etc).
 
- rxit ( -- )      Exits orterforth (and returns to the shell,
-                  BASIC prompt or equivalent).
+ xt ( -- )      Exits orterforth (and returns to the shell,
+                BASIC prompt or equivalent).
 
 # It starts by installing from Forth source code #
 

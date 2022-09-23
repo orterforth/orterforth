@@ -1128,29 +1128,29 @@ void rf_code_bwrit(void)
 }
 #endif
 
-#ifndef RF_TARGET_CODE_RXIT
-void rf_code_rxit(void)
+#ifndef RF_TARGET_CODE_XT
+void rf_code_xt(void)
 {
   RF_START;
   rf_fp = 0;
 }
 #endif
 
-#ifndef RF_TARGET_CODE_RCLL
-void rf_code_rcll(void)
+#ifndef RF_TARGET_CODE_CL
+void rf_code_cl(void)
 {
   RF_START;
-  RF_LOG("rcll");
+  RF_LOG("cl");
   RF_SP_PUSH(RF_WORD_SIZE);
   RF_JUMP_NEXT;
 }
 #endif
 
-#ifndef RF_TARGET_CODE_RCLS
-void rf_code_rcls(void)
+#ifndef RF_TARGET_CODE_CS
+void rf_code_cs(void)
 {
   RF_START;
-  RF_LOG("rcls");
+  RF_LOG("cs");
   {
     uintptr_t a;
 
@@ -1161,11 +1161,11 @@ void rf_code_rcls(void)
 }
 #endif
 
-#ifndef RF_TARGET_CODE_RLNS
-void rf_code_rlns(void)
+#ifndef RF_TARGET_CODE_LN
+void rf_code_ln(void)
 {
   RF_START;
-  RF_LOG("rlns");
+  RF_LOG("ln");
 #ifdef RF_ALIGN
   {
     uintptr_t a;
@@ -1181,8 +1181,8 @@ void rf_code_rlns(void)
 }
 #endif
 
-#ifndef RF_TARGET_CODE_RTGT
-void rf_code_rtgt(void)
+#ifndef RF_TARGET_CODE_TG
+void rf_code_tg(void)
 {
   RF_START;
   RF_SP_PUSH(RF_TARGET_LO);

@@ -19,6 +19,7 @@ trampoline1:
 	move.l _rf_w, a5
   addq.l #4, a5
 	move.l d0, a0
+  ; TODO jmp faster?
 	jsr    (a0)
 	bra    trampoline1
 trampoline2:
@@ -525,8 +526,8 @@ stod2:
   jmp    (a0)
 
 	.align	2
-	.extern _rf_code_rcll
-_rf_code_rcll:
+	.extern _rf_code_cl
+_rf_code_cl:
   moveq.l #4, d0
   move.l  d0, -(a3)
   !;bra    _rf_next
@@ -535,8 +536,8 @@ _rf_code_rcll:
   jmp    (a0)
 
 	.align	2
-	.extern _rf_code_rcls
-_rf_code_rcls:
+	.extern _rf_code_cs
+_rf_code_cs:
   move.l (a3), d0
   lsl.l  #2, d0
   move.l d0, (a3)

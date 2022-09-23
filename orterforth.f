@@ -208,7 +208,7 @@ tib    ,        ( TERMINAL INPUT BUFFER )
 0000   ,        ( COLD START VALUE FOR VOC-LINK ) ext -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
-lit HERE rcll - !
+lit HERE cl - !
 
 
 
@@ -233,19 +233,19 @@ lit HERE rcll - !
 
 CODE EXECUTE              ( EXECUTE A WORD BY ITS CODE FIELD *)
                                       ( ADDRESS ON THE STACK *)
-exec HERE rcll - !
+exec HERE cl - !
 
 
 
 -->    
 (  BRANCH, 0BRANCH     W/16-BIT OFFSET            WFR-79APR01 )
 CODE BRANCH            ( ADJUST IP BY IN-LINE 16 BIT LITERAL *)
-bran HERE rcll - !
+bran HERE cl - !
 
 
 
 CODE 0BRANCH           ( IF BOT IS ZERO, BRANCH FROM LITERAL *)
-zbran HERE rcll - !
+zbran HERE cl - !
 
 
 
@@ -256,14 +256,14 @@ zbran HERE rcll - !
 
 (  LOOP CONTROL                                   WFR-79MAR20 )
 CODE (LOOP)      ( INCREMENT LOOP INDEX, LOOP UNTIL => LIMIT *)
-xloop HERE rcll - !
+xloop HERE cl - !
 
 
 
 
 
 CODE (+LOOP)          ( INCREMENT INDEX BY STACK VALUE +/-   *)
-xploo HERE rcll - !
+xploo HERE cl - !
 
 
 
@@ -273,14 +273,14 @@ xploo HERE rcll - !
 (  (DO-                                           WFR-79MAR30 )
 
 CODE (DO)             ( MOVE TWO STACK ITEMS TO RETURN STACK *)
-xdo HERE rcll - !
+xdo HERE cl - !
 
 
 
 
 
 CODE I                    ( COPY CURRENT LOOP INDEX TO STACK *)
-rr HERE rcll - !          ( THIS WILL LATER BE POINTED TO 'R' )
+rr HERE cl - !          ( THIS WILL LATER BE POINTED TO 'R' )
 
 -->    
 
@@ -290,7 +290,7 @@ rr HERE rcll - !          ( THIS WILL LATER BE POINTED TO 'R' )
 CODE DIGIT     ( CONVERT ASCII CHAR-SECOND, WITH BASE-BOTTOM *)
                    ( IF OK RETURN DIGIT-SECOND, TRUE-BOTTOM; *)
                                    ( OTHERWISE FALSE-BOTTOM. *)
-digit HERE rcll - !
+digit HERE cl - !
 
 
 
@@ -304,7 +304,7 @@ digit HERE rcll - !
 -->    
 (  FIND FOR VARIABLE LENGTH NAMES                  WFR-790225 )
 CODE (FIND)  ( HERE, NFA ... PFA, LEN BYTE, TRUE; ELSE FALSE *)
-pfind HERE rcll - !
+pfind HERE cl - !
 
 
 
@@ -321,7 +321,7 @@ pfind HERE rcll - !
 (  ENCLOSE                                         WFR-780926 )
 CODE ENCLOSE   ( ENTER WITH ADDRESS-2, DELIM-1.  RETURN WITH *)
     ( ADDR-4, AND OFFST TO FIRST CH-3, END WORD-2, NEXT CH-1 *)
-encl HERE rcll - !
+encl HERE cl - !
 
 
 
@@ -352,7 +352,7 @@ CODE CR         ( EXECUTE CAR. RETURN, LINE FEED ON TERMINAL *)
 
 (  CMOVE,                                         WFR-79MAR20 )
 CODE CMOVE   ( WITHIN MEMORY; ENTER W/  FROM-3, TO-2, QUAN-1 *)
-cmove HERE rcll - !
+cmove HERE cl - !
 
 
 
@@ -369,7 +369,7 @@ cmove HERE rcll - !
 (  U*,  UNSIGNED MULTIPLY FOR 16 BITS             WFR-79APR08 )
 CODE U*        ( 16 BIT MULTIPLICAND-2,  16 BIT MULTIPLIER-1 *)
              ( 32 BIT UNSIGNED PRODUCT: LO WORD-2, HI WORD-1 *)
-ustar HERE rcll - !
+ustar HERE cl - !
 
 
 
@@ -385,7 +385,7 @@ ustar HERE rcll - !
 (  U/,  UNSIGNED DIVIDE FOR 31 BITS               WFR-79APR29 )
 CODE U/          ( 31 BIT DIVIDEND-2, -3,  16 BIT DIVISOR-1  *)
                  ( 16 BIT REMAINDER-2,  16 BIT QUOTIENT-1    *)
-uslas HERE rcll - !
+uslas HERE cl - !
 
 
 
@@ -401,59 +401,59 @@ uslas HERE rcll - !
 (  LOGICALS                                       WFR-79APR20 )
 
 CODE AND           ( LOGICAL BITWISE AND OF BOTTOM TWO ITEMS *)
-andd HERE rcll - !
+andd HERE cl - !
 
 
 CODE OR           ( LOGICAL BITWISE 'OR' OF BOTTOM TWO ITEMS *)
-orr HERE rcll - !
+orr HERE cl - !
 
 
 CODE XOR        ( LOGICAL 'EXCLUSIVE OR' OF BOTTOM TWO ITEMS *)
-xorr HERE rcll - !
+xorr HERE cl - !
 
 
 -->    
 
 (  STACK INITIALIZATION                           WFR-79MAR30 )
 CODE SP@                      ( FETCH STACK POINTER TO STACK *)
-spat HERE rcll - !
+spat HERE cl - !
 
 
 CODE SP!                                 ( LOAD SP FROM 'S0' *)
-spsto HERE rcll - !
+spsto HERE cl - !
 
 CODE RP!                                   ( LOAD RP FROM R0 *)
-rpsto HERE rcll - !
+rpsto HERE cl - !
 
 
 CODE ;S              ( RESTORE IP REGISTER FROM RETURN STACK *)
-semis HERE rcll - !
+semis HERE cl - !
 
 -->    
 (  RETURN STACK WORDS                             WFR-79MAR29 )
 CODE LEAVE          ( FORCE EXIT OF DO-LOOP BY SETTING LIMIT *)
                                                   ( TO INDEX *)
-leave HERE rcll - !
+leave HERE cl - !
 
 CODE >R              ( MOVE FROM COMP. STACK TO RETURN STACK *)
-tor HERE rcll - !
+tor HERE cl - !
 
 CODE R>              ( MOVE FROM RETURN STACK TO COMP. STACK *)
-fromr HERE rcll - !
+fromr HERE cl - !
 
 CODE R  ( COPY THE BOTTOM OF THE RETURN STACK TO COMP. STACK *)
-rr HERE rcll - !
+rr HERE cl - !
 
 ( '   R    -2  BYTE.IN  I  ! )
 -->    
 (  TESTS AND LOGICALS                             WFR-79MAR19 )
 
 CODE 0=           ( REVERSE LOGICAL STATE OF BOTTOM OF STACK *)
-zequ HERE rcll - !
+zequ HERE cl - !
 
 
 CODE 0<            ( LEAVE TRUE IF NEGATIVE; OTHERWISE FALSE *)
-zless HERE rcll - !
+zless HERE cl - !
 
 
 -->    
@@ -464,45 +464,45 @@ zless HERE rcll - !
 
 (  MATH                                           WFR-79MAR19 )
 CODE +         ( LEAVE THE SUM OF THE BOTTOM TWO STACK ITEMS *)
-plus HERE rcll - !
+plus HERE cl - !
 
 CODE D+            ( ADD TWO DOUBLE INTEGERS, LEAVING DOUBLE *)
-dplus HERE rcll - !
+dplus HERE cl - !
 
 
 
 CODE MINUS         ( TWOS COMPLEMENT OF BOTTOM SINGLE NUMBER *)
-minus HERE rcll - !
+minus HERE cl - !
 
 CODE DMINUS        ( TWOS COMPLEMENT OF BOTTOM DOUBLE NUMBER *)
-dminu HERE rcll - !
+dminu HERE cl - !
 
                                            -->    
 (  STACK MANIPULATION                             WFR-79MAR29 )
 CODE OVER              ( DUPLICATE SECOND ITEM AS NEW BOTTOM *)
-over HERE rcll - !
+over HERE cl - !
 
 CODE DROP                           ( DROP BOTTOM STACK ITEM *)
-drop HERE rcll - !           ( C.F. VECTORS DIRECTLY TO 'POP' )
+drop HERE cl - !           ( C.F. VECTORS DIRECTLY TO 'POP' )
 
 CODE SWAP        ( EXCHANGE BOTTOM AND SECOND ITEMS ON STACK *)
-swap HERE rcll - !
+swap HERE cl - !
 
 
 CODE DUP                    ( DUPLICATE BOTTOM ITEM ON STACK *)
-dup HERE rcll - !
+dup HERE cl - !
 
 -->    
 
 (  MEMORY INCREMENT,                              WFR-79MAR30 )
 
 CODE +!   ( ADD SECOND TO MEMORY 16 BITS ADDRESSED BY BOTTOM *)
-pstor HERE rcll - !
+pstor HERE cl - !
 
 
 
 CODE TOGGLE           ( BYTE AT ADDRESS-2, BIT PATTERN-1 ... *)
-toggl HERE rcll - !
+toggl HERE cl - !
 
 -->    
 
@@ -512,18 +512,18 @@ toggl HERE rcll - !
 
 (  MEMORY FETCH AND STORE                          WFR-781202 )
 CODE @                   ( REPLACE STACK ADDRESS WITH 16 BIT *)
-at HERE rcll - !                  ( CONTENTS OF THAT ADDRESS *)
+at HERE cl - !                  ( CONTENTS OF THAT ADDRESS *)
 
 
 CODE C@      ( REPLACE STACK ADDRESS WITH POINTED 8 BIT BYTE *)
-cat HERE rcll - !
+cat HERE cl - !
 
 CODE !         ( STORE SECOND AT 16 BITS ADDRESSED BY BOTTOM *)
-store HERE rcll - SMUDGE ! SMUDGE
+store HERE cl - SMUDGE ! SMUDGE
 
 
 CODE C!           ( STORE SECOND AT BYTE ADDRESSED BY BOTTOM *)
-cstor HERE rcll - !
+cstor HERE cl - !
 
 DECIMAL     ;S    
 (  :,  ;,                                         WFR-79MAR30 )
@@ -531,7 +531,7 @@ DECIMAL     ;S
 : :                  ( CREATE NEW COLON-DEFINITION UNTIL ';' *)
                     ?EXEC !CSP CURRENT   @         CONTEXT    !
                 CREATE  ]
-docol HERE rcll MINUS + ! ; IMMEDIATE
+docol HERE cl MINUS + ! ; IMMEDIATE
 
 
 
@@ -545,15 +545,15 @@ docol HERE rcll MINUS + ! ; IMMEDIATE
 (  CONSTANT,  VARIABLE, USER                      WFR-79MAR30 )
 : CONSTANT              ( WORD WHICH LATER CREATES CONSTANTS *)
                       CREATE  SMUDGE  ,
-docon HERE rcll DUP + MINUS + ! ;
+docon HERE cl DUP + MINUS + ! ;
 
 : VARIABLE              ( WORD WHICH LATER CREATES VARIABLES *)
      CONSTANT
-dovar HERE rcll DUP + MINUS + ! ;
+dovar HERE cl DUP + MINUS + ! ;
 
 : USER                                ( CREATE USER VARIABLE *)
      CONSTANT
-douse HERE rcll DUP + MINUS + ! ;
+douse HERE cl DUP + MINUS + ! ;
 
 
 
@@ -578,29 +578,29 @@ limit   CONSTANT   LIMIT            ( JUST BEYOND TOP OF RAM *)
 HEX              ( 0 THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 ( 06 USER  S0 )             ( TOP OF EMPTY COMPUTATION STACK *)
 ( 08 USER  R0 )                  ( TOP OF EMPTY RETURN STACK *)
-05 rcls USER  TIB                    ( TERMINAL INPUT BUFFER *)
-06 rcls USER  WIDTH               ( MAXIMUM NAME FIELD WIDTH *)
-07 rcls USER  WARNING                ( CONTROL WARNING MODES *)
-08 rcls USER  FENCE                 ( BARRIER FOR FORGETTING *)
-09 rcls USER  DP                        ( DICTIONARY POINTER *)
-0A rcls USER  VOC-LINK                ( TO NEWEST VOCABULARY *)
-0B rcls USER  BLK                     ( INTERPRETATION BLOCK *)
-0C rcls USER  IN                   ( OFFSET INTO SOURCE TEXT *)
-0D rcls USER  OUT                  ( DISPLAY CURSOR POSITION *)
-0E rcls USER  SCR                           ( EDITING SCREEN *)
+05 cs USER  TIB                      ( TERMINAL INPUT BUFFER *)
+06 cs USER  WIDTH                 ( MAXIMUM NAME FIELD WIDTH *)
+07 cs USER  WARNING                  ( CONTROL WARNING MODES *)
+08 cs USER  FENCE                   ( BARRIER FOR FORGETTING *)
+09 cs USER  DP                          ( DICTIONARY POINTER *)
+0A cs USER  VOC-LINK                  ( TO NEWEST VOCABULARY *)
+0B cs USER  BLK                       ( INTERPRETATION BLOCK *)
+0C cs USER  IN                     ( OFFSET INTO SOURCE TEXT *)
+0D cs USER  OUT                    ( DISPLAY CURSOR POSITION *)
+0E cs USER  SCR                             ( EDITING SCREEN *)
 -->    
 
 (  USER VARIABLES, CONT.                          WFR-79APR29 )
-0F rcls USER  OFFSET              ( POSSIBLY TO OTHER DRIVES *)
-10 rcls USER  CONTEXT            ( VOCABULARY FIRST SEARCHED *)
-11 rcls USER  CURRENT       ( SEARCHED SECOND, COMPILED INTO *)
-12 rcls USER  STATE                      ( COMPILATION STATE *)
-13 rcls USER  BASE                ( FOR NUMERIC INPUT-OUTPUT *)
-14 rcls USER  DPL                   ( DECIMAL POINT LOCATION *)
-15 rcls USER  FLD                       ( OUTPUT FIELD WIDTH *)
-16 rcls USER  CSP                     ( CHECK STACK POSITION *)
-17 rcls USER  R#                   ( EDITING CURSOR POSITION *)
-18 rcls USER  HLD     ( POINTS TO LAST CHARACTER HELD IN PAD *)
+0F cs USER  OFFSET                ( POSSIBLY TO OTHER DRIVES *)
+10 cs USER  CONTEXT              ( VOCABULARY FIRST SEARCHED *)
+11 cs USER  CURRENT         ( SEARCHED SECOND, COMPILED INTO *)
+12 cs USER  STATE                        ( COMPILATION STATE *)
+13 cs USER  BASE                  ( FOR NUMERIC INPUT-OUTPUT *)
+14 cs USER  DPL                     ( DECIMAL POINT LOCATION *)
+15 cs USER  FLD                         ( OUTPUT FIELD WIDTH *)
+16 cs USER  CSP                       ( CHECK STACK POSITION *)
+17 cs USER  R#                     ( EDITING CURSOR POSITION *)
+18 cs USER  HLD       ( POINTS TO LAST CHARACTER HELD IN PAD *)
 -->    
 
 
@@ -611,7 +611,7 @@ HEX              ( 0 THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 : 2+      2   +  ;           ( INCREMENT STACK NUMBER BY TWO *)
 : HERE    DP  @  ;        ( FETCH NEXT FREE ADDRESS IN DICT. *)
 : ALLOT   DP  +! ;                ( MOVE DICT. POINTER AHEAD *)
-: ,   HERE  !  rcll  ALLOT  ;  ( ENTER STACK NUMBER TO DICT. *)
+: ,   HERE  !  cl  ALLOT  ;    ( ENTER STACK NUMBER TO DICT. *)
 : C,   HERE  C!  1   ALLOT  ;    ( ENTER STACK BYTE TO DICT. *)
 : -   MINUS   +  ;               ( LEAVE DIFF.  SEC - BOTTOM *)
 : =   -  0=  ;                   ( LEAVE BOOLEAN OF EQUALITY *)
@@ -633,10 +633,10 @@ HEX              ( 0 THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 
 ( FOLLOWING HAVE LITERALS DEPENDENT ON COMPUTER WORD SIZE )
 
-: LFA    2 rcls  -  ;           ( CONVERT A WORDS PFA TO LFA *)
-: CFA    rcll  -  ;             ( CONVERT A WORDS PFA TO CFA *)
-: NFA 2 rcls 1+ - -1 TRAVERSE ; ( CONVERT A WORDS PFA TO NFA *)
-: PFA 1 TRAVERSE 2 rcls 1+ + ;  ( CONVERT A WORDS NFA TO PFA *)
+: LFA    2 cs  -  ;             ( CONVERT A WORDS PFA TO LFA *)
+: CFA    cl  -  ;               ( CONVERT A WORDS PFA TO CFA *)
+: NFA 2 cs 1+ - -1 TRAVERSE ;   ( CONVERT A WORDS PFA TO NFA *)
+: PFA 1 TRAVERSE 2 cs 1+ + ;    ( CONVERT A WORDS NFA TO PFA *)
     -->    
 (  ERROR PROCEEDURES, PER SHIRA                   WFR-79MAR23 )
 : !CSP     SP@  CSP  !  ;     ( SAVE STACK POSITION IN 'CSP' *)
@@ -657,7 +657,7 @@ HEX              ( 0 THRU 5 RESERVED,    REFERENCED TO $00A0 *)
 (  COMPILE,  SMUDGE,  HEX, DECIMAL                WFR-79APR20 )
 
 : COMPILE          ( COMPILE THE EXECUTION ADDRESS FOLLOWING *)
-        ?COMP  R>  DUP  rcll +  >R  @  ,  ;
+        ?COMP  R>  DUP  cl +  >R  @  ,  ;
 
 : [    0  STATE  !  ;  IMMEDIATE          ( STOP COMPILATION *)
 
@@ -711,17 +711,17 @@ dodoe LATEST PFA CFA ! ;
         DUP  0  DO  OVER  OVER  +  1  -  C@
         BL  -  IF  LEAVE  ELSE  1  -  ENDIF  LOOP  ;
 : (.")             ( TYPE IN-LINE STRING, ADJUSTING RETURN *)
-        R  COUNT  DUP  1+  R>  + rlns >R  TYPE  ;
+        R  COUNT  DUP  1+  R>  + ln >R  TYPE  ;
 
 
 : ."     22  STATE  @       ( COMPILE OR PRINT QUOTED STRING *)
-    IF  COMPILE  (.")        WORD    HERE  C@  1+ rlns ALLOT
+    IF  COMPILE  (.")        WORD    HERE  C@  1+ ln ALLOT
         ELSE        WORD    HERE   COUNT  TYPE  ENDIF  ;
                IMMEDIATE     -->    
 (  TERMINAL INPUT                                 WFR-79APR29 )
 
 : EXPECT            ( TERMINAL INPUT MEMORY-2,  CHAR LIMIT-1 *)
-    OVER  +  OVER  DO  KEY  DUP  07 rcls +ORIGIN ( BS ) @ =
+    OVER  +  OVER  DO  KEY  DUP  07 cs +ORIGIN ( BS ) @ =
     IF  DROP  08  OVER  I  =  DUP  R>  2  -  + >R  -
        ELSE ( NOT BS )  DUP  0D  =
            IF ( RET ) LEAVE  DROP  BL  0  ELSE  DUP  ENDIF
@@ -807,10 +807,10 @@ HERE 1+
       IF ( WARN USER )  DROP  NFA  ID.
                         4         MESSAGE    SPACE  ENDIF
       HERE  DUP  C@  WIDTH  @        MIN    1+  ALLOT
-      DP  C@  OFD  =  ALLOT HERE rlns DP !
+      DP  C@  OFD  =  ALLOT HERE ln DP !
       DUP  A0  TOGGLE HERE  1  -  80  TOGGLE ( DELIMIT BITS )
       LATEST  ,  CURRENT  @  ! 
-      HERE  rcll +  ,  ;
+      HERE  cl +  ,  ;
 -->    
 
 
@@ -851,10 +851,10 @@ HERE 1+
          LATEST  40  TOGGLE  ;
 
 : VOCABULARY  ( CREATE VOCAB WITH 'V-HEAD' AT VOC INTERSECT. *) 
-       <BUILDS HERE rcll BLANKS 81 C, rcll 2 - ALLOT A0 C,
-       CURRENT  @  rcll -  ,
+       <BUILDS HERE cl BLANKS 81 C, cl 2 - ALLOT A0 C,
+       CURRENT  @  cl -  ,
        HERE  VOC-LINK  @  ,  VOC-LINK  !
-       DOES>  rcll +  CONTEXT  !  ;
+       DOES>  cl +  CONTEXT  !  ;
 VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *) 
 
 : DEFINITIONS        ( SET THE CONTEXT ALSO AS CURRENT VOCAB *)
@@ -880,8 +880,8 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
-cold HERE rcll - !
-2 rcls BYTE.IN FORTH coldforth !
+cold HERE cl - !
+2 cs BYTE.IN FORTH coldforth !
 0 BYTE.IN ABORT coldabort !
 
 
@@ -896,7 +896,7 @@ cold HERE rcll - !
                                                     -->    
 (  MATH UTILITY                               DJK-WFR-79APR29 )
 CODE S->D                  ( EXTEND SINGLE INTEGER TO DOUBLE *)
-stod HERE rcll - !
+stod HERE cl - !
 
 : +-    0< IF MINUS ENDIF ;   ( APPLY SIGN TO NUMBER BENEATH *)
 
@@ -931,7 +931,7 @@ FIRST  VARIABLE  USE           ( NEXT BUFFER TO USE, STALEST *)
 FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 : +BUF     ( ADVANCE ADDRESS-1 TO NEXT BUFFER. RETURNS FALSE *)
-      80 2 rcls +          +  DUP  LIMIT  =     ( IF AT PREV *)
+      80 2 cs +          +  DUP  LIMIT  =       ( IF AT PREV *)
       IF  DROP  FIRST  ENDIF  DUP  PREV  @  -  ;
 
 : UPDATE     ( MARK THE BUFFER POINTED TO BY PREV AS ALTERED *)
@@ -948,13 +948,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
     BEGIN  +BUF  UNTIL ( AVOID PREV )  USE  !  ( FOR NEXT TIME )
     R  @  8000 AND  ( TEST FOR UPDATE IN THIS BUFFER )
     IF ( UPDATED, FLUSH TO DISC )
-       R  rcll + ( STORAGE LOC. )
+       R  cl + ( STORAGE LOC. )
        R  @  7FFF  AND  ( ITS BLOCK # )
        0         R/W     ( WRITE SECTOR TO DISC )
       ENDIF
     R  !  ( WRITE NEW BLOCK # INTO THIS BUFFER )
     R  PREV  !  ( ASSIGN THIS BUFFER AS 'PREV' )
-    R>  rcll +  ( MOVE TO STORAGE LOCATION )  ;
+    R>  cl +  ( MOVE TO STORAGE LOCATION )  ;
 
 -->    
 
@@ -966,13 +966,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
       BEGIN  +BUF  0=  ( TRUE UPON REACHING 'PREV' )
          IF ( WRAPPED )  DROP  R  BUFFER
              DUP  R  1         R/W    ( READ SECTOR FROM DISC )
-             rcll  - ( BACKUP )
+             cl  - ( BACKUP )
            ENDIF 
            DUP  @  R  -  7FFF AND  0= 
         UNTIL  ( WITH BUFFER ADDRESS ) 
       DUP  PREV  !
      ENDIF 
-     R>  DROP    rcll +  ;
+     R>  DROP    cl +  ;
 -->    
 (  TEXT OUTPUT FORMATTING                         WFR-79MAY03 )
 
@@ -1000,21 +1000,21 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
      ?LOADING  0  IN  !  B/SCR  BLK  @  OVER
      MOD  -  BLK  +!  ;    IMMEDIATE
 
-0A rcls BYTE.IN :        REPLACED.BY HERE
-05 rcls BYTE.IN CONSTANT REPLACED.BY HERE
-03 rcls BYTE.IN VARIABLE REPLACED.BY HERE
-03 rcls BYTE.IN USER     REPLACED.BY HERE
+0A cs BYTE.IN :        REPLACED.BY HERE
+05 cs BYTE.IN CONSTANT REPLACED.BY HERE
+03 cs BYTE.IN VARIABLE REPLACED.BY HERE
+03 cs BYTE.IN USER     REPLACED.BY HERE
 -->
 
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR26 )
 ( EMIT )
-  emit rcll MINUS BYTE.IN EMIT !
+  emit cl MINUS BYTE.IN EMIT !
 
 
 
 
 ( KEY )
-      key rcll MINUS BYTE.IN KEY !
+      key cl MINUS BYTE.IN KEY !
 
 
 
@@ -1025,13 +1025,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR02 )
 
 ( ?TERMINAL )
-     qterm rcll MINUS BYTE.IN ?TERMINAL !
+     qterm cl MINUS BYTE.IN ?TERMINAL !
 
 
 
 
 ( CR )
-    cr rcll MINUS BYTE.IN CR !
+    cr cl MINUS BYTE.IN CR !
 
 
 -->    
@@ -1056,7 +1056,7 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 (  D/CHAR,  ?DISC,                                WFR-79MAR23 )
 CODE D/CHAR      ( TEST CHAR-1. EXIT TEST BOOL-2, NEW CHAR-1 *)
-dchar HERE rcll - !
+dchar HERE cl - !
 
 
 
@@ -1072,7 +1072,7 @@ dchar HERE rcll - !
      ENDIF  R>  DROP  ;   -->    
 (  BLOCK-WRITE                                     WFR-790103 )
 CODE BLOCK-WRITE     ( SEND TO DISC FROM ADDRESS-2,  COUNT-1 *)
-bwrit HERE rcll - !                        ( WITH EOT AT END *)
+bwrit HERE cl - !                        ( WITH EOT AT END *)
 
 
 
@@ -1089,7 +1089,7 @@ bwrit HERE rcll - !                        ( WITH EOT AT END *)
 (  BLOCK-READ,                                     WFR-790103 )
 
 CODE BLOCK-READ   ( BUF.ADDR-1. EXIT AT 128 CHAR OR CONTROL *)
-bread HERE rcll - !
+bread HERE cl - !
 
 
 
@@ -1120,35 +1120,35 @@ bread HERE rcll - !
    ?DISC  ;     -->    
 (  FORWARD REFERENCES                             WFR-79MAR30 )
 00  BYTE.IN :          REPLACED.BY  ?EXEC
-01 rcls BYTE.IN :      REPLACED.BY  !CSP
-02 rcls BYTE.IN :      REPLACED.BY  CURRENT
-04 rcls BYTE.IN :      REPLACED.BY  CONTEXT
-06 rcls BYTE.IN :      REPLACED.BY  CREATE
-07 rcls BYTE.IN :      REPLACED.BY  ]
-0F rcls BYTE.IN :      REPLACED.BY  ;S
+01 cs BYTE.IN :        REPLACED.BY  !CSP
+02 cs BYTE.IN :        REPLACED.BY  CURRENT
+04 cs BYTE.IN :        REPLACED.BY  CONTEXT
+06 cs BYTE.IN :        REPLACED.BY  CREATE
+07 cs BYTE.IN :        REPLACED.BY  ]
+0F cs BYTE.IN :        REPLACED.BY  ;S
 00  BYTE.IN  ;         REPLACED.BY  ?CSP
-01 rcls BYTE.IN ;      REPLACED.BY  COMPILE
-03 rcls BYTE.IN ;      REPLACED.BY  SMUDGE
-04 rcls BYTE.IN ;      REPLACED.BY  [
-05 rcls BYTE.IN ;      REPLACED.BY  ;S
+01 cs BYTE.IN ;        REPLACED.BY  COMPILE
+03 cs BYTE.IN ;        REPLACED.BY  SMUDGE
+04 cs BYTE.IN ;        REPLACED.BY  [
+05 cs BYTE.IN ;        REPLACED.BY  ;S
 00  BYTE.IN  CONSTANT  REPLACED.BY  CREATE
-01 rcls BYTE.IN CONSTANT REPLACED.BY SMUDGE
-02 rcls BYTE.IN CONSTANT REPLACED.BY , -->    
+01 cs BYTE.IN CONSTANT REPLACED.BY SMUDGE
+02 cs BYTE.IN CONSTANT REPLACED.BY , -->    
 (  FORWARD REFERENCES                             WFR-79APR29 )
 ( 02  BYTE.IN VARIABLE   REPLACED.BY  (;CODE)
 ( 02  BYTE.IN USER       REPLACED.BY  (;CODE)
-03 rcls BYTE.IN ?ERROR   REPLACED.BY  ERROR
-08 rcls BYTE.IN ."       REPLACED.BY  WORD
-10 rcls BYTE.IN ."       REPLACED.BY  WORD
-00  BYTE.IN  (ABORT)     REPLACED.BY  ABORT
-0A rcls 5 + BYTE.IN ERROR rlns REPLACED.BY MESSAGE
-10 rcls 5 + BYTE.IN ERROR rlns REPLACED.BY QUIT
-06 rcls BYTE.IN WORD     REPLACED.BY  BLOCK
-10 rcls BYTE.IN CREATE   REPLACED.BY  MESSAGE
-17 rcls BYTE.IN CREATE   REPLACED.BY  MIN 
-02 rcls BYTE.IN ABORT    REPLACED.BY  DR0
-19 rcls BYTE.IN BUFFER   REPLACED.BY  R/W
-19 rcls BYTE.IN BLOCK    REPLACED.BY  R/W      DECIMAL ;S    
+03 cs BYTE.IN ?ERROR   REPLACED.BY  ERROR
+08 cs BYTE.IN ."       REPLACED.BY  WORD
+10 cs BYTE.IN ."       REPLACED.BY  WORD
+00  BYTE.IN  (ABORT)   REPLACED.BY  ABORT
+0A cs 5 + BYTE.IN ERROR ln REPLACED.BY MESSAGE
+10 cs 5 + BYTE.IN ERROR ln REPLACED.BY QUIT
+06 cs BYTE.IN WORD     REPLACED.BY  BLOCK
+10 cs BYTE.IN CREATE   REPLACED.BY  MESSAGE
+17 cs BYTE.IN CREATE   REPLACED.BY  MIN 
+02 cs BYTE.IN ABORT    REPLACED.BY  DR0
+19 cs BYTE.IN BUFFER   REPLACED.BY  R/W
+19 cs BYTE.IN BLOCK    REPLACED.BY  R/W      DECIMAL ;S    
 
 (  ',  FORGET,  \                                 WFR-79APR28 )
 HEX  ( 3   WIDTH  ! )
@@ -1227,7 +1227,7 @@ HEX  ( 3   WIDTH  ! )
 
 : ?      @  .  ;                  ( PRINT CONTENTS OF MEMORY *)
 
-' . CFA ' MESSAGE 12 rcls + 7 + rlns ! ( PRINT MESSAGE NUMBER )
+' . CFA ' MESSAGE 12 cs + 7 + ln !     ( PRINT MESSAGE NUMBER )
 -->    
 
 (  PROGRAM DOCUMENTATION                          WFR-79APR20 )
@@ -1266,7 +1266,7 @@ HEX
 HEX
 
 CREATE MON          ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
-       SMUDGE ' rxit CFA @ LATEST PFA CFA !
+       SMUDGE ' xt CFA @ LATEST PFA CFA !
 
 
 
@@ -1274,10 +1274,10 @@ CREATE MON          ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
 
 DECIMAL
 HERE              FENCE  !
-HERE 14 rcls    +ORIGIN  !   ( COLD START FENCE )
-HERE 15 rcls    +ORIGIN  !   ( COLD START DP )
-LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
-' FORTH 3 rcls + 16 rcls +ORIGIN ! ( COLD VOC-LINK ) ;S
+HERE 14 cs      +ORIGIN  !   ( COLD START FENCE )
+HERE 15 cs      +ORIGIN  !   ( COLD START DP )
+LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
+' FORTH 3 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
 ( orterforth inst                                             )
 
 ( Code to load the fig-Forth Model source follows. Some words )
@@ -1295,8 +1295,8 @@ LATEST 6 rcls   +ORIGIN  !   ( TOPMOST WORD )
 
 
 DECIMAL
-CREATE : docol DP @ rcll MINUS + ! 192 STATE !
-CREATE 192 STATE ! docol DP @ rcll MINUS + !
+CREATE : docol DP @ cl MINUS + ! 192 STATE !
+CREATE 192 STATE ! docol DP @ cl MINUS + !
 ;S [ CURRENT @ @ 96 TOGGLE
 : ; COMPILE ;S CURRENT @ @ 32 TOGGLE 0 STATE !
 ;S [ CURRENT @ @ 96 TOGGLE
@@ -1316,11 +1316,11 @@ CREATE 192 STATE ! docol DP @ rcll MINUS + !
 : MESSAGE ; : QUIT ; : MIN ; : DR0 ; : R/W ; : . DROP ;
 ( required by the model source                                )
 : HEX 16 BASE ! ; : HERE DP @ ; : CODE CREATE SMUDGE ;
-: , HERE ! rcll DP +! ; : LITERAL COMPILE noop , ; IMMEDIATE
+: , HERE ! cl DP +! ; : LITERAL COMPILE noop , ; IMMEDIATE
 : +ORIGIN origin + ; : -FIND 32 WORD HERE CONTEXT @ @ (FIND) ;
-: [COMPILE] -FIND DROP DROP rcll - , ; IMMEDIATE
+: [COMPILE] -FIND DROP DROP cl - , ; IMMEDIATE
 : BYTE.IN -FIND DROP DROP + ;
-: REPLACED.BY -FIND DROP DROP rcll - SWAP ! ;
+: REPLACED.BY -FIND DROP DROP cl - SWAP ! ;
 -->
 
 
@@ -1347,13 +1347,13 @@ IMMEDIATE
 ( load boot-up parameters and machine code definitions        )
 12 LOAD
 ( resolve forward references in control words                 )
-01 rcls BYTE.IN LITERAL REPLACED.BY LIT
-01 rcls BYTE.IN DO REPLACED.BY (DO)
-02 rcls BYTE.IN LOOP REPLACED.BY (LOOP)
-02 rcls BYTE.IN UNTIL REPLACED.BY 0BRANCH
-02 rcls BYTE.IN AGAIN REPLACED.BY BRANCH
-01 rcls BYTE.IN IF REPLACED.BY 0BRANCH
-02 rcls BYTE.IN ELSE REPLACED.BY BRANCH
+01 cs BYTE.IN LITERAL REPLACED.BY LIT
+01 cs BYTE.IN DO REPLACED.BY (DO)
+02 cs BYTE.IN LOOP REPLACED.BY (LOOP)
+02 cs BYTE.IN UNTIL REPLACED.BY 0BRANCH
+02 cs BYTE.IN AGAIN REPLACED.BY BRANCH
+01 cs BYTE.IN IF REPLACED.BY 0BRANCH
+02 cs BYTE.IN ELSE REPLACED.BY BRANCH
 -->
 
 
@@ -1367,7 +1367,7 @@ emit2 ' EMIT CFA ! cr2 ' CR CFA !
 ( installed = 1                                               )
 1 installed C!
 ( break link with inst time code                              )
-0 ' rcll LFA !
+0 ' cl LFA !
 ( WARNING = 1                                                 )
-1 13 rcls +ORIGIN !             
+1 13 cs +ORIGIN !             
 ;S

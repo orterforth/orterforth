@@ -115,11 +115,11 @@ CR
 HEX
 : tests-U/
   8 0 4                2  0 test-U/ ."  high word zero" CR
-  8 1 4 rcll 8 = IF
+  8 1 4 cl 8 = IF
         4000000000000002 ENDIF
-        rcll 4 = IF
+        cl 4 = IF
                 40000002 ENDIF
-        rcll 2 = IF
+        cl 2 = IF
                     4002 ENDIF
                           0 test-U/ ."  high word nonzero" CR
   0 4 1               -1 -1 test-U/ ."  overflow" CR

@@ -3,11 +3,11 @@
 #define SIZE 61
 
 static rf_code_t codes[] = {
-  rf_code_rcll,
-  rf_code_rcls,
-  rf_code_rlns,
-  rf_code_rtgt,
-  rf_code_rxit,
+  rf_code_cl,
+  rf_code_cs,
+  rf_code_ln,
+  rf_code_tg,
+  rf_code_xt,
   rf_code_lit,
   rf_code_exec,
   rf_code_bran,

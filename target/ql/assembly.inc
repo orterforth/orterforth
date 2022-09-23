@@ -63,8 +63,8 @@
 #define RF_TARGET_CODE_DOUSE
 #define RF_TARGET_CODE_DODOE
 #define RF_TARGET_CODE_STOD
-#define RF_TARGET_CODE_RCLL
-#define RF_TARGET_CODE_RCLS
+#define RF_TARGET_CODE_CL
+#define RF_TARGET_CODE_CS
 /* there is no dpush so we define this */
-#define RF_TARGET_CODE_RTGT
+#define RF_TARGET_CODE_TG
 

@@ -178,7 +178,7 @@ void rf_code_dminu(void)
 }
 #endif
 
-void rf_code_rtgt(void)
+void rf_code_tg(void)
 {
   RF_START;
   RF_SP_PUSH(RF_TARGET);

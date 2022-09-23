@@ -757,27 +757,27 @@ _rf_code_stod:
 stod1:
 	jmp dpush
 
-	.globl	rf_code_rcll
-	.globl	_rf_code_rcll
-rf_code_rcll:
-_rf_code_rcll:
+	.globl	rf_code_cl
+	.globl	_rf_code_cl
+rf_code_cl:
+_rf_code_cl:
 
 	movl $4, %eax
 	jmp apush
 
-	.globl	rf_code_rcls
-	.globl	_rf_code_rcls
-rf_code_rcls:
-_rf_code_rcls:
+	.globl	rf_code_cs
+	.globl	_rf_code_cs
+rf_code_cs:
+_rf_code_cs:
 
 	popl %eax
 	shll $2, %eax
 	jmp apush
 
-	.globl rf_code_rxit
-	.globl _rf_code_rxit
-rf_code_rxit:
-_rf_code_rxit:
+	.globl rf_code_xt
+	.globl _rf_code_xt
+rf_code_xt:
+_rf_code_xt:
 
   pushl %ebp
   movl %esp, %ebp
@@ -794,7 +794,6 @@ _rf_code_rxit:
 	.data
 	.globl rf_i686_ebp_save
 	.globl _rf_i686_ebp_save
-.p2align 2
 	.p2align 2
 _rf_i686_ebp_save:
 
@@ -803,7 +802,6 @@ _rf_i686_ebp_save:
 	.data
 	.globl rf_i686_esp_save
 	.globl _rf_i686_esp_save
-.p2align 2
 	.p2align 2
 _rf_i686_esp_save:
 

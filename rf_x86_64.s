@@ -767,30 +767,30 @@ _rf_code_stod:
 stod1:
 	jmp dpush
 
-	.globl rf_code_rcll
-	.globl _rf_code_rcll
+	.globl rf_code_cl
+	.globl _rf_code_cl
 	.p2align 4, 0x90
-rf_code_rcll:
-_rf_code_rcll:
+rf_code_cl:
+_rf_code_cl:
 
 	movq $8, %rax
 	jmp apush
 
-	.globl rf_code_rcls
-	.globl _rf_code_rcls
+	.globl rf_code_cs
+	.globl _rf_code_cs
 	.p2align 4, 0x90
-rf_code_rcls:
-_rf_code_rcls:
+rf_code_cs:
+_rf_code_cs:
 
 	popq %rax
 	shlq $3, %rax
 	jmp apush
 
-	.globl rf_code_rxit
-	.globl _rf_code_rxit
+	.globl rf_code_xt
+	.globl _rf_code_xt
 	.p2align 4, 0x90
-rf_code_rxit:
-_rf_code_rxit:
+rf_code_xt:
+_rf_code_xt:
 
   pushq %rbp
   movq %rsp, %rbp

@@ -939,30 +939,30 @@ stod1:
 	pha
 	jmp push
 
-.export _rf_code_rcll
+.export _rf_code_cl
 
-_rf_code_rcll:
+_rf_code_cl:
 
 	lda #$02
 	pha
 	lda #$00
 	jmp push
 
-.export _rf_code_rcls
+.export _rf_code_cs
 
-_rf_code_rcls:
+_rf_code_cs:
 
 	asl $00,x
 	rol $01,x
 	jmp _rf_next
 
-.export _rf_code_rlns
+.export _rf_code_ln
 
-_rf_code_rlns := _rf_next
+_rf_code_ln := _rf_next
 
-.export _rf_code_rtgt
+.export _rf_code_tg
 
-_rf_code_rtgt:
+_rf_code_tg:
 
 	dex
 	dex
@@ -978,9 +978,9 @@ _rf_code_rtgt:
 	sta $03,x
 	jmp _rf_next
 
-.export _rf_code_rxit
+.export _rf_code_xt
 
-_rf_code_rxit:
+_rf_code_xt:
 
 	sty _rf_fp
 	sty _rf_fp+1

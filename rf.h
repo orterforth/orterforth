@@ -483,16 +483,16 @@ void rf_code_bwrit(void);
 
 void rf_code_dchar(void);
 
-/* EXTENSIONS */
+/* ADDITIONAL */
 
-void rf_code_rcll(void);
+void rf_code_cl(void);
 
-void rf_code_rcls(void);
+void rf_code_cs(void);
 
-void rf_code_rlns(void);
+void rf_code_ln(void);
 
-void rf_code_rtgt(void);
+void rf_code_tg(void);
 
-void rf_code_rxit(void);
+void rf_code_xt(void);
 
 #endif /* RF_H_ */

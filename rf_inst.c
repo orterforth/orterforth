@@ -326,7 +326,7 @@ static void rf_inst_code_compile(void)
     /* ?COMP */
     /* R> */
     a = RF_IP_GET;
-    /* DUP rcll + >R */
+    /* DUP cl + >R */
     RF_IP_INC;
     /* @ , */
     rf_inst_comma(*a);
@@ -529,11 +529,11 @@ static void rf_inst_cold(void)
 static void rf_inst_code_ext(void)
 {
   RF_START;
-  rf_inst_def_code("rcll", rf_code_rcll);
-  rf_inst_def_code("rcls", rf_code_rcls);
-  rf_inst_def_code("rlns", rf_code_rlns);
-  rf_inst_def_code("rtgt", rf_code_rtgt);
-  rf_inst_def_code("rxit", rf_code_rxit);
+  rf_inst_def_code("cl", rf_code_cl);
+  rf_inst_def_code("cs", rf_code_cs);
+  rf_inst_def_code("ln", rf_code_ln);
+  rf_inst_def_code("tg", rf_code_tg);
+  rf_inst_def_code("xt", rf_code_xt);
   RF_JUMP_NEXT;
 }
 
@@ -548,11 +548,11 @@ typedef struct rf_inst_code_t {
 #define RF_INST_CODE_LIT_LIST_SIZE 68
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
-  { 0, "rcll", rf_code_rcll },
-  { 0, "rcls", rf_code_rcls },
-  { 0, "rlns", rf_code_rlns },
-  { 0, 0, rf_code_rtgt },
-  { 0, "rxit", rf_code_rxit },
+  { 0, "cl", rf_code_cl },
+  { 0, "cs", rf_code_cs },
+  { 0, "ln", rf_code_ln },
+  { 0, 0, rf_code_tg },
+  { 0, "xt", rf_code_xt },
   { "lit", "LIT", rf_code_lit },
   { "exec", 0, rf_code_exec },
   { "bran", "BRANCH", rf_code_bran },
@@ -709,7 +709,7 @@ static void rf_inst_forward(void)
   rf_inst_colon("BLOCK");
   rf_inst_compile(
     "DUP prev @ - 0BRANCH ^15 DUP block-cmd LIT 11 BLOCK-WRITE ?DISC prev "
-    "rcll + BLOCK-READ ?DISC DUP prev ! DROP prev rcll + ;S");
+    "cl + BLOCK-READ ?DISC DUP prev ! DROP prev cl + ;S");
 
   /* WORD */
   rf_inst_colon("WORD");
@@ -733,11 +733,11 @@ static void rf_inst_forward(void)
     "-FIND 0BRANCH ^3 DROP DROP HERE DUP C@ LIT 1 + DP +! DP C@ "
     "LIT 253 - 0= DP +!");
 #ifdef RF_ALIGN
-  rf_inst_compile("HERE rlns DP !");
+  rf_inst_compile("HERE ln DP !");
 #endif
   rf_inst_compile(
     "DUP LIT 160 TOGGLE HERE LIT 1 - LIT 128 TOGGLE CURRENT @ @ "
-    "HERE ! rcll DP +! CURRENT @ ! HERE rcll + HERE ! rcll DP +! ;S");
+    "HERE ! cl DP +! CURRENT @ ! HERE cl + HERE ! cl DP +! ;S");
 
   /* LOAD */
   rf_inst_colon("LOAD");
@@ -748,7 +748,7 @@ static void rf_inst_forward(void)
   /* inst load sequence */
   rf_inst_colon("load");
   rf_inst_load_cfa = (rf_code_t *) RF_USER_DP - 1;
-  rf_inst_compile("LIT 1 LOAD rxit");
+  rf_inst_compile("LIT 1 LOAD xt");
 
   /* X */  
   here = (uint8_t *) RF_USER_DP;

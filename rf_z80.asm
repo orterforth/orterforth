@@ -1025,9 +1025,9 @@ cold2:
 
   jp (ix)
 
-PUBLIC _rf_code_rcll
+PUBLIC _rf_code_cl
 
-_rf_code_rcll:
+_rf_code_cl:
   ld hl, $0002                  ; push 2
 IFDEF USEIY
   jp (iy)
@@ -1035,9 +1035,9 @@ ELSE
   jp hpush
 ENDIF
 
-PUBLIC _rf_code_rcls
+PUBLIC _rf_code_cs
 
-_rf_code_rcls:
+_rf_code_cs:
   pop hl                        ; push hl * 2
   add hl, hl
 IFDEF USEIY
@@ -1046,16 +1046,16 @@ ELSE
   jp hpush
 ENDIF
 
-PUBLIC _rf_code_rtgt
+PUBLIC _rf_code_tg
 
-_rf_code_rtgt:
+_rf_code_tg:
   ld de, $E16F                  ; SPECTR
   ld hl, $6774
   jp dpush
 
-PUBLIC _rf_code_rxit
+PUBLIC _rf_code_xt
 
-_rf_code_rxit:
+_rf_code_xt:
   ld hl, $0000
   ld (_rf_fp), hl
   call _rf_start
