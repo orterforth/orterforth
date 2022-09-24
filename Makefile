@@ -244,7 +244,7 @@ ifeq ($(BBCOPTION),assembly)
 	BBCINSTMEDIA = bbc/orterforth-inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := 2200
+	BBCORIGIN := 2300
 	BBCRUN := bbc-run-disk
 endif
 
@@ -266,7 +266,7 @@ ifeq ($(BBCOPTION),tape)
 	BBCINSTMEDIA = bbc/orterforth-inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
 	BBCORG := 1220
-	BBCORIGIN := 1D00
+	BBCORIGIN := 1E00
 	BBCRUN := bbc-run-tape
 endif
 
@@ -412,6 +412,22 @@ bbc/orterforth-inst : $(BBCDEPS)
 bbc/orterforth-inst.inf : | bbc
 
 	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
+
+# inst serial load file
+ifeq ($(OPER),cygwin)
+STAT := stat -c %s
+endif
+ifeq ($(OPER),darwin)
+STAT := stat -f%z
+endif
+ifeq ($(OPER),linux)
+STAT := stat -c %s
+endif
+bbc/orterforth-inst.ser : bbc/orterforth-inst
+
+	printf "5P.\"Loading...\"\r10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" > $@.io
+	cat -u $< >> $@.io
+	mv $@.io $@
 
 # inst disc image
 bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterforth-inst.inf
@@ -744,10 +760,13 @@ rc2014-run : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $(ORTER)
 
 	#echo "C35071" | $(ORTER) serial -o olfcr -e 5 $(RC2014SERIALPORT) 115200
 	echo "A"
+	sleep 10
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
 	echo "B"
+	sleep 10
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
 	echo "C"
+	sleep 3
 	$(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc 1.disc
 
 rc2014 :
