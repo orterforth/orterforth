@@ -324,6 +324,20 @@ bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 	# stop disc
 	sh scripts/stop.sh disc.pid
 
+# load from disk and run tests
+.PHONY : bbc-test
+bbc-test : bbc/orterforth.ssd $(BBCROMS) | $(DISC) test.disc
+
+	# start disc
+	touch 1.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 test.disc 1.disc
+
+	# run mame
+	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\rEMPTY-BUFFERS 1 LOAD\r' -flop1 bbc/orterforth.ssd
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
+
 # general assemble rule
 bbc/%.o : bbc/%.s
 

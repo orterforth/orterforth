@@ -111,24 +111,24 @@ CR
 
 
 ( U/                                                          )
-: test-U/ >R >R U/ R> = SWAP R> = AND assert ."  U/" ;
 HEX
-: tests-U/
-  8 0 4                2  0 test-U/ ."  high word zero" CR
-  8 1 4 cl 8 = IF
-        4000000000000002 ENDIF
-        cl 4 = IF
-                40000002 ENDIF
-        cl 2 = IF
-                    4002 ENDIF
-                          0 test-U/ ."  high word nonzero" CR
-  0 4 1               -1 -1 test-U/ ."  overflow" CR
-  1 0 0               -1 -1 test-U/ ."  division by zero" CR
-;
-tests-U/ -->
+: d32 cl 2 = IF ELSE 10000 * + 0 ENDIF ; ( for word size )
+: test-U/ >R >R U/ R> = SWAP R> = AND assert ."  U/" ;
+0000 7000 d32 FFFF 7000 7000 test-U/ ."  often wrong 1 " CR
+0000 6000 d32 FFFF 6000 6000 test-U/ ."  often wrong 2 " CR
+0000 2000 d32 FFFF 2000 2000 test-U/ ."  often wrong 3 " CR
+0000 2000 d32 EFFF 2222 4222 test-U/ ."  often wrong 4 " CR
+FFFF 7FFF d32 EFFF 8889 1888 test-U/ ."  often wrong 5 " CR
+FFFF 7FFF d32 FFFF 8000 7FFF test-U/ ."  often wrong 6 " CR
+FFFF 7FFF d32 8FFF E38F 738E test-U/ ."  often wrong 7 " CR
+FFFF 7FFF d32 800F FFE2 01C1 test-U/ ."  often wrong 8 " CR
+0000 9000 d32 A000 E666 4000 test-U/ ."  often wrong 9 " CR
+0000 0004     0004   -1   -1 test-U/ ."  overflow" CR
+0001 0000 d32 0000   -1   -1 test-U/ ."  division by zero" CR
+-->
 ( summary                                                     )
 DECIMAL
 10 SPACES ." tests complete " failures ? ." failures" CR
 ( segfault if failures to exit nonzero )
-: exit failures @ IF 100 100 ! ENDIF ; exit
+: exit failures @ IF ( 100 100 ! )  ENDIF ; exit
 ;S
