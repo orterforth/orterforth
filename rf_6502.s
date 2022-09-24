@@ -442,36 +442,82 @@ ustar2:
 
 _rf_code_uslas:
 
-	lda $04,x
-	ldy $02,x
-	sty $04,x
-	asl
-	sta $02,x
-	lda $05,x
-	ldy $03,x
-	sty $05,x
-	rol
-	sta $03,x
-	lda #$10
+;	lda $04,x
+;	ldy $02,x
+;	sty $04,x
+;	asl
+;	sta $02,x
+;	lda $05,x
+;	ldy $03,x
+;	sty $05,x
+;	rol
+;	sta $03,x
+;	lda #$10
+;	sta n
+;uslas1:
+;	rol $04,x
+;	rol $05,x
+;	sec
+;	lda $04,x
+;	sbc $00,x
+;	tay
+;	lda $05,x
+;	sbc $01,x
+;	bcc uslas2
+;	sty $04,x
+;	sta $05,x
+;uslas2:
+;	rol $02,x
+;	rol $03,x
+;	dec n
+;	bne uslas1
+;	jmp pop
+
+; http://6502.org/source/integers/ummodfix/ummodfix.htm
+; https://dwheeler.com/6502/ummod.txt
+
+	sec
+	lda $02,x
+	sbc $00,x
+	lda $03,x
+	sbc $01,x
+	bcs uslas2
+	lda #$11
 	sta n
 uslas1:
 	rol $04,x
 	rol $05,x
-	sec
-	lda $04,x
-	sbc $00,x
-	tay
-	lda $05,x
-	sbc $01,x
-	bcc uslas2
-	sty $04,x
-	sta $05,x
-uslas2:
-	rol $02,x
+	dec n   
+	beq uslas3
+	rol $02,x 
 	rol $03,x
-	dec n
-	bne uslas1
-	jmp pop
+	lda #00
+	sta n+1
+	rol n+1
+	sec
+	lda $02,x 
+	sbc $00,x
+	sta n+2 
+	lda $03,x
+	sbc $01,x
+	tay     
+	lda n+1 
+	sbc #$00
+	bcc uslas1
+	lda n+2 
+	sta $02,x 
+	sty $03,x 
+	bcs uslas1
+uslas2:
+	lda #$FF    
+	sta $02,x 
+	sta $03,x
+	sta $04,x 
+	sta $05,x
+uslas3:
+	inx     
+	inx     
+	jmp _rf_code_swap    
 
 .export _rf_code_andd
 
