@@ -770,20 +770,51 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
+rc2014-run : rc2014/orterforth.ihx | $(DISC) $(ORTER)
+
+	# load via hexload
+	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	sleep 3
+	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ihx
+
+	# run without -o olfcr 
+	sudo $(ORTER) serial $(RC2014SERIALPORT) 115200
+
 rc2014 :
 
 	mkdir $@
+
+# inst executable
+rc2014/inst.ihx : \
+	rc2014/rf.lib \
+	rc2014/rf_inst.lib \
+	rc2014/rf_system.lib \
+	orterforth.c
+
+	zcc +rc2014 -subtype=basic -clib=new \
+		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
+		-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
+		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
+		-m \
+		-o $@ \
+		orterforth.c -create-app
+
+rc2014/inst.ser : target/rc2014/hexload.bas rc2014/inst.ihx
+
+	cp target/rc2014/hexload.bas $@.io
+	cat rc2014/inst.ihx >> $@.io
+	mv $@.io $@
 
 rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $(DISC) $(ORTER)
+rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
 
 	# load inst via hexload
 	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
 	sleep 3
-	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
+	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
 	# start disc
 	touch $@.io
@@ -798,26 +829,9 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $
 	# file complete
 	mv $@.io $@
 
-# inst executable
-rc2014/orterforth-inst.ihx : \
-	rc2014/rf.lib \
-	rc2014/rf_inst.lib \
-	rc2014/rf_system.lib \
-	orterforth.c
+rc2014/orterforth.ihx : rc2014/orterforth
 
-	zcc +rc2014 -subtype=basic -clib=new \
-		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
-		-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
-		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
-		-m \
-		-o $@ \
-		orterforth.c -create-app
-
-rc2014/orterforth-inst.ser : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx
-
-	cp target/rc2014/hexload.bas $@.io
-	cat rc2014/orterforth-inst.ihx >> $@.io
-	mv $@.io $@
+	z88dk-appmake +hex --org 0x9000 --binfile $< --output $@
 
 # base orterforth code
 rc2014/rf.lib : rf.c rf.h target/rc2014/default.inc | rc2014
