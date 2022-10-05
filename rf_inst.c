@@ -1,5 +1,9 @@
 #include <stdlib.h>
 #include <unistd.h>
+/* TODO detect z88dk classic vs new library usage */
+#ifdef __RC2014
+#include <z80.h>
+#endif
 
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
@@ -276,6 +280,7 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
   uintptr_t *cfa = lfa + 1;
   return (rf_code_t *) cfa;
 }
+
 
 /* proto outer interpreter */
 static void __FASTCALL__ rf_inst_compile(char *name)
@@ -790,8 +795,10 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
   return b + (b < 10 ? 48 : 55);
 }
 
+static char buf[128];
+
 /* save the installation as hex on DR1 */
-static void rf_inst_save(void)
+void rf_inst_save(void)
 {
   /* write to DR1 */
   unsigned int blk = 2000;
@@ -804,7 +811,9 @@ static void rf_inst_save(void)
   char *e = (char *) RF_USER_DP;
 #endif
   /* write blocks to disc until HERE */
+/*
   char buf[128];
+*/
   uint8_t j;
 #ifdef RF_INST_RELINK
   /* write table of code addresses */
@@ -836,7 +845,12 @@ void rf_inst(void)
 {
 #ifndef RF_INST_LOCAL_DISC
   /* wait for disc server to init */
-  /*sleep(5);*/
+  /* TODO detect z88dk newlib vs classic */
+#ifdef __RC2014
+  z80_delay_ms(5000);
+#else
+  sleep(5);
+#endif
 #endif
 
   /* cold start */

@@ -6,8 +6,6 @@
 
 void rf_init()
 {
-  putchar('@');
-  putchar('\n');
 }
 
 void rf_code_emit()
@@ -23,18 +21,13 @@ void rf_code_emit()
   RF_JUMP_NEXT;
 }
 
-static char capslock = 0;
-
 void rf_code_key(void)
 {
   RF_START;
   {
     int c;
 
-    /* caps lock */
     c = getchar();
-
-    /* return key */
     RF_SP_PUSH(c & 0x7F);
   }
   RF_JUMP_NEXT;

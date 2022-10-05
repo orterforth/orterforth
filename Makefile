@@ -697,6 +697,7 @@ ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader-inst.ser | $(DISC) $(OR
 	@sleep 1
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth-inst.ser
 
+	# TODO use disc start/stop script
 	@echo "* Starting disc and waiting for completion..."
 	@touch $@.io
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc $@.io & pid=$$! ; \
@@ -751,7 +752,7 @@ ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
 # === RC2014 ===
 
 .PHONY : rc2014-build
-rc2014-build : rc2014/orterforth-inst.ihx
+rc2014-build : rc2014/orterforth
 
 .PHONY : rc2014-clean
 rc2014-clean :
@@ -769,23 +770,33 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
-.PHONY : rc2014-run
-rc2014-run : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $(ORTER)
-
-	#echo "C35071" | $(ORTER) serial -o olfcr -e 5 $(RC2014SERIALPORT) 115200
-	echo "A"
-	sleep 10
-	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
-	echo "B"
-	sleep 10
-	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
-	echo "C"
-	sleep 3
-	$(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc 1.disc
-
 rc2014 :
 
 	mkdir $@
+
+rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
+
+	$(ORTER) hex read < $< > $@
+
+rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx | $(DISC) $(ORTER)
+
+	# load inst via hexload
+	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	sleep 3
+	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth-inst.ihx
+
+	# start disc
+	touch $@.io
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid sudo $(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc $@.io
+
+	# wait for install and save
+	sh scripts/waitforhex $@.io
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
+
+	# file complete
+	mv $@.io $@
 
 # inst executable
 rc2014/orterforth-inst.ihx : \
@@ -794,26 +805,34 @@ rc2014/orterforth-inst.ihx : \
 	rc2014/rf_system.lib \
 	orterforth.c
 
-	zcc +rc2014 -subtype=basic \
+	zcc +rc2014 -subtype=basic -clib=new \
 		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
+		-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
+		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 		-m \
 		-o $@ \
 		orterforth.c -create-app
 
+rc2014/orterforth-inst.ser : target/rc2014/hexload.bas rc2014/orterforth-inst.ihx
+
+	cp target/rc2014/hexload.bas $@.io
+	cat rc2014/orterforth-inst.ihx >> $@.io
+	mv $@.io $@
+
 # base orterforth code
 rc2014/rf.lib : rf.c rf.h target/rc2014/default.inc | rc2014
 
-	zcc +rc2014 -x -o $@ $<
+	zcc +rc2014 -clib=new -x -o $@ $<
 
 # inst code
 rc2014/rf_inst.lib : rf_inst.c rf.h target/rc2014/default.inc rf_inst.h | rc2014
 
-	zcc +rc2014 -x -o $@ $<
+	zcc +rc2014 -clib=new -x -o $@ $<
 
 # system code
 rc2014/rf_system.lib : target/rc2014/rc2014.c rf.h target/rc2014/default.inc | rc2014
 
-	zcc +rc2014 -x -o $@ $<
+	zcc +rc2014 -clib=new -x -o $@ $<
 
 # ROM file dir
 roms : 
