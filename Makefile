@@ -771,15 +771,14 @@ RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
 .PHONY : rc2014-run
-rc2014-run : rc2014/orterforth.ihx | $(DISC) $(ORTER)
+rc2014-run : rc2014/orterforth.ser | $(DISC) $(ORTER)
 
-	# load via hexload
-	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
-	sleep 3
-	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ihx
-
-	# run without -o olfcr 
-	$(ORTER) serial $(RC2014SERIALPORT) 115200
+	@echo "On the RC2014: Press reset"
+	@echo "               Initialise memory top to 35071"
+	@echo "               Disconnect"
+	@read -p "Then press enter to start: " LINE
+	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
+	@$(ORTER) serial $(RC2014SERIALPORT) 115200
 
 rc2014 :
 
@@ -873,6 +872,13 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(OR
 rc2014/orterforth.ihx : rc2014/orterforth
 
 	z88dk-appmake +hex --org 0x9000 --binfile $< --output $@
+
+rc2014/orterforth.ser : target/rc2014/hexload.bas rc2014/orterforth.ihx
+
+	# echo "C35071" > $@.io
+	cat target/rc2014/hexload.bas > $@.io
+	cat rc2014/orterforth.ihx >> $@.io
+	mv $@.io $@
 
 # base orterforth code
 rc2014/rf.lib : rf.c rf.h target/rc2014/default.inc | rc2014
