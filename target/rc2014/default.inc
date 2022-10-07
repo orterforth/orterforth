@@ -10,13 +10,14 @@
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
 
+/* Start of C code */
 #define RF_ORG 0x9000
 
-/* TODO look at .map file to work out high water mark */
-#define RF_ORIGIN 0xBF00
+/* Start of Forth origin */
+#define RF_ORIGIN 0xA980
 
-/*
-#define RF_ORIGIN 0xC300
-*/
-/* disc buffers leave space for stack in high memory */
-#define RF_LIMIT 0xFD00
+/* Offset of C inst code */
+#define RF_INST_OFFSET 0x5000
+
+/* end of disc buffers - leave space for C stack in high memory */
+#define RF_LIMIT 0xFF00

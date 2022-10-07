@@ -12,7 +12,9 @@ OUT="$2"
 PIDFILE="$3"
 
 # stop existing processes in pidfile
-kill -9 $(cat $PIDFILE) || true
+if [ -f "$PIDFILE" ]; then
+  kill -9 $(cat "$PIDFILE") 2> /dev/null || true
+fi
 
 # now get command and args
 shift

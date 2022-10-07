@@ -849,7 +849,9 @@ void rf_inst(void)
 #ifdef __RC2014
   z80_delay_ms(5000);
 #else
+#ifndef __CC65__
   sleep(5);
+#endif
 #endif
 #endif
 

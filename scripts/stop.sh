@@ -9,8 +9,10 @@ set -eu
 # get args
 PIDFILE="$1"
 
-# stop existing processes in pidfile
-kill -9 $(cat $PIDFILE) || true
+if [ -f "$PIDFILE" ]; then
+  # stop existing processes in pidfile
+  kill -9 $(cat "$PIDFILE") 2> /dev/null || true
 
-# remove pidfile
-rm -f $PIDFILE || true
+  # remove pidfile
+  rm "$PIDFILE" || true
+fi

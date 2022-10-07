@@ -580,6 +580,10 @@ orterforth.inc : orterforth.disc | $(ORTER)
 
 # === Raspberry Pi Pico ===
 
+pico :
+
+	mkdir $@
+
 .PHONY : pico-build
 pico-build : orterforth.inc | pico
 
@@ -589,10 +593,6 @@ pico-build : orterforth.inc | pico
 pico-clean :
 
 	rm -rf pico/*
-
-pico :
-
-	mkdir $@
 
 
 # === Sinclair QL ===
@@ -752,7 +752,7 @@ ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
 # === RC2014 ===
 
 .PHONY : rc2014-build
-rc2014-build : rc2014/orterforth
+rc2014-build : rc2014/orterforth.ihx
 
 .PHONY : rc2014-clean
 rc2014-clean :
@@ -770,22 +770,23 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
+.PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ihx | $(DISC) $(ORTER)
 
 	# load via hexload
-	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
 	sleep 3
-	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ihx
+	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ihx
 
 	# run without -o olfcr 
-	sudo $(ORTER) serial $(RC2014SERIALPORT) 115200
+	$(ORTER) serial $(RC2014SERIALPORT) 115200
 
 rc2014 :
 
 	mkdir $@
 
 # inst executable
-rc2014/inst.ihx : \
+rc2014/inst_CODE.bin : \
 	rc2014/rf.lib \
 	rc2014/rf_inst.lib \
 	rc2014/rf_system.lib \
@@ -795,9 +796,49 @@ rc2014/inst.ihx : \
 		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
 		-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
+	 	-Ca-DRF_ORG=0x9000 \
+	 	-Ca-DRF_INST_OFFSET=0x5000 \
 		-m \
-		-o $@ \
-		orterforth.c -create-app
+		-o rc2014/inst \
+		rf_z80_memory.asm orterforth.c
+
+# start with an empty bin file to build the multi segment bin
+rc2014/inst-0.bin : | rc2014
+
+	z88dk-appmake +rom \
+		-s 0x9000 \
+		-f 0 \
+		-o $@
+
+# add main code at start
+rc2014/inst-1.bin : \
+	rc2014/inst-0.bin \
+	rc2014/inst_CODE.bin
+
+	z88dk-appmake +inject \
+		-b rc2014/inst-0.bin \
+		-i rc2014/inst_CODE.bin \
+		-s 0 \
+		-o $@
+
+# add inst code at offset, safely beyond dictionary
+rc2014/inst-2.bin : \
+	rc2014/inst-1.bin \
+	rc2014/inst_INST.bin
+
+	z88dk-appmake +inject \
+		-b rc2014/inst-1.bin \
+		-i rc2014/inst_INST.bin \
+		-s 0x5000 \
+		-o $@
+
+# make inst tap from inst bin
+rc2014/inst.ihx : rc2014/inst-2.bin
+
+	z88dk-appmake +hex --org 0x9000 --binfile $< --output $@
+
+# both CODE and INST bin files are built by same command
+rc2014/inst_INST.bin : rc2014/inst_CODE.bin
 
 rc2014/inst.ser : target/rc2014/hexload.bas rc2014/inst.ihx
 
@@ -812,13 +853,13 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
 
 	# load inst via hexload
-	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
 	sleep 3
-	sudo $(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
+	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
 	# start disc
 	touch $@.io
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid sudo $(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc $@.io
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc $@.io
 
 	# wait for install and save
 	sh scripts/waitforhex $@.io
@@ -841,7 +882,7 @@ rc2014/rf.lib : rf.c rf.h target/rc2014/default.inc | rc2014
 # inst code
 rc2014/rf_inst.lib : rf_inst.c rf.h target/rc2014/default.inc rf_inst.h | rc2014
 
-	zcc +rc2014 -clib=new -x -o $@ $<
+	zcc +rc2014 -clib=new -x -o $@ $< --codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
 
 # system code
 rc2014/rf_system.lib : target/rc2014/rc2014.c rf.h target/rc2014/default.inc | rc2014
