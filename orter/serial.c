@@ -297,6 +297,8 @@ static void restore(void)
   /* stdout */
 }
 
+static int finish = 0;
+
 /* signal handler */
 /* TODO lives in main? */
 static void handler(int signum)
@@ -310,10 +312,9 @@ static void handler(int signum)
 #ifdef __MACH__
   const char *name = sys_signame[signum];
 #endif
-
-  restore();
+  fprintf(stderr, "handler\n");
   fprintf(stderr, "signal %s\n", name ? name : "unknown");
-  exit(signum);
+  finish = signum;
 }
 
 static size_t nbwrite(int fd, char *off, size_t len)
@@ -561,7 +562,7 @@ int orter_serial(int argc, char **argv)
   if (serial_fd > nfds) nfds = serial_fd;
   nfds++;
 
-  for (;;) {
+  while (!finish) {
 
     /* init fd sets */
     FD_ZERO(&readfds);
@@ -571,7 +572,9 @@ int orter_serial(int argc, char **argv)
     /* add in to read, err set */
     if (!in_pending && !eof) {
       FD_SET(0, &readfds);
+/*
       FD_SET(0, &exceptfds);
+*/
     }
 
     /* add out to write, err set */
@@ -606,7 +609,9 @@ int orter_serial(int argc, char **argv)
           return errno;
       }
     }
-
+/*
+    fprintf(stderr, ".");
+*/
     /* check for exceptions */
     if (FD_ISSET(1, &exceptfds)) {
       perror("out error");
@@ -647,7 +652,7 @@ int orter_serial(int argc, char **argv)
     }
   }
 
-  /* finish */
+  /* done */
   restore();
-  return 0;
+  return finish;
 }
