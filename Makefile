@@ -487,10 +487,6 @@ bbc/rf_system_asm.o : target/bbc/system.s | bbc
 .PHONY : build
 build : $(TARGET)-build
 
-# build all
-.PHONY : build-all
-build-all : $(SYSTEM)-build spectrum-build
-
 
 # === Commodore 64 ===
 
@@ -499,7 +495,7 @@ c64 :
 	mkdir $@
 
 .PHONY : c64-build
-c64-build : c64/orterforth-inst
+c64-build : c64/inst
 
 .PHONY : c64-clean
 c64-clean :
@@ -507,7 +503,7 @@ c64-clean :
 	rm -rf c64/*
 
 .PHONY : c64-run
-c64-run : c64/orterforth-inst
+c64-run : c64/inst
 
 	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc 1.disc" -rsdev4baud 2400 -autostart $<
 
@@ -532,9 +528,9 @@ c64/rf_system_c.s : target/c64/system.c | c64
 	cc65 -O -t c64 -o $@ $<
 
 # inst binary
-c64/orterforth-inst : c64/orterforth.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
+c64/inst : c64/orterforth.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
 
-	cl65 -O -t c64 -o $@ -m c64/orterforth-inst.map $^
+	cl65 -O -t c64 -o $@ -m c64/inst.map $^
 
 # clean
 .PHONY : clean
@@ -775,7 +771,8 @@ endif
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ser | $(DISC) $(ORTER)
 
-	@echo "On the RC2014: Press reset"
+	@echo "On the RC2014: Connect via serial"
+	@echo "               Press reset"
 	@echo "               Initialise memory top to 35071"
 	@echo "               Disconnect"
 	@read -p "Then press enter to start: " LINE
@@ -791,11 +788,11 @@ rc2014/inst_CODE.bin : \
 	rc2014/rf.lib \
 	rc2014/rf_inst.lib \
 	rc2014/rf_system.lib \
+	rf_z80_memory.asm \
 	orterforth.c
 
 	zcc +rc2014 -subtype=basic -clib=new \
 		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
-		-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 	 	-Ca-DRF_ORG=0x9000 \
 	 	-Ca-DRF_INST_OFFSET=0x5000 \
@@ -803,13 +800,14 @@ rc2014/inst_CODE.bin : \
 		-o rc2014/inst \
 		rf_z80_memory.asm orterforth.c
 
+
 # start with an empty bin file to build the multi segment bin
 rc2014/inst-0.bin : | rc2014
 
 	z88dk-appmake +rom \
-		-s 0x9000 \
-		-f 0 \
-		-o $@
+		--romsize 0x7000 \
+		--filler 0 \
+		--output $@
 
 # add main code at start
 rc2014/inst-1.bin : \
@@ -817,10 +815,10 @@ rc2014/inst-1.bin : \
 	rc2014/inst_CODE.bin
 
 	z88dk-appmake +inject \
-		-b rc2014/inst-0.bin \
-		-i rc2014/inst_CODE.bin \
-		-s 0 \
-		-o $@
+		--binfile $< \
+		--inject rc2014/inst_CODE.bin \
+		--offset 0 \
+		--output $@
 
 # add inst code at offset, safely beyond dictionary
 rc2014/inst-2.bin : \
@@ -828,15 +826,18 @@ rc2014/inst-2.bin : \
 	rc2014/inst_INST.bin
 
 	z88dk-appmake +inject \
-		-b rc2014/inst-1.bin \
-		-i rc2014/inst_INST.bin \
-		-s 0x5000 \
-		-o $@
+		--binfile $< \
+		--inject rc2014/inst_INST.bin \
+		--offset 0x5000 \
+		--output $@
 
 # make inst tap from inst bin
 rc2014/inst.ihx : rc2014/inst-2.bin
 
-	z88dk-appmake +hex --org 0x9000 --binfile $< --output $@
+	z88dk-appmake +hex \
+		--binfile $< \
+		--org 0x9000 \
+		--output $@
 
 # both CODE and INST bin files are built by same command
 rc2014/inst_INST.bin : rc2014/inst_CODE.bin
@@ -849,13 +850,13 @@ rc2014/inst.ser : target/rc2014/hexload.bas rc2014/inst.ihx
 
 rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 
-	$(ORTER) hex read < $< > $@
+	$(ORTER) hex read < $< > $@.io
+	mv $@.io $@
 
 rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
 
 	# load inst via hexload
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
-	sleep 3
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
 	# start disc
