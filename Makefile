@@ -769,14 +769,19 @@ RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
 .PHONY : rc2014-run
-rc2014-run : rc2014/orterforth.ser | $(DISC) $(ORTER)
+rc2014-run : rc2014/orterforth.ser | $(ORTER)
 
+	# reset and get ready
 	@echo "On the RC2014: Connect via serial"
 	@echo "               Press reset"
 	@echo "               Initialise memory top to 35071"
 	@echo "               Disconnect"
 	@read -p "Then press enter to start: " LINE
+
+	# load via serial
 	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
+
+	# start interactive session
 	@$(ORTER) serial $(RC2014SERIALPORT) 115200
 
 rc2014 :
@@ -799,7 +804,6 @@ rc2014/inst_CODE.bin : \
 		-m \
 		-o rc2014/inst \
 		rf_z80_memory.asm orterforth.c
-
 
 # start with an empty bin file to build the multi segment bin
 rc2014/inst-0.bin : | rc2014
@@ -842,17 +846,20 @@ rc2014/inst.ihx : rc2014/inst-2.bin
 # both CODE and INST bin files are built by same command
 rc2014/inst_INST.bin : rc2014/inst_CODE.bin
 
+# inst serial load file - seems an unreliable approach
 rc2014/inst.ser : target/rc2014/hexload.bas rc2014/inst.ihx
 
 	cp target/rc2014/hexload.bas $@.io
 	cat rc2014/inst.ihx >> $@.io
 	mv $@.io $@
 
+# final binary from hex
 rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@.io
 	mv $@.io $@
 
+# saved hex result
 rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
 
 	# load inst via hexload
@@ -872,10 +879,12 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(OR
 	# file complete
 	mv $@.io $@
 
+# final binary as IHEX
 rc2014/orterforth.ihx : rc2014/orterforth
 
 	z88dk-appmake +hex --org 0x9000 --binfile $< --output $@
 
+# serial load file
 rc2014/orterforth.ser : target/rc2014/hexload.bas rc2014/orterforth.ihx
 
 	cp target/rc2014/hexload.bas $@.io
