@@ -556,9 +556,10 @@ help : $(TARGET)-help
 
 # install to local
 .PHONY : install
-install : $(ORTERFORTH)
+install : $(ORTER) $(ORTERFORTH)
 
-	cp $< /usr/local/bin/orterforth
+	cp "$(ORTER)" /usr/local/bin/orter
+	cp "$(ORTERFORTH)" /usr/local/bin/orterforth
 
 
 # === TRS-80 Model 100 ===
@@ -875,8 +876,7 @@ rc2014/orterforth.ihx : rc2014/orterforth
 
 rc2014/orterforth.ser : target/rc2014/hexload.bas rc2014/orterforth.ihx
 
-	# echo "C35071" > $@.io
-	cat target/rc2014/hexload.bas > $@.io
+	cp target/rc2014/hexload.bas $@.io
 	cat rc2014/orterforth.ihx >> $@.io
 	mv $@.io $@
 
@@ -1323,3 +1323,10 @@ tools/z80/z80.c : | tools
 	cd tools && git clone https://github.com/superzazu/z80.git
 
 tools/z80/z80.h : tools/z80/z80.c
+
+# uninstall from local
+.PHONY : uninstall
+uninstall :
+
+	rm -f /usr/local/bin/orter
+	rm -f /usr/local/bin/orterforth
