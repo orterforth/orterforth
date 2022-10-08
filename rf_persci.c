@@ -147,22 +147,21 @@ static void rf_persci_error_on_drive(const char *message, uint8_t drive)
 /* READING AND WRITING */
 
 /* validate drive track and sector are within ranges */
-/* TODO reverse return code so 0 is success */
 static char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
 {
   /* validate drive number */
   if (drive > 3) {
     rf_persci_error("COMMAND");
-    return 0;
+    return 1;
   }
 
   /* validate track and sector numbers */
   if (track > 76 || sector < 1 || sector > 26) {
     rf_persci_error_on_drive("COMMAND", drive);
-    return 0;
+    return 1;
   }
 
-  return 1;
+  return 0;
 }
 
 /* track and sector offset */
@@ -194,7 +193,7 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
   rf_persci_reset();
 
   /* validate args */
-  if (!rf_persci_validate(track, sector, drive)) {
+  if (rf_persci_validate(track, sector, drive)) {
     return;
   }
 
@@ -230,7 +229,7 @@ static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
   rf_persci_reset();
 
   /* validate args */
-  if (!rf_persci_validate(track, sector, drive)) {
+  if (rf_persci_validate(track, sector, drive)) {
     return;
   }
 
