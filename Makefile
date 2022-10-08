@@ -241,8 +241,8 @@ BBCROMS := \
 ifeq ($(BBCOPTION),assembly)
 	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/assembly.inc
-	BBCINSTMEDIA = bbc/orterforth-inst.ssd
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
+	BBCINSTMEDIA = bbc/inst.ssd
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
 	BBCORG := 1720
 	BBCORIGIN := 2300
 	BBCRUN := bbc-run-disk
@@ -252,8 +252,8 @@ endif
 ifeq ($(BBCOPTION),default)
 	BBCDEPS := bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
 	BBCINC := target/bbc/default.inc
-	BBCINSTMEDIA = bbc/orterforth-inst.ssd
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth-inst.ssd
+	BBCINSTMEDIA = bbc/inst.ssd
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
 	BBCORG := 1720
 	BBCORIGIN := 2E00
 	BBCRUN := bbc-run-disk
@@ -263,8 +263,8 @@ endif
 ifeq ($(BBCOPTION),tape)
 	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/tape.inc
-	BBCINSTMEDIA = bbc/orterforth-inst.uef
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth-inst.uef
+	BBCINSTMEDIA = bbc/inst.uef
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/inst.uef
 	BBCORG := 1220
 	BBCORIGIN := 1E00
 	BBCRUN := bbc-run-tape
@@ -418,13 +418,14 @@ bbc/orterforth.uef : bbc/orterforth $(ORTER)
 	mv $@.io $@
 
 # inst binary
-bbc/orterforth-inst : $(BBCDEPS)
+bbc/inst : $(BBCDEPS)
 
-	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/orterforth-inst.map $^
+	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/inst.map $^
 
 # inst disc inf
-bbc/orterforth-inst.inf : | bbc
+bbc/inst.inf : | bbc
 
+	# TODO !BOOT uses this name
 	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
 # inst serial load file
@@ -437,21 +438,21 @@ endif
 ifeq ($(OPER),linux)
 STAT := stat -c %s
 endif
-bbc/orterforth-inst.ser : bbc/orterforth-inst
+bbc/inst.ser : bbc/inst
 
 	printf "5P.\"Loading...\"\r10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" > $@.io
 	cat -u $< >> $@.io
 	mv $@.io $@
 
 # inst disc image
-bbc/orterforth-inst.ssd : bbc/boot bbc/boot.inf bbc/orterforth-inst bbc/orterforth-inst.inf
+bbc/inst.ssd : bbc/boot bbc/boot.inf bbc/inst bbc/inst.inf
 
 	rm -f $@
 	bbcim -a $@ bbc/boot
-	bbcim -a $@ bbc/orterforth-inst
+	bbcim -a $@ bbc/inst
 
 # inst tape image
-bbc/orterforth-inst.uef : bbc/orterforth-inst $(ORTER)
+bbc/inst.uef : bbc/inst $(ORTER)
 
 	$(ORTER) uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
 	mv $@.io $@
