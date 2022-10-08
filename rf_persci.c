@@ -16,7 +16,7 @@ static char rf_persci_state = RF_PERSCI_STATE_COMMAND;
 
 static FILE *files[4] = { 0, 0, 0, 0 };
 
-static uint8_t *discs[4];
+static uint8_t *discs[4] = { 0, 0, 0, 0 };
 
 static void validate_drive_no(int drive)
 {
@@ -124,13 +124,6 @@ static void rf_persci_ws(const char *s)
   }
 }
 
-/* write a two place decimal int to write buffer */
-static void rf_persci_wi(uint8_t i)
-{
-  rf_persci_w(48 + (i / 10));
-  rf_persci_w(48 + (i % 10));
-}
-
 /* ERROR HANDLING */
 
 /* write error message */
@@ -147,7 +140,7 @@ static void rf_persci_error_on_drive(const char *message, uint8_t drive)
   rf_persci_w(RF_ASCII_NAK);
   rf_persci_ws(message);
   rf_persci_ws(" ERROR ON DRIVE #");
-  rf_persci_wi(drive);
+  rf_persci_w(48 + drive);
   rf_persci_ws("\r\n\004");
 }
 
@@ -202,6 +195,12 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
 
   /* validate args */
   if (!rf_persci_validate(track, sector, drive)) {
+    return;
+  }
+
+  /* check disc is present */
+  if (!discs[drive]) {
+    rf_persci_error_on_drive("READY", drive);
     return;
   }
 
