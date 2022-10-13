@@ -274,13 +274,53 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
   return sign ? -l : l;
 }
 
+static uintptr_t __FASTCALL__ *rf_inst_lfa(char *nfa)
+{
+  while (!(*(++nfa) & 0x80)) {
+  }
+  return (uintptr_t *) ++nfa;
+}
+
 static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
 {
-  uintptr_t *lfa = rf_lfa(nfa);
+  uintptr_t *lfa = rf_inst_lfa(nfa);
   uintptr_t *cfa = lfa + 1;
   return (rf_code_t *) cfa;
 }
 
+
+static char *rf_inst_find(char *t, uint8_t length, char *nfa)
+{
+  uint8_t l;
+  uint8_t i;
+  uintptr_t *lfa;
+  char *n;
+
+  while (nfa) {
+    /* length from name field incl smudge bit */
+    l = *nfa & 0x3F;
+    /* start of name */
+    n = nfa + 1;
+    /* match name */
+    if (l == length) {
+      for (i = 0; i < l; i++) {
+        if (t[i] != (*(n++) & 0x7F)) {
+          break;
+        }
+      }
+      if (i == l) {
+        return nfa;
+      }
+    }
+
+    /* if no match, follow link */
+    lfa = rf_inst_lfa(nfa);
+    nfa = (char *) *(lfa);
+  }
+
+  /* not found */
+  return 0;
+}
 
 /* proto outer interpreter */
 static void __FASTCALL__ rf_inst_compile(char *name)
@@ -293,7 +333,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
     for (p = name; *p != ' ' && *p != '\0'; p++) { }
 
     /* find in dictionary */
-    nfa = rf_find(name, p - name, rf_inst_vocabulary);
+    nfa = rf_inst_find(name, p - name, rf_inst_vocabulary);
 
     if (nfa) {
       /* compile word */

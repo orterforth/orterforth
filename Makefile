@@ -86,6 +86,7 @@ SYSTEMDEPSALL := \
 	$(SYSTEM)/rf_persci.o \
 	$(SYSTEM)/rf_system.o
 
+# assembler based inner interpreter and code
 ifeq ($(SYSTEMOPTION),assembly)
 SYSTEMDEPS := $(SYSTEMDEPSALL) $(SYSTEM)/rf_$(PROC).o
 SYSTEMINC := target/system/assembly.inc
@@ -98,6 +99,7 @@ LDFLAGS += -t target/system/linux.ld
 endif
 endif
 
+# C based inner interpreter and code
 ifeq ($(SYSTEMOPTION),default)
 SYSTEMDEPS := $(SYSTEMDEPSALL)
 SYSTEMINC := target/system/default.inc
@@ -244,7 +246,7 @@ ifeq ($(BBCOPTION),assembly)
 	BBCINSTMEDIA = bbc/inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := 2300
+	BBCORIGIN := 2200
 	BBCRUN := bbc-run-disk
 endif
 
@@ -266,7 +268,7 @@ ifeq ($(BBCOPTION),tape)
 	BBCINSTMEDIA = bbc/inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/inst.uef
 	BBCORG := 1220
-	BBCORIGIN := 1E00
+	BBCORIGIN := 1D00
 	BBCRUN := bbc-run-tape
 endif
 

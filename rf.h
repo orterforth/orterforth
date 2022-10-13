@@ -215,21 +215,27 @@ typedef unsigned long uintptr_t;
 /* S0, TIB, R0, USER, FIRST defined in relation to LIMIT by default */
 
 #define RF_FIRST (RF_LIMIT - RF_DISC_BUFFERS_SIZE)
+
 #ifndef RF_USER
 #define RF_USER ((char *) (RF_FIRST - (32 * RF_WORD_SIZE)))
 #endif
+
 #ifndef RF_R0
 #define RF_R0 (RF_USER - RF_WORD_SIZE) 
 #endif
+
 #ifndef RF_RETURN_STACK_SIZE
 #define RF_RETURN_STACK_SIZE 128
 #endif
+
 #ifndef RF_TIB
 #define RF_TIB (RF_USER - (RF_RETURN_STACK_SIZE * RF_WORD_SIZE))
 #endif
+
 #ifndef RF_S0
 #define RF_S0 RF_TIB
 #endif
+
 #ifndef RF_STACK_SIZE
 #define RF_STACK_SIZE 128
 #endif
@@ -273,7 +279,9 @@ typedef unsigned long uintptr_t;
 
 /* FORTH MACHINE */
 
-/* parameter stack pointer */
+#define RF_LOG(name)
+
+/* SP */
 extern uintptr_t *rf_sp;
 
 #define RF_SP_GET rf_sp
@@ -291,7 +299,7 @@ void __FASTCALL__ rf_sp_push(uintptr_t a);
 #define RF_SP_PUSH(a) rf_sp_push(a)
 #endif
 
-/* return stack pointer */
+/* RP */
 extern uintptr_t *rf_rp;
 
 #define RF_RP_GET rf_rp
@@ -309,21 +317,21 @@ void __FASTCALL__ rf_rp_push(uintptr_t a);
 #define RF_RP_PUSH(a) { rf_rp_push((uintptr_t) (a)); }
 #endif
 
-/* interpretive pointer */
+/* IP */
 extern uintptr_t *rf_ip;
 
 #define RF_IP_GET rf_ip
 #define RF_IP_INC { rf_ip++; }
 #define RF_IP_SET(a) { rf_ip = (a); }
 
-/* code field pointer */
+/* W */
 typedef void (*rf_code_t)(void);
 extern rf_code_t *rf_w;
 
-/* user area pointer */
+/* UP */
 extern uintptr_t *rf_up;
 
-/* TRAMPOLINE */
+/* INNER INTERPRETER */
 
 /* function pointer */
 extern rf_code_t rf_fp;
@@ -334,13 +342,11 @@ void rf_trampoline(void);
 #define RF_JUMP(a) { rf_fp = (a); }
 
 /* NEXT */
-
 void rf_next(void);
 
 #define RF_JUMP_NEXT { rf_fp = rf_next; }
 
 /* C CODE START - save registers */
-
 void rf_start(void);
 
 #define RF_START rf_start()
@@ -350,14 +356,6 @@ void rf_start(void);
 void rf_init(void);
 
 void rf_fin(void);
-
-/* UTILITIES */
-
-uintptr_t __FASTCALL__ *rf_lfa(char *nfa);
-
-char *rf_find(char *t, uint8_t t_length, char *nfa);
-
-#define RF_LOG(name)
 
 /* COLD START */
 
