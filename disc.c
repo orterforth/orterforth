@@ -209,7 +209,8 @@ static int serve(char *dr0, char *dr1)
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
 
-  for (;;) {
+  /* TODO make signal handling general */
+  while (!orter_serial_finished) {
 
     /* TODO use select */
     /* don't wait on write fd if input buffer empty */
