@@ -297,7 +297,8 @@ static void restore(void)
   /* stdout */
 }
 
-static int finish = 0;
+/* flag for cleanup and exit */
+int orter_serial_finished = 0;
 
 /* signal handler */
 /* TODO lives in main? */
@@ -314,7 +315,7 @@ static void handler(int signum)
 #endif
   fprintf(stderr, "handler\n");
   fprintf(stderr, "signal %s\n", name ? name : "unknown");
-  finish = signum;
+  orter_serial_finished = signum;
 }
 
 static size_t nbwrite(int fd, char *off, size_t len)
@@ -562,7 +563,7 @@ int orter_serial(int argc, char **argv)
   if (serial_fd > nfds) nfds = serial_fd;
   nfds++;
 
-  while (!finish) {
+  while (!orter_serial_finished) {
 
     /* init fd sets */
     FD_ZERO(&readfds);
@@ -654,5 +655,5 @@ int orter_serial(int argc, char **argv)
 
   /* done */
   restore();
-  return finish;
+  return orter_serial_finished;
 }

@@ -3,6 +3,8 @@
 
 #include "io.h"
 
+extern int orter_serial_finished;
+
 int orter_serial_open(char *name, int baud);
 
 size_t orter_serial_stdin_rd(char *off, size_t len);
