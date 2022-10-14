@@ -1006,24 +1006,6 @@ _rf_code_cs:
 
 _rf_code_ln := _rf_next
 
-.export _rf_code_tg
-
-_rf_code_tg:
-
-	dex
-	dex
-	dex
-	dex
-	lda #$00                      ; BBC
-	sta $00,x
-	lda #$00
-	sta $01,x
-	lda #$48
-	sta $02,x
-	lda #$39
-	sta $03,x
-	jmp _rf_next
-
 .export _rf_code_xt
 
 _rf_code_xt:
