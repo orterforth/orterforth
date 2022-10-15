@@ -781,11 +781,13 @@ ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS := rc2014/rf.lib rc2014/rf_inst.lib rc2014/rf_system.lib rc2014/rf_z80.lib
 RC2014INC=target/rc2014/assembly.inc
 RC2014LIBS := -lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system -lrc2014/rf_z80
+RC2014ORIGIN := 0x9F00
 endif
 ifeq ($(RC2014OPTION),default)
 RC2014DEPS := rc2014/rf.lib rc2014/rf_inst.lib rc2014/rf_system.lib
 RC2014INC := target/rc2014/default.inc
 RC2014LIBS := -lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system
+RC2014ORIGIN := 0xA980
 endif
 
 .PHONY : rc2014-run
@@ -924,7 +926,7 @@ rc2014/rf_system.lib : target/rc2014/rc2014.c rf.h $(RC2014INC) | rc2014
 rc2014/rf_z80.lib : rf_z80.asm | rc2014
 
 	zcc +rc2014 -clib=new \
-		-Ca-DRF_ORIGIN=0xA980 \
+		-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
 		-x -o $@ \
 		$<
 

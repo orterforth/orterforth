@@ -14,7 +14,7 @@
 #define RF_ORG 0x9000
 
 /* Start of Forth origin */
-#define RF_ORIGIN 0xA980
+#define RF_ORIGIN 0x9F00
 
 /* Offset of C inst code */
 #define RF_INST_OFFSET 0x5000
