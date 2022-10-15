@@ -36,6 +36,10 @@ void rf_code_emit(void)
 
     c = RF_SP_POP & 0x7F;
     oswrch(c);
+    if (c == 8) {
+      oswrch(' ');
+      oswrch(c);
+    }
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;

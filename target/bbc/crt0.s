@@ -1,4 +1,4 @@
-; .import initlib, donelib
+.import initlib, donelib
 .import callmain	
 .importzp sp
 
@@ -15,7 +15,7 @@ osbyte := $FFF4
 
 __Cstart:
 
-	lda	#$00                      ; init stack at $0600
+	lda	#$00                      ; init C stack at $0600
 	sta	sp
 	lda	#$06
 	sta	sp+1
@@ -36,7 +36,7 @@ __Cstart:
 	jsr	osbyte
 	stx	enable_save
 
-;	jsr	initlib                   ; run constructors
+	jsr	initlib                   ; run constructors
 
 	tsx                           ; save S
 	stx	s_save
@@ -49,7 +49,7 @@ doexit:
 	lda	#$01
 	jsr	osbyte
 
-;	jsr donelib
+	jsr donelib
 
 	lda	enable_save               ; reset escape event state
 	bne	doexit1
@@ -78,9 +78,9 @@ _exit:
 handle:
 
 	php
-	cmp	#$06                      ; is esc?
+	cmp	#$06                      ; if escape detected, no op
 	bne	handle1
-	plp                           ; no op
+	plp
 	rts
 handle1:
 	plp                           ; else forward to saved handler
