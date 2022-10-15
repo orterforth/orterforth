@@ -124,34 +124,6 @@ void rf_code_ustar(void)
 }
 #endif
 
-#ifndef RF_TARGET_CODE_DPLUS
-static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
-{
-	*cl = al + bl;
-	*ch = ah + bh;
-	if (*cl < al)
-		(*ch)++;
-}
-
-void rf_code_dplus(void)
-{
-  RF_START;
-  RF_LOG("dplus");
-  {
-    uintptr_t ah, al, bh, bl, ch, cl;
-
-    ah = RF_SP_POP;
-    al = RF_SP_POP;
-    bh = RF_SP_POP;
-    bl = RF_SP_POP;
-    rf_dplus(ah, al, bh, bl, &ch, &cl);
-    RF_SP_PUSH(cl);
-    RF_SP_PUSH(ch);
-  }
-  RF_JUMP_NEXT;
-}
-#endif
-
 #ifndef RF_TARGET_CODE_DMINU
 static void rf_dminu(uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
 {
@@ -177,14 +149,6 @@ void rf_code_dminu(void)
   RF_JUMP_NEXT;
 }
 #endif
-
-void rf_code_tg(void)
-{
-  RF_START;
-  RF_SP_PUSH(RF_TARGET);
-  RF_SP_PUSH(0);
-  RF_JUMP_NEXT;  
-}
 
 static chanid_t con;
 

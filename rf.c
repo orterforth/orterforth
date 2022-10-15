@@ -737,6 +737,32 @@ static void rf_dpop(rf_double_t *a);
 #define RF_DPUSH
 static void __FASTCALL__ rf_dpush(rf_double_t *a);
 #endif
+/*
+static void rf_double(uintptr_t h, uintptr_t l, rf_double_t *d)
+{
+  rf_double_t a = (rf_double_t) h << RF_WORD_SIZE_BITS;
+  rf_double_t b = (rf_double_t) l;
+  *d = a | b;
+}
+
+static void rf_undouble(rf_double_t d, uintptr_t *h, uintptr_t *l)
+{
+  *h = d >> RF_WORD_SIZE_BITS;
+  *l = d;
+}
+
+static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
+{
+  rf_double_t a;
+  rf_double_t b;
+  rf_double_t c;
+
+  rf_double(ah, al, &a);
+  rf_double(bh, bl, &b);
+  c = a + b;
+  rf_undouble(c, ch, cl);
+}
+*/
 static void rf_dplus(void)
 {
   rf_double_t a, b, c;
@@ -752,6 +778,36 @@ void rf_code_dplus(void)
   RF_START;
   RF_LOG("dplus");
   rf_dplus();
+  RF_JUMP_NEXT;
+}
+#endif
+#endif
+
+#ifndef RF_DOUBLE_ARITH
+#ifndef RF_TARGET_CODE_DPLUS
+static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
+{
+	*cl = al + bl;
+	*ch = ah + bh;
+	if (*cl < al)
+		(*ch)++;
+}
+
+void rf_code_dplus(void)
+{
+  RF_START;
+  RF_LOG("dplus");
+  {
+    uintptr_t ah, al, bh, bl, ch, cl;
+
+    ah = RF_SP_POP;
+    al = RF_SP_POP;
+    bh = RF_SP_POP;
+    bl = RF_SP_POP;
+    rf_dplus(ah, al, bh, bl, &ch, &cl);
+    RF_SP_PUSH(cl);
+    RF_SP_PUSH(ch);
+  }
   RF_JUMP_NEXT;
 }
 #endif
