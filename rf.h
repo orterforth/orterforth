@@ -17,6 +17,7 @@
 #define RF_WORD_SIZE 4
 #define RF_DOUBLE_ARITH
 typedef uint64_t rf_double_t;
+#define RF_ALIGN 4
 
 #elif (__WORDSIZE == 64)
 
@@ -24,6 +25,7 @@ typedef uint64_t rf_double_t;
 #define RF_WORD_SIZE 8
 #define RF_DOUBLE_ARITH
 typedef __uint128_t rf_double_t;
+#define RF_ALIGN 8
 
 #endif
 
@@ -42,6 +44,7 @@ typedef __uint128_t rf_double_t;
 #define RF_WORD_SIZE 4
 #define RF_DOUBLE_ARITH
 typedef uint64_t rf_double_t;
+#define RF_ALIGN 4
 
 #elif __SIZEOF_POINTER__ == 8
 
@@ -49,6 +52,7 @@ typedef uint64_t rf_double_t;
 #define RF_WORD_SIZE 8
 #define RF_DOUBLE_ARITH
 typedef __uint128_t rf_double_t;
+#define RF_ALIGN 8
 
 #endif
 
