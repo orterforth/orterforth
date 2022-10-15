@@ -751,6 +751,10 @@ ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
 
 # === RC2014 ===
 
+rc2014 :
+
+	mkdir $@
+
 .PHONY : rc2014-build
 rc2014-build : rc2014/orterforth.ihx
 
@@ -770,6 +774,20 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
+RC2014OPTION := assembly
+#RC2014OPTION := default
+
+ifeq ($(RC2014OPTION),assembly)
+RC2014DEPS := rc2014/rf.lib rc2014/rf_inst.lib rc2014/rf_system.lib rc2014/rf_z80.lib
+RC2014INC=target/rc2014/assembly.inc
+RC2014LIBS := -lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system -lrc2014/rf_z80
+endif
+ifeq ($(RC2014OPTION),default)
+RC2014DEPS := rc2014/rf.lib rc2014/rf_inst.lib rc2014/rf_system.lib
+RC2014INC := target/rc2014/default.inc
+RC2014LIBS := -lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system
+endif
+
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ser | $(ORTER)
 
@@ -786,20 +804,14 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER)
 	# start interactive session
 	@$(ORTER) serial $(RC2014SERIALPORT) 115200
 
-rc2014 :
-
-	mkdir $@
-
 # inst executable
 rc2014/inst_CODE.bin : \
-	rc2014/rf.lib \
-	rc2014/rf_inst.lib \
-	rc2014/rf_system.lib \
+	$(RC2014DEPS) \
 	rf_z80_memory.asm \
 	orterforth.c
 
-	zcc +rc2014 -subtype=basic -clib=new \
-		-lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system \
+	zcc +rc2014 -subtype=basic -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' \
+		$(RC2014LIBS) \
 		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 	 	-Ca-DRF_ORG=0x9000 \
 	 	-Ca-DRF_INST_OFFSET=0x5000 \
@@ -894,19 +906,27 @@ rc2014/orterforth.ser : target/rc2014/hexload.bas rc2014/orterforth.ihx
 	mv $@.io $@
 
 # base orterforth code
-rc2014/rf.lib : rf.c rf.h target/rc2014/default.inc | rc2014
+rc2014/rf.lib : rf.c rf.h $(RC2014INC) | rc2014
 
-	zcc +rc2014 -clib=new -x -o $@ $<
+	zcc +rc2014 -DRF_TARGET_INC='\"$(RC2014INC)\"' -clib=new -x -o $@ $<
 
 # inst code
-rc2014/rf_inst.lib : rf_inst.c rf.h target/rc2014/default.inc rf_inst.h | rc2014
+rc2014/rf_inst.lib : rf_inst.c rf.h $(RC2014INC) rf_inst.h | rc2014
 
-	zcc +rc2014 -clib=new -x -o $@ $< --codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
+	zcc +rc2014 -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' -x -o $@ $< --codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
 
 # system code
-rc2014/rf_system.lib : target/rc2014/rc2014.c rf.h target/rc2014/default.inc | rc2014
+rc2014/rf_system.lib : target/rc2014/rc2014.c rf.h $(RC2014INC) | rc2014
 
-	zcc +rc2014 -clib=new -x -o $@ $<
+	zcc +rc2014 -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' -x -o $@ $<
+
+# Z80 assembly optimised code
+rc2014/rf_z80.lib : rf_z80.asm | rc2014
+
+	zcc +rc2014 -clib=new \
+		-Ca-DRF_ORIGIN=0xA980 \
+		-x -o $@ \
+		$<
 
 # ROM file dir
 roms : 
@@ -985,7 +1005,9 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) messages.disc 1.disc
 
 # config option
-SPECTRUMOPTION := a
+SPECTRUMOPTION := assembly
+# SPECTRUMOPTION := assembly-z88dk
+# SPECTRUMOPTION := default
 
 SPECTRUMLIBSALL := \
 	-lmzx_tiny \
@@ -995,12 +1017,14 @@ SPECTRUMLIBSALL := \
 	-lspectrum/rf_system
 
 # minimal ROM-based
-ifeq ($(SPECTRUMOPTION),a)
+ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
 SPECTRUMLIBS := \
 	$(SPECTRUMLIBSALL) \
 	-lspectrum/rf_z80 \
 	-pragma-redirect:fputc_cons=fputc_cons_rom_rst
+# include file
+SPECTRUMINC := target/spectrum/assembly.inc
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 0x8000
 # ORIGIN
@@ -1014,7 +1038,9 @@ SPECTRUMIMPL := superzazu
 endif
 
 # z88dk library based
-ifeq ($(SPECTRUMOPTION),b)
+ifeq ($(SPECTRUMOPTION),assembly-z88dk)
+# include file
+SPECTRUMINC := target/spectrum/assembly.inc
 # requires z88dk RS232 library
 SPECTRUMLIBS := \
 	$(SPECTRUMLIBSALL) \
@@ -1033,7 +1059,9 @@ SPECTRUMIMPL := fuse
 endif
 
 # z88dk / pure C based
-ifeq ($(SPECTRUMOPTION),c)
+ifeq ($(SPECTRUMOPTION),default)
+# include file
+SPECTRUMINC := target/spectrum/default.inc
 # requires z88dk RS232 library
 SPECTRUMLIBS := \
 	$(SPECTRUMLIBSALL) \
@@ -1113,7 +1141,7 @@ spectrum-run-mame : spectrum/orterforth.tap
 # other Spectrum libs
 spectrum/%.lib : %.c | spectrum
 
-	zcc +zx -x -o spectrum/$* $<
+	zcc +zx -DRF_TARGET_INC='\"$(SPECTRUMINC)\"' -x -o spectrum/$* $<
 
 # Fuse serial named pipe
 spectrum/fuse-rs232-rx : | spectrum
@@ -1135,7 +1163,8 @@ spectrum/orterforth-inst.bin : \
 	orterforth.c
 
 	zcc +zx \
-		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+ 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
+ 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-Ca-DRF_ORG=$(SPECTRUMORG) \
 		-Ca-DRF_INST_OFFSET=$(SPECTRUMINSTOFFSET) \
 		$(SPECTRUMLIBS) \
@@ -1287,7 +1316,8 @@ spectrum/orterforth.tap : spectrum/orterforth.bin
 spectrum/rf.lib : rf.c rf.h | spectrum
 
 	zcc +zx \
-		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+ 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
+ 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-x -o $@ \
 		$<
 
@@ -1295,6 +1325,7 @@ spectrum/rf.lib : rf.c rf.h | spectrum
 spectrum/rf_inst.lib : rf_inst.c rf.h | spectrum
 
 	zcc +zx \
+ 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
 		-DRF_ORG=$(SPECTRUMORG) \
 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-x -o $@ \
@@ -1305,6 +1336,7 @@ spectrum/rf_inst.lib : rf_inst.c rf.h | spectrum
 spectrum/rf_system.lib : $(SPECTRUMSYSTEM) | spectrum
 
 	zcc +zx \
+ 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-x -o $@ \
 		$<

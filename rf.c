@@ -5,7 +5,9 @@
 /* FORTH MACHINE */
 
 /* parameter stack pointer */
+#ifndef RF_TARGET_SP
 uintptr_t *rf_sp = 0;
+#endif
 
 #ifndef RF_INLINE_SP
 uintptr_t rf_sp_pop(void)
@@ -20,7 +22,9 @@ void __FASTCALL__ rf_sp_push(uintptr_t a)
 #endif
 
 /* return stack pointer */
+#ifndef RF_TARGET_RP
 uintptr_t *rf_rp = 0;
+#endif
 
 #ifndef RF_INLINE_RP
 uintptr_t rf_rp_pop(void)
@@ -34,17 +38,17 @@ void __FASTCALL__ rf_rp_push(uintptr_t a)
 }
 #endif
 
+/* IP */
 #ifndef RF_TARGET_IP
-/* Interpretive Pointer */
 uintptr_t *rf_ip = 0;
 #endif
 
-/* code field pointer */
+/* W */
 #ifndef RF_TARGET_W
 rf_code_t *rf_w = 0;
 #endif
 
-/* user area pointer */
+/* UP */
 #ifndef RF_TARGET_UP
 uintptr_t *rf_up = 0;
 #endif
@@ -52,7 +56,9 @@ uintptr_t *rf_up = 0;
 /* TRAMPOLINE */
 
 /* trampoline function pointer */
+#ifndef RF_TARGET_FP
 rf_code_t rf_fp = 0;
+#endif
 
 #ifndef RF_TARGET_TRAMPOLINE
 void rf_trampoline(void)

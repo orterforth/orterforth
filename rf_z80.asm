@@ -150,9 +150,11 @@ ENDIF
 ;	FORTH ADDRESS INTERPRETER
 ;	POST INCREMENTING VERSION
 ;
+PUBLIC _rf_z80_dpush            ; external libs can use this
 PUBLIC _rf_z80_hpush            ; external libs can use this
 PUBLIC _rf_next
 
+_rf_z80_dpush:
 dpush:
   push de
 _rf_z80_hpush:
@@ -337,7 +339,6 @@ IFDEF USEIY
 ELSE
   jp hpush
 ENDIF
-
 
 PUBLIC _rf_code_pfind
 
@@ -1045,13 +1046,6 @@ IFDEF USEIY
 ELSE
   jp hpush
 ENDIF
-
-PUBLIC _rf_code_tg
-
-_rf_code_tg:
-  ld de, $E16F                  ; SPECTR
-  ld hl, $6774
-  jp dpush
 
 PUBLIC _rf_code_xt
 
