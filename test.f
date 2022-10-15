@@ -112,19 +112,35 @@ CR
 
 ( U/                                                          )
 HEX
-: d32 cl 2 = IF ELSE 10000 * + 0 ENDIF ; ( for word size )
 : test-U/ >R >R U/ R> = SWAP R> = AND assert ."  U/" ;
-0000 7000 d32 FFFF 7000 7000 test-U/ ."  often wrong 1 " CR
-0000 6000 d32 FFFF 6000 6000 test-U/ ."  often wrong 2 " CR
-0000 2000 d32 FFFF 2000 2000 test-U/ ."  often wrong 3 " CR
-0000 2000 d32 EFFF 2222 4222 test-U/ ."  often wrong 4 " CR
-FFFF 7FFF d32 EFFF 8889 1888 test-U/ ."  often wrong 5 " CR
-FFFF 7FFF d32 FFFF 8000 7FFF test-U/ ."  often wrong 6 " CR
-FFFF 7FFF d32 8FFF E38F 738E test-U/ ."  often wrong 7 " CR
-FFFF 7FFF d32 800F FFE2 01C1 test-U/ ."  often wrong 8 " CR
-0000 9000 d32 A000 E666 4000 test-U/ ."  often wrong 9 " CR
-0000 0004     0004   -1   -1 test-U/ ."  overflow" CR
-0001 0000 d32 0000   -1   -1 test-U/ ."  division by zero" CR
+70000000. FFFF 7000 7000 test-U/ ."  16 1" CR
+60000000. FFFF 6000 6000 test-U/ ."  16 2" CR
+20000000. FFFF 2000 2000 test-U/ ."  16 3" CR
+20000000. EFFF 2222 4222 test-U/ ."  16 4" CR
+7FFFFFFF. EFFF 8889 1888 test-U/ ."  16 5" CR
+7FFFFFFF. FFFF 8000 7FFF test-U/ ."  16 6" CR
+7FFFFFFF. 8FFF E38F 738E test-U/ ."  16 7" CR
+7FFFFFFF. 800F FFE2 01C1 test-U/ ."  16 8" CR
+90000000. A000 E666 4000 test-U/ ."  16 9" CR
+0000 0004 0004   -1   -1 test-U/ ."  overflow" CR
+00000001. 0000   -1   -1 test-U/ ."  division by zero" CR
+
+-->
+( D+                                                          )
+HEX
+: D= ROT = >R = R> AND ;
+: test-D+ >R >R D+ R> R> D= assert ."  D+" ;
+0000F000. 0000E000. 0001D000. test-D+ ."  16 1" CR
+FFFFFFFE. 00000001. FFFFFFFF. test-D+ ."  16 2" CR
+
+
+
+
+
+
+
+
+
 -->
 ( summary                                                     )
 DECIMAL
