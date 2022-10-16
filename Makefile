@@ -89,23 +89,20 @@ SYSTEMDEPSALL := \
 # assembler based inner interpreter and code
 ifeq ($(SYSTEMOPTION),assembly)
 SYSTEMDEPS := $(SYSTEMDEPSALL) $(SYSTEM)/rf_$(PROC).o
-SYSTEMINC := target/system/assembly.inc
+CPPFLAGS += -DRF_ASSEMBLY
 # linker script to reconcile leading underscore handling
 ifeq ($(OPER),cygwin)
-LDFLAGS += -t target/system/linux.ld
+LDFLAGS += -t gcc.ld
 endif
 ifeq ($(OPER),linux)
-LDFLAGS += -t target/system/linux.ld
+LDFLAGS += -t gcc.ld
 endif
 endif
 
 # C based inner interpreter and code
 ifeq ($(SYSTEMOPTION),default)
 SYSTEMDEPS := $(SYSTEMDEPSALL)
-SYSTEMINC := target/system/default.inc
 endif
-
-CPPFLAGS += -DRF_TARGET_INC='"$(SYSTEMINC)"'
 
 # local system executable
 $(ORTERFORTH) : $(SYSTEMDEPS) orterforth.c

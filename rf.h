@@ -204,7 +204,7 @@ typedef unsigned long uintptr_t;
 /* OTHERWISE DEFAULT TARGET = HOST PLATFORM */
 
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/system/default.inc"
+#define RF_TARGET_INC "system.inc"
 #endif
 
 /* TARGET SPECIFIC INCLUDE FILE */

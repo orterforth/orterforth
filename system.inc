@@ -28,6 +28,7 @@ extern char *rf_memory;
 #define RF_LIMIT ((char *) rf_memory + RF_MEMORY_SIZE)
 
 /* assembly code definitions */
+#ifdef RF_ASSEMBLY
 #define RF_TARGET_TRAMPOLINE
 #define RF_TARGET_NEXT
 #define RF_TARGET_CODE_LIT
@@ -80,3 +81,4 @@ extern char *rf_memory;
 #define RF_TARGET_CODE_CS
 #define RF_TARGET_CODE_XT
 /*#define RF_TARGET_CODE_TG*/
+#endif
