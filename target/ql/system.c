@@ -218,6 +218,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
+  /* TODO detect break */
   RF_SP_PUSH(0);
   RF_JUMP_NEXT;
 }
@@ -238,6 +239,16 @@ void rf_disc_write(char *p, uint8_t len)
 {
   io_sstrg(ser, TIMEOUT_FOREVER, p, len);
 }
+
+#ifdef RF_TARGET_CODE_TG
+void rf_code_tg(void)
+{
+  RF_START;
+  RF_SP_PUSH(RF_TARGET_LO);
+  RF_SP_PUSH(RF_TARGET_HI);
+  RF_JUMP_NEXT;
+}
+#endif
 
 void rf_fin(void)
 {
