@@ -16,7 +16,7 @@ add_compile_definitions(PICO)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=orterforth.map")
 add_library(rf OBJECT ../../rf.c)
 add_library(rf_persci OBJECT ../../rf_persci.c)
-add_library(rf_system OBJECT ../../rf_system.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:rf_persci>)
+add_library(system OBJECT ../../system.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:rf_persci>)
 add_library(rf_inst OBJECT ../../rf_inst.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:rf_persci>)
 
 # Tell CMake where to find the executable source file
@@ -24,7 +24,7 @@ add_executable(${PROJECT_NAME}
     ../../orterforth.c
     $<TARGET_OBJECTS:rf>
     $<TARGET_OBJECTS:rf_persci>
-    $<TARGET_OBJECTS:rf_system>
+    $<TARGET_OBJECTS:system>
     $<TARGET_OBJECTS:rf_inst>
 )
 

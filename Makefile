@@ -84,7 +84,7 @@ SYSTEMDEPSALL := \
 	$(SYSTEM)/rf.o \
 	$(SYSTEM)/rf_inst.o \
 	$(SYSTEM)/rf_persci.o \
-	$(SYSTEM)/rf_system.o
+	$(SYSTEM)/system.o
 
 # assembler based inner interpreter and code
 ifeq ($(SYSTEMOPTION),assembly)
@@ -194,7 +194,7 @@ $(SYSTEM)/rf_persci.o : rf_persci.c rf_persci.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # local system lib
-$(SYSTEM)/rf_system.o : rf_system.c rf.h rf_persci.h | $(SYSTEM)
+$(SYSTEM)/system.o : system.c rf.h rf_persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -593,7 +593,7 @@ pico/Makefile : target/pico/CMakeLists.txt | pico
 
 	cd pico && PICO_SDK_PATH=~/pico-sdk cmake ../target/pico
 
-pico/orterforth.uf2 : pico/Makefile rf.c rf_inst.c rf_system.c
+pico/orterforth.uf2 : pico/Makefile rf.c rf_inst.c system.c
 
 	rm -rf pico/orterforth.*
 	cd pico && PICO_SDK_PATH=~/pico-sdk make
