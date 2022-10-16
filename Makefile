@@ -585,15 +585,21 @@ pico :
 	mkdir $@
 
 .PHONY : pico-build
-pico-build : orterforth.inc | pico
-
-	cd pico && PICO_SDK_PATH=~/pico-sdk cmake ../target/pico && make
+pico-build : pico/orterforth.uf2
 
 .PHONY : pico-clean
 pico-clean :
 
 	rm -rf pico/*
 
+pico/Makefile : target/pico/CMakeLists.txt | pico
+
+	cd pico && PICO_SDK_PATH=~/pico-sdk cmake ../target/pico
+
+pico/orterforth.uf2 : pico/Makefile rf.c rf_inst.c rf_system.c
+
+	rm -rf pico/orterforth.*
+	cd pico && PICO_SDK_PATH=~/pico-sdk make
 
 # === Sinclair QL ===
 
@@ -670,12 +676,12 @@ ql/orterforth : ql/relink.o $(QLDEPS)
 	qld -ms -o $@ $^
 
 # inst executable
-ql/orterforth-inst : ql/rf_inst.o $(QLDEPS)
+ql/inst : ql/rf_inst.o $(QLDEPS)
 
 	qld -ms -o $@ $^
 
 # inst executable with serial header
-ql/orterforth-inst.ser : ql/orterforth-inst | $(ORTER)
+ql/inst.ser : ql/inst | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
@@ -685,7 +691,7 @@ ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # saved binary as hex
-ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
+ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE
@@ -695,7 +701,7 @@ ql/orterforth.bin.hex : ql/orterforth-inst.ser ql/loader-inst.ser | $(DISC) $(OR
 
 	@echo "* Loading installer..."
 	@sleep 1
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth-inst.ser
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/inst.ser
 
 	# TODO use disc start/stop script
 	@echo "* Starting disc and waiting for completion..."
