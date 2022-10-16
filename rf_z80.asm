@@ -1047,6 +1047,10 @@ ELSE
   jp hpush
 ENDIF
 
+PUBLIC _rf_code_ln
+
+DEFC _rf_code_ln = _rf_next
+
 PUBLIC _rf_code_xt
 
 _rf_code_xt:
