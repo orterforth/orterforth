@@ -301,8 +301,8 @@ bbc-run : $(BBCRUN)
 bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 
 	# start disc
-	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc 1.disc
+	touch data.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc data.disc
 
 	# run mame
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
@@ -315,8 +315,8 @@ bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 
 	# start disc
-	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc 1.disc
+	touch data.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc data.disc
 
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
@@ -328,8 +328,8 @@ bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
 bbc-test : bbc/orterforth.ssd $(BBCROMS) | $(DISC) test.disc
 
 	# start disc
-	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 test.disc 1.disc
+	touch data.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 test.disc data.disc
 
 	# run mame
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\rEMPTY-BUFFERS 1 LOAD\r' -flop1 bbc/orterforth.ssd
@@ -504,7 +504,7 @@ c64-clean :
 .PHONY : c64-run
 c64-run : c64/inst
 
-	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc 1.disc" -rsdev4baud 2400 -autostart $<
+	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc data.disc" -rsdev4baud 2400 -autostart $<
 
 
 # general assemble rule
@@ -543,8 +543,8 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 .PHONY : disc
 disc : $(DISC) orterforth.disc
 
-	touch 1.disc
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc 1.disc
+	touch data.disc
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc data.disc
 
 # help
 .PHONY : help
@@ -650,8 +650,8 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 	@sleep 3
 
 	@echo "* Starting disc..."
-	@touch 1.disc
-	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc 1.disc
+	@touch data.disc
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc data.disc
 
 # loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader-inst.ser : target/ql/loader-inst.bas
@@ -1006,8 +1006,8 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 	$(ORTER) serial -e 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 
 	@echo "* Starting disc..."
-	touch 1.disc
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) messages.disc 1.disc
+	touch data.disc
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) messages.disc data.disc
 
 # config option
 SPECTRUMOPTION := assembly
@@ -1101,8 +1101,8 @@ endif
 spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
 
 	# start disc
-	touch 1.disc
-	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse messages.disc 1.disc
+	touch data.disc
+	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse messages.disc data.disc
 
 	# run fuse
 	$(FUSE) \
@@ -1126,8 +1126,8 @@ spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom sp
 spectrum-run-mame : spectrum/orterforth.tap
 
 	# start disc
-	touch 1.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc 1.disc
+	touch data.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc data.disc
 
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
