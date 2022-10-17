@@ -12,6 +12,9 @@ extern int orter_io_eof;
 /* flag for cleanup and exit */
 extern int orter_io_finished;
 
+/* set up signal handler */
+void orter_io_signal_init(void);
+
 /* nonblocking read from fd */
 size_t orter_io_fd_rd(int fd, char *off, size_t len);
 

@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -10,6 +11,34 @@ int orter_io_eof = 0;
 
 /* flag for cleanup and exit */
 int orter_io_finished = 0;
+
+/* signal handler */
+static void handler(int signum)
+{
+#ifdef __CYGWIN__
+  const char *name = strsignal(signum);
+#endif
+#ifdef __linux__
+  char *name = strsignal(signum);
+#endif
+#ifdef __MACH__
+  const char *name = sys_signame[signum];
+#endif
+  fprintf(stderr, "handler signal %s\n", name ? name : "unknown");
+  orter_io_finished = signum;
+}
+
+void orter_io_signal_init(void)
+{
+  signal(SIGHUP, handler);
+  signal(SIGINT, handler);
+  signal(SIGTRAP, handler);
+  signal(SIGABRT, handler);
+  signal(SIGKILL, handler);
+  signal(SIGPIPE, handler);
+  signal(SIGTERM, handler);
+  signal(SIGSYS, handler);
+}
 
 size_t orter_io_fd_wr(int fd, char *off, size_t len)
 {
@@ -50,7 +79,6 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
   }
 
   /* mark EOF */
-  /* TODO what to do with this, need to mark orter_io_eof */
   if (n == 0 && !orter_io_eof) {
     orter_io_eof = 1;
   }

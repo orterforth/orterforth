@@ -242,12 +242,16 @@ static int disc_fuse(int argc, char **argv)
 
 static int disc_serial(int argc, char **argv)
 {
+  orter_io_signal_init();
+
   orter_serial_open(argv[2], atoi(argv[3]));
   rd = orter_serial_rd;
   wr = orter_serial_wr;
 
   serve(argv[4], argv[5]);
+
   orter_serial_close();
+
   /* TODO pass exit codes */
   return 0;
 }

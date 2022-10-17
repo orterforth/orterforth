@@ -297,23 +297,6 @@ static void restore(void)
   }
 }
 
-/* signal handler */
-/* TODO create and move to orter/io.c orter_io_finished */
-static void handler(int signum)
-{
-#ifdef __CYGWIN__
-  const char *name = strsignal(signum);
-#endif
-#ifdef __linux__
-  char *name = strsignal(signum);
-#endif
-#ifdef __MACH__
-  const char *name = sys_signame[signum];
-#endif
-  fprintf(stderr, "handler signal %s\n", name ? name : "unknown");
-  orter_io_finished = signum;
-}
-
 size_t orter_serial_rd(char *off, size_t len)
 {
   return orter_io_fd_rd(serial_fd, off, len);
@@ -322,19 +305,6 @@ size_t orter_serial_rd(char *off, size_t len)
 size_t orter_serial_wr(char *off, size_t len)
 {
   return orter_io_fd_wr(serial_fd, off, len);
-}
-
-/* TODO lives in io */
-void init_signal(void)
-{
-  signal(SIGHUP, handler);
-  signal(SIGINT, handler);
-  signal(SIGTRAP, handler);
-  signal(SIGABRT, handler);
-  signal(SIGKILL, handler);
-  signal(SIGPIPE, handler);
-  signal(SIGTERM, handler);
-  signal(SIGSYS, handler);
 }
 
 static int std_open(void)
@@ -449,7 +419,7 @@ int orter_serial(int argc, char **argv)
   }
 
   /* signal handlers */
-  init_signal();
+  orter_io_signal_init();
 
   /* serial */
   if (orter_serial_open(argv[0], atoi(argv[1]))) {
