@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <unistd.h>
-/* TODO detect z88dk classic vs new library usage */
 #ifdef __RC2014
 #include <z80.h>
 #endif
@@ -884,7 +883,6 @@ void rf_inst(void)
 {
 #ifndef RF_INST_LOCAL_DISC
   /* wait for disc server to init */
-  /* TODO detect z88dk newlib vs classic */
 #ifdef __RC2014
   z80_delay_ms(5000);
 #else

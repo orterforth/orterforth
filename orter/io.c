@@ -1,6 +1,12 @@
+#ifdef __unix__
+/* to get strsignal */
+#define _DEFAULT_SOURCE
+#endif
+
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
