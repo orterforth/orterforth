@@ -199,7 +199,6 @@ static int serve(char *dr0, char *dr1)
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
 
-  /* TODO make signal handling general */
   while (!orter_io_finished) {
 
     /* TODO use select */
@@ -242,18 +241,23 @@ static int disc_fuse(int argc, char **argv)
 
 static int disc_serial(int argc, char **argv)
 {
+  int exit = 0;
+
   orter_io_signal_init();
 
-  orter_serial_open(argv[2], atoi(argv[3]));
+  exit = orter_serial_open(argv[2], atoi(argv[3]));
+  if (exit) {
+    return exit;
+  }
+
   rd = orter_serial_rd;
   wr = orter_serial_wr;
 
-  serve(argv[4], argv[5]);
+  exit = serve(argv[4], argv[5]);
 
   orter_serial_close();
 
-  /* TODO pass exit codes */
-  return 0;
+  return exit;
 }
 
 static int disc_standard(int argc, char **argv)
@@ -269,10 +273,11 @@ static int disc_standard(int argc, char **argv)
 
 static int disc_tcp(int argc, char **argv)
 {
+  int exit = 0;
+
   int optval = 1;
   int sock;
   int port;
-  int status;
   struct sockaddr_in svr_addr, cli_addr;
   socklen_t sin_len = sizeof(cli_addr);
 
@@ -283,9 +288,10 @@ static int disc_tcp(int argc, char **argv)
     return 1;
   }
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) {
+    exit = errno;
     perror("setsockopt failed");
     close(sock);
-    return 1;
+    return exit;
   }
 
   /* bind, listen, accept */
@@ -294,37 +300,42 @@ static int disc_tcp(int argc, char **argv)
   svr_addr.sin_addr.s_addr = INADDR_ANY;
   svr_addr.sin_port = htons(port);
   if (bind(sock, (struct sockaddr *) &svr_addr, sizeof(svr_addr)) == -1) {
+    exit = errno;
     perror("bind failed");
     close(sock);
-    return 1;
+    return exit;
   }
   if (listen(sock, 2)) {
+    exit = errno;
     perror("listen failed");
     close(sock);
-    return 1;
+    return exit;
   }
   tcp_fd = accept(sock, (struct sockaddr *) &cli_addr, &sin_len);
   if (tcp_fd == -1) {
+    exit = errno;
     perror("accept failed");
     close(sock);
-    return 1;
+    return exit;
   }
 
   /* nonblocking */
-  status = fcntl(tcp_fd, F_SETFL, fcntl(tcp_fd, F_GETFL, 0) | O_NONBLOCK);
-  if (status == -1) {
+  if (fcntl(tcp_fd, F_SETFL, fcntl(tcp_fd, F_GETFL, 0) | O_NONBLOCK) == -1) {
+    exit = errno;
     perror("fcntl failed");
     close(sock);
-    return 1;
+    return exit;
   }
 
   /* bind the fps */
   rd = tcp_rd;
   wr = tcp_wr;
 
-  return serve(argv[3], argv[4]);
+  exit = serve(argv[3], argv[4]);
 
-  /* TODO close socket */
+  close(sock);
+
+  return exit;
 }
 
 int main(int argc, char *argv[])
