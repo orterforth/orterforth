@@ -57,6 +57,7 @@ default : build
 # local disc server executable
 $(DISC) : \
 	$(SYSTEM)/orter_fuse.o \
+	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/rf_persci.o \
 	disc.c
@@ -66,6 +67,7 @@ $(DISC) : \
 # orter - retrocomputing multitool
 $(ORTER) : \
 	$(SYSTEM)/orter_fuse.o \
+	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
@@ -159,6 +161,10 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h | $(SYSTEM)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
 $(SYSTEM)/orter_fuse.o : orter/fuse.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+$(SYSTEM)/orter_io.o : orter/io.c orter/io.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -504,7 +510,8 @@ c64-clean :
 .PHONY : c64-run
 c64-run : c64/inst
 
-	export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc data.disc" -rsdev4baud 2400 -autostart $<
+	# export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc data.disc" -rsdev4baud 2400 -autostart $<
+	x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc data.disc" -rsdev4baud 2400 -autostart $<
 
 
 # general assemble rule
