@@ -348,12 +348,14 @@ static int std_open(void)
 /* usage message */
 static int usage(void)
 {
-  /* TODO full message */
-  fprintf(stderr, "Usage: orter serial -a [-e wait] [-o option...] <name> <baud>\n\n"
-                  "e.g.   orter serial -o olfcr -o odelbs /dev/ttyUSB0 115200\n"
-                  "        - connect translate 0x0a->0x0d, 0x7f->0x08\n"
-                  "       echo 'run' | orter serial -e 5 /dev/ttyUSB0 115200\n"
-                  "        - write the string and keep open for 5 s\n");
+  fprintf(stderr, "Usage: orter serial <options> <name> <baud>\n\n"
+                  "                    -a        : terminate after 0x06 (ACK) read\n"
+                  "                    -e <wait> : wait <wait> s after EOF\n"
+                  "                    -o echo   : write 0x0a->0x0d\n"
+                  "                    -o icrnl  : read  0x0d->0x0a\n"
+                  "                    -o olfcr  : write 0x0a->0x0d\n"
+                  "                    -o ocrnl  : write 0x0d->0x0a\n"
+                  "                    -o odelbs : write 0x7f->0x08\n");
   return 1;
 }
 
