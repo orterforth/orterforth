@@ -563,13 +563,13 @@ int orter_serial(int argc, char **argv)
     }
 
     /* start EOF timer */
-    if (wai && !eof && orter_io_eof) {
+    if (!eof && orter_io_eof) {
       eof = 1;
       wai_timer = time(0) + wai_wait;
     }
 
     /* terminate after EOF and timer */
-    if (wai && eof && time(0) > wai_timer) {
+    if (eof && (!wai || time(0) >= wai_timer)) {
       break;
     }
   }
