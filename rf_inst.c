@@ -195,11 +195,10 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
   /* name */
   rf_inst_memcpy(here, address, length);
   here += length;
-  /* TODO move this to 6502 workaround? */
-  *here = 0x20;
 
 #ifdef __CC65__
   /* 6502 bug workaround */
+  *here = 0x20;
   if (((uintptr_t) here & 0xFF) == 0xFD) {
     ++here;
   }
