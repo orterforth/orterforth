@@ -788,15 +788,15 @@ RC2014OPTION := assembly
 #RC2014OPTION := default
 
 ifeq ($(RC2014OPTION),assembly)
-RC2014DEPS := rc2014/rf.lib rc2014/rf_inst.lib rc2014/rf_system.lib rc2014/rf_z80.lib
+RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib rc2014/z80.lib
 RC2014INC=target/rc2014/assembly.inc
-RC2014LIBS := -lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system -lrc2014/rf_z80
+RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system -lrc2014/z80
 RC2014ORIGIN := 0x9F00
 endif
 ifeq ($(RC2014OPTION),default)
-RC2014DEPS := rc2014/rf.lib rc2014/rf_inst.lib rc2014/rf_system.lib
+RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
 RC2014INC := target/rc2014/default.inc
-RC2014LIBS := -lrc2014/rf -lrc2014/rf_inst -lrc2014/rf_system
+RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
 RC2014ORIGIN := 0xA980
 endif
 
@@ -872,6 +872,17 @@ rc2014/inst.ihx : rc2014/inst-2.bin
 # both CODE and INST bin files are built by same command
 rc2014/inst_INST.bin : rc2014/inst_CODE.bin
 
+# inst code
+rc2014/inst.lib : rf_inst.c rf.h $(RC2014INC) rf_inst.h | rc2014
+
+	zcc +rc2014 -clib=new \
+		-DRF_TARGET_INC='\"$(RC2014INC)\"' \
+		-x -o $@ $< \
+		--codeseg=INST \
+		--dataseg=INST \
+		--bssseg=INST \
+		--constseg=INST
+
 # inst serial load file - seems an unreliable approach
 rc2014/inst.ser : target/rc2014/hexload.bas rc2014/inst.ihx
 
@@ -920,20 +931,15 @@ rc2014/orterforth.ser : target/rc2014/hexload.bas rc2014/orterforth.ihx
 # base orterforth code
 rc2014/rf.lib : rf.c rf.h $(RC2014INC) | rc2014
 
-	zcc +rc2014 -DRF_TARGET_INC='\"$(RC2014INC)\"' -clib=new -x -o $@ $<
-
-# inst code
-rc2014/rf_inst.lib : rf_inst.c rf.h $(RC2014INC) rf_inst.h | rc2014
-
-	zcc +rc2014 -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' -x -o $@ $< --codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
+	zcc +rc2014 -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' -x -o $@ $<
 
 # system code
-rc2014/rf_system.lib : target/rc2014/rc2014.c rf.h $(RC2014INC) | rc2014
+rc2014/system.lib : target/rc2014/system.c rf.h $(RC2014INC) | rc2014
 
 	zcc +rc2014 -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' -x -o $@ $<
 
 # Z80 assembly optimised code
-rc2014/rf_z80.lib : rf_z80.asm | rc2014
+rc2014/z80.lib : rf_z80.asm | rc2014
 
 	zcc +rc2014 -clib=new \
 		-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
@@ -999,6 +1005,7 @@ endif
 
 # load from serial
 # TODO should not rebuild orterforth-inst-2.tap via dependency chain
+# TODO use orter serial -a and add ACK to loader and inst
 .PHONY : spectrum-load-serial
 spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 

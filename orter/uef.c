@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* TODO change to orter bbc uef */
+/* TODO consolidate this byte io handling */
 static void put16be(uint16_t n)
 {
   fputc((uint8_t) (n >> 8), stdout);
