@@ -177,22 +177,12 @@ static int tcp_fd;
 
 static size_t tcp_rd(char *off, size_t len)
 {
-  ssize_t n = read(tcp_fd, off, len);
-  if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    perror("read failed");
-    exit(errno);
-  }
-  return (n < 0) ? 0 : n;
+  return orter_io_fd_rd(tcp_fd, off, len);
 }
 
 static size_t tcp_wr(char *off, size_t len)
 {
-  ssize_t n = write(tcp_fd, off, len);
-  if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    perror("write failed");
-    exit(errno);
-  }
-  return (n < 0) ? 0 : n;
+  return orter_io_fd_wr(tcp_fd, off, len);
 }
 
 /* Server loop */
@@ -223,7 +213,6 @@ static int serve(char *dr0, char *dr1)
   }
 
   /* finished */
-  orter_serial_close();
   return 0;
 }
 
@@ -257,7 +246,10 @@ static int disc_serial(int argc, char **argv)
   rd = orter_serial_rd;
   wr = orter_serial_wr;
 
-  return serve(argv[4], argv[5]);
+  serve(argv[4], argv[5]);
+  orter_serial_close();
+  /* TODO pass exit codes */
+  return 0;
 }
 
 static int disc_standard(int argc, char **argv)
@@ -265,8 +257,8 @@ static int disc_standard(int argc, char **argv)
   if (setconsoleunbuffered()) {
     return 1;
   }
-  rd = orter_serial_stdin_rd;
-  wr = orter_serial_stdout_wr;
+  rd = orter_io_stdin_rd;
+  wr = orter_io_stdout_wr;
 
   return serve(argv[2], argv[3]);
 }
@@ -327,6 +319,8 @@ static int disc_tcp(int argc, char **argv)
   wr = tcp_wr;
 
   return serve(argv[3], argv[4]);
+
+  /* TODO close socket */
 }
 
 int main(int argc, char *argv[])

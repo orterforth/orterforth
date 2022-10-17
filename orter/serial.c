@@ -50,10 +50,9 @@ static int            in_attr_saved = 0;
 /* ACK received */
 static char           ack = 0;
 
-/* EOF indicator */
+/* EOF timer */
 static char           wai = 0;
 static int            wai_wait = 1;
-static int            eof = 0;
 static time_t         wai_timer = 0;
 
 /* buffers */
@@ -294,7 +293,7 @@ static void restore(void)
 
   /* stdin/stdout */
   if (std_close()) {
-    perror("std close failed");
+    perror("stdin/stdout close failed");
   }
 }
 
@@ -315,80 +314,14 @@ static void handler(int signum)
   orter_io_finished = signum;
 }
 
-/* TODO this all to go to io */
-static size_t nbwrite(int fd, char *off, size_t len)
-{
-  ssize_t n;
-
-  /* no op if length is 0 */
-  if (!len) {
-    return 0;
-  }
-
-  /* write bytes */
-  n = write(fd, off, len);
-  if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-    /* mark finished */
-    /* TODO handle properly even when stdin not managed */
-    restore();
-    perror("write failed");
-    exit(errno);
-  }
-
-  /* return actual length */
-  return (n < 0) ? 0 : n;
-}
-
-/* TODO this all to go to io */
-static size_t nbread(int fd, char *off, size_t len)
-{
-  ssize_t n;
-
-  /* no op if length is 0 */
-  if (!len) {
-    return 0;
-  }
-
-  /* read bytes */
-  n = read(fd, off, len);
-  if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    /* mark finished */
-    /* TODO handle properly even when stdin not managed */
-    perror("read failed");
-    restore();
-    exit(errno);
-  }
-
-  /* mark EOF */
-  /* TODO what to do with this, need to mark eof */
-  if (n == 0 && !eof) {
-    eof = 1;
-    /* flag eof, but leave wai_timer here in the loop */
-    wai_timer = time(0) + wai_wait;
-  }
-
-  /* return actual length */
-  return (n < 0) ? 0 : n;
-}
-
-size_t orter_serial_stdin_rd(char *off, size_t len)
-{
-  return nbread(0, off, len);
-}
-
-size_t orter_serial_stdout_wr(char *off, size_t len)
-{
-  return nbwrite(1, off, len);
-}
-
 size_t orter_serial_rd(char *off, size_t len)
 {
-  return nbread(serial_fd, off, len);
+  return orter_io_fd_rd(serial_fd, off, len);
 }
 
 size_t orter_serial_wr(char *off, size_t len)
 {
-  return nbwrite(serial_fd, off, len);
+  return orter_io_fd_wr(serial_fd, off, len);
 }
 
 /* TODO lives in io */
@@ -498,6 +431,9 @@ int orter_serial(int argc, char **argv)
   /* exit code */
   int exit = 0;
 
+  /* EOF flag */
+  int eof = 0;
+
   /* select parameters */
   fd_set readfds, writefds, exceptfds;
   struct timeval timeout;
@@ -546,7 +482,7 @@ int orter_serial(int argc, char **argv)
     FD_ZERO(&exceptfds);
 
     /* add in to read, err set */
-    if (!in_pending && !eof) {
+    if (!in_pending && !orter_io_eof) {
       FD_SET(0, &readfds);
 /*
       FD_SET(0, &exceptfds);
@@ -613,18 +549,25 @@ int orter_serial(int argc, char **argv)
     }
 
     /* stdin to mapped */
-    orter_io_relay(orter_serial_stdin_rd, omap_wr, in_buf, &in_offset, &in_pending);
+    orter_io_relay(orter_io_stdin_rd, omap_wr, in_buf, &in_offset, &in_pending);
 
     /* mapped to serial */
     orter_io_relay(omap_rd, orter_serial_wr, mapped_buf, &mapped_offset, &mapped_pending);
 
     /* serial to stdout */
-    orter_io_relay(orter_serial_rd, orter_serial_stdout_wr, out_buf, &out_offset, &out_pending);
+    orter_io_relay(orter_serial_rd, orter_io_stdout_wr, out_buf, &out_offset, &out_pending);
 
     /* terminate after ACK */
     if (ack && out_buf[0] == 6) {
       break;
     }
+
+    /* start EOF timer */
+    if (wai && !eof && orter_io_eof) {
+      eof = 1;
+      wai_timer = time(0) + wai_wait;
+    }
+
     /* terminate after EOF and timer */
     if (wai && eof && time(0) > wai_timer) {
       break;

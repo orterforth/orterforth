@@ -3,10 +3,6 @@
 
 int orter_serial_open(char *name, int baud);
 
-size_t orter_serial_stdin_rd(char *off, size_t len);
-
-size_t orter_serial_stdout_wr(char *off, size_t len);
-
 size_t orter_serial_rd(char *off, size_t len);
 
 size_t orter_serial_wr(char *off, size_t len);
