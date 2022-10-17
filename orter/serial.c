@@ -37,10 +37,12 @@ static int            odelbs = 0;
 static int            serial_fd = -1;
 static struct termios serial_attr;
 static struct termios serial_attr_save;
+static int            serial_attr_saved = 0;
 
 /* stdin */
 static struct termios in_attr;
 static struct termios in_attr_save;
+static int            in_attr_saved = 0;
 
 /* stdout */
 
@@ -128,6 +130,7 @@ int orter_serial_open(char *name, int baud)
     perror("serial tcgetattr failed");
     return errno;
   }
+  serial_attr_saved = 1;
   /* raw mode */
   serial_makeraw(&serial_attr);
   /* baud */
@@ -197,9 +200,10 @@ int orter_serial_close(void)
     perror("serial tcdrain failed");
   }
   /* restore if set */
-  if (tcsetattr(serial_fd, TCSANOW, &serial_attr_save)) {
+  if (serial_attr_saved && tcsetattr(serial_fd, TCSANOW, &serial_attr_save)) {
     perror("serial tcsetattr failed");
   }
+  serial_attr_saved = 0;
   /* close it */
   if (close(serial_fd)) {
     perror("serial close failed");
@@ -210,23 +214,9 @@ int orter_serial_close(void)
   return 0;
 }
 
-/* character mappings */
-static void omaps(char *buf, int n)
-{
-  int i = 0;
-  
-  for (i = 0; i < n; i++) {
-    if (olfcr && buf[i] == 10) {
-      buf[i] = 13;
-    }
-    if (odelbs && buf[i] == 127) {
-      buf[i] = 8;
-    }
-  }
-}
-
 static size_t omap_rd(char *off, size_t len)
 {
+  char c;
   int n = 0;
 
   /* no op if empty buffer */
@@ -235,32 +225,30 @@ static size_t omap_rd(char *off, size_t len)
   }
 
   /* copy into buffer */
-/*
-  n = omap_pending < len ? omap_pending : len;
-  memcpy(off, omap_offset, n);
-  omap_offset += n;
-  omap_pending -= n;
-*/
   while (omap_pending && len) {
-/*
-    if (*omap_offset == 13) {
-      if (len < 2) {
-        return n;
-      }
-      *off++ = *(omap_offset++);
-      *off++ = 10;
-      omap_pending--;
-      len -= 2;
-      n += 2;
-      continue;
+
+    /* read char */
+    c = *(omap_offset++);
+
+    /* olfcr */
+    /* TODO rename to onlcrx? */
+    if (c == 10 && olfcr) {
+      c = 13;
     }
-*/
-    *off++ = *(omap_offset++);
+
+    /* odelbs */
+    if (odelbs && c == 127) {
+      c = 8;
+    }
+
+    /* write char */
+    *(off++) = c;
+
+    /* advance counters */
     omap_pending--;
     len--;
     n++;
   }
-
 
   return n;
 }
@@ -277,31 +265,43 @@ static size_t omap_wr(char *off, size_t len)
   omap_offset = omap_buf;
   omap_pending = len;
 
-  /* apply mappings */
-  omaps(omap_offset, len);
-
   return len;
 }
 
+static int std_close(void)
+{
+  /* stdin */
+  if (in_attr_saved && isatty(0)) {
+    if (tcsetattr(0, TCSANOW, &in_attr_save)) {
+      perror("stdin tcsetattr failed");
+    }
+    in_attr_saved = 0;
+  }
+
+  /* stdout */
+  /* currently no op */
+
+  return 0;
+}
 
 static void restore(void)
 {
   /* serial port */
-  orter_serial_close();
-
-  /* stdin */
-  if (isatty(0)) {
-    tcsetattr(0, TCSANOW, &in_attr_save);
+  if (orter_serial_close()) {
+    perror("serial close failed");
   }
 
-  /* stdout */
+  /* stdin/stdout */
+  if (std_close()) {
+    perror("std close failed");
+  }
 }
 
 /* flag for cleanup and exit */
-int orter_serial_finished = 0;
+int orter_io_finished = 0;
 
 /* signal handler */
-/* TODO lives in main? */
+/* TODO create and move to orter/io.c orter_io_finished */
 static void handler(int signum)
 {
 #ifdef __CYGWIN__
@@ -313,11 +313,11 @@ static void handler(int signum)
 #ifdef __MACH__
   const char *name = sys_signame[signum];
 #endif
-  fprintf(stderr, "handler\n");
-  fprintf(stderr, "signal %s\n", name ? name : "unknown");
-  orter_serial_finished = signum;
+  fprintf(stderr, "handler signal %s\n", name ? name : "unknown");
+  orter_io_finished = signum;
 }
 
+/* TODO this all to go to io */
 static size_t nbwrite(int fd, char *off, size_t len)
 {
   ssize_t n;
@@ -330,6 +330,8 @@ static size_t nbwrite(int fd, char *off, size_t len)
   /* write bytes */
   n = write(fd, off, len);
   if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+    /* mark finished */
+    /* TODO handle properly even when stdin not managed */
     restore();
     perror("write failed");
     exit(errno);
@@ -339,6 +341,7 @@ static size_t nbwrite(int fd, char *off, size_t len)
   return (n < 0) ? 0 : n;
 }
 
+/* TODO this all to go to io */
 static size_t nbread(int fd, char *off, size_t len)
 {
   ssize_t n;
@@ -351,14 +354,18 @@ static size_t nbread(int fd, char *off, size_t len)
   /* read bytes */
   n = read(fd, off, len);
   if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
+    /* mark finished */
+    /* TODO handle properly even when stdin not managed */
     perror("read failed");
     restore();
     exit(errno);
   }
 
   /* mark EOF */
+  /* TODO what to do with this, need to mark eof */
   if (n == 0 && !eof) {
     eof = 1;
+    /* flag eof, but leave wai_timer here in the loop */
     wai_timer = time(0) + wai_wait;
   }
 
@@ -421,14 +428,13 @@ static void bufwrite(orter_io_rdwr_t wr, char *buf, char **offset, size_t *pendi
   }
 }
 
-/* TODO rdwr stuff to separate module? */
-void orter_serial_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending)
+void orter_io_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending)
 {
   bufread(rd, buf, offset, pending);
   bufwrite(wr, buf, offset, pending);
 }
 
-/* TODO lives in main? */
+/* TODO lives in io */
 void init_signal(void)
 {
   signal(SIGHUP, handler);
@@ -441,55 +447,54 @@ void init_signal(void)
   signal(SIGSYS, handler);
 }
 
-/* TODO lose */
-void init_serial(char *name, int baud)
+static int std_open(void)
 {
-  if (orter_serial_open(name, baud)) {
-    perror("serial open failed");
-    exit(errno);
-  }
-}
-
-void init_std(void)
-{
+  /* make stdin nonblocking */
   if (fcntl(0, F_SETFL, O_NONBLOCK)) {
     perror("stdin fcntl failed");
-    restore();
-    exit(errno);
+    return errno;
   }
+  /* modify stdin attr */
   if (isatty(0)) {
+    /* save current stdin attr */
     if (tcgetattr(0, &in_attr_save)) {
       perror("stdin tcgetattr failed");
-      restore();
-      exit(errno);
+      return errno;
     }
+    in_attr_saved = 1;
+    /* modify stdin attr */
     in_attr = in_attr_save;
+    /* no echo, non canonical */
     in_attr.c_lflag &= ~(ECHO|ICANON);
+    /* VTIME/VMIN */
     in_attr.c_cc[VTIME] = 0;
     in_attr.c_cc[VMIN] = 1;
+    /* BRKINT */
     in_attr.c_iflag |= BRKINT;
     if (tcsetattr(0, TCSANOW, &in_attr)) {
       perror("stdin tcsetattr failed");
-      restore();
-      exit(errno);
+      return errno;
     }
   }
+  /* make stdout nonblocking */
   if (fcntl(1, F_SETFL, O_NONBLOCK)) {
     perror("stdout fcntl failed");
-    restore();
-    exit(errno);
+    return errno;
   }
+
+  return 0;
 }
 
 /* usage message */
-static void usage(void)
+static int usage(void)
 {
+  /* TODO full message */
   fprintf(stderr, "Usage: orter serial -a [-e wait] [-o option...] <name> <baud>\n\n"
                   "e.g.   orter serial -o olfcr -o odelbs /dev/ttyUSB0 115200\n"
                   "        - connect translate 0x0a->0x0d, 0x7f->0x08\n"
                   "       echo 'run' | orter serial -e 5 /dev/ttyUSB0 115200\n"
                   "        - write the string and keep open for 5 s\n");
-  exit(1);
+  return 1;
 }
 
 static void opts(int argc, char **argv)
@@ -533,6 +538,9 @@ static void opts(int argc, char **argv)
 
 int orter_serial(int argc, char **argv)
 {
+  /* exit code */
+  int exit = 0;
+
   /* select parameters */
   fd_set readfds, writefds, exceptfds;
   struct timeval timeout;
@@ -544,17 +552,27 @@ int orter_serial(int argc, char **argv)
   argv += optind;
   argc -= optind;
   if (argc != 2) {
-    usage();
+    return usage();
   }
 
   /* signal handlers */
   init_signal();
 
   /* serial */
-  init_serial(argv[0], atoi(argv[1]));
+  if (orter_serial_open(argv[0], atoi(argv[1]))) {
+    exit = errno;
+    perror("serial open failed");
+    restore();
+    return exit;
+  }
 
   /* stdin/stdout */
-  init_std();
+  if (std_open()) {
+    exit = errno;
+    perror("stdin/stdout open failed");
+    restore();
+    return exit;
+  }
 
   /* set up select */
   nfds = 0;
@@ -563,7 +581,7 @@ int orter_serial(int argc, char **argv)
   if (serial_fd > nfds) nfds = serial_fd;
   nfds++;
 
-  while (!orter_serial_finished) {
+  while (!orter_io_finished) {
 
     /* init fd sets */
     FD_ZERO(&readfds);
@@ -598,26 +616,28 @@ int orter_serial(int argc, char **argv)
     timeout.tv_usec = 0;
 
     /* select */
+    /* TODO use pselect */
     if (select(nfds, &readfds, &writefds, &exceptfds, &timeout) < 0) {
       switch (errno) {
         case EINTR:
+          exit = errno;
           perror("select interrupted");
           restore();
-          return errno;
+          return exit;
         default:
+          exit = errno;
           perror("select failed");
           restore();
-          return errno;
+          return exit;
       }
     }
-/*
-    fprintf(stderr, ".");
-*/
+
     /* check for exceptions */
     if (FD_ISSET(1, &exceptfds)) {
+      exit = errno;
       perror("out error");
       restore();
-      return errno;
+      return exit;
     }
 
     /* exceptions expected from stdin until pipe attached */
@@ -629,19 +649,20 @@ int orter_serial(int argc, char **argv)
     }
 */
     if (FD_ISSET(serial_fd, &exceptfds)) {
+      exit = errno;
       perror("serial error");
       restore();
-      return errno;
+      return exit;
     }
 
     /* stdin to mapped */
-    orter_serial_relay(orter_serial_stdin_rd, omap_wr, in_buf, &in_offset, &in_pending);
+    orter_io_relay(orter_serial_stdin_rd, omap_wr, in_buf, &in_offset, &in_pending);
 
     /* mapped to serial */
-    orter_serial_relay(omap_rd, orter_serial_wr, mapped_buf, &mapped_offset, &mapped_pending);
+    orter_io_relay(omap_rd, orter_serial_wr, mapped_buf, &mapped_offset, &mapped_pending);
 
     /* serial to stdout */
-    orter_serial_relay(orter_serial_rd, orter_serial_stdout_wr, out_buf, &out_offset, &out_pending);
+    orter_io_relay(orter_serial_rd, orter_serial_stdout_wr, out_buf, &out_offset, &out_pending);
 
     /* terminate after ACK */
     if (ack && out_buf[0] == 6) {
@@ -655,5 +676,5 @@ int orter_serial(int argc, char **argv)
 
   /* done */
   restore();
-  return orter_serial_finished;
+  return orter_io_finished;
 }

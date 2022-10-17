@@ -16,7 +16,8 @@ size_t orter_serial_rd(char *off, size_t len);
 size_t orter_serial_wr(char *off, size_t len);
 
 /* read and write with flow control */
-void orter_serial_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending);
+/* TODO move to io.c, io.h */
+void orter_io_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending);
 
 int orter_serial_close(void);
 
