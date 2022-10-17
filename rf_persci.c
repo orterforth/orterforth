@@ -52,7 +52,10 @@ void rf_persci_insert(int drive, char *filename)
     exit(1);
   }
   fread(discs[drive], 1, 256256, ptr);
-  /* TODO handle error */
+  if (ferror(ptr)) {
+    fprintf(stderr, "fread failed: drive %d\n", drive);
+    exit(1);
+  }
 
   /* reset controller state */
   rf_persci_state = RF_PERSCI_STATE_COMMAND;
