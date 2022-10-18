@@ -498,48 +498,70 @@ static void rf_inst_def_user(char *name, unsigned int idx)
 #define RF_INST_DICTIONARY (RF_ORIGIN + (3000*RF_WORD_SIZE))
 
 #define RF_FIGRELFIGREV 0x0101 /* 1.1 */
+
 /* IMPLEMENTATION ATTRIBUTES */
 /* B +ORIGIN   ...W:IEBA */
 /* W: 0=above sufficient 1=other differences exist */
 /* I: Interpreter is	0=pre- 1=post incrementing */
+#define RF_ATTRWI 0x0800
 /* E: Addr must be even: 0 yes 1 no */
-/* B: High byte @	0=low addr. 1=high addr. */
-/* A: CPU Addr.		0=BYTE 1=WORD */
-/* USRVER = r for retro */
-#ifdef RF_LE
-#define RF_USRVERATTR 0x0E72
+#ifndef RF_ALIGN
+#define RF_ATTRE 0x0400
 #else
-#define RF_USRVERATTR 0x0C72
+#define RF_ATTRE 0x0000
 #endif
+/* B: High byte @	0=low addr. 1=high addr. */
+#ifdef RF_LE
+#define RF_ATTRB 0x0200
+#else
+#define RF_ATTRB 0x0000
+#endif
+/* A: CPU Addr.		0=BYTE 1=WORD */
+#if (RF_ALIGN==RF_WORD_SIZE)
+#define RF_ATTRA 0x0100
+#else
+#define RF_ATTRA 0x0000
+#endif
+
+/* USRVER = r for retro */
+#define RF_USRVER 0x0072
 
 static void rf_inst_cold(void)
 {
+  /* set vocabulary */
   /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
   rf_inst_vocabulary = 0;
 
-  /* set UP and user vars */
+  /* set UP */
   rf_up = (uintptr_t *) RF_USER;
 
-  /* USER */
-
+  /* set USER vars */
   /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
   /* UP )Y STA, ( TO USER AREA ) */
   /* DEY, 0< END, */
+
+  /* warm start */
   RF_USER_S0 = (uintptr_t) RF_S0;
   RF_USER_R0 = (uintptr_t) RF_R0;
   RF_USER_TIB = (uintptr_t) RF_TIB;
   RF_USER_WIDTH = 31;
   RF_USER_WARNING = 0;
 
+  /* cold start */
   RF_USER_FENCE = (uintptr_t) RF_INST_DICTIONARY;
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
   RF_USER_VOCLINK = 0;
 
-  /* jump to RP! then to ABORT */
+  /* set IP to ABORT */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
   /* # LDA, IP STA, */
-  /* 6C # LDA, W 1 - STA, 'T RP! JMP, ( RUN ) */
+
+  /* create 6502 JMP ind */
+  /* 6C # LDA, W 1 - STA, */
+
+  /* jump to RP! */
+  /* 'T RP! JMP, ( RUN ) */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
   /* : ABORT */
@@ -688,7 +710,7 @@ static void rf_inst_forward(void)
 
   /* boot time literals */
   rf_inst_def_literal("relrev", (uintptr_t) RF_FIGRELFIGREV);
-  rf_inst_def_literal("ver", (uintptr_t) RF_USRVERATTR);
+  rf_inst_def_literal("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
   rf_inst_def_literal("bs", (uintptr_t) RF_BS);
   rf_inst_def_literal("user", (uintptr_t) RF_USER);
   rf_inst_def_literal("inits0", (uintptr_t) RF_S0);
