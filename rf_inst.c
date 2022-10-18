@@ -180,7 +180,7 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 static char *rf_inst_vocabulary = 0;
 
 /* CREATE */
-static void rf_inst_create(uint8_t length, uint8_t *address)
+static void rf_inst_create(uint8_t length, uint8_t *name)
 {
   uint8_t *here, *there;
 
@@ -192,7 +192,7 @@ static void rf_inst_create(uint8_t length, uint8_t *address)
   ++here;
 
   /* name */
-  rf_inst_memcpy(here, address, length);
+  rf_inst_memcpy(here, name, length);
   here += length;
 
 #ifdef __CC65__
@@ -285,7 +285,6 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
   uintptr_t *cfa = lfa + 1;
   return (rf_code_t *) cfa;
 }
-
 
 static char *rf_inst_find(char *t, uint8_t length, char *nfa)
 {
@@ -385,8 +384,6 @@ static void rf_inst_immediate(void)
 
 /* INTERPRET */
 
-#define rf_inst_qstack()
-
 static void rf_inst_code_interpret_word(void)
 {
   RF_START;
@@ -409,15 +406,15 @@ static void rf_inst_code_interpret_word(void)
     }
     /* ENDIF */
     /* ?STACK */
-    rf_inst_qstack();
   }
 }
 
 /* compile a LIT value */
 static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
 {
-  /* TODO this is the proto interpreter at the moment */
-  rf_inst_compile("LIT");
+  /* compile LIT */
+  rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3, rf_inst_vocabulary)));
+  /* compile value */
 	rf_inst_comma(literal);
 }
 
@@ -439,7 +436,6 @@ static void rf_inst_code_interpret_number(void)
     }
     /* ENDIF  */
     /* ?STACK  */
-    rf_inst_qstack();
     RF_JUMP_NEXT;
   }
 }
@@ -849,9 +845,6 @@ void rf_inst_save(void)
   char *e = (char *) RF_USER_DP;
 #endif
   /* write blocks to disc until HERE */
-/*
-  char buf[128];
-*/
   uint8_t j;
 #ifdef RF_INST_RELINK
   /* write table of code addresses */
