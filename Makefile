@@ -66,12 +66,12 @@ $(DISC) : \
 
 # orter - retrocomputing multitool
 $(ORTER) : \
+	$(SYSTEM)/orter_bbc.o \
 	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
-	$(SYSTEM)/orter_uef.o \
 	orter/main.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
@@ -160,6 +160,10 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
+$(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
 $(SYSTEM)/orter_fuse.o : orter/fuse.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
@@ -177,10 +181,6 @@ $(SYSTEM)/orter_serial.o : orter/serial.c orter/serial.h orter/io.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 $(SYSTEM)/orter_spectrum.o : orter/spectrum.c | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-$(SYSTEM)/orter_uef.o : orter/uef.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -419,7 +419,7 @@ bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 # final tape image
 bbc/orterforth.uef : bbc/orterforth $(ORTER)
 
-	$(ORTER) uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
+	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
 	mv $@.io $@
 
 # inst binary
@@ -459,7 +459,7 @@ bbc/inst.ssd : bbc/boot bbc/boot.inf bbc/inst bbc/inst.inf
 # inst tape image
 bbc/inst.uef : bbc/inst $(ORTER)
 
-	$(ORTER) uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
+	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
 	mv $@.io $@
 
 # main lib

@@ -58,7 +58,7 @@ static uint16_t crc(uint8_t *bytes, uint16_t len)
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
-int orter_uef_write(char *name, uint16_t load, uint16_t exec)
+int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 {
   uint8_t data[65536];
   size_t s;

@@ -18,23 +18,23 @@
 #include <unistd.h>
 #endif
 
+#include "bbc.h"
 #include "fuse.h"
 #include "ql.h"
 #include "serial.h"
 #include "spectrum.h"
-#include "uef.h"
 
 static int usage()
 {
   fprintf(stderr, "Usage: orter <subcommand> ...\n");
 
   /* an entry for each subcommand */
+  fprintf(stderr, "             bbc ...\n");
   fprintf(stderr, "             fuse ...\n");
   fprintf(stderr, "             hex ...\n");
   fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
   fprintf(stderr, "             spectrum ...\n");
-  fprintf(stderr, "             uef ...\n");
 
   return 1;
 }
@@ -203,15 +203,15 @@ static int hex_read()
   return 0;
 }
 
-static int uef(int argc, char *argv[])
+static int bbc(int argc, char *argv[])
 {
   /* create a UEF file from a binary */
-  if (argc == 6 && !strcmp("write", argv[2])) {
-    return orter_uef_write(argv[3], strtol(argv[4], 0, 0), strtol(argv[5], 0, 0));
+  if (argc == 7 && !strcmp("uef", argv[2]) && !strcmp("write", argv[3])) {
+    return orter_bbc_uef_write(argv[4], strtol(argv[5], 0, 0), strtol(argv[6], 0, 0));
   }
 
   /* usage */
-  fprintf(stderr, "Usage: orter uef write <filename> <load> <exec>\n");
+  fprintf(stderr, "Usage: orter bbc uef write <filename> <load> <exec>\n");
   return 1;
 }
 
@@ -237,8 +237,8 @@ int main(int argc, char *argv[])
     if (!strcmp("spectrum", arg)) {
       return spectrum(argc, argv);
     }
-    if (!strcmp("uef", arg)) {
-      return uef(argc, argv);
+    if (!strcmp("bbc", arg)) {
+      return bbc(argc, argv);
     }
   }
 
