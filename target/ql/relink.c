@@ -1,5 +1,5 @@
 #include "rf.h"
-/* TODO revalidate this against updated rf_inst */
+
 #define SIZE 61
 
 static rf_code_t codes[] = {
