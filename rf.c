@@ -486,64 +486,187 @@ void rf_code_cmove(void)
 }
 #endif
 
+/* define double handling functions where required */
 #ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_USTAR
-#ifndef RF_DPUSH
-#define RF_DPUSH
-static void __FASTCALL__ rf_dpush(rf_double_t *a);
+#define RF_UNDOUBLE
 #endif
-static void rf_ustar(void)
+#ifndef RF_TARGET_CODE_USLAS
+#define RF_DOUBLE
+#endif
+#ifndef RF_TARGET_CODE_DPLUS
+#define RF_DOUBLE
+#define RF_UNDOUBLE
+#endif
+#ifndef RF_TARGET_CODE_DMINU
+#define RF_DOUBLE
+#define RF_UNDOUBLE
+#endif
+#endif
+
+#ifdef RF_DOUBLE
+static void rf_double(uintptr_t h, uintptr_t l, rf_double_t *d)
 {
-  uintptr_t a;
-  uintptr_t b;
+  rf_double_t a = (rf_double_t) h << RF_WORD_SIZE_BITS;
+  rf_double_t b = (rf_double_t) l;
+  *d = a | b;
+}
+#endif
+
+#ifdef RF_UNDOUBLE
+static void rf_undouble(rf_double_t d, uintptr_t *h, uintptr_t *l)
+{
+  *h = d >> RF_WORD_SIZE_BITS;
+  *l = d;
+}
+#endif
+
+#ifndef RF_TARGET_CODE_USTAR
+
+#ifdef RF_DOUBLE_ARITH
+static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
+{
   rf_double_t d;
 
-  a = RF_SP_POP;
-  b = RF_SP_POP;
   d = (rf_double_t) a * b;
-  rf_dpush(&d);
+  rf_undouble(d, ch, cl);
 }
+#else
+#if (RF_WORD_SIZE==2)
+#define RF_WORD_SIZE_BITS_HALF 8
+#define RF_WORD_MASK_LO 0x00FFU
+#define RF_WORD_MASK_HI 0xFF00U
+#endif
+#if (RF_WORD_SIZE==4)
+#define RF_WORD_SIZE_BITS_HALF 16
+#define RF_WORD_MASK_LO 0x0000FFFFU
+#define RF_WORD_MASK_HI 0xFFFF0000U
+#endif
+#if (RF_WORD_SIZE==8)
+#define RF_WORD_SIZE_BITS_HALF 32
+#define RF_WORD_MASK_LO 0x00000000FFFFFFFFU
+#define RF_WORD_MASK_HI 0xFFFFFFFF00000000U
+#endif
+static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
+{
+  uintptr_t ah = a >> RF_WORD_SIZE_BITS_HALF;
+  uintptr_t al = a & RF_WORD_MASK_LO;
+  uintptr_t bh = b >> RF_WORD_SIZE_BITS_HALF;
+  uintptr_t bl = b & RF_WORD_MASK_LO;
+  uintptr_t rl = al * bl;
+  uintptr_t rm1 = ah * bl;
+  uintptr_t rm2 = al * bh;
+  uintptr_t rh = ah * bh;
+  uintptr_t rml = (rm1 & RF_WORD_MASK_LO) + (rm2 & RF_WORD_MASK_LO);
+  uintptr_t rmh = (rm1 >> RF_WORD_SIZE_BITS_HALF) + (rm2 >> RF_WORD_SIZE_BITS_HALF);
+
+  rl += rml << RF_WORD_SIZE_BITS_HALF;
+  if (rml & RF_WORD_MASK_HI) {
+    rmh++;
+  }
+  rh += rmh;
+
+  *cl = rl;
+  *ch = rh;
+}
+#endif
 
 void rf_code_ustar(void)
 {
   RF_START;
   RF_LOG("ustar");
-  rf_ustar();
+  {
+    uintptr_t a, b, ch, cl;
+
+    a = RF_SP_POP;
+    b = RF_SP_POP;
+    rf_ustar(a, b, &ch, &cl);
+    RF_SP_PUSH(cl);
+    RF_SP_PUSH(ch);
+  }
   RF_JUMP_NEXT;
 }
 #endif
-#endif
+
+#ifndef RF_TARGET_CODE_USLAS
 
 #ifdef RF_DOUBLE_ARITH
-#ifndef RF_TARGET_CODE_USLAS
-#ifndef RF_DPOP
-static void rf_dpop(rf_double_t *a);
-#define RF_DPOP
-#endif
-static void rf_uslas(void)
+static uintptr_t rf_uslas(uintptr_t uh, uintptr_t ul, uintptr_t v, uintptr_t *r)
 {
   rf_double_t b;
   rf_double_t a;
 
-  b = (rf_double_t) RF_SP_POP;
-  rf_dpop(&a);
+  /* TODO is this conversion necessary */
+  rf_double(uh, ul, &a);
+  rf_double(0, v, &b);
   if ((a >> RF_WORD_SIZE_BITS) >= b) {
-    RF_SP_PUSH(-1);
-    RF_SP_PUSH(-1);
-  } else {
-    RF_SP_PUSH((uintptr_t) (a % b));
-    RF_SP_PUSH((uintptr_t) (a / b));
+    *r = -1;
+    return -1;
   }
+  *r = (uintptr_t) a % b;
+  return (uintptr_t) a / b;
 }
+#else
+#if (RF_WORD_SIZE==2)
+#define RF_TOPBIT 0x8000
+#endif
+#if (RF_WORD_SIZE==4)
+#define RF_TOPBIT 0x80000000
+#endif
+#if (RF_WORD_SIZE==8)
+#define RF_TOPBIT 0x8000000000000000
+#endif
+static uintptr_t rf_uslas(uintptr_t uh, uintptr_t ul, uintptr_t v, uintptr_t *r)
+{
+	int i;
+
+  /* overflow or divide by zero */
+  /* TODO is this TOPBIT check correct */
+	if (v >= RF_TOPBIT || uh >= v) {
+    *r = (uintptr_t) -1;
+    return (uintptr_t) -1;
+  }
+
+	for (i = 0; i < RF_WORD_SIZE_BITS; i++) {
+    /* Start to shift numerator left (top bit is lost) */
+    uh <<= 1;
+    /* Add the carry to high word */
+    if (ul & RF_TOPBIT) {
+      uh++;
+    }
+    /* End of shift */
+    ul <<= 1;
+
+    /* Jump if can't subtract */
+    if (uh >= v) {
+      /* Subtract v and add the flag to result (in low word) */
+      uh -= v;
+      ul++;
+    }
+  }
+
+  /* result */
+  *r = uh;
+  return ul;
+}
+#endif
 
 void rf_code_uslas(void)
 {
   RF_START;
   RF_LOG("uslas");
-  rf_uslas();
+  {
+    uintptr_t ah, al, b, q, r;
+
+    b = RF_SP_POP;
+    ah = RF_SP_POP;
+    al = RF_SP_POP;
+    q = rf_uslas(ah, al, b, &r);
+    RF_SP_PUSH(r);
+    RF_SP_PUSH(q);
+  }
   RF_JUMP_NEXT;
 }
-#endif
 #endif
 
 #ifndef RF_TARGET_CODE_ANDD
@@ -726,31 +849,9 @@ void rf_code_plus(void)
 }
 #endif
 
-#ifdef RF_DOUBLE_ARITH
-
 #ifndef RF_TARGET_CODE_DPLUS
-#ifndef RF_DPOP
-static void rf_dpop(rf_double_t *a);
-#define RF_DPOP
-#endif
-#ifndef RF_DPUSH
-#define RF_DPUSH
-static void __FASTCALL__ rf_dpush(rf_double_t *a);
-#endif
-/*
-static void rf_double(uintptr_t h, uintptr_t l, rf_double_t *d)
-{
-  rf_double_t a = (rf_double_t) h << RF_WORD_SIZE_BITS;
-  rf_double_t b = (rf_double_t) l;
-  *d = a | b;
-}
 
-static void rf_undouble(rf_double_t d, uintptr_t *h, uintptr_t *l)
-{
-  *h = d >> RF_WORD_SIZE_BITS;
-  *l = d;
-}
-
+#ifdef RF_DOUBLE_ARITH
 static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
 {
   rf_double_t a;
@@ -762,29 +863,7 @@ static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uin
   c = a + b;
   rf_undouble(c, ch, cl);
 }
-*/
-static void rf_dplus(void)
-{
-  rf_double_t a, b, c;
-
-  rf_dpop(&a);
-  rf_dpop(&b);
-  c = a + b;
-  rf_dpush(&c);
-}
-
-void rf_code_dplus(void)
-{
-  RF_START;
-  RF_LOG("dplus");
-  rf_dplus();
-  RF_JUMP_NEXT;
-}
-#endif
-#endif
-
-#ifndef RF_DOUBLE_ARITH
-#ifndef RF_TARGET_CODE_DPLUS
+#else
 static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
 {
 	*cl = al + bl;
@@ -792,6 +871,7 @@ static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uin
 	if (*cl < al)
 		(*ch)++;
 }
+#endif
 
 void rf_code_dplus(void)
 {
@@ -811,7 +891,6 @@ void rf_code_dplus(void)
   RF_JUMP_NEXT;
 }
 #endif
-#endif
 
 #ifndef RF_TARGET_CODE_MINUS
 void rf_code_minus(void)
@@ -828,43 +907,42 @@ void rf_code_minus(void)
 }
 #endif
 
-#ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_DMINU
-#ifndef RF_DPOP
-static void rf_dpop(rf_double_t *a);
-#define RF_DPOP
+
+#ifdef RF_DOUBLE_ARITH
+static void rf_dminu(uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
+{
+  rf_double_t d;
+
+  rf_double(bh, bl, &d);
+  d = -d;
+  rf_undouble(d, ch, cl);
+}
+#else
+static void rf_dminu(uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
+{
+	*cl = -bl;
+	*ch = -bh;
+	if (bl)
+		(*ch)--;
+}
 #endif
-#ifndef RF_DPUSH
-#define RF_DPUSH
-static void __FASTCALL__ rf_dpush(rf_double_t *a);
-#endif
+
 void rf_code_dminu(void)
 {
   RF_START;
   RF_LOG("dminu");
   {
-    rf_double_t d;
+    uintptr_t bh, bl, ch, cl;
     
-    rf_dpop(&d);
-    d = -d;
-    rf_dpush(&d);
+    bh = RF_SP_POP;
+    bl = RF_SP_POP;
+    rf_dminu(bh, bl, &ch, &cl);
+    RF_SP_PUSH(cl);
+    RF_SP_PUSH(ch);
   }
   RF_JUMP_NEXT;
 }
-#endif
-#endif
-
-#ifdef RF_DOUBLE_ARITH
-#ifdef RF_DPOP
-static void rf_dpop(rf_double_t *e)
-{
-  uintptr_t a = RF_SP_POP;
-  uintptr_t b = RF_SP_POP;
-  rf_double_t c = (rf_double_t) a << RF_WORD_SIZE_BITS;
-  rf_double_t d = (rf_double_t) b;
-  *e = c | d;
-}
-#endif
 #endif
 
 #ifndef RF_TARGET_CODE_OVER
@@ -1251,16 +1329,4 @@ void rf_code_tg(void)
   RF_SP_PUSH(RF_TARGET_HI);
   RF_JUMP_NEXT;
 }
-#endif
-
-#ifdef RF_DOUBLE_ARITH
-#ifdef RF_DPUSH
-static void __FASTCALL__ rf_dpush(rf_double_t *a)
-{
-  uintptr_t b = *a;
-  uintptr_t c = *a >> RF_WORD_SIZE_BITS;
-  RF_SP_PUSH(b);
-  RF_SP_PUSH(c);
-}
-#endif
 #endif
