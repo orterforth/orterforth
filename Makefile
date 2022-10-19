@@ -176,7 +176,7 @@ $(SYSTEM)/orter_ql.o : orter/ql.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-$(SYSTEM)/orter_serial.o : orter/serial.c orter/serial.h orter/io.h | $(SYSTEM)
+$(SYSTEM)/orter_serial.o : orter/serial.c orter/io.h orter/serial.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -589,7 +589,7 @@ pico :
 	mkdir $@
 
 .PHONY : pico-build
-pico-build : pico/orterforth.uf2
+pico-build : orterforth.inc pico/orterforth.uf2
 
 .PHONY : pico-clean
 pico-clean :
