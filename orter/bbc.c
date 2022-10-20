@@ -58,6 +58,18 @@ static uint16_t crc(uint8_t *bytes, uint16_t len)
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
+static void chunk(uint16_t id, uint32_t length)
+{
+  put16le(id);
+  put32le(length);
+}
+
+static void carrier(uint16_t cycles)
+{
+  chunk(0x0110, 2);
+  put16le(cycles);
+}
+
 int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 {
   uint8_t data[65536];
@@ -65,23 +77,17 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
   int block_nr = 0;
 
   /* header */
-  fputs("UEF File!", stdout);
-  fputc('\x00', stdout);
-  /* version */
-  fputc('\x01', stdout);
-  fputc('\x00', stdout);
-  /* carrier tone */
-  put16le(0x0110);
-  put32le(2);
-  put16le(1500);
+  fwrite("UEF File!\x00\x01\x00", 1, 12, stdout);
 
-  put16le(0x0100);
-  put32le(1);
+  /* carrier tone */
+  carrier(1500);
+
+  /*  */
+  chunk(0x0100, 1);
   fputc(0xdc, stdout);
 
-  put16le(0x0110);
-  put32le(2);
-  put16le(1500);
+  /* carrier tone */
+  carrier(1500);
 
   /* read whole file */
   s = fread(data, 1, 65536, stdin);
@@ -90,36 +96,40 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
     uint16_t i = block_nr * 256;
     uint16_t j = MIN(i + 256, s);
     uint8_t *block = &data[i];
-    uint8_t block_flag = (j == s) ? 0x80 : 0;
 
     /* construct data header */
-    uint8_t header[99];
+    uint8_t header[32];
     uint16_t lenname = MIN(10, strlen(name));
     uint16_t lenhdr = 18 + lenname;
-    memcpy(header, name, lenname); /* TODO length 10 */
+
+    /* name */
+    memcpy(header, name, lenname);
     header[lenname] = 0;
+    /* load */
     set32le(load, header + lenname + 1);
+    /* exec */
     set32le(exec, header + lenname + 5);
+    /* block no */
     set16le(block_nr, header + lenname + 9);
+    /* block len */
     set16le(j - i, header + lenname + 11);
-    header[lenname + 13] = block_flag;
+    /* flag */
+    header[lenname + 13] = ((j == s) ? 0x80 : 0);
+    /* spare */
     set32le(0, header + lenname + 14);
 
-    /* write data chunk lead */
-    put16le(0x0100);
-    put32le(1 + lenhdr + 2 + (j - i) + 2); /* j - i = len(block) */
-
     /* write data */
+    chunk(0x0100, 1 + lenhdr + 2 + (j - i) + 2);
     fputc('*', stdout);
+    /* header */
     fwrite(header, 1, lenhdr, stdout);
     put16be(crc(header, lenhdr));
+    /* block */
     fwrite(block, 1, j - i, stdout);
     put16be(crc(block, j - i));
 
-    /* write data */
-    put16le(0x0110);
-    put32le(2);
-    put16le(600);
+    /* carrier tone */
+    carrier(600);
 
     block_nr++;
   }
@@ -129,7 +139,7 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
   put32le(2);
   put16le(600);
 
+  /* done */
   fflush(stdout);
-
   return 0;
 }
