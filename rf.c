@@ -593,18 +593,18 @@ void rf_code_ustar(void)
 #ifdef RF_DOUBLE_ARITH
 static uintptr_t rf_uslas(uintptr_t uh, uintptr_t ul, uintptr_t v, uintptr_t *r)
 {
-  rf_double_t b;
-  rf_double_t a;
+  rf_double_t a, b;
 
-  /* TODO is this conversion necessary */
+  /* overflow or divide by zero */
+  if (uh >= v) {
+    *r = (uintptr_t) -1;
+    return (uintptr_t) -1;
+  }
+
   rf_double(uh, ul, &a);
   rf_double(0, v, &b);
-  if ((a >> RF_WORD_SIZE_BITS) >= b) {
-    *r = -1;
-    return -1;
-  }
-  *r = (uintptr_t) a % b;
-  return (uintptr_t) a / b;
+  *r = (uintptr_t) (a % b);
+  return (uintptr_t) (a / b);
 }
 #else
 #if (RF_WORD_SIZE==2)

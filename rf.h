@@ -84,6 +84,11 @@ typedef uint32_t rf_double_t;
 
 /* z88dk */
 
+#ifdef __SCCZ80
+#ifndef __Z80
+#define __Z80
+#endif
+#endif
 #ifdef __Z80
 #include <stdint.h>
 #define RF_WORD_SIZE 2
@@ -111,7 +116,7 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_HI 0x0019
 #define RF_TARGET_LO 0x92f1
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/zx81.inc"
+#define RF_TARGET_INC "target/zx81/system.inc"
 #endif
 #endif
 #endif

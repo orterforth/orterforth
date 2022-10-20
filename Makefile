@@ -214,6 +214,10 @@ $(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
+$(SYSTEM)/zx81putil : tools/zx81putil/zx81putil.c | $(SYSTEM)
+
+	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -o $@ $<
+
 # help
 .PHONY : $(TARGET)-help
 $(TARGET)-help :
@@ -260,7 +264,7 @@ ifeq ($(BBCOPTION),default)
 	BBCINSTMEDIA = bbc/inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
 	BBCORG := 1720
-	BBCORIGIN := 2E00
+	BBCORIGIN := 3000
 	BBCRUN := bbc-run-disk
 endif
 
@@ -430,7 +434,6 @@ bbc/inst : $(BBCDEPS)
 # inst disc inf
 bbc/inst.inf : | bbc
 
-	# TODO !BOOT uses this name
 	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
 # inst serial load file
@@ -743,6 +746,10 @@ ql/rf.o : rf.c rf.h $(QLINC) | ql
 
 	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
+ql/rf.s : rf.c rf.h $(QLINC) | ql
+
+	qcc -D RF_TARGET_INC='"$(QLINC)"' -S -c $<
+
 # assembly code
 ql/rf_m68k.o : rf_m68k.s | ql
 
@@ -1005,6 +1012,9 @@ endif
 
 # load from serial
 # TODO should not rebuild orterforth-inst-2.tap via dependency chain
+# this happens because spectrum-load-serial is run when SPECTRUMIMPL
+# is not "real" and it is assumed that the .tap needs to be built
+# if the inst was previously done via serial/real.
 # TODO use orter serial -a and add ACK to loader and inst
 .PHONY : spectrum-load-serial
 spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
@@ -1382,11 +1392,13 @@ tools :
 
 	mkdir $@
 
-tools/z80/z80.c : | tools
+tools/z80/z80.c tools/z80/z80.h &: | tools
 
 	cd tools && git clone https://github.com/superzazu/z80.git
 
-tools/z80/z80.h : tools/z80/z80.c
+tools/zx81putil/zx81putil.c : | tools
+
+	cd tools && git clone https://github.com/mcleod-ideafix/zx81putil.git
 
 # uninstall from local
 .PHONY : uninstall
@@ -1394,3 +1406,36 @@ uninstall :
 
 	rm -f /usr/local/bin/orter
 	rm -f /usr/local/bin/orterforth
+
+zx81 :
+
+	mkdir $@
+
+.PHONY : zx81-run
+zx81-run : zx81/inst.tzx | zx81/jtyone.jar
+
+	java -jar zx81/jtyone.jar zx81/inst.tzx@0 -scale 3 -machine ZX81
+
+zx81/%.tzx : zx81/%.P $(SYSTEM)/zx81putil
+
+	$(SYSTEM)/zx81putil -tzx $<
+
+zx81/inst.bin zx81/inst.P &: zx81/rf.lib zx81/system.lib zx81/inst.lib orterforth.c
+
+	zcc +zx81 -lm -lzx81/rf -lzx81/system -lzx81/inst -create-app -o zx81/inst.bin orterforth.c
+
+zx81/inst.lib : rf_inst.c rf.h | zx81
+
+	zcc +zx81 -x -o $@ $<
+
+zx81/jtyone.jar : | zx81
+
+	curl --output $@ http://www.zx81stuff.org.uk/zx81/jtyone.jar
+
+zx81/rf.lib : rf.c rf.h target/zx81/system.inc | zx81
+
+	zcc +zx81 -x -o $@ $<
+
+zx81/system.lib : target/zx81/system.c rf.h | zx81
+
+	zcc +zx81 -x -o $@ $<
