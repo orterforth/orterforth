@@ -207,8 +207,21 @@ static int serve(char *dr0, char *dr1)
     /* sleep if no fds to wait on */
     usleep(100000);
 
+    /* TODO stdin must be nonblocking */
+
+    /* disc in to disc controller */
     orter_io_relay(rd, disc_wr, in_buf, &in_offset, &in_pending);
+
+    /* TODO rd to mux_in_wr */
+    /* TODO mux_in_disc_rd to disc_wr */
+    /* TODO mux_in_emit_rd to stdout_wr */
+
+    /* disc controller to disc out */
     orter_io_relay(disc_rd, wr, out_buf, &out_offset, &out_pending);
+
+    /* TODO disc_rd to mux_out_disc_wr */
+    /* TODO stdin_rd to mux_out_key_wr */
+    /* TODO mux_out_rd to wr */
   }
 
   /* finished */

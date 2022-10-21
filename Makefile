@@ -107,7 +107,7 @@ SYSTEMDEPS := $(SYSTEMDEPSALL)
 endif
 
 # local system executable
-$(ORTERFORTH) : $(SYSTEMDEPS) orterforth.c
+$(ORTERFORTH) : $(SYSTEMDEPS) main.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
 
@@ -727,7 +727,7 @@ ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
 	$(ORTER) ql serial-bytes $< > $@
 
 # main program
-ql/orterforth.o : orterforth.c rf.h $(QLINC) rf_inst.h | ql
+ql/orterforth.o : main.c rf.h $(QLINC) rf_inst.h | ql
 
 	qcc -o $@ -c $<
 
@@ -827,7 +827,7 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER)
 rc2014/inst_CODE.bin : \
 	$(RC2014DEPS) \
 	rf_z80_memory.asm \
-	orterforth.c
+	main.c
 
 	zcc +rc2014 -subtype=basic -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' \
 		$(RC2014LIBS) \
@@ -836,7 +836,7 @@ rc2014/inst_CODE.bin : \
 	 	-Ca-DRF_INST_OFFSET=0x5000 \
 		-m \
 		-o rc2014/inst \
-		rf_z80_memory.asm orterforth.c
+		rf_z80_memory.asm main.c
 
 # start with an empty bin file to build the multi segment bin
 rc2014/inst-0.bin : | rc2014
@@ -1189,7 +1189,7 @@ spectrum/orterforth-inst.bin : \
 	spectrum/rf_system.lib \
 	spectrum/rf_z80.lib \
 	rf_z80_memory.asm \
-	orterforth.c
+	main.c
 
 	zcc +zx \
  		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
@@ -1201,7 +1201,7 @@ spectrum/orterforth-inst.bin : \
 		-pragma-define:CRT_INITIALIZE_BSS=0 \
 		-m \
 		-o $@ \
-		rf_z80_memory.asm orterforth.c
+		rf_z80_memory.asm main.c
 
 # start with an empty bin file to build the multi segment bin
 spectrum/orterforth-inst-0.bin : | spectrum
@@ -1420,9 +1420,9 @@ zx81/%.tzx : zx81/%.P $(SYSTEM)/zx81putil
 
 	$(SYSTEM)/zx81putil -tzx $<
 
-zx81/inst.bin zx81/inst.P &: zx81/rf.lib zx81/system.lib zx81/inst.lib orterforth.c
+zx81/inst.bin zx81/inst.P &: zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
 
-	zcc +zx81 -lm -lzx81/rf -lzx81/system -lzx81/inst -create-app -o zx81/inst.bin orterforth.c
+	zcc +zx81 -lm -lzx81/rf -lzx81/system -lzx81/inst -create-app -m -o zx81/inst.bin main.c
 
 zx81/inst.lib : rf_inst.c rf.h | zx81
 

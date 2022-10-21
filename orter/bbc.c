@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* TODO change to orter bbc uef */
 /* TODO consolidate this byte io handling */
 static void put16be(uint16_t n)
 {
@@ -135,8 +134,7 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
   }
 
   /* integer gap */
-  put16le(0x0112);
-  put32le(2);
+  chunk(0x0112, 2);
   put16le(600);
 
   /* done */

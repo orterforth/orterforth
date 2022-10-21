@@ -21,7 +21,7 @@ add_library(rf_inst OBJECT ../../rf_inst.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS
 
 # Tell CMake where to find the executable source file
 add_executable(${PROJECT_NAME} 
-    ../../orterforth.c
+    ../../main.c
     $<TARGET_OBJECTS:rf>
     $<TARGET_OBJECTS:rf_persci>
     $<TARGET_OBJECTS:system>
