@@ -248,7 +248,7 @@ BBCROMS := \
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
-	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/assembly.inc
 	BBCINSTMEDIA = bbc/inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
@@ -259,7 +259,7 @@ endif
 
 # default C code
 ifeq ($(BBCOPTION),default)
-	BBCDEPS := bbc/mos.o bbc/orterforth.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
+	BBCDEPS := bbc/mos.o bbc/main.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
 	BBCINC := target/bbc/default.inc
 	BBCINSTMEDIA = bbc/inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
@@ -270,7 +270,7 @@ endif
 
 # assembly code, tape only config starting at 0xE00
 ifeq ($(BBCOPTION),tape)
-	BBCDEPS := bbc/orterforth.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/tape.inc
 	BBCINSTMEDIA = bbc/inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/inst.uef
@@ -537,7 +537,7 @@ c64/rf_system_c.s : target/c64/system.c | c64
 	cc65 -O -t c64 -o $@ $<
 
 # inst binary
-c64/inst : c64/orterforth.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
+c64/inst : c64/main.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
 
 	cl65 -O -t c64 -o $@ -m c64/inst.map $^
 
@@ -614,12 +614,12 @@ pico/orterforth.uf2 : pico/Makefile rf.c rf_inst.c system.c
 QLOPTION := default
 
 ifeq ($(QLOPTION),assembly)
-QLDEPS := ql/rf.o ql/rf_m68k.o ql/system.o ql/orterforth.o
+QLDEPS := ql/rf.o ql/rf_m68k.o ql/system.o ql/main.o
 QLINC := target/ql/assembly.inc
 endif
 
 ifeq ($(QLOPTION),default)
-QLDEPS := ql/rf.o ql/system.o ql/orterforth.o
+QLDEPS := ql/rf.o ql/system.o ql/main.o
 QLINC := target/ql/default.inc
 endif
 
@@ -727,7 +727,7 @@ ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
 	$(ORTER) ql serial-bytes $< > $@
 
 # main program
-ql/orterforth.o : main.c rf.h $(QLINC) rf_inst.h | ql
+ql/main.o : main.c rf.h $(QLINC) rf_inst.h | ql
 
 	qcc -o $@ -c $<
 
