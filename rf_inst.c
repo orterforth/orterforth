@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <unistd.h>
 #ifdef __RC2014
 #include <z80.h>
 #endif
@@ -9,6 +7,7 @@
 /* disc controller runs in process */
 #include "rf_persci.h"
 /* fig-Forth source compiled into C array */
+/* const to compile to flash on e.g. Pico */
 const
 #include "orterforth.inc"
 #endif
@@ -19,17 +18,6 @@ const
 #define RF_ASCII_ACK 6
 
 /* INST TIME DISC OPERATIONS */
-
-/* convert block number into drive, track and sector */
-static void rf_inst_disc_blk(uintptr_t blk, uint8_t *drive, uint8_t *track, uint8_t *sector)
-{
-  uintptr_t blk_offset;
-  
-  blk_offset = blk % 2000;
-  *drive = blk / 2000;
-  *track = blk_offset / 26;
-  *sector = (blk_offset % 26) + 1;
-}
 
 /* inst time disc command buffer */
 static uint8_t cmd[12] = {
@@ -46,35 +34,29 @@ static void rf_inst_puti(uint8_t idx, uint8_t i)
 /* PerSci disc command, I or O */
 static void rf_inst_disc_cmd_set(char c, uintptr_t blk)
 {
-  uint8_t drive, track, sector;
-
-  /* calculate params */
-  rf_inst_disc_blk(blk, &drive, &track, &sector);
-
-  /* create command */
+  uintptr_t offset = blk % 2000;
+  
+  /* set command */
   cmd[0] = c;
-  rf_inst_puti(2, track);
-  rf_inst_puti(5, sector);
-  rf_inst_puti(9, drive);
+  /* convert block number into drive, track and sector */
+  rf_inst_puti(2, offset / 26);
+  rf_inst_puti(5, (offset % 26) + 1);
+  rf_inst_puti(9, blk / 2000);
 }
 
 #ifdef RF_INST_SAVE
-/* write disc command */
-static void rf_inst_disc_cmd(char c, uintptr_t blk)
-{
-  rf_inst_disc_cmd_set(c, blk);
-  rf_disc_write((char *) cmd, 12);
-}
-
 /* read the next byte from disc, fail if not the expected value */
 static void __FASTCALL__ rf_inst_disc_expect(char e)
 {
   char c;
 
   rf_disc_read(&c, 1);
+  /* TODO determine best cause of action when expect fails */
+/*
   if (c != e) {
     exit(1);
   }
+*/
 }
 
 /* write block */
@@ -83,7 +65,8 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
   static char eot = RF_ASCII_EOT;
 
   /* send command */
-  rf_inst_disc_cmd('O', blk);
+  rf_inst_disc_cmd_set('O', blk);
+  rf_disc_write((char *) cmd, 12);
 
   /* get response */
   rf_inst_disc_expect(RF_ASCII_ENQ);
@@ -126,10 +109,9 @@ static void rf_inst_code_block_cmd(void)
 {
   RF_START;
   {
-    uintptr_t block;
+    uintptr_t block = RF_SP_POP;
 
     /* create command */
-    block = RF_SP_POP;
     rf_inst_disc_cmd_set('I', block);
 
     /* return command addr */
@@ -148,14 +130,6 @@ static uint8_t __FASTCALL__ rf_inst_strlen(const char *s)
   return i;
 }
 
-/* replaces memcpy */
-static void rf_inst_memcpy(uint8_t *dst, uint8_t *src, uint8_t length)
-{
-  while (length--) {
-    *dst++ = *src++;
-  }
-}
-
 /* replaces memset */
 static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
 {
@@ -166,13 +140,7 @@ static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
 
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 {
-  uintptr_t *dp;
-
-  dp = (uintptr_t *) RF_USER_DP;
-  *dp = word;
-/*
-  RF_USER_DP = (uintptr_t) (dp + 1);
-*/
+  *((uintptr_t *) RF_USER_DP) = word;
   RF_USER_DP += RF_WORD_SIZE;
 }
 
@@ -182,18 +150,17 @@ static char *rf_inst_vocabulary = 0;
 /* CREATE */
 static void rf_inst_create(uint8_t length, uint8_t *name)
 {
-  uint8_t *here, *there;
-
-  here = (uint8_t *) RF_USER_DP;
-  there = here;
+  uint8_t *here = (uint8_t *) RF_USER_DP;
+  uint8_t *there = here;
 
   /* length byte with smudge */
   *here = length | 0xA0;
-  ++here;
 
   /* name */
-  rf_inst_memcpy(here, name, length);
-  here += length;
+  while (length--) {
+    *(++here) = *(name++);
+  }
+  ++here;
 
 #ifdef __CC65__
   /* 6502 bug workaround */
@@ -363,14 +330,8 @@ static void rf_inst_code_compile(void)
 {
   RF_START;
   {
-    uintptr_t *a;
-
-    /* ?COMP */
-    /* R> */
-    a = RF_IP_GET;
-    /* DUP cl + >R */
+    uintptr_t *a = RF_IP_GET;
     RF_IP_INC;
-    /* @ , */
     rf_inst_comma(*a);
   }
   RF_JUMP_NEXT;
@@ -380,33 +341,6 @@ static void rf_inst_code_compile(void)
 static void rf_inst_immediate(void)
 {
   *rf_inst_vocabulary ^= 0x40;
-}
-
-/* INTERPRET */
-
-static void rf_inst_code_interpret_word(void)
-{
-  RF_START;
-  {
-    uintptr_t len;
-    uintptr_t *pfa;
-
-    len = RF_SP_POP;
-    pfa = (uintptr_t *) RF_SP_POP;
-
-    /* STATE @ < IF  */
-    if (len < RF_USER_STATE) {
-      /* CFA , */
-      rf_inst_comma((uintptr_t) ((uintptr_t *) pfa - 1));
-      RF_JUMP_NEXT;
-    } else {
-      /* ELSE CFA EXECUTE */
-      rf_w = (rf_code_t *) ((uintptr_t *) pfa - 1);
-      RF_JUMP(*rf_w);
-    }
-    /* ENDIF */
-    /* ?STACK */
-  }
 }
 
 /* compile a LIT value */
@@ -422,11 +356,7 @@ static void rf_inst_code_interpret_number(void)
 {
   RF_START;
   {
-    intptr_t number;
-
-    /* ELSE */
-    /* HERE NUMBER */
-    number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
+    intptr_t number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
 
     /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
     if (RF_USER_STATE) {
@@ -466,9 +396,8 @@ static void rf_inst_code_doliteral(void)
 {
   RF_START;
   {
-    uintptr_t number;
-    
-    number = *((uintptr_t *) rf_w + 1);
+    uintptr_t number = *((uintptr_t *) rf_w + 1);
+
     if (RF_USER_STATE) {
       rf_inst_compile_lit(number);
     } else {
@@ -606,7 +535,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 68
+#define RF_INST_CODE_LIT_LIST_SIZE 67
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "cl", rf_code_cl },
@@ -615,7 +544,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, 0, rf_code_tg },
   { 0, "xt", rf_code_xt },
   { "lit", "LIT", rf_code_lit },
-  { "exec", 0, rf_code_exec },
+  { "exec", "EXECUTE", rf_code_exec },
   { "bran", "BRANCH", rf_code_bran },
   { "zbran", "0BRANCH", rf_code_zbran },
   { "xloop", 0, rf_code_xloop },
@@ -653,7 +582,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "fromr", "R>", rf_code_fromr },
   { "rr", "R", rf_code_rr },
   { "zequ", "0=", rf_code_zequ },
-  { "zless", 0, rf_code_zless },
+  { "zless", "0<", rf_code_zless },
   { "plus", "+", rf_code_plus },
   { "dplus", 0, rf_code_dplus },
   { "minus", "MINUS", rf_code_minus },
@@ -680,7 +609,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "bread", "BLOCK-READ", rf_code_bread },
   { 0, "DECIMAL", rf_inst_code_decimal },
   { 0, "COMPILE", rf_inst_code_compile },
-  { 0, "interpret-word", rf_inst_code_interpret_word },
   { 0, "interpret-number", rf_inst_code_interpret_number },
   { 0, "add", rf_inst_code_add },
   { 0, "prev", rf_inst_code_prev },
@@ -786,7 +714,9 @@ static void rf_inst_forward(void)
 
   /* INTERPRET */
   rf_inst_colon("INTERPRET");
-  rf_inst_compile("-FIND 0BRANCH ^4 interpret-word BRANCH ^-5 interpret-number BRANCH ^-8");
+  rf_inst_compile(
+    "-FIND 0BRANCH ^21 STATE @ - 0< 0BRANCH ^10 cl - HERE ! cl DP +! "
+    "BRANCH ^4 cl - EXECUTE BRANCH ^-22 interpret-number BRANCH ^-25");
 
   /* CREATE */
   rf_inst_colon("CREATE");
@@ -851,7 +781,7 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
   return b + (b < 10 ? 48 : 55);
 }
 
-static char buf[128];
+static uint8_t * buf = (uint8_t *) RF_FIRST + RF_WORD_SIZE;
 
 /* save the installation as hex on DR1 */
 void rf_inst_save(void)
@@ -901,9 +831,6 @@ void rf_inst(void)
 #ifdef __RC2014
   z80_delay_ms(5000);
 #else
-#ifndef __CC65__
-  sleep(5);
-#endif
 #endif
 #endif
 
