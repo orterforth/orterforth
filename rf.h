@@ -82,6 +82,25 @@ typedef uint32_t rf_double_t;
 #endif
 #endif
 
+/* cmoc */
+
+#ifdef _CMOC_VERSION_
+#define RF_WORD_SIZE 2
+#define RF_DOUBLE_ARITH
+typedef unsigned char uint8_t;
+typedef int intptr_t;
+typedef unsigned int uintptr_t;
+typedef unsigned long rf_double_t;
+#define RF_BE
+#ifdef DRAGON
+#define RF_TARGET_HI 0x3195
+#define RF_TARGET_LO 0xC1F7
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/dragon/system.inc"
+#endif
+#endif
+#endif
+
 /* z88dk */
 
 #ifdef __SCCZ80

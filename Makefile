@@ -556,6 +556,33 @@ disc : $(DISC) orterforth.disc
 	touch data.disc
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc data.disc
 
+
+# === Dragon 32/64 ===
+
+dragon :
+
+	mkdir $@
+
+.PHONY : dragon-build
+dragon-build : dragon/inst.bin
+
+dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
+
+	cmoc --dragon -c -o $@ $<
+
+
+dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
+
+	cmoc --dragon -o $@ $^
+
+dragon/inst.o : rf_inst.c rf.h target/dragon/system.inc | dragon
+
+	cmoc --dragon -c -o $@ $<
+
+dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
+
+	cmoc --dragon -c -o $@ $<
+
 # help
 .PHONY : help
 help : $(TARGET)-help
@@ -578,12 +605,14 @@ m100/hw.co : | m100
 
 	zcc +m100 -subtype=default hw.c -o $@ -create-app
 
+
 # disc image as C include
 orterforth.inc : orterforth.disc | $(ORTER)
 
 	# xxd -i $< > $@
-	$(ORTER) hex include orterforth_disc <$< >$@.io
+	$(ORTER) hex include orterforth_disc < $< > $@.io
 	mv $@.io $@
+
 
 # === Raspberry Pi Pico ===
 
