@@ -258,7 +258,6 @@ ifeq ($(BBCOPTION),assembly)
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
 	BBCORG := 1720
 	BBCORIGIN := 2200
-	BBCRUN := bbc-run-disk
 endif
 
 # default C code
@@ -269,7 +268,6 @@ ifeq ($(BBCOPTION),default)
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
 	BBCORG := 1720
 	BBCORIGIN := 3000
-	BBCRUN := bbc-run-disk
 endif
 
 # assembly code, tape only config starting at 0xE00
@@ -280,7 +278,6 @@ ifeq ($(BBCOPTION),tape)
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/inst.uef
 	BBCORG := 1220
 	BBCORIGIN := 1D00
-	BBCRUN := bbc-run-tape
 endif
 
 bbc :
@@ -306,47 +303,46 @@ BBCMAMEFAST := mame bbcb -rompath roms -video none -sound none \
 	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
-# default is to load from disk
+# load and run
 .PHONY : bbc-run
-bbc-run : $(BBCRUN)
-
-# load from disk and run
-.PHONY : bbc-run-disk
-bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) $(DR0)
+ifeq ($(BBCOPTION),tape)
+bbc-run : bbc/orterforth.uef $(BBCROMS) | $(DISC) $(DR0) $(DR1)
+else
+bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC) $(DR0) $(DR1)
+endif
 
 	# start disc
-	touch data.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) data.disc
+	touch $(DR1)
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) $(DR1)
 
 	# run mame
-	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
+ifeq ($(BBCOPTION),tape)
+	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
+else
+	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
+endif
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
 
-# load from tape and run
-.PHONY : bbc-run-tape
-bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) $(DR0)
-
-	# start disc
-	touch data.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) data.disc
-
-	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
-
-	# stop disc
-	sh scripts/stop.sh disc.pid
-
-# load from disk and run tests
+# load and run tests
 .PHONY : bbc-test
-bbc-test : bbc/orterforth.ssd $(BBCROMS) | $(DISC) test.disc
+ifeq ($(BBCOPTION),tape)
+bbc-test : bbc/orterforth.uef $(BBCROMS) | $(DISC) test.disc $(DR1)
+else
+bbc-test : bbc/orterforth.ssd $(BBCROMS) | $(DISC) test.disc $(DR1)
+endif
 
 	# start disc
-	touch data.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 test.disc data.disc
+	touch $(DR1)
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 test.disc $(DR1)
 
 	# run mame
-	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\rEMPTY-BUFFERS 1 LOAD\r' -flop1 bbc/orterforth.ssd
+ifeq ($(BBCOPTION),tape)
+	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\rEMPTY-BUFFERS 1 LOAD\r' -cassette bbc/orterforth.uef
+else
+	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\rEMPTY-BUFFERS 1 LOAD\r' -flop1 bbc/orterforth.ssd
+endif
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
