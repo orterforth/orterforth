@@ -392,21 +392,27 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # final binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 
-	# start disc
+	# empty disc
 	rm -f $@.io
 	touch $@.io
+
+	# start disc
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 orterforth.disc $@.io
 
-	# run emulator, wait for result
-	$(BBCMAMEFAST) $(BBCMAMEINST) & pid=$$! ; \
-		scripts/waitforhex $@.io ; \
-		kill -9 $$pid
+	# start Mame
+	sh scripts/start.sh /dev/stdin /dev/stdout mame.pid $(BBCMAMEFAST) $(BBCMAMEINST)
 
-	# copy result
-	mv $@.io $@
+	# wait for save
+	sh scripts/waitforhex $@.io
+
+	# stop Mame
+	sh scripts/stop.sh mame.pid
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
+
+	# copy result
+	mv $@.io $@
 
 # final disc inf
 bbc/orterforth.inf : | bbc
@@ -943,11 +949,14 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(OR
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
-	# start disc
+	# empty disc
+	rm -f $@.io
 	touch $@.io
+
+	# start disc
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc $@.io
 
-	# wait for install and save
+	# wait for save
 	sh scripts/waitforhex $@.io
 
 	# stop disc
@@ -1358,7 +1367,7 @@ ifeq ($(SPECTRUMIMPL),real)
 		kill -9 $$pid
 endif
 
-	# read hex from disc 1 blocks and write to file
+	# copy result
 	mv $@.io $@
 
 # make serial load file from bin
