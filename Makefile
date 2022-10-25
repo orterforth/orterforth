@@ -133,9 +133,9 @@ $(SYSTEM)-clean :
 
 # run local build
 .PHONY : $(SYSTEM)-run
-$(SYSTEM)-run : $(ORTERFORTH) orterforth.disc library.disc
+$(SYSTEM)-run : $(ORTERFORTH) $(DR0)
 
-	@$(ORTERFORTH) library.disc
+	@$(ORTERFORTH) $(DR0)
 
 # local system lib default
 $(SYSTEM)/%.o : %.c | $(SYSTEM)
@@ -230,6 +230,10 @@ $(TARGET)-help :
 	$(DISC) create <$< >$@.io
 	mv $@.io $@
 
+# runtime disc images
+DR0=messages.disc
+DR1=data.disc
+
 
 # === BBC Micro ===
 
@@ -308,11 +312,11 @@ bbc-run : $(BBCRUN)
 
 # load from disk and run
 .PHONY : bbc-run-disk
-bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
+bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) $(DR0)
 
 	# start disc
 	touch data.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc data.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) data.disc
 
 	# run mame
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
@@ -322,11 +326,11 @@ bbc-run-disk : bbc/orterforth.ssd $(BBCROMS) | $(DISC) messages.disc
 
 # load from tape and run
 .PHONY : bbc-run-tape
-bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) messages.disc
+bbc-run-tape : bbc/orterforth.uef $(BBCROMS) | $(DISC) $(DR0)
 
 	# start disc
 	touch data.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc data.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) data.disc
 
 	@$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
 
@@ -566,16 +570,19 @@ dragon :
 .PHONY : dragon-build
 dragon-build : dragon/inst.bin
 
-dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
+dragon/hw.bin : hw.c
 
-	cmoc --dragon -c -o $@ $<
-
+	cmoc --dragon -o $@ $^
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
 	cmoc --dragon -o $@ $^
 
 dragon/inst.o : rf_inst.c rf.h target/dragon/system.inc | dragon
+
+	cmoc --dragon -c -o $@ $<
+
+dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -c -o $@ $<
 
@@ -636,6 +643,7 @@ pico/orterforth.uf2 : pico/Makefile rf.c rf_inst.c system.c
 
 	rm -rf pico/orterforth.*
 	cd pico && PICO_SDK_PATH=~/pico-sdk make
+
 
 # === Sinclair QL ===
 
@@ -1155,7 +1163,7 @@ spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom sp
 
 	# start disc
 	touch data.disc
-	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse messages.disc data.disc
+	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse $(DR0) data.disc
 
 	# run fuse
 	$(FUSE) \
@@ -1180,7 +1188,7 @@ spectrum-run-mame : spectrum/orterforth.tap
 
 	# start disc
 	touch data.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 messages.disc data.disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) data.disc
 
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
