@@ -1,13 +1,12 @@
 /* ORTERFORTH */
 
 #include "rf.h"
-#include "rf_inst.h"
+#include "inst.h"
 #ifdef RF_INST_LOCAL_DISC
 #include "rf_persci.h"
 #endif
 
 /* indicates whether installation has been completed */
-/* inst time functions will fail fast if so */
 char rf_installed = 0;
 
 int main(int argc, char *argv[])

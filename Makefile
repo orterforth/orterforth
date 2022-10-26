@@ -818,7 +818,7 @@ ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
 	$(ORTER) ql serial-bytes $< > $@
 
 # main program
-ql/main.o : main.c rf.h $(QLINC) rf_inst.h | ql
+ql/main.o : main.c rf.h $(QLINC) inst.h | ql
 
 	qcc -o $@ -c $<
 
@@ -971,7 +971,7 @@ rc2014/inst.ihx : rc2014/inst-2.bin
 rc2014/inst_INST.bin : rc2014/inst_CODE.bin
 
 # inst code
-rc2014/inst.lib : rf_inst.c rf.h $(RC2014INC) rf_inst.h | rc2014
+rc2014/inst.lib : rf_inst.c rf.h $(RC2014INC) inst.h | rc2014
 
 	zcc +rc2014 -clib=new \
 		-DRF_TARGET_INC='\"$(RC2014INC)\"' \
