@@ -6,14 +6,15 @@ orterforth
 ==========
 
 
-# Introduction #
+INTRODUCTION
 
 orterforth is an implementation of fig-Forth 1.1 for multiple 
 platforms. It is closely based on the fig-FORTH Installation 
-Manual, Glossary, Model, Editor (1980).
+Manual, Glossary, Model, Editor created by the Forth Interest
+Group (fig) in 1980.
 
 
-# Building #
+BUILDING
 
 To build orterforth for the local system (Linux, macOS, 
 Cygwin), call:
@@ -28,15 +29,29 @@ The target executable is built at the location:
 where <os>   is e.g.: cygwin, darwin, linux
       <arch> is e.g.: armv6l, armv7l, i686, x86_64
 
+To build a version implemented in assembly, for performance,
+call:
 
-# Running #
+ make clean
+ make SYSTEMOPTION=assembly
+
+The target executable is built at the location:
+
+ <os>-<arch>/orterforth.exe (on Cygwin)
+ <os>-<arch>/orterforth     (on others)
+
+where <os>   is e.g.: cygwin, darwin, linux
+      <arch> is e.g.: armv6l, armv7l, i686, x86_64
+
+
+BUILDING
 
 To build and run the local system build call:
 
  make run
 
 
-# Building for another platform #
+BUILDING FOR RETRO PLATFORMS
 
 To build orterforth for a historical platform, you will need 
 prerequisites such as:
@@ -57,7 +72,7 @@ Then to build call:
  make TARGET=<target>
 
 
-# Running on another platform #
+RUNNING ON RETRO PLATFORMS
 
 orterforth can be built and run in an emulator (if installed)
 by calling:
@@ -65,7 +80,7 @@ by calling:
  make run TARGET=<target>
 
 
-# orterforth is implemented in C #
+ORTERFORTH IS IMPLEMENTED IN C
 
 A typical Forth implementation rests on a number of base words
 implemented in native machine code. Higher-level words are 
@@ -82,7 +97,7 @@ implementations of each base word in C. The CFA is set to point
 to this C code.
 
 
-# orterforth uses a trampoline to execute code #
+THE TRAMPOLINE - EMULATING JUMPS IN C
 
 Forth implementations normally use jump instructions to
 transfer control through successive native code, rather than 
@@ -91,7 +106,7 @@ orterforth emulates them using a trampoline - a loop that
 successively calls function pointers.
 
 
-# orterforth emulates the retro disc controller #
+THE RETRO DISC CONTROLLER - EMULATED HERE
 
 The Installation Manual contains an implementation of the 
 protocol used by the PerSci 1070 Intelligent Diskette
@@ -118,7 +133,7 @@ An RS-232 serial port can be added to a modern machine that
 doesn't have one, using a USB to RS-232 converter.
 
 
-# orterforth integrates with native machine code #
+INTEGRATING WITH ASSEMBLY CODE - IMPROVING PERFORMANCE
 
 orterforth will usually be substantially slower than other 
 Forth implementations written in assembly code, because many 
@@ -136,50 +151,52 @@ the C code. This allows you to benefit from performance
 improvement but keep the practical advantages of C interop.
 
 
-# orterforth has a few additional words #
+ADDITIONAL WORDS - PLATFORM INDEPENDENCE
 
 To support different platforms, while making the minimum of 
 changes to the fig-Forth language itself, there are a small 
 number of words added to the Forth dictionary to help make code
 system-independent:
 
- cl ( -- n )    Returns the word size in bytes. (CELL is not
-                part of this version of fig-Forth.)
+ cl ( -- n )             Returns the word size in bytes. (CELL
+                         is not part of this version of fig-
+                         Forth.)
 
- cs ( n -- n )  Multiplies the value on the stack by the word
-                size. (CELLS is not part of this version of
-                fig-Forth.)
+ cs ( n -- n )           Multiplies the value on the stack by
+                         the word size. (CELLS is not part of
+                         this version of fig-Forth.)
 
- ln ( n -- n )  Aligns the stack value according to CPU
-                requirements. Used in CREATE when adding the
-                name field and in other non-aligned dictionary
-                operations. (ALIGNED is not part of this 
-                version of fig-Forth.)
+ ln ( c-addr -- a-addr ) Aligns the stack value according to
+                         CPU requirements. Used in CREATE when
+                         adding the name field and in other 
+                         non-aligned dictionary operations. 
+                         (ALIGNED is not part of this version
+                         of fig-Forth.)
 
- tg ( -- d )    Returns a base-36 representation of the target
-                system (e.g., one of: BBC. CYGWIN. DARWIN. 
-                LINUX. PICO. SPECTR. etc).
+ tg ( -- d )             Returns a base-36 representation of
+                         the target system (e.g., one of: BBC.
+                         CYGWIN. DARWIN. LINUX. PICO. RC2014.
+                         SPECTR. etc).
 
- xt ( -- )      Exits orterforth (and returns to the shell,
-                BASIC prompt or equivalent).
+ xt ( -- )               Exits orterforth (and returns to the
+                         shell, BASIC prompt or equivalent).
+                         Used to exit the install process.
 
-# It starts by installing from Forth source code #
+
+THE INSTALLATION PROCESS
 
 First, installation code written in C reads and interprets
 Forth source code from the emulated disc drive, in the manner
 described in the Installation Manual. This compiles and builds
-up a complete Forth installation.
+up the complete Forth installation.
 
 The fig-Forth source code comes from the Installation Manual, 
 but is modified to allow for different platforms' processor 
 architectures, word sizes, I/O, memory layouts, and so on.
 
-
-# It saves the completed Forth installation to disc #
-
 On historical platforms, when install is complete, the memory
 map containing the installation and the required native code
-is saved to the emulated disc drive. This is in a hex format
+is saved to the emulated disc drive. (This is in a hex format
 to avoid issues with control characters used by the disc
 controller).
 
@@ -189,17 +206,14 @@ To save space, the original installation code is loaded into a
 memory location outside this area and does not form part of the
 final binary.
 
-
-# Now Forth is started #
-
-When installation is complete, or when the final binary is 
+When installation is complete, or when the final binary is
 loaded, the user is placed at Forth's interactive prompt.
 
-The user can use the emulated disc drive to load programs
-in the same way it was used for install.
+The emulated disc drive is available to the user to load
+programs in the same way it was used for install.
 
 
-# Acknowledgements #
+ACKNOWLEDGEMENTS
 
 orterforth builds upon the work of many, most obviously the 
 Forth Interest Group and those involved in putting together the
