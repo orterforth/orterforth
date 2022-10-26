@@ -904,9 +904,8 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER)
 	# reset and get ready
 	@echo "On the RC2014: Connect via serial"
 	@echo "               Press reset"
-	@echo "               Initialise memory top to 35071"
-	@echo "               Disconnect"
 	@read -p "Then press enter to start: " LINE
+	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
 
 	# load via serial
 	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
@@ -1000,9 +999,8 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(OR
 	# reset and get ready
 	@echo "On the RC2014: Connect via serial"
 	@echo "               Press reset"
-	@echo "               Initialise memory top to 35071"
-	@echo "               Disconnect"
 	@read -p "Then press enter to start: " LINE
+	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
 
 	# load inst via hexload
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas

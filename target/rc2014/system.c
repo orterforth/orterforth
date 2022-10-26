@@ -28,6 +28,12 @@ void rf_code_key(void)
     int c;
 
     c = getchar();
+
+    /* LF to CR */
+    if (c == 10) {
+      c = 13;
+    }
+
     RF_SP_PUSH(c & 0x7F);
   }
   RF_JUMP_NEXT;
