@@ -116,7 +116,7 @@ file system, providing access to "screens" of source code.
 
 orterforth provides an emulated version of this. It partly
 implements the protocol at the controller end, uses files as
-disc images and reads or writes to to them as necessary.
+disc images and reads or writes to them as necessary.
 
 Unlike in the Installation Manual, though, orterforth uses a 
 serial interface to communicate with the disc drive. Because
@@ -221,6 +221,10 @@ This is then used to create completed installation binaries.
 To save space, the original installation code is loaded into a
 memory location outside this area and does not form part of the
 final binary.
+
+(On modern platforms, this whole installation process takes
+place on startup every time the program is launched - the 
+installation code and disc contents are part of the binary.)
 
 When installation is complete, or when the final binary is
 loaded, the user is placed at Forth's interactive prompt.
