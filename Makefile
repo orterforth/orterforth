@@ -190,7 +190,7 @@ $(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # inst lib
-$(SYSTEM)/rf_inst.o : rf_inst.c orterforth.inc rf.h rf_persci.h | $(SYSTEM)
+$(SYSTEM)/rf_inst.o : inst.c orterforth.inc rf.h rf_persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -534,7 +534,7 @@ bbc/rf_6502.o : rf_6502.s | bbc
 	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
 
 # main lib
-bbc/rf_inst.s : rf_inst.c rf.h $(BBCINC) | bbc
+bbc/rf_inst.s : inst.c rf.h $(BBCINC) | bbc
 
 	# TODO determine why INST and INDA need to be distinct sections
 	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
@@ -632,7 +632,7 @@ dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
 	cmoc --dragon -o $@ $^
 
-dragon/inst.o : rf_inst.c rf.h target/dragon/system.inc | dragon
+dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -c -o $@ $<
 
@@ -693,7 +693,7 @@ pico/Makefile : target/pico/CMakeLists.txt | pico
 
 	cd pico && PICO_SDK_PATH=~/pico-sdk cmake ../target/pico
 
-pico/orterforth.uf2 : pico/Makefile rf.c rf_inst.c system.c
+pico/orterforth.uf2 : pico/Makefile rf.c inst.c system.c
 
 	rm -rf pico/orterforth.*
 	cd pico && PICO_SDK_PATH=~/pico-sdk make
@@ -847,7 +847,7 @@ ql/rf_m68k.o : rf_m68k.s | ql
 	qcc -o $@ -c $<
 
 # installer
-ql/rf_inst.o : rf_inst.c rf.h $(QLINC) | ql
+ql/rf_inst.o : inst.c rf.h $(QLINC) | ql
 
 	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
@@ -971,7 +971,7 @@ rc2014/inst.ihx : rc2014/inst-2.bin
 rc2014/inst_INST.bin : rc2014/inst_CODE.bin
 
 # inst code
-rc2014/inst.lib : rf_inst.c rf.h $(RC2014INC) inst.h | rc2014
+rc2014/inst.lib : inst.c rf.h $(RC2014INC) inst.h | rc2014
 
 	zcc +rc2014 -clib=new \
 		-DRF_TARGET_INC='\"$(RC2014INC)\"' \
@@ -1452,7 +1452,7 @@ spectrum/rf.lib : rf.c rf.h | spectrum
 		$<
 
 # inst code, which is located to be overwritten when complete
-spectrum/rf_inst.lib : rf_inst.c rf.h | spectrum
+spectrum/rf_inst.lib : inst.c rf.h | spectrum
 
 	zcc +zx \
  		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
@@ -1525,7 +1525,7 @@ zx81/inst.bin zx81/inst.P &: zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
 
 	zcc +zx81 -lm -lzx81/rf -lzx81/system -lzx81/inst -create-app -m -o zx81/inst.bin main.c
 
-zx81/inst.lib : rf_inst.c rf.h | zx81
+zx81/inst.lib : inst.c rf.h | zx81
 
 	zcc +zx81 -x -o $@ $<
 
