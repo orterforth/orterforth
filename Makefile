@@ -84,7 +84,7 @@ SYSTEMOPTION := default
 
 SYSTEMDEPSALL := \
 	$(SYSTEM)/rf.o \
-	$(SYSTEM)/rf_inst.o \
+	$(SYSTEM)/inst.o \
 	$(SYSTEM)/rf_persci.o \
 	$(SYSTEM)/system.o
 
@@ -190,7 +190,7 @@ $(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # inst lib
-$(SYSTEM)/rf_inst.o : inst.c orterforth.inc rf.h rf_persci.h | $(SYSTEM)
+$(SYSTEM)/inst.o : inst.c orterforth.inc rf.h rf_persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -252,7 +252,7 @@ BBCROMS := \
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
-	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/assembly.inc
 	BBCINSTMEDIA = bbc/inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
@@ -262,7 +262,7 @@ endif
 
 # default C code
 ifeq ($(BBCOPTION),default)
-	BBCDEPS := bbc/mos.o bbc/main.o bbc/rf.o bbc/rf_inst.o bbc/rf_system_c.o bbc/bbc.lib
+	BBCDEPS := bbc/mos.o bbc/main.o bbc/rf.o bbc/inst.o bbc/rf_system_c.o bbc/bbc.lib
 	BBCINC := target/bbc/default.inc
 	BBCINSTMEDIA = bbc/inst.ssd
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
@@ -272,7 +272,7 @@ endif
 
 # assembly code, tape only config starting at 0xE00
 ifeq ($(BBCOPTION),tape)
-	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/rf_inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/tape.inc
 	BBCINSTMEDIA = bbc/inst.uef
 	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/inst.uef
@@ -534,7 +534,7 @@ bbc/rf_6502.o : rf_6502.s | bbc
 	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
 
 # main lib
-bbc/rf_inst.s : inst.c rf.h $(BBCINC) | bbc
+bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 
 	# TODO determine why INST and INDA need to be distinct sections
 	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
@@ -595,7 +595,7 @@ c64/rf_system_c.s : target/c64/system.c | c64
 	cc65 -O -t c64 -o $@ $<
 
 # inst binary
-c64/inst : c64/main.o c64/rf.o c64/rf_inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
+c64/inst : c64/main.o c64/rf.o c64/inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
 
 	cl65 -O -t c64 -o $@ -m c64/inst.map $^
 
@@ -774,7 +774,7 @@ ql/orterforth : ql/relink.o $(QLDEPS)
 	qld -ms -o $@ $^
 
 # inst executable
-ql/inst : ql/rf_inst.o $(QLDEPS)
+ql/inst : ql/inst.o $(QLDEPS)
 
 	qld -ms -o $@ $^
 
@@ -847,7 +847,7 @@ ql/rf_m68k.o : rf_m68k.s | ql
 	qcc -o $@ -c $<
 
 # installer
-ql/rf_inst.o : inst.c rf.h $(QLINC) | ql
+ql/inst.o : inst.c rf.h $(QLINC) | ql
 
 	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
@@ -1143,7 +1143,7 @@ SPECTRUMLIBSALL := \
 	-lmzx_tiny \
 	-lndos \
 	-lspectrum/rf \
-	-lspectrum/rf_inst \
+	-lspectrum/inst \
 	-lspectrum/rf_system
 
 # minimal ROM-based
@@ -1286,7 +1286,7 @@ spectrum/fuse-rs232-tx : | spectrum
 # inst executable
 spectrum/orterforth-inst.bin : \
 	spectrum/rf.lib \
-	spectrum/rf_inst.lib \
+	spectrum/inst.lib \
 	spectrum/rf_system.lib \
 	spectrum/rf_z80.lib \
 	rf_z80_memory.asm \
@@ -1452,7 +1452,7 @@ spectrum/rf.lib : rf.c rf.h | spectrum
 		$<
 
 # inst code, which is located to be overwritten when complete
-spectrum/rf_inst.lib : inst.c rf.h | spectrum
+spectrum/inst.lib : inst.c rf.h | spectrum
 
 	zcc +zx \
  		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
