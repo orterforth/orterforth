@@ -16,6 +16,10 @@ void rf_code_emit(void)
     
     c = RF_SP_POP & 0x7F;
     putchar(c);
+    if (c == 0x08) {
+      putchar(' ');
+      putchar(c);
+    }
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
