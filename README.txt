@@ -21,14 +21,6 @@ Cygwin), call:
 
  make
 
-The target executable is built at the location:
-
- <os>-<arch>/orterforth.exe (on Cygwin)
- <os>-<arch>/orterforth     (on others)
-
-where <os>   is e.g.: cygwin, darwin, linux
-      <arch> is e.g.: armv6l, armv7l, i686, x86_64
-
 To build a version implemented in assembly, for performance,
 call:
 
