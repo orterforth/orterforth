@@ -292,6 +292,15 @@ bbc-clean :
 
 	rm -f bbc/*
 
+# default is to run MAME
+BBCMACHINE := mame
+#BBCMACHINE := real
+
+# physical machine loading method serial by default
+ifeq ($(BBCMACHINE),real)
+	BBCINSTMEDIA = bbc/inst.ser
+endif
+
 # MAME command line
 BBCMAME := mame bbcb -rompath roms -video opengl \
 	-skip_gameinfo -nomax -window \
@@ -311,8 +320,8 @@ else
 bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 endif
 
+ifeq ($(BBCMACHINE),mame)
 	# start disc
-	touch $(DR1)
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) $(DR1)
 
 	# run mame
@@ -324,6 +333,25 @@ endif
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
+endif
+ifeq ($(BBCMACHINE),real)
+	@# prompt user
+	@echo "  ensure RS423 connected to serial port"
+	@echo "  type the following"
+	@# TODO baud settings parameterised
+	@echo "   *FX7,7 <enter>"
+	@echo "   *FX8,7 <enter>"
+	@echo "   *FX2,1 <enter>"
+	@read -p "  then on this machine press enter " LINE
+
+	@# load via serial
+	@echo "* loading via serial..."
+	@# TODO set BBCMEDIA as bbc/orterforth.ser via config
+	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/orterforth.ser
+
+	# start disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+endif
 
 # load and run tests
 .PHONY : bbc-test
@@ -396,17 +424,39 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 	rm -f $@.io
 	touch $@.io
 
+ifeq ($(BBCMACHINE),mame)
 	# start disc
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 orterforth.disc $@.io
 
 	# start Mame
 	sh scripts/start.sh /dev/stdin /dev/stdout mame.pid $(BBCMAMEFAST) $(BBCMAMEINST)
+endif
+ifeq ($(BBCMACHINE),real)
+	@# prompt user
+	@echo "  ensure RS423 connected to serial port"
+	@echo "  type the following"
+	@# TODO baud settings parameterised
+	@echo "   *FX7,7 <enter>"
+	@echo "   *FX8,7 <enter>"
+	@echo "   *FX2,1 <enter>"
+	@read -p "  then on this machine press enter " LINE
+
+	# load via serial
+	@echo "* loading via serial..."
+	# TODO set BBCINSTMEDIA as bbc/inst.ser via config
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/inst.ser
+
+	# start disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io
+endif
 
 	# wait for save
 	sh scripts/waitforhex $@.io
 
+ifeq ($(BBCMACHINE),mame)
 	# stop Mame
 	sh scripts/stop.sh mame.pid
+endif
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
@@ -454,7 +504,9 @@ STAT := stat -c %s
 endif
 bbc/inst.ser : bbc/inst
 
-	printf "5P.\"Loading...\"\r10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" > $@.io
+	printf "5P.\"Loading...\"\r" > $@.io
+	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" >> $@.io
+	printf "20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" >> $@.io
 	cat -u $< >> $@.io
 	mv $@.io $@
 
@@ -944,6 +996,13 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 
 # saved hex result
 rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
+
+	# reset and get ready
+	@echo "On the RC2014: Connect via serial"
+	@echo "               Press reset"
+	@echo "               Initialise memory top to 35071"
+	@echo "               Disconnect"
+	@read -p "Then press enter to start: " LINE
 
 	# load inst via hexload
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
