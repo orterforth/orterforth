@@ -212,16 +212,23 @@ static int serve(char *dr0, char *dr1)
     /* disc in to disc controller */
     orter_io_relay(rd, disc_wr, in_buf, &in_offset, &in_pending);
 
-    /* TODO rd to mux_in_wr */
+    /* TODO mux_in_rd */
+    /*      relays into two buffers, the in_buf and an emit buf */
     /* TODO mux_in_disc_rd to disc_wr */
+    /*      simple relay */
     /* TODO mux_in_emit_rd to stdout_wr */
+    /*      simple relay */
 
     /* disc controller to disc out */
     orter_io_relay(disc_rd, wr, out_buf, &out_offset, &out_pending);
 
     /* TODO disc_rd to mux_out_disc_wr */
+    /*      disc out is written to port with high bit */
     /* TODO stdin_rd to mux_out_key_wr */
+    /*      stdin is written to port with no high bit */
+    /* NB   if there are bytes from the disc then prob drop stdin bytes */
     /* TODO mux_out_rd to wr */
+    /*      relay one buffer to wr. */
   }
 
   /* finished */
