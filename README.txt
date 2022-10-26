@@ -150,6 +150,22 @@ the native code words in assembly code and integrate them with
 the C code. This allows you to benefit from performance 
 improvement but keep the practical advantages of C interop.
 
+This is done by providing a mechanism to switch context
+between optimised code, that uses direct jumps and registers,
+and C code that uses the trampoline and memory locations. All
+C code words must start by calling a hook to switch the
+context, and the trampoline will switch it back.
+
+NB In some cases this involves copying stack frames and other
+intricate moves, to support everything the C compiler might do
+with the stack. It is also necessary to try to prevent the C
+compiler from moving stack operations before the hook.
+
+Compiler defines are provided to allow assembly code to be
+implemented incrementally, by omitting individual code words
+from the C implementation and linking the assembly code
+implemented thus far.
+
 
 ADDITIONAL WORDS - PLATFORM INDEPENDENCE
 
