@@ -895,7 +895,7 @@ ifeq ($(RC2014OPTION),default)
 RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
 RC2014INC := target/rc2014/default.inc
 RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
-RC2014ORIGIN := 0xA980
+RC2014ORIGIN := 0xAB00
 endif
 
 .PHONY : rc2014-run
