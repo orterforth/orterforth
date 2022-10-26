@@ -36,7 +36,7 @@ where <os>   is e.g.: cygwin, darwin, linux
       <arch> is e.g.: armv6l, armv7l, i686, x86_64
 
 
-BUILDING
+RUNNING
 
 To build and run the local system build call:
 
@@ -183,8 +183,8 @@ system-independent:
 
  tg ( -- d )             Returns a base-36 representation of
                          the target system (e.g., one of: BBC.
-                         CYGWIN. DARWIN. LINUX. PICO. RC2014.
-                         SPECTR. etc).
+                         CYGWIN. DARWIN. LINUX. PICO. QL.
+                         RC2014. SPECTR. etc).
 
  xt ( -- )               Exits orterforth (and returns to the
                          shell, BASIC prompt or equivalent).
