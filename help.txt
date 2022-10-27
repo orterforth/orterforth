@@ -6,5 +6,6 @@ where <target> is one of:
 
   bbc
   pico
+  rc2014
   ql
   spectrum

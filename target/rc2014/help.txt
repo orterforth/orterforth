@@ -1,0 +1,30 @@
+Building for the RC2014
+=======================
+
+You will need:
+
+* z88dk https://z88dk.org/
+* hexload.bas, from https://github.com/RC2014Z80/RC2014
+* Physical RC2014 with BASIC ROM
+* FTDI serial connection
+
+To build, call:
+
+ make TARGET=rc2014 RC2014OPTION=default  (default C impl)
+ make TARGET=rc2014 RC2014OPTION=assembly (assembly optimised impl)
+
+and follow instructions. You may need to reset the RC2014 so it
+responds to serial input, however a script then takes care of
+resetting memory top.
+
+The target files are:
+
+ rc2014/orterforth     (the pure binary)
+ rc2014/orterforth.ihx (Intel HEX format, for hexload.bas)
+ rc2014/orterforth.ser (hexload.bas and the .ihx file bundled
+                       together)
+
+
+To run, call:
+
+ make run TARGET=rc2014
