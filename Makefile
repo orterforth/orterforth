@@ -1310,7 +1310,7 @@ spectrum/fuse-rs232-tx : | spectrum
 	mkfifo $@
 
 # inst executable
-spectrum/orterforth-inst.bin : \
+spectrum/inst.bin : \
 	spectrum/rf.lib \
 	spectrum/inst.lib \
 	spectrum/rf_system.lib \
@@ -1331,7 +1331,7 @@ spectrum/orterforth-inst.bin : \
 		rf_z80_memory.asm main.c
 
 # start with an empty bin file to build the multi segment bin
-spectrum/orterforth-inst-0.bin : | spectrum
+spectrum/inst-0.bin : | spectrum
 
 	z88dk-appmake +rom \
 		-s $(SPECTRUMORG) \
@@ -1339,39 +1339,39 @@ spectrum/orterforth-inst-0.bin : | spectrum
 		-o $@
 
 # add main code at start
-spectrum/orterforth-inst-1.bin : \
-	spectrum/orterforth-inst-0.bin \
-	spectrum/orterforth-inst.bin
+spectrum/inst-1.bin : \
+	spectrum/inst-0.bin \
+	spectrum/inst.bin
 
 	z88dk-appmake +inject \
-		-b spectrum/orterforth-inst-0.bin \
-		-i spectrum/orterforth-inst.bin \
+		-b spectrum/inst-0.bin \
+		-i spectrum/inst.bin \
 		-s 0 \
 		-o $@
 
 # add inst code at offset, safely beyond dictionary
-spectrum/orterforth-inst-2.bin : \
-	spectrum/orterforth-inst-1.bin \
-	spectrum/orterforth-inst_INST.bin
+spectrum/inst-2.bin : \
+	spectrum/inst-1.bin \
+	spectrum/inst_INST.bin
 
 	z88dk-appmake +inject \
-		-b spectrum/orterforth-inst-1.bin \
-		-i spectrum/orterforth-inst_INST.bin \
+		-b spectrum/inst-1.bin \
+		-i spectrum/inst_INST.bin \
 		-s $(SPECTRUMINSTOFFSET) \
 		-o $@
 	# cat $< > $@.io
 	# head -c 32768 /dev/null >> $@.io
 	# head -c $(SPECTRUMINSTOFFSET) $@.io > $@
-	# cat spectrum/orterforth-inst_INST.bin >> $@
+	# cat spectrum/inst_INST.bin >> $@
 
 
 # make inst serial load file from inst bin
-spectrum/orterforth-inst-2.ser : spectrum/orterforth-inst-2.bin | $(ORTER)
+spectrum/inst-2.ser : spectrum/inst-2.bin | $(ORTER)
 
 	$(ORTER) spectrum header $< 3 32768 0 > $@
 
 # make inst tap from inst bin
-spectrum/orterforth-inst-2.tap : spectrum/orterforth-inst-2.bin
+spectrum/inst-2.tap : spectrum/inst-2.bin
 
 	z88dk-appmake +zx \
 		-b $< \
@@ -1379,7 +1379,7 @@ spectrum/orterforth-inst-2.tap : spectrum/orterforth-inst-2.bin
 		-o $@
 
 # both main and INST bin files are built by same command
-spectrum/orterforth-inst_INST.bin : spectrum/orterforth-inst.bin
+spectrum/inst_INST.bin : spectrum/inst.bin
 
 # final bin from the hex output by inst
 spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
@@ -1388,13 +1388,13 @@ spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
 
 # run inst which writes hex file to disc 01
 ifeq ($(SPECTRUMIMPL),fuse)
-SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(DISC) $(ORTER) $(FUSE) roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
+SPECTRUMINSTDEPS := spectrum/inst-2.tap $(DISC) $(ORTER) $(FUSE) roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
 endif
 ifeq ($(SPECTRUMIMPL),superzazu)
-SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.tap $(SYSTEM)/emulate_spectrum roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom
+SPECTRUMINSTDEPS := spectrum/inst-2.tap $(SYSTEM)/emulate_spectrum roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom
 endif
 ifeq ($(SPECTRUMIMPL),real)
-SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.ser $(DISC) $(ORTER)
+SPECTRUMINSTDEPS := spectrum/inst-2.ser $(DISC) $(ORTER)
 endif
 
 spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
@@ -1403,7 +1403,7 @@ spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
 	sh target/spectrum/check-memory.sh \
 		$(SPECTRUMORG) \
 		$(SPECTRUMORIGIN) \
-		$(shell $(STAT) spectrum/orterforth-inst.bin)
+		$(shell $(STAT) spectrum/inst.bin)
 
 	# empty disc in drive 1 for hex installed file
 	rm -f $@.io
@@ -1424,7 +1424,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--phantom-typist-mode keyword \
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
-		--tape spectrum/orterforth-inst-2.tap
+		--tape spectrum/inst-2.tap
 
 	# wait for install and save
 	sh scripts/waitforhex $@.io
@@ -1450,7 +1450,7 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
 	@echo "* Loading inst..."
-	@$(ORTER) serial -e 21 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth-inst-2.ser
+	@$(ORTER) serial -e 21 $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 
 	@echo "* Starting disc and waiting for completion..."
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io & pid=$$! ; \

@@ -363,25 +363,57 @@ static void init(void)
   cpu_init();
 
   /* tape */
-  tape_load("spectrum/orterforth-inst-2.tap");
+  tape_load("spectrum/inst-2.tap");
 
   /* disc */
   rf_persci_insert(0, "orterforth.disc");
   rf_persci_insert(1, "spectrum/orterforth.bin.hex.io");
 }
 
+static inline uint8_t get_f(z80* const z) {
+  uint8_t val = 0;
+  val |= z->cf << 0;
+  val |= z->nf << 1;
+  val |= z->pf << 2;
+  val |= z->xf << 3;
+  val |= z->hf << 4;
+  val |= z->yf << 5;
+  val |= z->zf << 6;
+  val |= z->sf << 7;
+  return val;
+}
+
 static void run(void)
 {
   unsigned long since_int = 0;
-
+/*
+  unsigned long steps = 0;
+*/
   finished = 0;
+/*
+  while (!finished && steps < 0x180000) {
+*/
   while (!finished) {
     /* hooks */
     hook();
 
     /* CPU step */
     z80_step(z);
-
+/*
+    printf("PC=%04X AF=%04X BC=%04X DE=%04X HL=%04X AF'=%04X BC'=%04X DE'=%04X HL'=%04X IR=%04X\n",
+      z->pc, 
+      (uint16_t) (z->a) << 8 | (uint16_t) get_f(z),
+      (uint16_t) (z->b) << 8 | (uint16_t) (z->c),
+      (uint16_t) (z->d) << 8 | (uint16_t) (z->e),
+      (uint16_t) (z->h) << 8 | (uint16_t) (z->l),
+      (uint16_t) (z->a_) << 8 | (uint16_t) (z->f_),
+      (uint16_t) (z->b_) << 8 | (uint16_t) (z->c_),
+      (uint16_t) (z->d_) << 8 | (uint16_t) (z->e_),
+      (uint16_t) (z->h_) << 8 | (uint16_t) (z->l_),
+      (uint16_t) (z->i) << 8 | (uint16_t) (z->r)
+      );
+    steps++;
+*/
     /* interrupt */
     if (cpu_cycles() - since_int > 70000) {
       z80_gen_int(z, 0);
