@@ -166,12 +166,12 @@ changes to the fig-Forth language itself, there are a small
 number of words added to the Forth dictionary to help make code
 system-independent:
 
- cl ( -- n )             Returns the word size in bytes. (CELL
+ cl ( -- n )             Returns the cell size in bytes. (CELL
                          is not part of this version of fig-
                          Forth.)
 
  cs ( n -- n )           Multiplies the value on the stack by
-                         the word size. (CELLS is not part of
+                         the cell size. (CELLS is not part of
                          this version of fig-Forth.)
 
  ln ( c-addr -- a-addr ) Aligns the stack value according to
@@ -200,13 +200,13 @@ up the complete Forth installation.
 
 The fig-Forth source code comes from the Installation Manual, 
 but is modified to allow for different platforms' processor 
-architectures, word sizes, I/O, memory layouts, and so on.
+architectures, cell sizes, I/O, memory layouts, and so on.
 
 On historical platforms, when install is complete, the memory
 map containing the installation and the required native code
 is saved to the emulated disc drive. (This is in a hex format
 to avoid issues with control characters used by the disc
-controller).
+controller.)
 
 This is then used to create completed installation binaries.
 
