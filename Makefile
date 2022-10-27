@@ -682,18 +682,46 @@ pico :
 	mkdir $@
 
 .PHONY : pico-build
-pico-build : orterforth.inc pico/orterforth.uf2
+pico-build : pico/orterforth.uf2
 
 .PHONY : pico-clean
 pico-clean :
 
 	rm -rf pico/*
 
+
+# Pico serial port name
+ifeq ($(OPER),cygwin)
+PICOSERIALPORT := /dev/ttyS2
+endif
+ifeq ($(OPER),darwin)
+PICOSERIALPORT := /dev/cu.usbmodem123451
+endif
+ifeq ($(OPER),linux)
+PICOSERIALPORT := /dev/ttyACM0
+endif
+
+.PHONY : pico-run
+pico-run :
+
+	$(ORTER) serial $(PICOSERIALPORT) 115200
+
 pico/Makefile : target/pico/CMakeLists.txt | pico
 
 	cd pico && PICO_SDK_PATH=~/pico-sdk cmake ../target/pico
 
-pico/orterforth.uf2 : pico/Makefile rf.c inst.c system.c
+pico/orterforth.uf2 : \
+	pico/Makefile \
+	inst.c \
+	inst.h \
+	main.c \
+	orterforth.inc \
+	rf_persci.c \
+	rf_persci.h \
+	rf.c \
+	rf.h \
+	system.c \
+	system.inc
 
 	rm -rf pico/orterforth.*
 	cd pico && PICO_SDK_PATH=~/pico-sdk make
@@ -1370,6 +1398,12 @@ SPECTRUMINSTDEPS := spectrum/orterforth-inst-2.ser $(DISC) $(ORTER)
 endif
 
 spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
+
+	# validate that code does not overlap ORIGIN
+	sh target/spectrum/check-memory.sh \
+		$(SPECTRUMORG) \
+		$(SPECTRUMORIGIN) \
+		$(shell $(STAT) spectrum/orterforth-inst.bin)
 
 	# empty disc in drive 1 for hex installed file
 	rm -f $@.io
