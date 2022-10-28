@@ -40,7 +40,8 @@ To run in MAME, call:
  make run TARGET=bbc BBCOPTION=assembly (loads .ssd)
  make run TARGET=bbc BBCOPTION=tape     (loads .uef)
 
-Likewise, to via serial and run on a physical machine, call:
+Likewise, to load via serial and run on a physical machine,
+call:
 
  make run TARGET=bbc [BBCOPTION=...] BBCMACHINE=real
 

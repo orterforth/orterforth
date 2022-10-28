@@ -41,6 +41,8 @@ static struct termios serial_attr_save;
 static int            serial_attr_saved = 0;
 
 /* stdin */
+static int            in_fl;
+static int            in_fl_saved = 0;
 static struct termios in_attr;
 static struct termios in_attr_save;
 static int            in_attr_saved = 0;
@@ -271,6 +273,12 @@ static size_t omap_wr(char *off, size_t len)
 static int std_close(void)
 {
   /* stdin */
+  if (in_fl_saved) {
+    if (fcntl(0, F_SETFL, in_fl)) {
+      perror("stdin fcntl failed");
+    }
+    in_fl_saved = 0;
+  }
   if (in_attr_saved && isatty(0)) {
     if (tcsetattr(0, TCSANOW, &in_attr_save)) {
       perror("stdin tcsetattr failed");
@@ -279,7 +287,7 @@ static int std_close(void)
   }
 
   /* stdout */
-  /* currently no op */
+  /* TODO fl */
 
   return 0;
 }
@@ -310,6 +318,8 @@ size_t orter_serial_wr(char *off, size_t len)
 static int std_open(void)
 {
   /* make stdin nonblocking */
+  in_fl = fcntl(0, F_GETFL, 0);
+  in_fl_saved = 1;
   if (fcntl(0, F_SETFL, O_NONBLOCK)) {
     perror("stdin fcntl failed");
     return errno;
@@ -540,8 +550,13 @@ int orter_serial(int argc, char **argv)
       wai_timer = time(0) + wai_wait;
     }
 
+    /* terminate after EOF */
+    if (!ack && !wai && eof) {
+      break;
+    }
+
     /* terminate after EOF and timer */
-    if (eof && (!wai || time(0) >= wai_timer)) {
+    if (!ack && wai && eof && time(0) >= wai_timer) {
       break;
     }
   }

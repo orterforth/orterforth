@@ -319,6 +319,9 @@ bbc-run : bbc/orterforth.uef $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 else
 bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 endif
+ifeq ($(BBCMACHINE),real)
+bbc-run : bbc/orterforth.ser | $(DISC) $(DR0) $(DR1)
+endif
 
 ifeq ($(BBCMACHINE),mame)
 	# start disc
@@ -346,11 +349,10 @@ ifeq ($(BBCMACHINE),real)
 
 	@# load via serial
 	@echo "* loading via serial..."
-	@# TODO set BBCMEDIA as bbc/orterforth.ser via config
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/orterforth.ser
 
-	# start disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+	# run disc
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 endif
 
 # load and run tests
@@ -502,7 +504,7 @@ endif
 ifeq ($(OPER),linux)
 STAT := stat -c %s
 endif
-bbc/inst.ser : bbc/inst
+bbc/%.ser : bbc/%
 
 	printf "5P.\"Loading...\"\r" > $@.io
 	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" >> $@.io
@@ -609,10 +611,10 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 
 # run disc on physical serial port
 .PHONY : disc
-disc : $(DISC) orterforth.disc
+disc : $(DISC) $(DR0) $(DR1)
 
-	touch data.disc
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc data.disc
+	touch $(DR1)
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 
 
 # === Dragon 32/64 ===
@@ -1023,6 +1025,12 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 
 # saved hex result
 rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
+
+	# validate that code does not overlap ORIGIN
+	sh target/spectrum/check-memory.sh \
+		0x9000 \
+		$(RC2014ORIGIN) \
+		$(shell $(STAT) rc2014/inst_CODE.bin)
 
 	# reset and get ready
 	@echo "On the RC2014: Connect via serial"
