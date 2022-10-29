@@ -131,11 +131,16 @@ $(SYSTEM)-clean :
 	rm -f orterforth.disc
 	rm -f orterforth.inc
 
+# runtime disc images
+DR0=messages.disc
+DR1=data.disc
+
 # run local build
 .PHONY : $(SYSTEM)-run
 $(SYSTEM)-run : $(ORTERFORTH) $(DR0)
 
-	@$(ORTERFORTH) $(DR0)
+	@touch $(DR1)
+	@$(ORTERFORTH) $(DR0) $(DR1)
 
 .PHONY : $(SYSTEM)-test
 $(SYSTEM)-test : $(ORTERFORTH) test.disc
@@ -234,10 +239,6 @@ $(TARGET)-help :
 
 	$(DISC) create <$< >$@.io
 	mv $@.io $@
-
-# runtime disc images
-DR0=messages.disc
-DR1=data.disc
 
 
 # === BBC Micro ===
