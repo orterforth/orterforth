@@ -1180,7 +1180,6 @@ endif
 # this happens because spectrum-load-serial is run when SPECTRUMIMPL
 # is not "real" and it is assumed that the .tap needs to be built
 # if the inst was previously done via serial/real.
-# TODO use orter serial -a and add ACK to loader and inst
 .PHONY : spectrum-load-serial
 spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 
@@ -1192,7 +1191,7 @@ spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
 	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
 	@echo "* Loading orterforth..."
-	$(ORTER) serial -e 15 $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 
 	@echo "* Starting disc..."
 	touch data.disc
@@ -1488,7 +1487,7 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
 	@echo "* Loading inst..."
-	@$(ORTER) serial -e 21 $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
+	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 
 	@echo "* Starting disc and waiting for completion..."
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io & pid=$$! ; \
