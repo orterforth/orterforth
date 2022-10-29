@@ -137,6 +137,11 @@ $(SYSTEM)-run : $(ORTERFORTH) $(DR0)
 
 	@$(ORTERFORTH) $(DR0)
 
+.PHONY : $(SYSTEM)-test
+$(SYSTEM)-test : $(ORTERFORTH) test.disc
+
+	echo "1 LOAD" | $< test.disc
+
 # local system lib default
 $(SYSTEM)/%.o : %.c | $(SYSTEM)
 
@@ -254,8 +259,7 @@ BBCROMS := \
 ifeq ($(BBCOPTION),assembly)
 	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/assembly.inc
-	BBCINSTMEDIA = bbc/inst.ssd
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
+	BBCLOADINGMETHOD := disk
 	BBCORG := 1720
 	BBCORIGIN := 2200
 endif
@@ -264,8 +268,7 @@ endif
 ifeq ($(BBCOPTION),default)
 	BBCDEPS := bbc/mos.o bbc/main.o bbc/rf.o bbc/inst.o bbc/rf_system_c.o bbc/bbc.lib
 	BBCINC := target/bbc/default.inc
-	BBCINSTMEDIA = bbc/inst.ssd
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/inst.ssd
+	BBCLOADINGMETHOD := disk
 	BBCORG := 1720
 	BBCORIGIN := 3000
 endif
@@ -274,10 +277,36 @@ endif
 ifeq ($(BBCOPTION),tape)
 	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/rf_system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/tape.inc
-	BBCINSTMEDIA = bbc/inst.uef
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/inst.uef
+	BBCLOADINGMETHOD := tape
 	BBCORG := 1220
 	BBCORIGIN := 1D00
+endif
+
+# default is to run MAME
+BBCMACHINE := mame
+#BBCMACHINE := real
+
+# physical machine loading method serial by default
+ifeq ($(BBCMACHINE),real)
+	BBCLOADINGMETHOD := serial
+endif
+
+# loading media
+ifeq ($(BBCLOADINGMETHOD),disk)
+	BBCINSTMEDIA = bbc/inst.ssd
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 $(BBCINSTMEDIA)
+	BBCMEDIA = bbc/orterforth.ssd
+	BBCMAMERUN := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1  $(BBCMEDIA)
+endif
+ifeq ($(BBCLOADINGMETHOD),serial)
+	BBCINSTMEDIA = bbc/inst.ser
+	BBCMEDIA = bbc/orterforth.ser
+endif
+ifeq ($(BBCLOADINGMETHOD),tape)
+	BBCINSTMEDIA = bbc/inst.uef
+	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette $(BBCINSTMEDIA)
+	BBCMEDIA = bbc/orterforth.uef
+	BBCMAMERUN := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette $(BBCMEDIA)
 endif
 
 bbc :
@@ -292,15 +321,6 @@ bbc-clean :
 
 	rm -f bbc/*
 
-# default is to run MAME
-BBCMACHINE := mame
-#BBCMACHINE := real
-
-# physical machine loading method serial by default
-ifeq ($(BBCMACHINE),real)
-	BBCINSTMEDIA = bbc/inst.ser
-endif
-
 # MAME command line
 BBCMAME := mame bbcb -rompath roms -video opengl \
 	-skip_gameinfo -nomax -window \
@@ -313,26 +333,14 @@ BBCMAMEFAST := mame bbcb -rompath roms -video none -sound none \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # load and run
-.PHONY : bbc-run
-ifeq ($(BBCOPTION),tape)
-bbc-run : bbc/orterforth.uef $(BBCROMS) | $(DISC) $(DR0) $(DR1)
-else
-bbc-run : bbc/orterforth.ssd $(BBCROMS) | $(DISC) $(DR0) $(DR1)
-endif
-ifeq ($(BBCMACHINE),real)
-bbc-run : bbc/orterforth.ser | $(DISC) $(DR0) $(DR1)
-endif
+bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
 	# start disc
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) $(DR1)
 
 	# run mame
-ifeq ($(BBCOPTION),tape)
-	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/orterforth.uef
-else
-	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 bbc/orterforth.ssd
-endif
+	$(BBCMAME) $(BBCMAMERUN)
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
@@ -357,25 +365,47 @@ endif
 
 # load and run tests
 .PHONY : bbc-test
-ifeq ($(BBCOPTION),tape)
-bbc-test : bbc/orterforth.uef $(BBCROMS) | $(DISC) test.disc $(DR1)
-else
-bbc-test : bbc/orterforth.ssd $(BBCROMS) | $(DISC) test.disc $(DR1)
-endif
+bbc-test : $(BBCMEDIA) $(BBCROMS) | $(DISC) test.disc $(DR1)
 
+ifeq ($(BBCMACHINE),mame)
 	# start disc
 	touch $(DR1)
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 test.disc $(DR1)
 
 	# run mame
-ifeq ($(BBCOPTION),tape)
-	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\rEMPTY-BUFFERS 1 LOAD\r' -cassette bbc/orterforth.uef
-else
+ifeq ($(BBCLOADINGMETHOD),disk)
 	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\rEMPTY-BUFFERS 1 LOAD\r' -flop1 bbc/orterforth.ssd
+endif
+ifeq ($(BBCLOADINGMETHOD),serial)
+	echo "serial load currently fails on MAME" && exit 1
+endif
+ifeq ($(BBCLOADINGMETHOD),tape)
+	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\rEMPTY-BUFFERS 1 LOAD\r' -cassette bbc/orterforth.uef
 endif
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
+endif
+ifeq ($(BBCMACHINE),real)
+	@# prompt user
+	@echo "  ensure RS423 connected to serial port"
+	@echo "  type the following"
+	@# TODO baud settings parameterised
+	@echo "   *FX7,7 <enter>"
+	@echo "   *FX8,7 <enter>"
+	@echo "   *FX2,1 <enter>"
+	@read -p "  then on this machine press enter " LINE
+
+	@# load via serial
+	@echo "* loading via serial..."
+	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/orterforth.ser
+
+	@# prompt user
+	@echo "* now type EMPTY-BUFFERS 1 LOAD"
+
+	# run disc
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) test.disc $(DR1)
+endif
 
 # general assemble rule
 bbc/%.o : bbc/%.s
@@ -445,8 +475,7 @@ ifeq ($(BBCMACHINE),real)
 
 	# load via serial
 	@echo "* loading via serial..."
-	# TODO set BBCINSTMEDIA as bbc/inst.ser via config
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/inst.ser
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
 
 	# start disc
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io
@@ -1519,15 +1548,9 @@ spectrum/rf_z80.lib : rf_z80.asm | spectrum
 		-x -o $@ \
 		$<
 
+# run test disc
 .PHONY : test
-test : $(ORTERFORTH) test.disc
-
-	echo "1 LOAD" | $< test.disc
-
-.PHONY : todo
-todo : $(ORTERFORTH)
-
-	$< < todo.f
+test : $(TARGET)-test
 
 tools :
 
