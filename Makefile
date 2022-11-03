@@ -1175,28 +1175,6 @@ else
 FUSE := $(shell which fuse)
 endif
 
-# load from serial
-# TODO should not rebuild orterforth-inst-2.tap via dependency chain
-# this happens because spectrum-load-serial is run when SPECTRUMIMPL
-# is not "real" and it is assumed that the .tap needs to be built
-# if the inst was previously done via serial/real.
-.PHONY : spectrum-load-serial
-spectrum-load-serial : spectrum/orterforth.ser target/spectrum/load-serial.bas
-
-	@echo "On the Spectrum type: FORMAT \"b\";$(SERIALBAUD)"
-	@echo "                      LOAD *\"b\""
-	@read -p "Then press enter to start: " LINE
-
-	@echo "* Loading loader..."
-	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
-
-	@echo "* Loading orterforth..."
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
-
-	@echo "* Starting disc..."
-	touch data.disc
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) messages.disc data.disc
-
 # config option
 SPECTRUMOPTION := assembly
 # SPECTRUMOPTION := assembly-z88dk
@@ -1262,7 +1240,7 @@ SPECTRUMLIBS := \
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 0x8000
 # ORIGIN higher, 0x9B00, C code is larger as uses z88dk libs and pure C impl
-SPECTRUMORIGIN := 0x9B00
+SPECTRUMORIGIN := 0x9D00
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
 # locates inst code at 0xC800
@@ -1272,26 +1250,72 @@ SPECTRUMIMPL := fuse
 endif
 
 # run Spectrum build
-.PHONY : spectrum-run
 ifeq ($(SPECTRUMIMPL),fuse)
-spectrum-run : spectrum-run-fuse
+SPECTRUMMACHINE := fuse
 endif
 ifeq ($(SPECTRUMIMPL),mame)
-spectrum-run : spectrum-run-mame
+SPECTRUMMACHINE := mame
 endif
 ifeq ($(SPECTRUMIMPL),superzazu)
 # default is to use fast build but run in Fuse
-spectrum-run : spectrum-run-fuse
+SPECTRUMMACHINE := fuse
 endif
 
-# run Fuse emulator, load TAP, connect disc
-.PHONY : spectrum-run-fuse
-spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
+.PHONY : spectrum-run
+ifeq ($(SPECTRUMMACHINE),fuse)
+spectrum-run : \
+	spectrum/orterforth.tap \
+	$(DR0) | \
+	$(DISC) \
+	roms/spectrum/if1-2.rom \
+	roms/spectrum/spectrum.rom \
+	spectrum/fuse-rs232-rx \
+	spectrum/fuse-rs232-tx
+endif
+ifeq ($(SPECTRUMMACHINE),mame)
+spectrum-run : \
+	spectrum/orterforth.tap \
+	$(DR0) | \
+	$(DISC) \
+	roms/spectrum/if1-2.rom \
+	roms/spectrum/spectrum.rom
+endif
+ifeq ($(SPECTRUMMACHINE),real)
+spectrum-run : \
+	spectrum/orterforth.ser \
+	target/spectrum/load-serial.bas \
+	spectrum/orterforth.tap \
+	$(DR0) | \
+	$(DISC) \
+	$(ORTER)
+endif
+
+ifeq ($(SPECTRUMMACHINE),real)
+	@echo "On the Spectrum type: FORMAT \"b\";$(SERIALBAUD)"
+	@echo "                      LOAD *\"b\""
+	@read -p "Then press enter to start: " LINE
+
+	@echo "* Loading loader..."
+	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
+
+	@echo "* Loading orterforth..."
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
+endif
 
 	# start disc
 	touch data.disc
+ifeq ($(SPECTRUMMACHINE),fuse)
 	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse $(DR0) data.disc
+endif
+ifeq ($(SPECTRUMMACHINE),mame)
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) data.disc
+endif
+ifeq ($(SPECTRUMMACHINE),real)
+	@echo "* Starting disc..."
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) data.disc
+endif
 
+ifeq ($(SPECTRUMMACHINE),fuse)
 	# run fuse
 	$(FUSE) \
 		--speed=100 \
@@ -1308,15 +1332,8 @@ spectrum-run-fuse : spectrum/orterforth.tap | $(DISC) roms/spectrum/if1-2.rom sp
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
-
-# run Mame emulator, load TAP
-.PHONY: spectrum-run-mame
-spectrum-run-mame : spectrum/orterforth.tap
-
-	# start disc
-	touch data.disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 $(DR0) data.disc
-
+endif
+ifeq ($(SPECTRUMMACHINE),mame)
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
 	@mame spectrum -rompath roms -video opengl \
@@ -1328,8 +1345,9 @@ spectrum-run-mame : spectrum/orterforth.tap
 		-autoboot_command 'j""\n' \
 		-cassette $<
 
-	# stop disc
+	# stop disc
 	sh scripts/stop.sh disc.pid
+endif
 
 # other Spectrum libs
 spectrum/%.lib : %.c | spectrum
