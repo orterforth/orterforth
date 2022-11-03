@@ -15,6 +15,7 @@
 #define RF_BS 0x000C
 
 /* skip C based definitions of functions defined in Z80 assembler */
+/*
 #define RF_TARGET_TRAMPOLINE
 #define RF_TARGET_CODE_LIT
 #define RF_TARGET_NEXT
@@ -68,3 +69,4 @@
 #define RF_TARGET_CODE_COLD
 #define RF_TARGET_CODE_TG
 #define RF_TARGET_CODE_XT
+*/
