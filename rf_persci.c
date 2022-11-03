@@ -92,32 +92,24 @@ void rf_persci_eject(int drive)
 
 /* BUFFER */
 
-/* read buffer */
-static char rf_persci_r_buf[131];
-static unsigned int rf_persci_r_idx = 0;
-static unsigned int rf_persci_r_len = 0;
-
-/* write buffer */
-static char rf_persci_w_buf[131];
-static unsigned int rf_persci_w_idx = 0;
-static unsigned int rf_persci_w_len = 0;
+static char rf_persci_buf[131];
+static unsigned int rf_persci_idx = 0;
+static unsigned int rf_persci_len = 0;
 
 /* empty buffers */
 static void rf_persci_reset(void)
 {
-  rf_persci_r_idx = 0;
-  rf_persci_r_len = 0;
-  rf_persci_w_idx = 0;
-  rf_persci_w_len = 0;
+  rf_persci_idx = 0;
+  rf_persci_len = 0;
 }
 
-/* write a char to write buffer */
+/* write a char to buffer */
 static void rf_persci_w(char c)
 {
-  rf_persci_w_buf[rf_persci_w_len++] = c;
+  rf_persci_buf[rf_persci_len++] = c;
 }
 
-/* write a string to write buffer */
+/* write a string to buffer */
 static void rf_persci_ws(const char *s)
 {
   const char *i;
@@ -258,9 +250,9 @@ static void rf_persci_write()
   size_t len;
 
   /* get size of data */
-  for (; rf_persci_r_buf[rf_persci_r_idx] != RF_ASCII_EOT; rf_persci_r_idx++) {
+  for (; rf_persci_buf[rf_persci_idx] != RF_ASCII_EOT; rf_persci_idx++) {
   }
-  len = rf_persci_r_idx > 128 ? 128 : rf_persci_r_idx;
+  len = rf_persci_idx > 128 ? 128 : rf_persci_idx;
 
   /* open file */
   ptr = files[rf_persci_drive];
@@ -277,11 +269,11 @@ static void rf_persci_write()
   }
 
   /* write data to file */
-  s = fwrite(rf_persci_r_buf, 1, len, ptr);
+  s = fwrite(rf_persci_buf, 1, len, ptr);
   fflush(ptr);
 
   /* handle write failure */
-  if (s != rf_persci_r_idx) {
+  if (s != rf_persci_idx) {
     perror("fwrite failed");
     rf_persci_reset();
     rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
@@ -291,7 +283,7 @@ static void rf_persci_write()
   /* write data to memory */
   memcpy(
     discs[rf_persci_drive] + off, 
-    rf_persci_r_buf, 
+    rf_persci_buf, 
     len);
 
   /* ACK EOT */
@@ -305,24 +297,24 @@ static void rf_persci_write()
 
 /* READ */
 
-/* read char from read buffer */
+/* read char from buffer */
 static char rf_persci_r(void)
 {
   char c;
 
   /* validate buffer */
-  if (rf_persci_r_idx >= rf_persci_r_len) {
-    fprintf(stderr, "read buffer empty\n");
+  if (rf_persci_idx >= rf_persci_len) {
+    fprintf(stderr, "buffer empty\n");
     exit(1);
   }
 
   /* read char from buffer */
-  c = rf_persci_r_buf[rf_persci_r_idx++];
+  c = rf_persci_buf[rf_persci_idx++];
 
   /* reset buffer if empty */
-  if (rf_persci_r_idx >= rf_persci_r_len) {
-    rf_persci_r_idx = 0;
-    rf_persci_r_len = 0;
+  if (rf_persci_idx >= rf_persci_len) {
+    rf_persci_idx = 0;
+    rf_persci_len = 0;
   }
 
   return c;
@@ -330,28 +322,28 @@ static char rf_persci_r(void)
 
 /* COMMAND PARSING */
 
-/* skip whitespace in read buffer */
+/* skip whitespace in buffer */
 static void rf_persci_read_ws(void)
 {
   /* validate buffer */
-  if (rf_persci_r_idx >= rf_persci_r_len) {
-    fprintf(stderr, "read buffer empty\n");
+  if (rf_persci_idx >= rf_persci_len) {
+    fprintf(stderr, "buffer empty\n");
     exit(1);
   }
 
-  while (rf_persci_r_buf[rf_persci_r_idx] == ' ') {
+  while (rf_persci_buf[rf_persci_idx] == ' ') {
     /* skip whitespace */
-    rf_persci_r_idx++;
+    rf_persci_idx++;
 
     /* reset buffer if empty */
-    if (rf_persci_r_idx >= rf_persci_r_len) {
-      rf_persci_r_idx = 0;
-      rf_persci_r_len = 0;
+    if (rf_persci_idx >= rf_persci_len) {
+      rf_persci_idx = 0;
+      rf_persci_len = 0;
     }
   }
 }
 
-/* read decimal int from read buffer */
+/* read decimal int from buffer */
 static char rf_persci_read_int(void)
 {
   char i;
@@ -360,10 +352,10 @@ static char rf_persci_read_int(void)
   rf_persci_read_ws();
 
   i = 0;
-  while ((c = rf_persci_r_buf[rf_persci_r_idx]) >= '0' && c <= '9') {
+  while ((c = rf_persci_buf[rf_persci_idx]) >= '0' && c <= '9') {
     i *= 10;
     i += (c - 48);
-    rf_persci_r_idx++;
+    rf_persci_idx++;
   }
 
   return i;
@@ -373,8 +365,8 @@ static char rf_persci_read_int(void)
 static char rf_persci_expect(char c)
 {
   rf_persci_read_ws();
-  if (rf_persci_r_buf[rf_persci_r_idx] == c) {
-    rf_persci_r_idx++;
+  if (rf_persci_buf[rf_persci_idx] == c) {
+    rf_persci_idx++;
     return 1;
   }
   return 0;
@@ -444,31 +436,31 @@ static void rf_persci_serve(void)
   }
 }
 
-/* read next char from write buffer */
+/* read next char from buffer */
 char rf_persci_getc(void)
 {
   char c;
 
   /* validate not empty */
-  if (rf_persci_w_idx >= rf_persci_w_len) {
-    fprintf(stderr, "write buffer empty");
+  if (rf_persci_idx >= rf_persci_len) {
+    fprintf(stderr, "buffer empty");
     exit(1);
   }
 
   /* get char and reset empty buffer */
-  c = rf_persci_w_buf[rf_persci_w_idx++];
-  if (rf_persci_w_idx >= rf_persci_w_len) {
-    rf_persci_w_idx = 0;
-    rf_persci_w_len = 0;
+  c = rf_persci_buf[rf_persci_idx++];
+  if (rf_persci_idx >= rf_persci_len) {
+    rf_persci_idx = 0;
+    rf_persci_len = 0;
   }
 
   return c;
 }
 
-/* write next char to read buffer and handle if EOT */
+/* write next char to buffer and handle if EOT */
 void rf_persci_putc(char c)
 {
-  rf_persci_r_buf[rf_persci_r_len++] = c;
+  rf_persci_buf[rf_persci_len++] = c;
   if (c == RF_ASCII_EOT) {
     rf_persci_serve();
   }
