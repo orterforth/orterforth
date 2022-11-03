@@ -28,4 +28,4 @@ To run in Fuse, call:
 To load and run on a physical machine, connect the Interface 1
 to your host system via RS-232 and call:
 
- make spectrum-load-serial
+ make run TARGET=spectrum SPECTRUMMACHINE=real
