@@ -5,7 +5,7 @@
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
 /* disc controller runs in process */
-#include "rf_persci.h"
+#include "persci.h"
 /* fig-Forth source compiled into C array */
 /* const to compile to flash on e.g. Pico */
 const

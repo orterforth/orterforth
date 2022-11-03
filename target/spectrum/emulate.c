@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../rf_persci.h"
+#include "../../persci.h"
 #include "../../tools/z80/z80.h"
 
 static z80 *z = 0;

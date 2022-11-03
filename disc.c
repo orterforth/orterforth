@@ -15,7 +15,7 @@
 #include "orter/fuse.h"
 #include "orter/io.h"
 #include "orter/serial.h"
-#include "rf_persci.h"
+#include "persci.h"
 
 #define RF_BBLK 128
 

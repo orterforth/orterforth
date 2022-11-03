@@ -13,7 +13,7 @@
 #endif
 
 #include "rf.h"
-#include "rf_persci.h"
+#include "persci.h"
 
 /* use heap memory */
 char *rf_memory = 0;

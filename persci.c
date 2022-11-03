@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rf_persci.h"
+#include "persci.h"
 
 /* STATE */
 

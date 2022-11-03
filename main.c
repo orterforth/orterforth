@@ -3,7 +3,7 @@
 #include "rf.h"
 #include "inst.h"
 #ifdef RF_INST_LOCAL_DISC
-#include "rf_persci.h"
+#include "persci.h"
 #endif
 
 /* indicates whether installation has been completed */

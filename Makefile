@@ -59,7 +59,7 @@ $(DISC) : \
 	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_serial.o \
-	$(SYSTEM)/rf_persci.o \
+	$(SYSTEM)/persci.o \
 	disc.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
@@ -85,7 +85,7 @@ SYSTEMOPTION := default
 SYSTEMDEPSALL := \
 	$(SYSTEM)/rf.o \
 	$(SYSTEM)/inst.o \
-	$(SYSTEM)/rf_persci.o \
+	$(SYSTEM)/persci.o \
 	$(SYSTEM)/system.o
 
 # assembler based inner interpreter and code
@@ -161,12 +161,12 @@ $(SYSTEM)/%.s : %.c | $(SYSTEM)
 $(SYSTEM)/emulate_spectrum : \
 	$(SYSTEM)/emulate_spectrum.o \
 	$(SYSTEM)/z80.o \
-	$(SYSTEM)/rf_persci.o
+	$(SYSTEM)/persci.o
 
 	$(CC) -o $@ $^
 
 # spectrum emulator
-$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c rf_persci.h | $(SYSTEM)
+$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c persci.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
@@ -200,17 +200,17 @@ $(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # inst lib
-$(SYSTEM)/inst.o : inst.c orterforth.inc rf.h rf_persci.h | $(SYSTEM)
+$(SYSTEM)/inst.o : inst.c orterforth.inc rf.h persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # disc impl lib
-$(SYSTEM)/rf_persci.o : rf_persci.c rf_persci.h | $(SYSTEM)
+$(SYSTEM)/persci.o : persci.c persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # local system lib
-$(SYSTEM)/system.o : system.c rf.h rf_persci.h | $(SYSTEM)
+$(SYSTEM)/system.o : system.c rf.h persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -748,8 +748,8 @@ pico/orterforth.uf2 : \
 	inst.h \
 	main.c \
 	orterforth.inc \
-	rf_persci.c \
-	rf_persci.h \
+	persci.c \
+	persci.h \
 	rf.c \
 	rf.h \
 	system.c \
