@@ -140,19 +140,15 @@ DR1=data.disc
 $(SYSTEM)-run : $(ORTERFORTH) $(DR0)
 
 	@touch $(DR1)
-	@$(ORTERFORTH) $(DR0) $(DR1)
+	@$< $(DR0) $(DR1)
 
+# run local build with test disc
 .PHONY : $(SYSTEM)-test
 $(SYSTEM)-test : $(ORTERFORTH) test.disc
 
 	echo "1 LOAD" | $< test.disc
 
-# local system lib default
-$(SYSTEM)/%.o : %.c | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-# local system lib default
+# for working with assembly
 $(SYSTEM)/%.s : %.c | $(SYSTEM)
 
 	$(CC) -S $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
@@ -169,6 +165,11 @@ $(SYSTEM)/emulate_spectrum : \
 $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c persci.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
+
+# inst lib
+$(SYSTEM)/inst.o : inst.c orterforth.inc rf.h system.inc persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 $(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)
 
@@ -194,28 +195,23 @@ $(SYSTEM)/orter_spectrum.o : orter/spectrum.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# main lib
-$(SYSTEM)/rf.o : rf.c rf.h | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-# inst lib
-$(SYSTEM)/inst.o : inst.c orterforth.inc rf.h persci.h | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
 # disc impl lib
 $(SYSTEM)/persci.o : persci.c persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# local system lib
-$(SYSTEM)/system.o : system.c rf.h persci.h | $(SYSTEM)
+# main lib
+$(SYSTEM)/rf.o : rf.c rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# x86_64 assembly code
+# assembly code
 $(SYSTEM)/rf_$(PROC).o : rf_$(PROC).s | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# local system lib
+$(SYSTEM)/system.o : system.c rf.h system.inc persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -224,6 +220,7 @@ $(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
+# https://github.com/mcleod-ideafix/zx81putil
 $(SYSTEM)/zx81putil : tools/zx81putil/zx81putil.c | $(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -o $@ $<
