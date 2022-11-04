@@ -1574,7 +1574,7 @@ tools :
 
 	mkdir $@
 
-tools/z80/z80.c tools/z80/z80.h &: | tools
+tools/z80/z80.c tools/z80/z80.h : | tools
 
 	cd tools && git clone https://github.com/superzazu/z80.git
 
@@ -1602,7 +1602,7 @@ zx81/%.tzx : zx81/%.P $(SYSTEM)/zx81putil
 
 	$(SYSTEM)/zx81putil -tzx $<
 
-zx81/inst.bin zx81/inst.P &: zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
+zx81/inst.bin zx81/inst.P : zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
 
 	zcc +zx81 -lm -lzx81/rf -lzx81/system -lzx81/inst -create-app -m -o zx81/inst.bin main.c
 
