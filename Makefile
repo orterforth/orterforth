@@ -200,17 +200,17 @@ $(SYSTEM)/persci.o : persci.c persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# main lib
+# C code lib
 $(SYSTEM)/rf.o : rf.c rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# assembly code
+# assembly code lib
 $(SYSTEM)/rf_$(PROC).o : rf_$(PROC).s | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# local system lib
+# system dependent code lib
 $(SYSTEM)/system.o : system.c rf.h system.inc persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
@@ -653,6 +653,20 @@ dragon :
 .PHONY : dragon-build
 dragon-build : dragon/inst.bin
 
+.PHONY : dragon-run
+dragon-run : dragon/hw.cas
+
+	mame dragon64 -rompath roms -video opengl \
+	-resolution 1024x768 -skip_gameinfo -nomax -window \
+	-rompath roms -video opengl -resolution 1024x768 \
+	-cassette $< \
+	-skip_gameinfo -nomax -window \
+	-autoboot_delay 2 -autoboot_command "CLOADM\r"
+
+dragon/%.cas : dragon/%.bin
+
+	~/Downloads/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+
 dragon/hw.bin : hw.c
 
 	cmoc --dragon -o $@ $^
@@ -973,7 +987,7 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER)
 # inst executable
 rc2014/inst_CODE.bin : \
 	$(RC2014DEPS) \
-	rf_z80_memory.asm \
+	z80_memory.asm \
 	main.c
 
 	zcc +rc2014 -subtype=basic -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' \
@@ -983,7 +997,7 @@ rc2014/inst_CODE.bin : \
 	 	-Ca-DRF_INST_OFFSET=0x5000 \
 		-m \
 		-o rc2014/inst \
-		rf_z80_memory.asm main.c
+		z80_memory.asm main.c
 
 # start with an empty bin file to build the multi segment bin
 rc2014/inst-0.bin : | rc2014
@@ -1367,7 +1381,7 @@ spectrum/inst.bin : \
 	spectrum/inst.lib \
 	spectrum/rf_system.lib \
 	spectrum/rf_z80.lib \
-	rf_z80_memory.asm \
+	z80_memory.asm \
 	main.c
 
 	zcc +zx \
@@ -1380,7 +1394,7 @@ spectrum/inst.bin : \
 		-pragma-define:CRT_INITIALIZE_BSS=0 \
 		-m \
 		-o $@ \
-		rf_z80_memory.asm main.c
+		z80_memory.asm main.c
 
 # start with an empty bin file to build the multi segment bin
 spectrum/inst-0.bin : | spectrum
