@@ -1,4 +1,45 @@
-For help on specific targets, run:
+BUILDING ORTERFORTH
+===================
+
+To build orterforth for the local system (Linux, macOS, 
+Cygwin), call:
+
+ make
+
+To build a version implemented in assembly, for performance,
+call:
+
+ make clean
+ make SYSTEMOPTION=assembly
+
+The target executable is built at the location:
+
+ <os>-<arch>/orterforth.exe (on Cygwin)
+ <os>-<arch>/orterforth     (on others)
+
+where <os>   is e.g.: cygwin, darwin, linux
+      <arch> is e.g.: armv6l, armv7l, i686, x86_64
+
+To run the local system build call:
+
+ make run
+
+
+BUILDING FOR RETRO PLATFORMS
+============================
+
+To build orterforth for a another platform, such as a retro
+machine or microcontroller, you will need prerequisites such 
+as some of the following:
+
+* a C toolchain for the platform,
+* system ROM files in the roms directory,
+* system emulator source files,
+* an installed emulator,
+* a physical machine.
+
+For details of what is needed to build and run on specific
+targets, run:
 
  make help TARGET=<target>
 

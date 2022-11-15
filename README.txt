@@ -14,62 +14,27 @@ Manual, Glossary, Model, Editor created by the Forth Interest
 Group (fig) in 1980.
 
 
-BUILDING
+QUICK START
 
-To build orterforth for the local system (Linux, macOS, 
-Cygwin), call:
-
- make
-
-To build a version implemented in assembly, for performance,
-call:
-
- make clean
- make SYSTEMOPTION=assembly
-
-The target executable is built at the location:
-
- <os>-<arch>/orterforth.exe (on Cygwin)
- <os>-<arch>/orterforth     (on others)
-
-where <os>   is e.g.: cygwin, darwin, linux
-      <arch> is e.g.: armv6l, armv7l, i686, x86_64
-
-
-RUNNING
-
-To build and run the local system build call:
+To build and run orterforth, type:
 
  make run
 
+You will see the following prompt:
 
-BUILDING FOR RETRO PLATFORMS
+ orterforth
 
-To build orterforth for a historical platform, you will need 
-prerequisites such as:
+Type:
 
-* a C compiler/assembler for the target platform,
-* system ROM files in the roms directory,
-* system emulator source files, and/or 
-* emulator installations.
+ VLIST
 
-For more details of what is needed for a target, call:
+for a list of all fig-Forth words and a few additional ones 
+defined in orterforth.
 
- make help TARGET=<target>
+For more information on building and running, including for
+other platforms, particularly retro ones, type:
 
-where <target> is e.g.: bbc, spectrum
-
-Then to build call:
-
- make TARGET=<target>
-
-
-RUNNING ON RETRO PLATFORMS
-
-orterforth can be built and run in an emulator (if installed)
-by calling:
-
- make run TARGET=<target>
+ make help
 
 
 ORTERFORTH IS IMPLEMENTED IN C

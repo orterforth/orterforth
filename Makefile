@@ -229,7 +229,7 @@ $(SYSTEM)/zx81putil : tools/zx81putil/zx81putil.c | $(SYSTEM)
 .PHONY : $(TARGET)-help
 $(TARGET)-help :
 
-	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then cat help.txt ; else more target/$(TARGET)/help.txt ; fi
+	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then more help.txt ; else more target/$(TARGET)/help.txt ; fi
 
 # disc images from %.f files including model.f
 %.disc : %.f | $(DISC)
