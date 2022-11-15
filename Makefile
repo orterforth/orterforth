@@ -128,8 +128,8 @@ $(SYSTEM)-build : \
 $(SYSTEM)-clean :
 
 	rm -rf $(SYSTEM)/*
-	rm -f orterforth.disc
-	rm -f orterforth.inc
+	rm -f model.disc
+	rm -f model.inc
 
 # runtime disc images
 DR0=messages.disc
@@ -167,7 +167,7 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c persci.h | $(SYSTEM)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
 # inst lib
-$(SYSTEM)/inst.o : inst.c orterforth.inc rf.h system.inc persci.h | $(SYSTEM)
+$(SYSTEM)/inst.o : inst.c model.inc rf.h system.inc persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -231,7 +231,7 @@ $(TARGET)-help :
 
 	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then cat help.txt ; else more target/$(TARGET)/help.txt ; fi
 
-# disc images from %.f files including orterforth.f
+# disc images from %.f files including model.f
 %.disc : %.f | $(DISC)
 
 	$(DISC) create <$< >$@.io
@@ -448,7 +448,7 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # final binary hex
-bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
+bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
 	# empty disc
 	rm -f $@.io
@@ -456,7 +456,7 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) orterforth.disc $(BBCROMS) | $(DISC)
 
 ifeq ($(BBCMACHINE),mame)
 	# start disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 orterforth.disc $@.io
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 model.disc $@.io
 
 	# start Mame
 	sh scripts/start.sh /dev/stdin /dev/stdout mame.pid $(BBCMAMEFAST) $(BBCMAMEINST)
@@ -476,7 +476,7 @@ ifeq ($(BBCMACHINE),real)
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
 
 	# start disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 
 	# wait for save
@@ -600,8 +600,8 @@ c64-clean :
 .PHONY : c64-run
 c64-run : c64/inst
 
-	# export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc data.disc" -rsdev4baud 2400 -autostart $<
-	x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard orterforth.disc data.disc" -rsdev4baud 2400 -autostart $<
+	# export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostart $<
+	x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostart $<
 
 
 # general assemble rule
@@ -711,10 +711,10 @@ m100/hw.co : | m100
 
 
 # disc image as C include
-orterforth.inc : orterforth.disc | $(ORTER)
+model.inc : model.disc | $(ORTER)
 
 	# xxd -i $< > $@
-	$(ORTER) hex include orterforth_disc < $< > $@.io
+	$(ORTER) hex include model_disc < $< > $@.io
 	mv $@.io $@
 
 
@@ -758,7 +758,7 @@ pico/orterforth.uf2 : \
 	inst.c \
 	inst.h \
 	main.c \
-	orterforth.inc \
+	model.inc \
 	persci.c \
 	persci.h \
 	rf.c \
@@ -823,7 +823,7 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 
 	@echo "* Starting disc..."
 	@touch data.disc
-	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc data.disc
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.disc data.disc
 
 # loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader-inst.ser : target/ql/loader-inst.bas
@@ -875,7 +875,7 @@ ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 	# TODO use disc start/stop script
 	@echo "* Starting disc and waiting for completion..."
 	@touch $@.io
-	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) orterforth.disc $@.io & pid=$$! ; \
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.disc $@.io & pid=$$! ; \
 		scripts/waitforhex $@.io ; \
 		kill -9 $$pid
 
@@ -1088,7 +1088,7 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(OR
 	touch $@.io
 
 	# start disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(RC2014SERIALPORT) 115200 orterforth.disc $@.io
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(RC2014SERIALPORT) 115200 model.disc $@.io
 
 	# wait for save
 	sh scripts/waitforhex $@.io
@@ -1463,7 +1463,7 @@ ifeq ($(SPECTRUMIMPL),real)
 SPECTRUMINSTDEPS := spectrum/inst-2.ser $(DISC) $(ORTER)
 endif
 
-spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
+spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
 
 	# validate that code does not overlap ORIGIN
 	sh target/spectrum/check-memory.sh \
@@ -1477,7 +1477,7 @@ spectrum/orterforth.bin.hex : orterforth.disc $(SPECTRUMINSTDEPS)
 
 ifeq ($(SPECTRUMIMPL),fuse)
 	# start disc
-	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse orterforth.disc $@.io
+	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
 
 	# start Fuse
 	sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) \
@@ -1519,7 +1519,7 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 
 	@echo "* Starting disc and waiting for completion..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) orterforth.disc $@.io & pid=$$! ; \
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io & pid=$$! ; \
 		scripts/waitforhex $@.io ; \
 		kill -9 $$pid
 endif

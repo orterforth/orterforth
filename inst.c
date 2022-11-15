@@ -9,7 +9,7 @@
 /* fig-Forth source compiled into C array */
 /* const to compile to flash on e.g. Pico */
 const
-#include "orterforth.inc"
+#include "model.inc"
 #endif
 
 /* ASCII CONTROL CHARS */
@@ -842,7 +842,7 @@ void rf_inst(void)
 
 #ifdef RF_INST_LOCAL_DISC
   /* "insert" the inst disc */
-  rf_persci_insert_bytes(0, "orterforth.disc", orterforth_disc, orterforth_disc_len);
+  rf_persci_insert_bytes(0, "model.disc", model_disc, model_disc_len);
 #endif
 
   /* LOAD all Forth model source from disc */
