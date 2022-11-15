@@ -1,5 +1,6 @@
 .vscode/
 *.disc
+*.io
 /bbc/
 /c64/
 /cfg/

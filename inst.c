@@ -20,8 +20,8 @@ const
 /* INST TIME DISC OPERATIONS */
 
 /* inst time disc command buffer */
-static uint8_t cmd[12] = {
-  'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '0', '\x04'
+static uint8_t cmd[11] = {
+  'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '\x04'
 };
 
 /* write two place decimal integer */
@@ -41,7 +41,7 @@ static void rf_inst_disc_cmd_set(char c, uintptr_t blk)
   /* convert block number into drive, track and sector */
   rf_inst_puti(2, offset / 26);
   rf_inst_puti(5, (offset % 26) + 1);
-  rf_inst_puti(9, blk / 2000);
+  cmd[9] = 48 + (blk / 2000);
 }
 
 #ifdef RF_INST_SAVE
@@ -66,7 +66,7 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
 
   /* send command */
   rf_inst_disc_cmd_set('O', blk);
-  rf_disc_write((char *) cmd, 12);
+  rf_disc_write((char *) cmd, 11);
 
   /* get response */
   rf_inst_disc_expect(RF_ASCII_ENQ);
@@ -697,7 +697,7 @@ static void rf_inst_forward(void)
   /* BLOCK */
   rf_inst_colon("BLOCK");
   rf_inst_compile(
-    "DUP prev @ - 0BRANCH ^15 DUP block-cmd LIT 11 BLOCK-WRITE ?DISC prev "
+    "DUP prev @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC prev "
     "cl + BLOCK-READ ?DISC DUP prev ! DROP prev cl + ;S");
 
   /* WORD */
