@@ -480,7 +480,7 @@ ifeq ($(BBCMACHINE),real)
 endif
 
 	# wait for save
-	sh scripts/waitforhex $@.io
+	sh scripts/wait-until-saved.sh $@.io
 
 ifeq ($(BBCMACHINE),mame)
 	# stop Mame
@@ -602,7 +602,6 @@ c64-run : c64/inst
 
 	# export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostart $<
 	x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostart $<
-
 
 # general assemble rule
 c64/%.o : c64/%.s
@@ -876,7 +875,7 @@ ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 	@echo "* Starting disc and waiting for completion..."
 	@touch $@.io
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.disc $@.io & pid=$$! ; \
-		scripts/waitforhex $@.io ; \
+		scripts/wait-until-saved.sh $@.io ; \
 		kill -9 $$pid
 
 	@mv $@.io $@
@@ -1091,7 +1090,7 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(OR
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(RC2014SERIALPORT) 115200 model.disc $@.io
 
 	# wait for save
-	sh scripts/waitforhex $@.io
+	sh scripts/wait-until-saved.sh $@.io
 
 	# stop disc
 	sh scripts/stop.sh disc.pid
@@ -1493,7 +1492,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--tape spectrum/inst-2.tap
 
 	# wait for install and save
-	sh scripts/waitforhex $@.io
+	sh scripts/wait-until-saved.sh $@.io
 
 	# stop Fuse
 	sh scripts/stop.sh fuse.pid
@@ -1520,7 +1519,7 @@ ifeq ($(SPECTRUMIMPL),real)
 
 	@echo "* Starting disc and waiting for completion..."
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io & pid=$$! ; \
-		scripts/waitforhex $@.io ; \
+		scripts/wait-until-saved.sh $@.io ; \
 		kill -9 $$pid
 endif
 
