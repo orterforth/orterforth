@@ -146,7 +146,7 @@ $(SYSTEM)-run : $(ORTERFORTH) $(DR0)
 .PHONY : $(SYSTEM)-test
 $(SYSTEM)-test : $(ORTERFORTH) test.disc
 
-	echo "1 LOAD" | $< test.disc
+	echo "EMPTY-BUFFERS 1 LOAD" | $< test.disc
 
 # for working with assembly
 $(SYSTEM)/%.s : %.c | $(SYSTEM)
