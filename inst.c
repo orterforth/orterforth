@@ -50,13 +50,8 @@ static void __FASTCALL__ rf_inst_disc_expect(char e)
 {
   char c;
 
+  /* no op if expect fails */
   rf_disc_read(&c, 1);
-  /* TODO determine best cause of action when expect fails */
-/*
-  if (c != e) {
-    exit(1);
-  }
-*/
 }
 
 /* write block */
@@ -313,9 +308,10 @@ static void __FASTCALL__ rf_inst_compile(char *name)
         q++;
         factor = RF_WORD_SIZE;
       }
+      /* now read decimal number */
       accum = rf_inst_number(q, 10);
 
-      /* prefix with LIT, BRANCH or 0BRANCH */
+      /* to prefix with LIT, BRANCH or 0BRANCH */
       rf_inst_comma((uintptr_t) (factor * accum));
     }
 
@@ -702,7 +698,7 @@ static void rf_inst_forward(void)
 
   /* WORD */
   rf_inst_colon("WORD");
-  /* TODO wider align may need more blanks in edge case of long words */
+  /* wider align may need more blanks in edge case of long words */
   /* maybe not here but in final model source version of WORD */
   rf_inst_compile(
     "BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +! "
