@@ -1,3 +1,4 @@
+/* TODO remove if not necessary */
 #ifdef __RC2014
 #include <z80.h>
 #endif
@@ -20,6 +21,7 @@ const
 /* INST TIME DISC OPERATIONS */
 
 /* inst time disc command buffer */
+/* TODO use dict memory? or is this more efficient */
 static uint8_t cmd[11] = {
   'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '\x04'
 };
@@ -43,39 +45,6 @@ static void rf_inst_disc_cmd_set(char c, uintptr_t blk)
   rf_inst_puti(5, (offset % 26) + 1);
   cmd[9] = 48 + (blk / 2000);
 }
-
-#ifdef RF_INST_SAVE
-/* read the next byte from disc, fail if not the expected value */
-static void __FASTCALL__ rf_inst_disc_expect(char e)
-{
-  char c;
-
-  /* no op if expect fails */
-  rf_disc_read(&c, 1);
-}
-
-/* write block */
-static void rf_inst_disc_w(char *b, uintptr_t blk)
-{
-  static char eot = RF_ASCII_EOT;
-
-  /* send command */
-  rf_inst_disc_cmd_set('O', blk);
-  rf_disc_write((char *) cmd, 11);
-
-  /* get response */
-  rf_inst_disc_expect(RF_ASCII_ENQ);
-  rf_inst_disc_expect(RF_ASCII_EOT);
-
-  /* send data */
-  rf_disc_write(b, RF_BBLK);
-  rf_disc_write(&eot, 1);
-
-  /* get response */
-  rf_inst_disc_expect(RF_ASCII_ACK);
-  rf_inst_disc_expect(RF_ASCII_EOT);
-}
-#endif
 
 /* INST TIME CODE */
 
@@ -771,6 +740,38 @@ static void rf_inst_load(void)
 }
 
 #ifdef RF_INST_SAVE
+/* read the next byte from disc, fail if not the expected value */
+/* TODO simple expect 2 , also in that case don't need ascii defines */
+static void __FASTCALL__ rf_inst_disc_expect(char e)
+{
+  char c;
+
+  /* no op if expect fails */
+  rf_disc_read(&c, 1);
+}
+
+/* write block */
+static void rf_inst_disc_w(char *b, uintptr_t blk)
+{
+  static char eot = RF_ASCII_EOT;
+
+  /* send command */
+  rf_inst_disc_cmd_set('O', blk);
+  rf_disc_write((char *) cmd, 11);
+
+  /* get response */
+  rf_inst_disc_expect(RF_ASCII_ENQ);
+  rf_inst_disc_expect(RF_ASCII_EOT);
+
+  /* send data */
+  rf_disc_write(b, RF_BBLK);
+  rf_disc_write(&eot, 1);
+
+  /* get response */
+  rf_inst_disc_expect(RF_ASCII_ACK);
+  rf_inst_disc_expect(RF_ASCII_EOT);
+}
+
 /* return an ASCII hex digit */
 static char __FASTCALL__ rf_inst_hex(uint8_t b)
 {
@@ -824,6 +825,7 @@ void rf_inst(void)
 {
 #ifndef RF_INST_LOCAL_DISC
   /* wait for disc server to init */
+  /* TODO remove if not necessary */
 #ifdef __RC2014
   z80_delay_ms(5000);
 #else
