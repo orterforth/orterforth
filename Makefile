@@ -1128,6 +1128,11 @@ rc2014/z80.lib : rf_z80.asm | rc2014
 		-x -o $@ \
 		$<
 
+# Raspberry Pi 1 - armv6l assembly source is (currently) the same as armv7l
+rf_armv6l.s : rf_armv7l.s
+
+	cp -p $< $@
+
 # ROM file dir
 roms : 
 
