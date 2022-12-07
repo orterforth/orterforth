@@ -21,7 +21,6 @@ const
 /* INST TIME DISC OPERATIONS */
 
 /* inst time disc command buffer */
-/* TODO use dict memory? or is this more efficient */
 static uint8_t cmd[11] = {
   'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '\x04'
 };
@@ -60,7 +59,7 @@ static void rf_inst_code_noop(void)
 }
 #endif
 
-/* PREV */
+/* PREV - always use just first buffer */
 static void rf_inst_code_prev(void)
 {
   RF_START;
@@ -68,7 +67,7 @@ static void rf_inst_code_prev(void)
   RF_JUMP_NEXT;
 }
 
-/* block-cmd */
+/* block-cmd - write I nn nn /n and return buffer address */
 static void rf_inst_code_block_cmd(void)
 {
   RF_START;
@@ -155,28 +154,35 @@ static void rf_inst_create(uint8_t length, uint8_t *name)
 /* create and un-smudge */
 static void __FASTCALL__ rf_inst_def(char *name)
 {
+  /* create */
   rf_inst_create(rf_inst_strlen(name), (uint8_t *) name);
+  /* un-smudge */
   *rf_inst_vocabulary ^= 0x20;
 }
 
-/* NUMBER */
+/* DIGIT */
 static uint8_t rf_inst_digit(uint8_t base, uint8_t c)
 {
+  /* start from ASCII 0 */
   if (c >= 0x30) {
     c -= 0x30;
+    /* if not 0-9 start from ASCII A */
     if (c > 9) {
       if (c < 17) {
         return 0xFF;
       }
       c -= 7;
     }
+    /* return if valid for base */
     if (c < base) {
       return c;
     }
   }
+  /* fail */
   return 0xFF;
 }
 
+/* NUMBER */
 static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
 
   intptr_t l;
@@ -203,6 +209,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
   return sign ? -l : l;
 }
 
+/* LFA */
 static uintptr_t __FASTCALL__ *rf_inst_lfa(char *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
@@ -210,6 +217,7 @@ static uintptr_t __FASTCALL__ *rf_inst_lfa(char *nfa)
   return (uintptr_t *) ++nfa;
 }
 
+/* CFA */
 static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
 {
   uintptr_t *lfa = rf_inst_lfa(nfa);
@@ -217,6 +225,7 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
   return (rf_code_t *) cfa;
 }
 
+/* (FIND) */
 static char *rf_inst_find(char *t, uint8_t length, char *nfa)
 {
   uint8_t l;
@@ -740,36 +749,27 @@ static void rf_inst_load(void)
 }
 
 #ifdef RF_INST_SAVE
-/* read the next byte from disc, fail if not the expected value */
-/* TODO simple expect 2 , also in that case don't need ascii defines */
-static void __FASTCALL__ rf_inst_disc_expect(char e)
-{
-  char c;
-
-  /* no op if expect fails */
-  rf_disc_read(&c, 1);
-}
+static char rf_inst_disc_eot = RF_ASCII_EOT;
 
 /* write block */
 static void rf_inst_disc_w(char *b, uintptr_t blk)
 {
-  static char eot = RF_ASCII_EOT;
+  /* static char here fails for some reason on BBC build */
+  char d[2];
 
   /* send command */
   rf_inst_disc_cmd_set('O', blk);
   rf_disc_write((char *) cmd, 11);
 
-  /* get response */
-  rf_inst_disc_expect(RF_ASCII_ENQ);
-  rf_inst_disc_expect(RF_ASCII_EOT);
+  /* expect ENQ EOT */
+  rf_disc_read(d, 2);
 
   /* send data */
   rf_disc_write(b, RF_BBLK);
-  rf_disc_write(&eot, 1);
+  rf_disc_write(&rf_inst_disc_eot, 1);
 
-  /* get response */
-  rf_inst_disc_expect(RF_ASCII_ACK);
-  rf_inst_disc_expect(RF_ASCII_EOT);
+  /* expect ACK EOT */
+  rf_disc_read(d, 2);
 }
 
 /* return an ASCII hex digit */
@@ -778,6 +778,7 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
   return b + (b < 10 ? 48 : 55);
 }
 
+/* disc buffer start */
 static uint8_t * buf = (uint8_t *) RF_FIRST + RF_WORD_SIZE;
 
 /* save the installation as hex on DR1 */
