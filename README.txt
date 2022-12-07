@@ -190,6 +190,48 @@ The emulated disc drive is available to the user to load
 programs in the same way it was used for install.
 
 
+BACKGROUND
+
+orterforth is an attempt to reflect on the efforts of the Forth
+Interest Group and create a working executable model for Forth
+that could be ported to multiple machines. The Forth model
+source was intended to be illustrative, for Forth implementers
+to go away and create assembly listings of respective fig-Forth
+implementations, but orterforth takes it literally and treats
+it as the proper installation process, for generating a final
+binary.
+
+The installation process for each machine is executable on real
+hardware wherever possible - using the machine's serial port to
+connect to the emulated disc controller. (It should, in theory,
+also work with a real PerSci 1070 disc controller and 8" disc
+drives as was described in the Installation Manual, via the
+serial interface - were anyone able to locate working examples
+of these and write the model source to a disc.)
+
+More practically, modern automation tools and machine emulators
+can be used to create working Forth binaries for different
+targets from the same source code on the same host machine.
+
+The idea is extended to modern architectures, but without
+modifying the model source or the resulting Forth word set more
+than necessary to make this work in a general way.
+
+I have resisted extending the language with additional words
+and capabilities; extensions like these can be added as desired
+by linking in C or assembly code implementing these words, or
+implementing them in Forth. Interesting projects in this
+direction might be implementing bindings to the C standard
+library, or creating a platform-independent graphics library.
+
+The idea of self-hosting - creating a Forth implementation that
+builds itself from the absolute minimum of bootstrap code and
+using few or no external tools - is a compelling one, but it's 
+not the primary goal of this project. I am certainly open to
+ways to reduce the amount of install code required as they
+present themselves.
+
+
 ACKNOWLEDGEMENTS
 
 orterforth builds upon the work of many, most obviously the 
