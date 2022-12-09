@@ -678,19 +678,22 @@ dragon :
 .PHONY : dragon-build
 dragon-build : dragon/inst.bin
 
+.PHONY : dragon-clean
+dragon-clean :
+
+	rm -f dragon/*
+
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
 	mame dragon64 -rompath roms -video opengl \
 	-resolution 1024x768 -skip_gameinfo -nomax -window \
-	-rompath roms -video opengl -resolution 1024x768 \
 	-cassette $< \
-	-skip_gameinfo -nomax -window \
 	-autoboot_delay 4 -autoboot_command "CLOADM\r"
 
-dragon/%.cas : dragon/%.bin
+dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
 
-	~/Downloads/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
 
 dragon/hw.bin : hw.c
 
