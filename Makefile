@@ -331,6 +331,7 @@ BBCMAMEFAST := mame bbcb -rompath roms -video none -sound none \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # load and run
+# TODO BBCROMS not needed for real hardware
 bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
@@ -363,6 +364,7 @@ endif
 
 # load and run tests
 .PHONY : bbc-test
+# TODO BBCROMS not needed for real hardware
 bbc-test : $(BBCMEDIA) $(BBCROMS) | $(DISC) test.disc $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
@@ -448,6 +450,7 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # final binary hex
+# TODO BBCROMS not needed for real hardware
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
 	# empty disc
@@ -597,11 +600,29 @@ c64-clean :
 
 	rm -rf c64/*
 
-.PHONY : c64-run
-c64-run : c64/inst
+# laderach order number Your order # is: 16000009993.
 
-	# export PATH="/Applications/vice-x86-64-gtk3-3.6.1/bin:$$PATH" && x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostart $<
-	x64sc -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostart $<
+.PHONY : c64-example
+c64-example : ../c64-up2400-cc65/example/example.d64
+
+	x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|echo 'hello'" -rsdev4baud 2400 -autostart "$<:example.prg"
+
+.PHONY : c64-hw
+c64-hw : c64/hw.prg
+
+	x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostartprgmode 1 -autostart $<
+
+.PHONY : c64-run
+c64-run : c64/inst.prg
+
+	# start disc
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 25232 model.disc data.disc
+
+	# x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostartprgmode 1 -autostart $<
+	x64 -userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 -autostartprgmode 1 -autostart $<
+
+	# stop disc
+	sh scripts/stop.sh disc.pid
 
 # general assemble rule
 c64/%.o : c64/%.s
@@ -622,8 +643,13 @@ c64/rf_system_c.s : target/c64/system.c | c64
 
 	cc65 -O -t c64 -o $@ $<
 
+# Hello World
+c64/hw.prg : hw.c | c64
+
+	cl65 -O -t c64 -o $@ $^
+
 # inst binary
-c64/inst : c64/main.o c64/rf.o c64/inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
+c64/inst.prg : c64/main.o c64/rf.o c64/inst.o c64/rf_system_c.o c64/c64-up2400.o | c64
 
 	cl65 -O -t c64 -o $@ -m c64/inst.map $^
 
@@ -652,15 +678,15 @@ dragon :
 .PHONY : dragon-build
 dragon-build : dragon/inst.bin
 
-.PHONY : dragon-run
-dragon-run : dragon/hw.cas
+.PHONY : dragon-hw
+dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
 	mame dragon64 -rompath roms -video opengl \
 	-resolution 1024x768 -skip_gameinfo -nomax -window \
 	-rompath roms -video opengl -resolution 1024x768 \
 	-cassette $< \
 	-skip_gameinfo -nomax -window \
-	-autoboot_delay 2 -autoboot_command "CLOADM\r"
+	-autoboot_delay 4 -autoboot_command "CLOADM\r"
 
 dragon/%.cas : dragon/%.bin
 
@@ -1145,6 +1171,11 @@ roms/bbcb : | roms
 
 # BBC Micro ROM files
 roms/bbcb/% : | roms/bbcb
+
+	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
+
+# Dragon 64 ROM files
+roms/dragon64/% :
 
 	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
 
