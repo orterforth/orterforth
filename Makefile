@@ -1192,10 +1192,11 @@ roms/spectrum/% : | roms/spectrum
 .PHONY : run
 run : $(TARGET)-run
 
-# run utility script
+# run working script
 .PHONY : script
 script :
 
+	@[ -f $@ ] || (echo "Create the file scripts/script.sh for your working script and run it using: make script" && exit 1)
 	sh scripts/script.sh
 
 
