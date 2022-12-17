@@ -19,7 +19,6 @@
 #endif
 
 #include "bbc.h"
-#include "fuse.h"
 #include "ql.h"
 #include "serial.h"
 #include "spectrum.h"

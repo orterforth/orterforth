@@ -1196,7 +1196,7 @@ run : $(TARGET)-run
 .PHONY : script
 script :
 
-	@[ -f $@ ] || (echo "Create the file scripts/script.sh for your working script and run it using: make script" && exit 1)
+	@[ -f scripts/script.sh ] || (echo "Create the file scripts/script.sh for your working script and run it using: make script" && exit 1)
 	sh scripts/script.sh
 
 
