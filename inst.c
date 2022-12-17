@@ -101,6 +101,7 @@ static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
   }
 }
 
+/* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 {
   *((uintptr_t *) RF_USER_DP) = word;
@@ -381,7 +382,10 @@ static void rf_inst_code_doliteral(void)
   RF_JUMP_NEXT;
 }
 
-/* compile an inst time literal */
+/* compile an inst time literal - these install-time values 
+   are compiled as literals or executed and so aren't
+   referenced by the resulting install.
+*/
 static void rf_inst_def_literal(char *name, uintptr_t value)
 {
   rf_inst_def_code(name, rf_inst_code_doliteral);
@@ -622,7 +626,7 @@ static void rf_inst_forward(void)
   /* code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    /* model source builds code word with the address*/
+    /* model source builds code word with the address */
     if (code->name) {
       rf_inst_def_literal(code->name, (uintptr_t) code->value);
     }
@@ -786,28 +790,30 @@ void rf_inst_save(void)
 {
   /* write to DR1 */
   unsigned int blk = 2000;
-  /* start from ORG */
 #ifdef RF_INST_RELINK
+  /* start from ORIGIN, if code is separate and to be relinked */
   char *i = (char *) RF_ORIGIN;
-  char *e = (char *) RF_USER_DP;
 #else
+  /* start from ORG */
   char *i = (char *) RF_ORG;
-  char *e = (char *) RF_USER_DP;
 #endif
-  /* write blocks to disc until HERE */
+  char *e = (char *) RF_USER_DP;
   uint8_t j;
+
 #ifdef RF_INST_RELINK
-  /* write table of code addresses */
+  /* write table of code addresses after HERE */
   for (j = 0; j < RF_INST_CODE_LIT_LIST_SIZE; j++) {
     *((rf_code_t *) e) = rf_inst_code_lit_list[j].value;
     e += RF_WORD_SIZE;
   }
-  /* write two links used in COLD */
+  /* and write two links used in COLD */
   *((rf_code_t *) e) = (rf_code_t) rf_cold_forth;
   e += RF_WORD_SIZE;
   *((rf_code_t *) e) = (rf_code_t) rf_cold_abort;
   e += RF_WORD_SIZE;
 #endif
+
+  /* now write hex blocks to DR1 */
   while (i < e) {
     for (j = 0; j < 128;) {
       uint8_t b = *i++;
