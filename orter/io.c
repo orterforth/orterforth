@@ -21,6 +21,7 @@ int orter_io_finished = 0;
 /* signal handler */
 static void handler(int signum)
 {
+/*
 #ifdef __CYGWIN__
   const char *name = strsignal(signum);
 #endif
@@ -30,7 +31,11 @@ static void handler(int signum)
 #ifdef __MACH__
   const char *name = sys_signame[signum];
 #endif
+*/
+/*
   fprintf(stderr, "handler signal %s\n", name ? name : "unknown");
+*/
+  /* TODO separate signal no from this flag */
   orter_io_finished = signum;
 }
 
@@ -58,6 +63,7 @@ size_t orter_io_fd_wr(int fd, char *off, size_t len)
   /* write bytes */
   n = write(fd, off, len);
   if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
+    /* TODO separate finished from errno */
     orter_io_finished = errno;
     perror("write failed");
     return 0;
@@ -79,6 +85,7 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
   /* read bytes */
   n = read(fd, off, len);
   if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
+    /* TODO separate finished from errno */
     orter_io_finished = errno;
     perror("read failed");
     return 0;
