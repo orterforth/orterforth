@@ -2,6 +2,9 @@
 
 # reset.sh
 
+# This script attempts to exit any program, reset the machine 
+# and set Memory Top appropriately
+
 set -e
 
 # try cold start and default memory top
@@ -28,6 +31,6 @@ sleep 1
 printf '\n'
 sleep 1
 
-# ACK
+# send ACK back, then the client will exit
 printf 'print chr$(6)\n'
 sleep 1
