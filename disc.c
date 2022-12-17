@@ -12,9 +12,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "orter/fuse.h"
 #include "orter/io.h"
 #include "orter/serial.h"
+#include "orter/spectrum.h"
 #include "persci.h"
 
 #define RF_BBLK 128
@@ -146,7 +146,7 @@ static size_t fuse_rd(char *off, size_t len)
   int c;
 
   for (i = 0; i < len; i++) {
-    c = orter_fuse_serial_getc(stdin);
+    c = orter_spectrum_fuse_serial_getc(stdin);
     /* EOF */
     if (c == -1) {
       break;
@@ -167,7 +167,7 @@ static size_t fuse_wr(char *off, size_t len)
   size_t i;
 
   for (i = 0; i < len; i++) {
-    orter_fuse_serial_putc(off[i], stdout);
+    orter_spectrum_fuse_serial_putc(off[i], stdout);
   }  
 
   return len;

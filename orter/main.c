@@ -50,7 +50,7 @@ static int fuse(int argc, char *argv[])
 
     /* read from Fuse serial named pipe and write to stdout */
     if (!strcmp("serial", argv[2]) && !strcmp("read", argv[3])) {
-      while ((c = orter_fuse_serial_getc(stdin)) != -1) {
+      while ((c = orter_spectrum_fuse_serial_getc(stdin)) != -1) {
         fputc(c, stdout);
       }
     }
@@ -58,7 +58,7 @@ static int fuse(int argc, char *argv[])
     /* read from stdin and write to Fuse serial named pipe */
     if (!strcmp("serial", argv[2]) && !strcmp("write", argv[3])) {
       while ((c = fgetc(stdin)) != -1) {
-        orter_fuse_serial_putc(c, stdout);
+        orter_spectrum_fuse_serial_putc(c, stdout);
       }
     }
 

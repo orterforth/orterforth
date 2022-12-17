@@ -56,9 +56,9 @@ default : build
 
 # local disc server executable
 $(DISC) : \
-	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_serial.o \
+	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/persci.o \
 	disc.c
 
@@ -67,7 +67,6 @@ $(DISC) : \
 # orter - retrocomputing multitool
 $(ORTER) : \
 	$(SYSTEM)/orter_bbc.o \
-	$(SYSTEM)/orter_fuse.o \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
@@ -169,11 +168,6 @@ $(SYSTEM)/inst.o : inst.c model.inc rf.h system.inc persci.h | $(SYSTEM)
 
 # orter libs - BBC Micro
 $(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-# orter libs - Fuse Emulator serial escape support
-$(SYSTEM)/orter_fuse.o : orter/fuse.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
