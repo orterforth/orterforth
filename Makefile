@@ -326,6 +326,11 @@ BBCMAMEFAST := mame bbcb -rompath roms -video none -sound none \
 	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
+# Hello World
+bbc-hw : bbc/hw.uef $(BBCROMS)
+
+	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/hw.uef
+
 # load and run
 # TODO BBCROMS not needed for real hardware
 bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
@@ -434,6 +439,17 @@ bbc/boot.inf : | bbc
 bbc/crt0.o : target/bbc/crt0.s
 
 	ca65 -o $@ $<
+
+# Hello World
+bbc/hw : hw.o bbc/bbc.lib
+
+	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ $^
+
+# Hello World
+bbc/hw.uef : bbc/hw | $(ORTER)
+
+	$(ORTER) bbc uef write hw 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
+	mv $@.io $@
 
 # MOS bindings
 bbc/mos.o : target/bbc/mos.s | bbc
@@ -595,8 +611,6 @@ c64-build : c64/inst
 c64-clean :
 
 	rm -rf c64/*
-
-# laderach order number Your order # is: 16000009993.
 
 .PHONY : c64-example
 c64-example : ../c64-up2400-cc65/example/example.d64
