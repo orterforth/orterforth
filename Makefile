@@ -580,8 +580,7 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # main lib
 bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 
-	# TODO determine why INST and INDA need to be distinct sections
-	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INDA --rodata-name INST -o $@ $<
+	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INST --rodata-name INST -o $@ $<
 
 # system lib, C
 bbc/rf_system_c.s : target/bbc/system.c | bbc
