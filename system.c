@@ -31,12 +31,6 @@ void rf_init(void)
     perror("memory init failed");
     exit(1);
   }
-
-  /* make sure any output is written before a seg fault */
-  if (setvbuf(stdout, NULL, _IONBF, 0)) {
-    perror("setvbuf failed");
-    exit(1);
-  }
 }
 
 void rf_code_emit(void)
@@ -46,10 +40,13 @@ void rf_code_emit(void)
     uint8_t c = RF_SP_POP & 0x7F;
 
     putchar(c);
+
+    /* backspace erase */
     if (c == 0x08) {
       putchar(' ');
       putchar(c);
     }
+
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
