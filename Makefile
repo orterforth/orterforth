@@ -1021,6 +1021,11 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER)
 	# start interactive session
 	@$(ORTER) serial $(RC2014SERIALPORT) 115200
 
+# hexload
+rc2014/hexload.bas : tools/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
+
+	cp $< $@
+
 # inst executable
 rc2014/inst_CODE.bin : \
 	$(RC2014DEPS) \
@@ -1089,9 +1094,9 @@ rc2014/inst.lib : inst.c rf.h $(RC2014INC) inst.h | rc2014
 		--constseg=INST
 
 # inst serial load file - seems an unreliable approach
-rc2014/inst.ser : target/rc2014/hexload.bas rc2014/inst.ihx
+rc2014/inst.ser : rc2014/hexload.bas rc2014/inst.ihx
 
-	cp target/rc2014/hexload.bas $@.io
+	cp rc2014/hexload.bas $@.io
 	cat rc2014/inst.ihx >> $@.io
 	mv $@.io $@
 
@@ -1102,7 +1107,7 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 	mv $@.io $@
 
 # saved hex result
-rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
+rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
 
 	# validate that code does not overlap ORIGIN
 	sh target/spectrum/check-memory.sh \
@@ -1117,7 +1122,7 @@ rc2014/orterforth.hex : target/rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(OR
 	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
 
 	# load inst via hexload
-	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < target/rc2014/hexload.bas
+	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/hexload.bas
 	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
 	# empty disc
@@ -1142,9 +1147,9 @@ rc2014/orterforth.ihx : rc2014/orterforth
 	z88dk-appmake +hex --org 0x9000 --binfile $< --output $@
 
 # serial load file
-rc2014/orterforth.ser : target/rc2014/hexload.bas rc2014/orterforth.ihx
+rc2014/orterforth.ser : rc2014/hexload.bas rc2014/orterforth.ihx
 
-	cp target/rc2014/hexload.bas $@.io
+	cp rc2014/hexload.bas $@.io
 	cat rc2014/orterforth.ihx >> $@.io
 	mv $@.io $@
 
@@ -1632,6 +1637,10 @@ test : $(TARGET)-test
 tools :
 
 	mkdir $@
+
+tools/RC2014/BASIC-Programs/hexload/hexload.bas : | tools
+
+	cd tools && git clone https://github.com/RC2014.git
 
 tools/z80/z80.c tools/z80/z80.h : | tools
 
