@@ -283,9 +283,10 @@ endif
 BBCMACHINE := mame
 #BBCMACHINE := real
 
-# physical machine loading method serial by default
+# physical machine loading method serial by default, ROM files not needed
 ifeq ($(BBCMACHINE),real)
 	BBCLOADINGMETHOD := serial
+	BBCROMS :=
 endif
 
 # loading media
@@ -311,7 +312,7 @@ bbc :
 	mkdir $@
 
 .PHONY : bbc-build
-bbc-build : bbc/orterforth.ssd bbc/orterforth.uef
+bbc-build : $(BBCMEDIA)
 
 .PHONY : bbc-clean
 bbc-clean : 
@@ -335,7 +336,6 @@ bbc-hw : bbc/hw.uef $(BBCROMS)
 	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/hw.uef
 
 # load and run
-# TODO BBCROMS not needed for real hardware
 bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
@@ -368,7 +368,6 @@ endif
 
 # load and run example disc
 .PHONY : bbc-example
-# TODO BBCROMS not needed for real hardware
 bbc-example : $(BBCMEDIA) $(BBCROMS) | $(DISC) example/$(EXAMPLE).disc $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
@@ -465,7 +464,6 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # final binary hex
-# TODO BBCROMS not needed for real hardware
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
 	# empty disc
