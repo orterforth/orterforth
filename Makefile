@@ -466,48 +466,54 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # final binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
-	# empty disc
-	rm -f $@.io
-	touch $@.io
+	@# empty disc
+	@printf '* \e[1;33mClearing DR1\e[0;0m\n'
+	@rm -f $@.io
+	@touch $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	# start disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 model.disc $@.io
+	@# start disc
+	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 model.disc $@.io
 
-	# start Mame
-	sh scripts/start.sh /dev/stdin /dev/stdout mame.pid $(BBCMAMEFAST) $(BBCMAMEINST)
+	@# start MAME
+	@printf '* \e[1;33mStarting MAME\e[0;0m\n'
+	@sh scripts/start.sh /dev/stdin /dev/stdout mame.pid $(BBCMAMEFAST) $(BBCMAMEINST)
 endif
 ifeq ($(BBCMACHINE),real)
 	@# prompt user
-	@echo "  ensure RS423 connected to serial port"
-	@echo "  type the following"
+	@printf '* \e[1;35mEnsure RS423 connected to serial port\e[0;0m\n'
+	@printf '  \e[1;35mType the following:\e[0;0m\n'
 	@# TODO baud settings parameterised
-	@echo "   *FX7,7 <enter>"
-	@echo "   *FX8,7 <enter>"
-	@echo "   *FX2,1 <enter>"
-	@read -p "  then on this machine press enter " LINE
+	@printf '  FX2,1 <enter>\n'
+	@read -p "  then on this machine press enter" LINE
 
-	# load via serial
-	@echo "* loading via serial..."
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
+	@# load via serial
+	@printf '* \e[1;33mLoading via serial\e[0;0m\n'
+	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
 
-	# start disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+	@# start disc
+	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 
-	# wait for save
-	sh scripts/wait-until-saved.sh $@.io
+	@# wait for save
+	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
+	@sh scripts/wait-until-saved.sh $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	# stop Mame
-	sh scripts/stop.sh mame.pid
+	@# stop Mame
+	@printf '* \e[1;33mStopping MAME\e[0;0m\n'
+	@sh scripts/stop.sh mame.pid
 endif
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@# stop disc
+	@printf '* \e[1;33mStopping disc\e[0;0m\n'
+	@sh scripts/stop.sh disc.pid
 
-	# copy result
-	mv $@.io $@
+	@# copy result
+	@printf '* \e[1;33mDone\e[0;0m\n'
+	@mv $@.io $@
 
 # final disc inf
 bbc/orterforth.inf : | bbc
@@ -1519,22 +1525,27 @@ endif
 
 spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
 
-	# validate that code does not overlap ORIGIN
-	sh target/spectrum/check-memory.sh \
+	@# validate that code does not overlap ORIGIN
+	@printf '* \e[1;33mChecking memory limits\e[0;0m\n'
+	@sh target/spectrum/check-memory.sh \
 		$(SPECTRUMORG) \
 		$(SPECTRUMORIGIN) \
 		$(shell $(STAT) spectrum/inst.bin)
 
-	# empty disc in drive 1 for hex installed file
-	rm -f $@.io
-	touch $@.io
+	@# empty disc in drive 1 for hex installed file
+	@printf '* \e[1;33mClearing DR1\e[0;0m\n'
+	@rm -f $@.io
+	@touch $@.io
 
 ifeq ($(SPECTRUMIMPL),fuse)
-	# start disc
-	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
+	@# start disc
+	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
 
-	# start Fuse
-	sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) \
+	@# start Fuse
+	@printf '* \e[1;33mStarting Fuse\e[0;0m\n'
+	@printf '  \e[1;35mNB please type LOAD "" (phantom typist not working currently)\e[0;0m\n'
+	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) \
 		--speed=1000 \
 		--machine 48 \
 		--interface1 \
@@ -1546,40 +1557,57 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--rs232-tx spectrum/fuse-rs232-tx \
 		--tape spectrum/inst-2.tap
 
-	# wait for install and save
-	sh scripts/wait-until-saved.sh $@.io
+	@# wait for install and save
+	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
+	@sh scripts/wait-until-saved.sh $@.io
 
-	# stop Fuse
-	sh scripts/stop.sh fuse.pid
+	@# stop Fuse
+	@printf '* \e[1;33mStopping Fuse\e[0;0m\n'
+	@sh scripts/stop.sh fuse.pid
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@# stop disc
+	@printf '* \e[1;33mStopping disc\e[0;0m\n'
+	@sh scripts/stop.sh disc.pid
 endif
 
 ifeq ($(SPECTRUMIMPL),superzazu)
-	# run emulator with hooks to handle I/O and to terminate when finished
-	./$(SYSTEM)/emulate_spectrum
+	@# run emulator with hooks to handle I/O and to terminate when finished
+	@printf '* \e[1;33mRunning headless emulator\e[0;0m\n'
+	@./$(SYSTEM)/emulate_spectrum
 endif
 
 ifeq ($(SPECTRUMIMPL),real)
-	@echo "On the Spectrum type: FORMAT \"b\";$(SERIALBAUD)"
-	@echo "                      LOAD *\"b\""
-	@read -p "Then press enter to start: " LINE
+	@printf '* \e[1;35mOn the Spectrum type:\e[0;0m\n'
+	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
+	@printf '  LOAD *"b" <enter>\n'
+	@read -p '  then press enter to start: ' LINE
 
-	@echo "* Loading loader..."
+	@printf '* \e[1;33mLoading loader\e[0;0m\n'
 	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
-	@echo "* Loading inst..."
+	@printf '* \e[1;33mLoading inst\e[0;0m\n'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 
-	@echo "* Starting disc and waiting for completion..."
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io & pid=$$! ; \
-		scripts/wait-until-saved.sh $@.io ; \
-		kill -9 $$pid
+	@# @echo "* Starting disc and waiting for completion..."
+	@# @$(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io & pid=$$! ; \
+	# 	scripts/wait-until-saved.sh $@.io ; \
+	# 	kill -9 $$pid
+
+	@# start disc
+	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+
+	@# wait for install and save
+	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
+	@sh scripts/wait-until-saved.sh $@.io
+
+	@# stop disc
+	@printf '* \e[1;33mStopping disc\e[0;0m\n'
+	@sh scripts/stop.sh disc.pid
 endif
 
-	# copy result
-	mv $@.io $@
+	@# copy result
+	@mv $@.io $@
 
 # make serial load file from bin
 spectrum/orterforth.ser : spectrum/orterforth.bin | $(ORTER)
