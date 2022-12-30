@@ -466,52 +466,42 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # final binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
-	@# empty disc
 	@printf '* \e[1;33mClearing DR1\e[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	@# start disc
 	@printf '* \e[1;33mStarting disc\e[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 model.disc $@.io
 
-	@# start MAME
 	@printf '* \e[1;33mStarting MAME\e[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout mame.pid $(BBCMAMEFAST) $(BBCMAMEINST)
 endif
 ifeq ($(BBCMACHINE),real)
-	@# prompt user
 	@printf '* \e[1;35mEnsure RS423 connected to serial port\e[0;0m\n'
 	@printf '  \e[1;35mType the following:\e[0;0m\n'
 	@# TODO baud settings parameterised
 	@printf '  FX2,1 <enter>\n'
 	@read -p "  then on this machine press enter" LINE
 
-	@# load via serial
 	@printf '* \e[1;33mLoading via serial\e[0;0m\n'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
 
-	@# start disc
 	@printf '* \e[1;33mStarting disc\e[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 
-	@# wait for save
 	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
 	@sh scripts/wait-until-saved.sh $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	@# stop Mame
 	@printf '* \e[1;33mStopping MAME\e[0;0m\n'
 	@sh scripts/stop.sh mame.pid
 endif
 
-	@# stop disc
 	@printf '* \e[1;33mStopping disc\e[0;0m\n'
 	@sh scripts/stop.sh disc.pid
 
-	@# copy result
 	@printf '* \e[1;33mDone\e[0;0m\n'
 	@mv $@.io $@
 
