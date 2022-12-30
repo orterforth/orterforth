@@ -1,7 +1,10 @@
+#include <cmoc.h>
+
 #include "../../rf.h"
 
 void rf_init(void)
 {
+  printf("init\n");
 }
 
 void rf_code_emit(void)
@@ -37,6 +40,9 @@ void rf_disc_read(char *c, unsigned char len)
 
 void rf_disc_write(char *p, unsigned char len)
 {
+  while (len--) {
+    putchar(*(p++));
+  }
 }
 
 void rf_fin(void)

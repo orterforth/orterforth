@@ -673,7 +673,6 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 .PHONY : disc
 disc : $(DISC) $(DR0) $(DR1)
 
-	touch $(DR1)
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 
 
@@ -691,6 +690,14 @@ dragon-clean :
 
 	rm -f dragon/*
 
+.PHONY : dragon-inst
+dragon-inst : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+
+	mame dragon64 -rompath roms -video opengl \
+	-resolution 1024x768 -skip_gameinfo -nomax -window \
+	-cassette $< \
+	-autoboot_delay 4 -autoboot_command "CLOADM\r"
+
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
@@ -699,17 +706,21 @@ dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 	-cassette $< \
 	-autoboot_delay 4 -autoboot_command "CLOADM\r"
 
-dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
-
 dragon/hw.bin : hw.c
 
 	cmoc --dragon -o $@ $^
 
+dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
 	cmoc --dragon -o $@ $^
+
+dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
 
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
