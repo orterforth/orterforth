@@ -543,7 +543,7 @@ bbc/inst.inf : | bbc
 
 	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
-# inst serial load file
+# system dependent command to get file size
 ifeq ($(OPER),cygwin)
 STAT := stat -c %s
 endif
@@ -553,6 +553,8 @@ endif
 ifeq ($(OPER),linux)
 STAT := stat -c %s
 endif
+
+# inst serial load file
 bbc/%.ser : bbc/%
 
 	printf "5P.\"Loading...\"\r" > $@.io
@@ -1331,7 +1333,11 @@ ifeq ($(SPECTRUMIMPL),superzazu)
 # default is to use fast build but run in Fuse
 SPECTRUMMACHINE := fuse
 endif
+ifeq ($(SPECTRUMIMPL),real)
+SPECTRUMMACHINE := real
+endif
 
+# TODO organise SPECTRUMMEDIA, SPECTRUMROMS, etc
 .PHONY : spectrum-run
 ifeq ($(SPECTRUMMACHINE),fuse)
 spectrum-run : \
@@ -1525,24 +1531,38 @@ endif
 
 spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
 
-	@# validate that code does not overlap ORIGIN
 	@printf '* \e[1;33mChecking memory limits\e[0;0m\n'
 	@sh target/spectrum/check-memory.sh \
 		$(SPECTRUMORG) \
 		$(SPECTRUMORIGIN) \
 		$(shell $(STAT) spectrum/inst.bin)
 
-	@# empty disc in drive 1 for hex installed file
 	@printf '* \e[1;33mClearing DR1\e[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
 
-ifeq ($(SPECTRUMIMPL),fuse)
-	@# start disc
+ifeq ($(SPECTRUMIMPL),real)
+	@printf '* \e[1;35mOn the Spectrum type:\e[0;0m\n'
+	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
+	@printf '  LOAD *"b" <enter>\n'
+	@read -p '  then press enter to start: ' LINE
+
+	@printf '* \e[1;33mLoading loader\e[0;0m\n'
+	@# TODO load-serial could send ACK and we could use -a
+	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
+
+	@printf '* \e[1;33mLoading inst\e[0;0m\n'
+	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
+endif
+
 	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+ifeq ($(SPECTRUMIMPL),real)
+	@printf '  \e[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\e[0;0m\n'
+	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+endif
+ifeq ($(SPECTRUMIMPL),fuse)
 	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
 
-	@# start Fuse
 	@printf '* \e[1;33mStarting Fuse\e[0;0m\n'
 	@printf '  \e[1;35mNB please type LOAD "" (phantom typist not working currently)\e[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) \
@@ -1556,57 +1576,27 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
 		--tape spectrum/inst-2.tap
-
-	@# wait for install and save
-	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
-	@sh scripts/wait-until-saved.sh $@.io
-
-	@# stop Fuse
-	@printf '* \e[1;33mStopping Fuse\e[0;0m\n'
-	@sh scripts/stop.sh fuse.pid
-
-	@# stop disc
-	@printf '* \e[1;33mStopping disc\e[0;0m\n'
-	@sh scripts/stop.sh disc.pid
 endif
 
 ifeq ($(SPECTRUMIMPL),superzazu)
-	@# run emulator with hooks to handle I/O and to terminate when finished
 	@printf '* \e[1;33mRunning headless emulator\e[0;0m\n'
 	@./$(SYSTEM)/emulate_spectrum
 endif
 
-ifeq ($(SPECTRUMIMPL),real)
-	@printf '* \e[1;35mOn the Spectrum type:\e[0;0m\n'
-	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
-	@printf '  LOAD *"b" <enter>\n'
-	@read -p '  then press enter to start: ' LINE
-
-	@printf '* \e[1;33mLoading loader\e[0;0m\n'
-	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
-
-	@printf '* \e[1;33mLoading inst\e[0;0m\n'
-	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
-
-	@# @echo "* Starting disc and waiting for completion..."
-	@# @$(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io & pid=$$! ; \
-	# 	scripts/wait-until-saved.sh $@.io ; \
-	# 	kill -9 $$pid
-
-	@# start disc
-	@printf '* \e[1;33mStarting disc\e[0;0m\n'
-	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
-
-	@# wait for install and save
+ifneq ($(SPECTRUMIMPL),superzazu)
 	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
 	@sh scripts/wait-until-saved.sh $@.io
 
-	@# stop disc
+ifeq ($(SPECTRUMIMPL),fuse)
+	@printf '* \e[1;33mStopping Fuse\e[0;0m\n'
+	@sh scripts/stop.sh fuse.pid
+endif
+
 	@printf '* \e[1;33mStopping disc\e[0;0m\n'
 	@sh scripts/stop.sh disc.pid
 endif
 
-	@# copy result
+	@printf '* \e[1;33mDone\e[0;0m\n'
 	@mv $@.io $@
 
 # make serial load file from bin
