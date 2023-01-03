@@ -327,22 +327,24 @@ static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
 	rf_inst_comma(literal);
 }
 
-static void rf_inst_code_interpret_number(void)
+static void rf_inst_code_number(void)
 {
   RF_START;
   {
     intptr_t number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
-
-    /* DPL @ 1+ IF [COMPILE] DLITERAL ELSE DROP [COMPILE] LITERAL */
-    if (RF_USER_STATE) {
-      rf_inst_compile_lit((uintptr_t) number);
-    } else {
-      RF_SP_PUSH(number); 
-    }
-    /* ENDIF  */
-    /* ?STACK  */
-    RF_JUMP_NEXT;
+    RF_SP_PUSH(number); 
   }
+  RF_JUMP_NEXT;
+}
+
+static void rf_inst_code_compile_lit(void)
+{
+  RF_START;
+  {
+    /* compile LIT */
+    rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3, rf_inst_vocabulary)));
+  }
+  RF_JUMP_NEXT;
 }
 
 /* DECIMAL */
@@ -513,7 +515,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 67
+#define RF_INST_CODE_LIT_LIST_SIZE 68
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "cl", rf_code_cl },
@@ -587,7 +589,8 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "bread", "BLOCK-READ", rf_code_bread },
   { 0, "DECIMAL", rf_inst_code_decimal },
   { 0, "COMPILE", rf_inst_code_compile },
-  { 0, "interpret-number", rf_inst_code_interpret_number },
+  { 0, "number", rf_inst_code_number },
+  { 0, "compile-lit", rf_inst_code_compile_lit },
   { 0, "add", rf_inst_code_add },
   { 0, "prev", rf_inst_code_prev },
   { 0, "block-cmd", rf_inst_code_block_cmd }
@@ -694,7 +697,8 @@ static void rf_inst_forward(void)
   rf_inst_colon("INTERPRET");
   rf_inst_compile(
     "-FIND 0BRANCH ^21 STATE @ - 0< 0BRANCH ^10 cl - HERE ! cl DP +! "
-    "BRANCH ^4 cl - EXECUTE BRANCH ^-22 interpret-number BRANCH ^-25");
+    "BRANCH ^4 cl - EXECUTE BRANCH ^-22 number STATE @ 0BRANCH ^-27 compile-lit "
+    "HERE ! cl DP +! BRANCH ^-35");
 
   /* CREATE */
   rf_inst_colon("CREATE");
