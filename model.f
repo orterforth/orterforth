@@ -1354,8 +1354,8 @@ IMMEDIATE
 02 cs BYTE.IN AGAIN REPLACED.BY BRANCH
 01 cs BYTE.IN IF REPLACED.BY 0BRANCH
 02 cs BYTE.IN ELSE REPLACED.BY BRANCH
+25 cs BYTE.IN INTERPRET REPLACED.BY LIT
 -->
-
 
 
 ( load high level utility definitions                         )

@@ -325,16 +325,6 @@ static void rf_inst_code_number(void)
   RF_JUMP_NEXT;
 }
 
-static void rf_inst_code_compile_lit(void)
-{
-  RF_START;
-  {
-    /* compile LIT */
-    rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3, rf_inst_vocabulary)));
-  }
-  RF_JUMP_NEXT;
-}
-
 /* DECIMAL */
 static void rf_inst_code_decimal(void)
 {
@@ -503,7 +493,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 67
+#define RF_INST_CODE_LIT_LIST_SIZE 66
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "cl", rf_code_cl },
@@ -577,7 +567,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "bread", "BLOCK-READ", rf_code_bread },
   { 0, "DECIMAL", rf_inst_code_decimal },
   { 0, "number", rf_inst_code_number },
-  { 0, "compile-lit", rf_inst_code_compile_lit },
   { 0, "add", rf_inst_code_add },
   { 0, "prev", rf_inst_code_prev },
   { 0, "block-cmd", rf_inst_code_block_cmd }
@@ -689,12 +678,11 @@ static void rf_inst_forward(void)
   rf_inst_compile("R> DUP cl + >R @ , ;S");
 
   /* INTERPRET */
-  /* TODO compile-lit can be dropped to COMPILE LIT once REPLACED.BY executed */
   rf_inst_colon("INTERPRET");
   rf_inst_compile(
     "-FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
-    "EXECUTE BRANCH ^-18 number STATE @ 0BRANCH ^-23 compile-lit , "
-    "BRANCH ^-27");
+    "EXECUTE BRANCH ^-18 number STATE @ 0BRANCH ^-23 COMPILE LIT , "
+    "BRANCH ^-28");
 
   /* CREATE */
   rf_inst_colon("CREATE");
