@@ -466,43 +466,43 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # final binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
-	@printf '* \e[1;33mClearing DR1\e[0;0m\n'
+	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 model.disc $@.io
 
-	@printf '* \e[1;33mStarting MAME\e[0;0m\n'
+	@printf '* \033[1;33mStarting MAME\033[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout mame.pid $(BBCMAMEFAST) $(BBCMAMEINST)
 endif
 ifeq ($(BBCMACHINE),real)
-	@printf '* \e[1;35mEnsure RS423 connected to serial port\e[0;0m\n'
-	@printf '  \e[1;35mType the following:\e[0;0m\n'
+	@printf '* \033[1;35mEnsure RS423 connected to serial port\033[0;0m\n'
+	@printf '  \033[1;35mType the following:\033[0;0m\n'
 	@# TODO baud settings parameterised
-	@printf '  FX2,1 <enter>\n'
+	@printf '  *FX2,1 <enter>\n'
 	@read -p "  then on this machine press enter" LINE
 
-	@printf '* \e[1;33mLoading via serial\e[0;0m\n'
+	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
 
-	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 
-	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
+	@printf '* \033[1;33mWaiting until saved\033[0;0m\n'
 	@sh scripts/wait-until-saved.sh $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	@printf '* \e[1;33mStopping MAME\e[0;0m\n'
+	@printf '* \033[1;33mStopping MAME\033[0;0m\n'
 	@sh scripts/stop.sh mame.pid
 endif
 
-	@printf '* \e[1;33mStopping disc\e[0;0m\n'
+	@printf '* \033[1;33mStopping disc\033[0;0m\n'
 	@sh scripts/stop.sh disc.pid
 
-	@printf '* \e[1;33mDone\e[0;0m\n'
+	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
 # final disc inf
@@ -569,7 +569,10 @@ bbc/inst.uef : bbc/inst $(ORTER)
 # main lib
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
-	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
+	cc65 -O -t none -D__BBC__ \
+		-DRF_ORIGIN='0x$(BBCORIGIN)' \
+		-DRF_TARGET_INC='"$(BBCINC)"' \
+		-o $@ $<
 
 # asm bbc system lib
 bbc/rf_6502.o : rf_6502.s | bbc
@@ -579,17 +582,29 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # main lib
 bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 
-	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -DRF_TARGET_INC='"$(BBCINC)"' --bss-name INST --code-name INST --data-name INST --rodata-name INST -o $@ $<
+	cc65 -O -t none -D__BBC__ \
+		-DRF_ORIGIN='0x$(BBCORIGIN)' \
+		-DRF_TARGET_INC='"$(BBCINC)"' \
+		--bss-name INST \
+		--code-name INST \
+		--data-name INST \
+		--rodata-name INST \
+		-o $@ $<
 
 # system lib, C
 bbc/rf_system_c.s : target/bbc/system.c | bbc
 
-	cc65 -O -t none -D__BBC__ -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
+	cc65 -O -t none -D__BBC__ \
+		-DRF_ORIGIN='0x$(BBCORIGIN)' \
+		-DRF_TARGET_INC='"$(BBCINC)"' \
+		-o $@ $<
 
 # system lib, assembly
 bbc/rf_system_asm.o : target/bbc/system.s | bbc
 
-	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
+	ca65 \
+		-DRF_ORIGIN='0x$(BBCORIGIN)' \
+		-o $@ $<
 
 # build
 .PHONY : build
@@ -693,10 +708,14 @@ dragon-clean :
 .PHONY : dragon-inst
 dragon-inst : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
+	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 model.disc dragon/orterforth.bin.hex.io
+
 	mame dragon64 -rompath roms -video opengl \
 	-resolution 1024x768 -skip_gameinfo -nomax -window \
+    -rs232 null_modem -bitb socket.localhost:5705 \
 	-cassette $< \
 	-autoboot_delay 4 -autoboot_command "CLOADM\r"
+	# xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $<
 
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
@@ -1532,40 +1551,40 @@ endif
 
 spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
 
-	@printf '* \e[1;33mChecking memory limits\e[0;0m\n'
+	@printf '* \033[1;33mChecking memory limits\033[0;0m\n'
 	@sh target/spectrum/check-memory.sh \
 		$(SPECTRUMORG) \
 		$(SPECTRUMORIGIN) \
 		$(shell $(STAT) spectrum/inst.bin)
 
-	@printf '* \e[1;33mClearing DR1\e[0;0m\n'
+	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
 
 ifeq ($(SPECTRUMIMPL),real)
-	@printf '* \e[1;35mOn the Spectrum type:\e[0;0m\n'
+	@printf '* \033[1;35mOn the Spectrum type:\033[0;0m\n'
 	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
 	@printf '  LOAD *"b" <enter>\n'
 	@read -p '  then press enter to start: ' LINE
 
-	@printf '* \e[1;33mLoading loader\e[0;0m\n'
+	@printf '* \033[1;33mLoading loader\033[0;0m\n'
 	@# TODO load-serial could send ACK and we could use -a
 	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
-	@printf '* \e[1;33mLoading inst\e[0;0m\n'
+	@printf '* \033[1;33mLoading inst\033[0;0m\n'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 endif
 
-	@printf '* \e[1;33mStarting disc\e[0;0m\n'
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
 ifeq ($(SPECTRUMIMPL),real)
-	@printf '  \e[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\e[0;0m\n'
+	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 ifeq ($(SPECTRUMIMPL),fuse)
 	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
 
-	@printf '* \e[1;33mStarting Fuse\e[0;0m\n'
-	@printf '  \e[1;35mNB please type LOAD "" (phantom typist not working currently)\e[0;0m\n'
+	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
+	@printf '  \033[1;35mNB please type LOAD "" (phantom typist not working currently)\033[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) \
 		--speed=1000 \
 		--machine 48 \
@@ -1580,24 +1599,24 @@ ifeq ($(SPECTRUMIMPL),fuse)
 endif
 
 ifeq ($(SPECTRUMIMPL),superzazu)
-	@printf '* \e[1;33mRunning headless emulator\e[0;0m\n'
+	@printf '* \033[1;33mRunning headless emulator\033[0;0m\n'
 	@./$(SYSTEM)/emulate_spectrum
 endif
 
 ifneq ($(SPECTRUMIMPL),superzazu)
-	@printf '* \e[1;33mWaiting until saved\e[0;0m\n'
+	@printf '* \033[1;33mWaiting until saved\033[0;0m\n'
 	@sh scripts/wait-until-saved.sh $@.io
 
 ifeq ($(SPECTRUMIMPL),fuse)
-	@printf '* \e[1;33mStopping Fuse\e[0;0m\n'
+	@printf '* \033[1;33mStopping Fuse\033[0;0m\n'
 	@sh scripts/stop.sh fuse.pid
 endif
 
-	@printf '* \e[1;33mStopping disc\e[0;0m\n'
+	@printf '* \033[1;33mStopping disc\033[0;0m\n'
 	@sh scripts/stop.sh disc.pid
 endif
 
-	@printf '* \e[1;33mDone\e[0;0m\n'
+	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
 # make serial load file from bin
