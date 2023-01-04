@@ -300,18 +300,6 @@ static void __FASTCALL__ rf_inst_compile(char *name)
   }
 }
 
-/* COMPILE */
-static void rf_inst_code_compile(void)
-{
-  RF_START;
-  {
-    uintptr_t *a = RF_IP_GET;
-    RF_IP_INC;
-    rf_inst_comma(*a);
-  }
-  RF_JUMP_NEXT;
-}
-
 /* IMMEDIATE */
 static void rf_inst_immediate(void)
 {
@@ -515,7 +503,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 68
+#define RF_INST_CODE_LIT_LIST_SIZE 67
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "cl", rf_code_cl },
@@ -588,7 +576,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "bwrit", "BLOCK-WRITE", rf_code_bwrit },
   { "bread", "BLOCK-READ", rf_code_bread },
   { 0, "DECIMAL", rf_inst_code_decimal },
-  { 0, "COMPILE", rf_inst_code_compile },
   { 0, "number", rf_inst_code_number },
   { 0, "compile-lit", rf_inst_code_compile_lit },
   { 0, "add", rf_inst_code_add },
@@ -693,12 +680,21 @@ static void rf_inst_forward(void)
   rf_inst_colon("-FIND");
   rf_inst_compile("LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S");
 
+  /* , */
+  rf_inst_colon(",");
+  rf_inst_compile("HERE ! cl DP +! ;S");
+
+  /* COMPILE */
+  rf_inst_colon("COMPILE");
+  rf_inst_compile("R> DUP cl + >R @ , ;S");
+
   /* INTERPRET */
+  /* TODO compile-lit can be dropped to COMPILE LIT once REPLACED.BY executed */
   rf_inst_colon("INTERPRET");
   rf_inst_compile(
-    "-FIND 0BRANCH ^21 STATE @ - 0< 0BRANCH ^10 cl - HERE ! cl DP +! "
-    "BRANCH ^4 cl - EXECUTE BRANCH ^-22 number STATE @ 0BRANCH ^-27 compile-lit "
-    "HERE ! cl DP +! BRANCH ^-35");
+    "-FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
+    "EXECUTE BRANCH ^-18 number STATE @ 0BRANCH ^-23 compile-lit , "
+    "BRANCH ^-27");
 
   /* CREATE */
   rf_inst_colon("CREATE");
@@ -710,7 +706,7 @@ static void rf_inst_forward(void)
 #endif
   rf_inst_compile(
     "DUP LIT 160 TOGGLE HERE LIT 1 - LIT 128 TOGGLE CURRENT @ @ "
-    "HERE ! cl DP +! CURRENT @ ! HERE cl + HERE ! cl DP +! ;S");
+    ", CURRENT @ ! HERE cl + , ;S");
 
   /* LOAD */
   rf_inst_colon("LOAD");
