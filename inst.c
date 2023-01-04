@@ -325,14 +325,6 @@ static void rf_inst_code_number(void)
   RF_JUMP_NEXT;
 }
 
-/* DECIMAL */
-static void rf_inst_code_decimal(void)
-{
-  RF_START;
-  RF_USER_BASE = 10;
-  RF_JUMP_NEXT;
-}
-
 /* compile a definition and set CFA */
 static void rf_inst_def_code(char *name, rf_code_t code)
 {
@@ -493,7 +485,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 66
+#define RF_INST_CODE_LIT_LIST_SIZE 65
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "cl", rf_code_cl },
@@ -565,7 +557,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "dchar", "D/CHAR", rf_code_dchar },
   { "bwrit", "BLOCK-WRITE", rf_code_bwrit },
   { "bread", "BLOCK-READ", rf_code_bread },
-  { 0, "DECIMAL", rf_inst_code_decimal },
   { 0, "number", rf_inst_code_number },
   { 0, "add", rf_inst_code_add },
   { 0, "prev", rf_inst_code_prev },
@@ -719,6 +710,10 @@ static void rf_inst_forward(void)
   rf_inst_colon("[");
   rf_inst_compile("LIT 0 STATE ! ;S");
   rf_inst_immediate();
+
+  /* DECIMAL */
+  rf_inst_colon("DECIMAL");
+  rf_inst_compile("LIT 10 BASE ! ;S");
 }
 
 static void rf_inst_emptybuffers(void)
