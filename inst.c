@@ -162,7 +162,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
 }
 
 /* DIGIT */
-static uint8_t rf_inst_digit(uint8_t base, uint8_t c)
+static uint8_t __FASTCALL__ rf_inst_digit(uint8_t c)
 {
   /* start from ASCII 0 */
   if (c >= 0x30) {
@@ -175,7 +175,7 @@ static uint8_t rf_inst_digit(uint8_t base, uint8_t c)
       c -= 7;
     }
     /* return if valid for base */
-    if (c < base) {
+    if (c < 10) {
       return c;
     }
   }
@@ -183,12 +183,30 @@ static uint8_t rf_inst_digit(uint8_t base, uint8_t c)
   return 0xFF;
 }
 
+static intptr_t __FASTCALL__ rf_inst_pnumber(char *t) {
+
+  intptr_t l;
+  uint8_t d;
+
+  /* digits */
+  l = 0;
+  for (;;) {
+    if ((d = rf_inst_digit(*(t++))) == 0xFF) {
+      break;
+    }
+
+    l *= 10;
+    l += d;
+  }
+
+  return l;
+}
+
 /* NUMBER */
-static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
+static intptr_t __FASTCALL__ rf_inst_number(char *t) {
 
   intptr_t l;
   uint8_t sign;
-  uint8_t d;
 
   /* - */
   sign = (*t == '-');
@@ -197,15 +215,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t, uint8_t b) {
   }
 
   /* digits */
-  l = 0;
-  for (;;) {
-    if ((d = rf_inst_digit(b, *(t++))) == 0xFF) {
-      break;
-    }
-
-    l *= b;
-    l += d;
-  }
+  l = rf_inst_pnumber(t);
 
   return sign ? -l : l;
 }
@@ -288,7 +298,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
         factor = RF_WORD_SIZE;
       }
       /* now read decimal number */
-      accum = rf_inst_number(q, 10);
+      accum = rf_inst_number(q);
 
       /* to prefix with LIT, BRANCH or 0BRANCH */
       rf_inst_comma((uintptr_t) (factor * accum));
@@ -313,16 +323,6 @@ static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
   rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3, rf_inst_vocabulary)));
   /* compile value */
 	rf_inst_comma(literal);
-}
-
-static void rf_inst_code_number(void)
-{
-  RF_START;
-  {
-    intptr_t number = rf_inst_number((char *) RF_USER_DP + 1, RF_USER_BASE);
-    RF_SP_PUSH(number); 
-  }
-  RF_JUMP_NEXT;
 }
 
 /* compile a definition and set CFA */
@@ -485,7 +485,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 65
+#define RF_INST_CODE_LIT_LIST_SIZE 64
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "cl", rf_code_cl },
@@ -500,7 +500,7 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "xloop", 0, rf_code_xloop },
   { "xploo", 0, rf_code_xploo },
   { "xdo", 0, rf_code_xdo },
-  { "digit", 0, rf_code_digit },
+  { "digit", "DIGIT", rf_code_digit },
   { "pfind", "(FIND)", rf_code_pfind },
   { "encl", "ENCLOSE", rf_code_encl },
   { "emit2", 0, rf_code_emit },
@@ -557,7 +557,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "dchar", "D/CHAR", rf_code_dchar },
   { "bwrit", "BLOCK-WRITE", rf_code_bwrit },
   { "bread", "BLOCK-READ", rf_code_bread },
-  { 0, "number", rf_inst_code_number },
   { 0, "add", rf_inst_code_add },
   { 0, "prev", rf_inst_code_prev },
   { 0, "block-cmd", rf_inst_code_block_cmd }
@@ -667,6 +666,16 @@ static void rf_inst_forward(void)
   /* COMPILE */
   rf_inst_colon("COMPILE");
   rf_inst_compile("R> DUP cl + >R @ , ;S");
+
+  /* (number) */
+  rf_inst_colon("(number)");
+  rf_inst_compile("LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 "
+    "SWAP BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S");
+
+  /* number */
+  rf_inst_colon("number");
+  rf_inst_compile("HERE LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (number) "
+    "R> 0BRANCH ^2 MINUS ;S");
 
   /* INTERPRET */
   rf_inst_colon("INTERPRET");
