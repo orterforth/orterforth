@@ -164,27 +164,17 @@ static void __FASTCALL__ rf_inst_def(char *name)
 /* DIGIT */
 static uint8_t __FASTCALL__ rf_inst_digit(uint8_t c)
 {
-  /* start from ASCII 0 */
-  if (c >= 0x30) {
-    c -= 0x30;
-    /* if not 0-9 start from ASCII A */
-    if (c > 9) {
-      if (c < 17) {
-        return 0xFF;
-      }
-      c -= 7;
-    }
-    /* return if valid for base */
-    if (c < 10) {
-      return c;
-    }
+  /* ASCII 0-9 */
+  if (c >= 0x30 && c <= 0x39) {
+    return c - 0x30;
   }
+
   /* fail */
   return 0xFF;
 }
 
-static intptr_t __FASTCALL__ rf_inst_pnumber(char *t) {
-
+static intptr_t __FASTCALL__ rf_inst_pnumber(char *t)
+{
   intptr_t l;
   uint8_t d;
 
@@ -203,8 +193,8 @@ static intptr_t __FASTCALL__ rf_inst_pnumber(char *t) {
 }
 
 /* NUMBER */
-static intptr_t __FASTCALL__ rf_inst_number(char *t) {
-
+static intptr_t __FASTCALL__ rf_inst_number(char *t)
+{
   intptr_t l;
   uint8_t sign;
 
