@@ -161,42 +161,12 @@ static void __FASTCALL__ rf_inst_def(char *name)
   *rf_inst_vocabulary ^= 0x20;
 }
 
-/* DIGIT */
-static uint8_t __FASTCALL__ rf_inst_digit(uint8_t c)
-{
-  /* ASCII 0-9 */
-  if (c >= 0x30 && c <= 0x39) {
-    return c - 0x30;
-  }
-
-  /* fail */
-  return 0xFF;
-}
-
-static intptr_t __FASTCALL__ rf_inst_pnumber(char *t)
-{
-  intptr_t l;
-  uint8_t d;
-
-  /* digits */
-  l = 0;
-  for (;;) {
-    if ((d = rf_inst_digit(*(t++))) == 0xFF) {
-      break;
-    }
-
-    l *= 10;
-    l += d;
-  }
-
-  return l;
-}
-
 /* NUMBER */
 static intptr_t __FASTCALL__ rf_inst_number(char *t)
 {
-  intptr_t l;
+  intptr_t l = 0;
   uint8_t sign;
+  uint8_t d;
 
   /* - */
   sign = (*t == '-');
@@ -204,8 +174,16 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
     t++;
   }
 
-  /* digits */
-  l = rf_inst_pnumber(t);
+  /* ASCII 0-9 */
+  for (;;) {
+    d = *(t++) - 0x30;
+    if (d > 0x09) {
+      break;
+    }
+
+    l *= 10;
+    l += d;
+  }
 
   return sign ? -l : l;
 }
@@ -395,6 +373,7 @@ static void rf_inst_def_user(char *name, unsigned int idx)
 /* USRVER = r for retro */
 #define RF_USRVER 0x0072
 
+/* inst time cold start, based on COLD, ABORT, QUIT */
 static void rf_inst_cold(void)
 {
   /* set vocabulary */
@@ -663,11 +642,13 @@ static void rf_inst_forward(void)
     "SWAP BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S");
 
   /* number */
+  /* TODO NUMBER ( c-addr -- d )*/
   rf_inst_colon("number");
   rf_inst_compile("HERE LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (number) "
     "R> 0BRANCH ^2 MINUS ;S");
 
   /* INTERPRET */
+  /* LIT must be resolved later to final value of LIT CFA */
   rf_inst_colon("INTERPRET");
   rf_inst_compile(
     "-FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
