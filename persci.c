@@ -12,6 +12,7 @@
 #define RF_PERSCI_STATE_OUTPUT 2
 #define RF_PERSCI_STATE_WRITING 3
 #define RF_PERSCI_STATE_WRITTEN 4
+#define RF_PERSCI_STATE_ERROR 5
 
 static char rf_persci_state = RF_PERSCI_STATE_IDLE;
 
@@ -91,6 +92,9 @@ void rf_persci_eject(int drive)
   }
 
   discs[drive] = 0;
+
+  /* reset controller state */
+  rf_persci_state = RF_PERSCI_STATE_IDLE;
 }
 
 /* BUFFER */
@@ -130,6 +134,9 @@ static void rf_persci_error(const char *message)
   rf_persci_w(RF_ASCII_NAK);
   rf_persci_ws(message);
   rf_persci_ws(" ERROR\r\n\004");
+
+  /* set state */
+  rf_persci_state = RF_PERSCI_STATE_ERROR;
 }
 
 /* write error message with drive number */
@@ -140,6 +147,9 @@ static void rf_persci_error_on_drive(const char *message, uint8_t drive)
   rf_persci_ws(" ERROR ON DRIVE #");
   rf_persci_w(48 + drive);
   rf_persci_ws("\r\n\004");
+
+  /* set state */
+  rf_persci_state = RF_PERSCI_STATE_ERROR;
 }
 
 /* READING AND WRITING */
@@ -451,7 +461,10 @@ int rf_persci_getc(void)
   char c;
 
   /* validate state */
-  if (rf_persci_state != RF_PERSCI_STATE_INPUT && rf_persci_state != RF_PERSCI_STATE_OUTPUT && rf_persci_state != RF_PERSCI_STATE_WRITTEN) {
+  if (rf_persci_state != RF_PERSCI_STATE_INPUT && 
+    rf_persci_state != RF_PERSCI_STATE_OUTPUT && 
+    rf_persci_state != RF_PERSCI_STATE_WRITTEN &&
+    rf_persci_state != RF_PERSCI_STATE_ERROR) {
     return -1;
   }
 
