@@ -19,7 +19,7 @@ void rf_persci_insert_bytes(int drive, char *filename, const uint8_t *bytes, uns
 
 void rf_persci_eject(int drive);
 
-char rf_persci_getc(void);
+int rf_persci_getc(void);
 
 void rf_persci_putc(char c);
 

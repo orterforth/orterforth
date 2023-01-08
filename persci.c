@@ -7,10 +7,13 @@
 
 /* STATE */
 
-#define RF_PERSCI_STATE_COMMAND 0
-#define RF_PERSCI_STATE_WRITING 1
+#define RF_PERSCI_STATE_IDLE 0
+#define RF_PERSCI_STATE_INPUT 1
+#define RF_PERSCI_STATE_OUTPUT 2
+#define RF_PERSCI_STATE_WRITING 3
+#define RF_PERSCI_STATE_WRITTEN 4
 
-static char rf_persci_state = RF_PERSCI_STATE_COMMAND;
+static char rf_persci_state = RF_PERSCI_STATE_IDLE;
 
 /* DRIVES */
 
@@ -58,7 +61,7 @@ void rf_persci_insert(int drive, char *filename)
   }
 
   /* reset controller state */
-  rf_persci_state = RF_PERSCI_STATE_COMMAND;
+  rf_persci_state = RF_PERSCI_STATE_IDLE;
 }
 
 void rf_persci_insert_bytes(int drive, char *filename, const uint8_t *bytes, unsigned int len)
@@ -69,7 +72,7 @@ void rf_persci_insert_bytes(int drive, char *filename, const uint8_t *bytes, uns
   discs[drive] = (uint8_t *) bytes;
 
   /* reset controller state */
-  rf_persci_state = RF_PERSCI_STATE_COMMAND;
+  rf_persci_state = RF_PERSCI_STATE_IDLE;
 }
 
 void rf_persci_eject(int drive)
@@ -211,6 +214,9 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
   /* ACK EOT */
   rf_persci_w(RF_ASCII_ACK);
   rf_persci_w(RF_ASCII_EOT);
+
+  /* set state */
+  rf_persci_state = RF_PERSCI_STATE_INPUT;
 }
 
 static uint8_t rf_persci_drive = 0;
@@ -239,6 +245,9 @@ static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
   /* ENQ EOT */
   rf_persci_w(RF_ASCII_ENQ);
   rf_persci_w(RF_ASCII_EOT);
+
+  /* set state */
+  rf_persci_state = RF_PERSCI_STATE_OUTPUT;
 }
 
 /* write data after O */
@@ -292,7 +301,7 @@ static void rf_persci_write()
   rf_persci_w(RF_ASCII_EOT);
 
   /* reset controller state */
-  rf_persci_state = RF_PERSCI_STATE_COMMAND;
+  rf_persci_state = RF_PERSCI_STATE_WRITTEN;
 }
 
 /* READ */
@@ -424,27 +433,31 @@ static void rf_persci_command(void)
 static void rf_persci_serve(void)
 {
   switch (rf_persci_state) {
-    case RF_PERSCI_STATE_COMMAND:
+    case RF_PERSCI_STATE_IDLE:
       rf_persci_command();
       break;
     case RF_PERSCI_STATE_WRITING:
       rf_persci_write();
       break;
     default:
-      fprintf(stderr, "invalid state\n");
+      fprintf(stderr, "rf_persci_serve invalid state\n");
       exit(1);
   }
 }
 
 /* read next char from buffer */
-char rf_persci_getc(void)
+int rf_persci_getc(void)
 {
   char c;
 
+  /* validate state */
+  if (rf_persci_state != RF_PERSCI_STATE_INPUT && rf_persci_state != RF_PERSCI_STATE_OUTPUT && rf_persci_state != RF_PERSCI_STATE_WRITTEN) {
+    return -1;
+  }
+
   /* validate not empty */
   if (rf_persci_idx >= rf_persci_len) {
-    fprintf(stderr, "buffer empty");
-    exit(1);
+    return -1;
   }
 
   /* get char and reset empty buffer */
@@ -452,6 +465,9 @@ char rf_persci_getc(void)
   if (rf_persci_idx >= rf_persci_len) {
     rf_persci_idx = 0;
     rf_persci_len = 0;
+
+    /* set state */
+    rf_persci_state = (rf_persci_state == RF_PERSCI_STATE_OUTPUT) ? RF_PERSCI_STATE_WRITING : RF_PERSCI_STATE_IDLE;
   }
 
   return c;
@@ -460,6 +476,18 @@ char rf_persci_getc(void)
 /* write next char to buffer and handle if EOT */
 void rf_persci_putc(char c)
 {
+  /* validate state */
+  if (rf_persci_state != RF_PERSCI_STATE_IDLE && rf_persci_state != RF_PERSCI_STATE_WRITING) {
+    fprintf(stderr, "rf_persci_putc invalid state\n");
+    exit(1);
+  }
+
+  /* validate not full */
+  if (rf_persci_len >= 131) {
+    fprintf(stderr, "rf_persci_putc buffer full\n");
+    exit(1);
+  }
+
   rf_persci_buf[rf_persci_len++] = c;
   if (c == RF_ASCII_EOT) {
     rf_persci_serve();
