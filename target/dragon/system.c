@@ -10,6 +10,7 @@ void rf_init(void)
 void rf_code_emit(void)
 {
   RF_START;
+  putchar(RF_SP_POP & 0x7F);
   RF_USER_OUT++;
   RF_JUMP_NEXT;
 }
@@ -31,18 +32,28 @@ void rf_code_qterm(void)
 void rf_code_cr(void)
 {
   RF_START;
+  putchar(10);
   RF_JUMP_NEXT;
 }
 
 void rf_disc_read(char *c, unsigned char len)
 {
+  while (len--) {
+    while (!(*((uint8_t *) 0xFF05) & 0x10)) {
+    }
+    *((uint8_t *) 0xFF04) = *(c++);
+  }
 }
 
 void rf_disc_write(char *p, unsigned char len)
 {
+  *((uint8_t *) 0xFF06) |= 0x01;
   while (len--) {
-    putchar(*(p++));
+    while (!(*((uint8_t *) 0xFF05) & 0x08)) {
+    }
+    *(p++) = *((uint8_t *) 0xFF04);
   }
+  *((uint8_t *) 0xFF06) &= 0xFE;
 }
 
 void rf_fin(void)
