@@ -87,6 +87,7 @@ SYSTEMDEPS := \
 	$(SYSTEM)/rf.o \
 	$(SYSTEM)/system.o
 
+# local system assembly option config:
 ifeq ($(SYSTEMOPTION),assembly)
 # add the assembly code to deps
 SYSTEMDEPS += $(SYSTEM)/rf_$(PROC).o
@@ -237,6 +238,10 @@ $(TARGET)-help :
 	mv $@.io $@
 
 
+# common inst script commands
+STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh disc.pid
+
+
 # === BBC Micro ===
 
 # build config option
@@ -330,7 +335,7 @@ BBCMAMEFAST := mame bbcb -rompath roms -video none -sound none \
 	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
-# Hello World
+# Hello World - NB this doesn't work because bbc.lib is incomplete
 bbc-hw : bbc/hw.uef $(BBCROMS)
 
 	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/hw.uef
@@ -345,8 +350,7 @@ ifeq ($(BBCMACHINE),mame)
 	# run mame
 	$(BBCMAME) $(BBCMAMERUN)
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 endif
 ifeq ($(BBCMACHINE),real)
 	@# prompt user
@@ -386,8 +390,7 @@ ifeq ($(BBCLOADINGMETHOD),tape)
 	$(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\rEMPTY-BUFFERS 1 LOAD\r' -cassette bbc/orterforth.uef
 endif
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 endif
 ifeq ($(BBCMACHINE),real)
 	@# prompt user
@@ -499,8 +502,7 @@ ifeq ($(BBCMACHINE),mame)
 	@sh scripts/stop.sh mame.pid
 endif
 
-	@printf '* \033[1;33mStopping disc\033[0;0m\n'
-	@sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
@@ -644,8 +646,7 @@ c64-run : c64/inst.prg
 	# x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.disc data.disc" -rsdev4baud 2400 -autostartprgmode 1 -autostart $<
 	x64 -userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 -autostartprgmode 1 -autostart $<
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 
 # general assemble rule
 c64/%.o : c64/%.s
@@ -1164,8 +1165,7 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
 	# wait for save
 	sh scripts/wait-until-saved.sh $@.io
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 
 	# file complete
 	mv $@.io $@
@@ -1427,8 +1427,7 @@ ifeq ($(SPECTRUMMACHINE),fuse)
 		--rs232-tx spectrum/fuse-rs232-tx \
 		--tape $<
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@echo '1. Press Enter to skip the warning'
@@ -1442,8 +1441,7 @@ ifeq ($(SPECTRUMMACHINE),mame)
 		-autoboot_command 'j""\n' \
 		-cassette $<
 
-	# stop disc
-	sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 endif
 
 # other Spectrum libs
@@ -1612,8 +1610,7 @@ ifeq ($(SPECTRUMIMPL),fuse)
 	@sh scripts/stop.sh fuse.pid
 endif
 
-	@printf '* \033[1;33mStopping disc\033[0;0m\n'
-	@sh scripts/stop.sh disc.pid
+	@$(STOPDISC)
 endif
 
 	@printf '* \033[1;33mDone\033[0;0m\n'
