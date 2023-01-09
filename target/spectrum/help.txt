@@ -25,6 +25,10 @@ To run in Fuse, call:
 
  make run TARGET=spectrum
 
+Type LOAD "" in Fuse to load the installer and the final build.
+Note that since the phantom typist was introduced, Fuse auto
+start does not appear to work.
+
 To load and run on a physical machine, connect the Interface 1
 to your host system via RS-232 and call:
 
