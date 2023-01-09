@@ -1,6 +1,7 @@
 .vscode/
 *.disc
 *.io
+*.pid
 /bbc/
 /c64/
 /cfg/
