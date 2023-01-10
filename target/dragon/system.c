@@ -36,12 +36,12 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
-void rf_disc_read(char *c, unsigned char len)
+void rf_disc_read(char *p, unsigned char len)
 {
   while (len--) {
     while (!(*((uint8_t *) 0xFF05) & 0x10)) {
     }
-    *((uint8_t *) 0xFF04) = *(c++);
+    *(p++) = *((uint8_t *) 0xFF04);
   }
 }
 
@@ -51,7 +51,7 @@ void rf_disc_write(char *p, unsigned char len)
   while (len--) {
     while (!(*((uint8_t *) 0xFF05) & 0x08)) {
     }
-    *(p++) = *((uint8_t *) 0xFF04);
+    *((uint8_t *) 0xFF04) = *(p++);
   }
   *((uint8_t *) 0xFF06) &= 0xFE;
 }

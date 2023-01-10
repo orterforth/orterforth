@@ -706,25 +706,46 @@ dragon-clean :
 
 	rm -f dragon/*
 
+DRAGONMACHINE := xroar
+
 .PHONY : dragon-inst
 dragon-inst : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
+	# start disc
+ifeq ($(DRAGONMACHINE),mame)
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705 model.disc dragon/orterforth.bin.hex.io
+endif
+ifeq ($(DRAGONMACHINE),xroar)
+	sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC) standard model.disc dragon/orterforth.bin.hex.io
+endif
 
+ifeq ($(DRAGONMACHINE),mame)
+	# mame serial not working
 	mame dragon64 -rompath roms -video opengl \
 	-resolution 1024x768 -skip_gameinfo -nomax -window \
     -rs232 null_modem -bitb socket.localhost:5705 \
 	-cassette $< \
-	-autoboot_delay 4 -autoboot_command "CLOADM\r"
-	# xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $<
+	-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
+endif
+ifeq ($(DRAGONMACHINE),xroar)
+	# requires modified xroar to support serial
+	xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+endif
+
+	$(STOPDISC)
 
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
+ifeq ($(DRAGONMACHINE),mame)
 	mame dragon64 -rompath roms -video opengl \
 	-resolution 1024x768 -skip_gameinfo -nomax -window \
 	-cassette $< \
-	-autoboot_delay 4 -autoboot_command "CLOADM\r"
+	-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
+endif
+ifeq ($(DRAGONMACHINE),xroar)
+	xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+endif
 
 dragon/hw.bin : hw.c
 
@@ -736,7 +757,7 @@ dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 -r 48000 $<
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
@@ -1681,6 +1702,10 @@ example : $(TARGET)-example
 tools :
 
 	mkdir $@
+
+tools/bin2cas.pl : | tools
+
+	curl --output $@ https://www.6809.org.uk/dragon/bin2cas.pl
 
 tools/RC2014/BASIC-Programs/hexload/hexload.bas : | tools
 
