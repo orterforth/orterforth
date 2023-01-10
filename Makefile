@@ -734,11 +734,19 @@ dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
 
+dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
 	cmoc --dragon -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+
+dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
 
