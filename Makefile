@@ -38,6 +38,17 @@ DISC := $(SYSTEM)/disc
 ORTER := $(SYSTEM)/orter
 ORTERFORTH := $(SYSTEM)/orterforth
 
+# system dependent command to get file size
+ifeq ($(OPER),cygwin)
+STAT := stat -c %s
+endif
+ifeq ($(OPER),darwin)
+STAT := stat -f%z
+endif
+ifeq ($(OPER),linux)
+STAT := stat -c %s
+endif
+
 # serial port
 ifeq ($(OPER),cygwin)
 SERIALPORT := /dev/ttyS2
@@ -264,7 +275,7 @@ BBCROMS := \
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
-	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/assembly.inc
 	BBCLOADINGMETHOD := disk
 	BBCORG := 1720
@@ -273,7 +284,7 @@ endif
 
 # default C code
 ifeq ($(BBCOPTION),default)
-	BBCDEPS := bbc/mos.o bbc/main.o bbc/rf.o bbc/inst.o bbc/rf_system_c.o bbc/bbc.lib
+	BBCDEPS := bbc/mos.o bbc/main.o bbc/rf.o bbc/inst.o bbc/system_c.o bbc/bbc.lib
 	BBCINC := target/bbc/default.inc
 	BBCLOADINGMETHOD := disk
 	BBCORG := 1720
@@ -282,7 +293,7 @@ endif
 
 # assembly code, tape only config starting at 0xE00
 ifeq ($(BBCOPTION),tape)
-	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/rf_system_asm.o bbc/bbc.lib
+	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/system_asm.o bbc/bbc.lib
 	BBCINC := target/bbc/tape.inc
 	BBCLOADINGMETHOD := tape
 	BBCORG := 1220
@@ -340,40 +351,6 @@ BBCMAMEFAST := bbcb -rompath roms -video none -sound none \
 	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
-# Hello World - NB this doesn't work because bbc.lib is incomplete
-bbc-hw : bbc/hw.uef $(BBCROMS)
-
-	mame $(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/hw.uef
-
-# load and run
-bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
-
-ifeq ($(BBCMACHINE),mame)
-	@$(STARTDISCTCP) $(DR0) $(DR1)
-
-	# run mame
-	mame $(BBCMAME) $(BBCMAMERUN)
-
-	@$(STOPDISC)
-endif
-ifeq ($(BBCMACHINE),real)
-	@# prompt user
-	@echo "  ensure RS423 connected to serial port"
-	@echo "  type the following"
-	@# TODO baud settings parameterised
-	@echo "   *FX7,7 <enter>"
-	@echo "   *FX8,7 <enter>"
-	@echo "   *FX2,1 <enter>"
-	@read -p "  then on this machine press enter " LINE
-
-	@# load via serial
-	@echo "* loading via serial..."
-	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/orterforth.ser
-
-	# run disc
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
-endif
-
 # load and run example disc
 .PHONY : bbc-example
 bbc-example : $(BBCMEDIA) $(BBCROMS) | $(DISC) example/$(EXAMPLE).disc $(DR1)
@@ -416,6 +393,40 @@ ifeq ($(BBCMACHINE),real)
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) example/$(EXAMPLE).disc $(DR1)
 endif
 
+# Hello World - NB this doesn't work because bbc.lib is incomplete
+bbc-hw : bbc/hw.uef $(BBCROMS)
+
+	mame $(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/hw.uef
+
+# load and run
+bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
+
+ifeq ($(BBCMACHINE),mame)
+	@$(STARTDISCTCP) $(DR0) $(DR1)
+
+	# run mame
+	mame $(BBCMAME) $(BBCMAMERUN)
+
+	@$(STOPDISC)
+endif
+ifeq ($(BBCMACHINE),real)
+	@# prompt user
+	@echo "  ensure RS423 connected to serial port"
+	@echo "  type the following"
+	@# TODO baud settings parameterised
+	@echo "   *FX7,7 <enter>"
+	@echo "   *FX8,7 <enter>"
+	@echo "   *FX2,1 <enter>"
+	@read -p "  then on this machine press enter " LINE
+
+	@# load via serial
+	@echo "* loading via serial..."
+	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/orterforth.ser
+
+	# run disc
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+endif
+
 # general assemble rule
 bbc/%.o : bbc/%.s
 
@@ -425,6 +436,15 @@ bbc/%.o : bbc/%.s
 bbc/%.s : %.c | bbc
 
 	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
+
+# inst serial load file
+bbc/%.ser : bbc/%
+
+	printf "5P.\"Loading...\"\r" > $@.io
+	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" >> $@.io
+	printf "20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" >> $@.io
+	cat -u $< >> $@.io
+	mv $@.io $@
 
 # custom target lib
 bbc/bbc.lib : bbc/crt0.o
@@ -457,6 +477,41 @@ bbc/hw : hw.o bbc/bbc.lib
 bbc/hw.uef : bbc/hw | $(ORTER)
 
 	$(ORTER) bbc uef write hw 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
+	mv $@.io $@
+
+# inst binary
+bbc/inst : $(BBCDEPS)
+
+	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/inst.map $^
+
+# inst disc inf
+bbc/inst.inf : | bbc
+
+	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
+
+# main lib
+bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
+
+	cc65 -O -t none -D__BBC__ \
+		-DRF_ORIGIN='0x$(BBCORIGIN)' \
+		-DRF_TARGET_INC='"$(BBCINC)"' \
+		--bss-name INST \
+		--code-name INST \
+		--data-name INST \
+		--rodata-name INST \
+		-o $@ $<
+
+# inst disc image
+bbc/inst.ssd : bbc/boot bbc/boot.inf bbc/inst bbc/inst.inf
+
+	rm -f $@
+	bbcim -a $@ bbc/boot
+	bbcim -a $@ bbc/inst
+
+# inst tape image
+bbc/inst.uef : bbc/inst $(ORTER)
+
+	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
 	mv $@.io $@
 
 # MOS bindings
@@ -524,49 +579,6 @@ bbc/orterforth.uef : bbc/orterforth $(ORTER)
 	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
 	mv $@.io $@
 
-# inst binary
-bbc/inst : $(BBCDEPS)
-
-	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/inst.map $^
-
-# inst disc inf
-bbc/inst.inf : | bbc
-
-	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
-
-# system dependent command to get file size
-ifeq ($(OPER),cygwin)
-STAT := stat -c %s
-endif
-ifeq ($(OPER),darwin)
-STAT := stat -f%z
-endif
-ifeq ($(OPER),linux)
-STAT := stat -c %s
-endif
-
-# inst serial load file
-bbc/%.ser : bbc/%
-
-	printf "5P.\"Loading...\"\r" > $@.io
-	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" >> $@.io
-	printf "20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" >> $@.io
-	cat -u $< >> $@.io
-	mv $@.io $@
-
-# inst disc image
-bbc/inst.ssd : bbc/boot bbc/boot.inf bbc/inst bbc/inst.inf
-
-	rm -f $@
-	bbcim -a $@ bbc/boot
-	bbcim -a $@ bbc/inst
-
-# inst tape image
-bbc/inst.uef : bbc/inst $(ORTER)
-
-	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
-	mv $@.io $@
-
 # main lib
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
@@ -580,32 +592,21 @@ bbc/rf_6502.o : rf_6502.s | bbc
 
 	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
 
-# main lib
-bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
-
-	cc65 -O -t none -D__BBC__ \
-		-DRF_ORIGIN='0x$(BBCORIGIN)' \
-		-DRF_TARGET_INC='"$(BBCINC)"' \
-		--bss-name INST \
-		--code-name INST \
-		--data-name INST \
-		--rodata-name INST \
-		-o $@ $<
-
-# system lib, C
-bbc/rf_system_c.s : target/bbc/system.c | bbc
-
-	cc65 -O -t none -D__BBC__ \
-		-DRF_ORIGIN='0x$(BBCORIGIN)' \
-		-DRF_TARGET_INC='"$(BBCINC)"' \
-		-o $@ $<
-
 # system lib, assembly
-bbc/rf_system_asm.o : target/bbc/system.s | bbc
+bbc/system_asm.o : target/bbc/system.s | bbc
 
 	ca65 \
 		-DRF_ORIGIN='0x$(BBCORIGIN)' \
 		-o $@ $<
+
+# system lib, C
+bbc/system_c.s : target/bbc/system.c | bbc
+
+	cc65 -O -t none -D__BBC__ \
+		-DRF_ORIGIN='0x$(BBCORIGIN)' \
+		-DRF_TARGET_INC='"$(BBCINC)"' \
+		-o $@ $<
+
 
 # build
 .PHONY : build
