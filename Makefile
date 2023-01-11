@@ -252,10 +252,12 @@ $(TARGET)-help :
 
 
 # common inst script commands
+STARTDISCSERIAL := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial
 STARTDISCTCP := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705
 STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh disc.pid
 STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout mame.pid mame
 STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
+WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
 
 
 # === BBC Micro ===
@@ -533,6 +535,7 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
 ifeq ($(BBCMACHINE),mame)
 	@$(STARTDISCTCP) model.disc $@.io
+
 	@$(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
 endif
 ifeq ($(BBCMACHINE),real)
@@ -545,12 +548,10 @@ ifeq ($(BBCMACHINE),real)
 	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
 
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+	@$(STARTDISCSERIAL) $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 
-	@printf '* \033[1;33mWaiting until saved\033[0;0m\n'
-	@sh scripts/wait-until-saved.sh $@.io
+	@$(WAITUNTILSAVED) $@.io
 
 ifeq ($(BBCMACHINE),mame)
 	@$(STOPMAME)
@@ -721,10 +722,10 @@ endif
 ifeq ($(DRAGONMACHINE),mame)
 	# mame serial not working
 	mame dragon64 -rompath roms -video opengl \
-	-resolution 1024x768 -skip_gameinfo -nomax -window \
-    -rs232 null_modem -bitb socket.localhost:5705 \
-	-cassette $< \
-	-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
+		-resolution 1024x768 -skip_gameinfo -nomax -window \
+		-rs232 null_modem -bitb socket.localhost:5705 \
+		-cassette $< \
+		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
 	# requires modified xroar to support serial
@@ -738,9 +739,9 @@ dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
 ifeq ($(DRAGONMACHINE),mame)
 	mame dragon64 -rompath roms -video opengl \
-	-resolution 1024x768 -skip_gameinfo -nomax -window \
-	-cassette $< \
-	-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
+		-resolution 1024x768 -skip_gameinfo -nomax -window \
+		-cassette $< \
+		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
 	xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
@@ -1187,11 +1188,9 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
 	rm -f $@.io
 	touch $@.io
 
-	# start disc
-	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(RC2014SERIALPORT) 115200 model.disc $@.io
+	@$(STARTDISCSERIAL) $(RC2014SERIALPORT) 115200 model.disc $@.io
 
-	# wait for save
-	sh scripts/wait-until-saved.sh $@.io
+	@$(WAITUNTILSAVED) $@.io
 
 	@$(STOPDISC)
 
@@ -1600,12 +1599,12 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 endif
 
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
 ifeq ($(SPECTRUMIMPL),real)
+	@$(STARTDISCSERIAL) $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
-	@sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 ifeq ($(SPECTRUMIMPL),fuse)
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
 	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
 
 	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
@@ -1629,8 +1628,7 @@ ifeq ($(SPECTRUMIMPL),superzazu)
 endif
 
 ifneq ($(SPECTRUMIMPL),superzazu)
-	@printf '* \033[1;33mWaiting until saved\033[0;0m\n'
-	@sh scripts/wait-until-saved.sh $@.io
+	@$(WAITUNTILSAVED) $@.io
 
 ifeq ($(SPECTRUMIMPL),fuse)
 	@printf '* \033[1;33mStopping Fuse\033[0;0m\n'
