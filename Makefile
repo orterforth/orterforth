@@ -1493,6 +1493,17 @@ spectrum/inst.bin : \
 		-o $@ \
 		z80_memory.asm main.c
 
+# inst code, which is located to be overwritten when complete
+spectrum/inst.lib : inst.c rf.h | spectrum
+
+	zcc +zx \
+		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
+		-DRF_ORG=$(SPECTRUMORG) \
+		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+		-x -o $@ \
+		$< \
+		--codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
+
 # start with an empty bin file to build the multi segment bin
 spectrum/inst-0.bin : | spectrum
 
@@ -1662,29 +1673,18 @@ spectrum/rf.lib : rf.c rf.h | spectrum
 		-x -o $@ \
 		$<
 
-# inst code, which is located to be overwritten when complete
-spectrum/inst.lib : inst.c rf.h | spectrum
-
-	zcc +zx \
- 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
-		-DRF_ORG=$(SPECTRUMORG) \
-		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-x -o $@ \
-		$< \
-		--codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
-
-# system code, which may be C or assembler
-spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
-
-	zcc +zx \
-		-x -o $@ \
-		$<
-
 # Z80 assembly optimised code
 spectrum/rf_z80.lib : rf_z80.asm | spectrum
 
 	zcc +zx \
 		-Ca-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+		-x -o $@ \
+		$<
+
+# system code, which may be C or assembler
+spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
+
+	zcc +zx \
 		-x -o $@ \
 		$<
 
