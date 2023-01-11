@@ -1309,9 +1309,9 @@ SPECTRUMOPTION := assembly
 SPECTRUMLIBSALL := \
 	-lmzx_tiny \
 	-lndos \
-	-lspectrum/rf \
 	-lspectrum/inst \
-	-lspectrum/rf_system
+	-lspectrum/rf \
+	-lspectrum/system
 
 # minimal ROM-based
 ifeq ($(SPECTRUMOPTION),assembly)
@@ -1500,10 +1500,10 @@ spectrum/fuse-rs232-tx : | spectrum
 
 # inst executable
 spectrum/inst.bin : \
-	spectrum/rf.lib \
 	spectrum/inst.lib \
-	spectrum/rf_system.lib \
+	spectrum/rf.lib \
 	spectrum/rf_z80.lib \
+	spectrum/system.lib \
 	z80_memory.asm \
 	main.c
 
@@ -1700,7 +1700,7 @@ spectrum/inst.lib : inst.c rf.h | spectrum
 		--codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
 
 # system code, which may be C or assembler
-spectrum/rf_system.lib : $(SPECTRUMSYSTEM) | spectrum
+spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 
 	zcc +zx \
  		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
