@@ -497,7 +497,7 @@ bbc/inst.inf : | bbc
 
 	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
-# main lib
+# inst lib
 bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 
 	cc65 -O -t none -D__BBC__ \
@@ -527,12 +527,12 @@ bbc/mos.o : target/bbc/mos.s | bbc
 
 	ca65 -o $@ $<
 
-# final binary from the hex
+# binary from hex
 bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-# final binary hex
+# binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
@@ -568,19 +568,19 @@ endif
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
-# final disc inf
+# disc inf
 bbc/orterforth.inf : | bbc
 
 	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
-# final disc image
+# disc image
 bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 
 	rm -f $@
 	bbcim -a $@ bbc/boot
 	bbcim -a $@ bbc/orterforth
 
-# final tape image
+# tape image
 bbc/orterforth.uef : bbc/orterforth $(ORTER)
 
 	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
@@ -594,7 +594,7 @@ bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 		-DRF_TARGET_INC='"$(BBCINC)"' \
 		-o $@ $<
 
-# asm bbc system lib
+# main lib, assembly
 bbc/rf_6502.o : rf_6502.s | bbc
 
 	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
@@ -815,7 +815,7 @@ m100/hw.co : | m100
 # disc image as C include
 model.inc : model.disc | $(ORTER)
 
-	# xxd -i $< > $@
+	# xxd -i $< > $@.io
 	$(ORTER) hex include model_disc < $< > $@.io
 	mv $@.io $@
 
@@ -1172,7 +1172,7 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 	mv $@.io $@
 
 # saved hex result
-rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx | $(DISC) $(ORTER)
+rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) $(ORTER)
 
 	# validate that code does not overlap ORIGIN
 	sh target/spectrum/check-memory.sh \
