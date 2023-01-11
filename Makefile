@@ -1301,37 +1301,46 @@ else
 FUSE := $(shell which fuse)
 endif
 
-# config option
-SPECTRUMOPTION := assembly
-# SPECTRUMOPTION := assembly-z88dk
-# SPECTRUMOPTION := default
+# default inst time emulator
+SPECTRUMINSTMACHINE := fuse
 
-SPECTRUMLIBSALL := \
+# locates inst code at 0xC800
+SPECTRUMINSTOFFSET := 18432
+
+# command line linked libraries
+SPECTRUMLIBS := \
 	-lmzx_tiny \
 	-lndos \
 	-lspectrum/inst \
 	-lspectrum/rf \
 	-lspectrum/system
 
+# config option
+SPECTRUMOPTION := assembly
+# SPECTRUMOPTION := assembly-z88dk
+# SPECTRUMOPTION := default
+
+# ORG starts at non-contended memory, 0x8000, for performance
+SPECTRUMORG := 0x8000
+
+# ROM files for emulator
+SPECTRUMROMS := \
+	roms/spectrum/if1-2.rom \
+	roms/spectrum/spectrum.rom
+
 # minimal ROM-based
 ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
-SPECTRUMLIBS := \
-	$(SPECTRUMLIBSALL) \
-	-lspectrum/rf_z80 \
-	-pragma-redirect:fputc_cons=fputc_cons_rom_rst
+SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # include file
 SPECTRUMINC := target/spectrum/assembly.inc
-# ORG starts at non-contended memory, 0x8000, for performance
-SPECTRUMORG := 0x8000
 # ORIGIN
 SPECTRUMORIGIN := 0x8A00
 # assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
-# locates inst code at 0xC800
-SPECTRUMINSTOFFSET := 18432
 # superzazu emulator is minimal and launches no GUI
-SPECTRUMIMPL := superzazu
+# it can only be used if RS232 ROM calls are used
+SPECTRUMINSTMACHINE := superzazu
 endif
 
 # z88dk library based
@@ -1339,20 +1348,11 @@ ifeq ($(SPECTRUMOPTION),assembly-z88dk)
 # include file
 SPECTRUMINC := target/spectrum/assembly.inc
 # requires z88dk RS232 library
-SPECTRUMLIBS := \
-	$(SPECTRUMLIBSALL) \
-	-lspectrum/rf_z80 \
-	-lrs232if1
-# ORG starts at non-contended memory, 0x8000, for performance
-SPECTRUMORG := 0x8000
+SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
 # ORIGIN higher, 0x9200, C code is larger as uses z88dk libs
 SPECTRUMORIGIN := 0x9200
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
-# locates inst code at 0xC800
-SPECTRUMINSTOFFSET := 18432
-# no CPU hook for z88dk RS232 code so use Fuse
-SPECTRUMIMPL := fuse
 endif
 
 # z88dk / pure C based
@@ -1360,38 +1360,24 @@ ifeq ($(SPECTRUMOPTION),default)
 # include file
 SPECTRUMINC := target/spectrum/default.inc
 # requires z88dk RS232 library
-SPECTRUMLIBS := \
-	$(SPECTRUMLIBSALL) \
-	-lrs232if1
-# ORG starts at non-contended memory, 0x8000, for performance
-SPECTRUMORG := 0x8000
+SPECTRUMLIBS += -lrs232if1
 # ORIGIN higher, 0x9B00, C code is larger as uses z88dk libs and pure C impl
 SPECTRUMORIGIN := 0x9D00
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
-# locates inst code at 0xC800
-SPECTRUMINSTOFFSET := 18432
-# no CPU hook for z88dk RS232 code so use Fuse
-SPECTRUMIMPL := fuse
 endif
 
-# ROM files for emulator
-SPECTRUMROMS := \
-	roms/spectrum/if1-2.rom \
-	roms/spectrum/spectrum.rom
-
-# run Spectrum build
-ifeq ($(SPECTRUMIMPL),fuse)
+# superzazu fast partial emulator can't be used for run time
+ifeq ($(SPECTRUMINSTMACHINE),fuse)
 SPECTRUMMACHINE := fuse
 endif
-ifeq ($(SPECTRUMIMPL),mame)
+ifeq ($(SPECTRUMINSTMACHINE),mame)
 SPECTRUMMACHINE := mame
 endif
-ifeq ($(SPECTRUMIMPL),superzazu)
-# default is to use fast build but run in Fuse
+ifeq ($(SPECTRUMINSTMACHINE),superzazu)
 SPECTRUMMACHINE := fuse
 endif
-ifeq ($(SPECTRUMIMPL),real)
+ifeq ($(SPECTRUMINSTMACHINE),real)
 SPECTRUMMACHINE := real
 endif
 
@@ -1576,7 +1562,7 @@ spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # run inst which writes hex file to disc 01
-ifeq ($(SPECTRUMIMPL),fuse)
+ifeq ($(SPECTRUMINSTMACHINE),fuse)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
 	$(DISC) \
@@ -1585,13 +1571,13 @@ SPECTRUMINSTDEPS := \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx
 endif
-ifeq ($(SPECTRUMIMPL),real)
+ifeq ($(SPECTRUMINSTMACHINE),real)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.ser | \
 	$(DISC) \
 	$(ORTER)
 endif
-ifeq ($(SPECTRUMIMPL),superzazu)
+ifeq ($(SPECTRUMINSTMACHINE),superzazu)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
 	$(SYSTEM)/emulate_spectrum \
@@ -1610,7 +1596,7 @@ spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
 	@rm -f $@.io
 	@touch $@.io
 
-ifeq ($(SPECTRUMIMPL),real)
+ifeq ($(SPECTRUMINSTMACHINE),real)
 	@printf '* \033[1;35mOn the Spectrum type:\033[0;0m\n'
 	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
 	@printf '  LOAD *"b" <enter>\n'
@@ -1624,11 +1610,11 @@ ifeq ($(SPECTRUMIMPL),real)
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 endif
 
-ifeq ($(SPECTRUMIMPL),real)
+ifeq ($(SPECTRUMINSTMACHINE),real)
 	@$(STARTDISCSERIAL) $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 endif
-ifeq ($(SPECTRUMIMPL),fuse)
+ifeq ($(SPECTRUMINSTMACHINE),fuse)
 	@printf '* \033[1;33mStarting disc\033[0;0m\n'
 	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
 
@@ -1647,15 +1633,15 @@ ifeq ($(SPECTRUMIMPL),fuse)
 		--tape spectrum/inst-2.tap
 endif
 
-ifeq ($(SPECTRUMIMPL),superzazu)
+ifeq ($(SPECTRUMINSTMACHINE),superzazu)
 	@printf '* \033[1;33mRunning headless emulator\033[0;0m\n'
 	@./$(SYSTEM)/emulate_spectrum
 endif
 
-ifneq ($(SPECTRUMIMPL),superzazu)
+ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(WAITUNTILSAVED) $@.io
 
-ifeq ($(SPECTRUMIMPL),fuse)
+ifeq ($(SPECTRUMINSTMACHINE),fuse)
 	@printf '* \033[1;33mStopping Fuse\033[0;0m\n'
 	@sh scripts/stop.sh fuse.pid
 endif

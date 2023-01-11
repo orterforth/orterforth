@@ -11,7 +11,9 @@ You will need:
 To build, call:
 
  make TARGET=spectrum (to build using superzazu's emulator)
- make TARGET=spectrum SPECTRUMIMPL=fuse (to build in Fuse)
+ make TARGET=spectrum SPECTRUMINSTMACHINE=fuse
+                      (to build in Fuse - NB see note on 
+                      phantom typist below)
 
 The target files will be built in the respective named 
 directory, e.g.:
