@@ -1375,6 +1375,11 @@ SPECTRUMINSTOFFSET := 18432
 SPECTRUMIMPL := fuse
 endif
 
+# ROM files for emulator
+SPECTRUMROMS := \
+	roms/spectrum/if1-2.rom \
+	roms/spectrum/spectrum.rom
+
 # run Spectrum build
 ifeq ($(SPECTRUMIMPL),fuse)
 SPECTRUMMACHINE := fuse
@@ -1390,57 +1395,59 @@ ifeq ($(SPECTRUMIMPL),real)
 SPECTRUMMACHINE := real
 endif
 
-# TODO organise SPECTRUMMEDIA, SPECTRUMROMS, etc
-.PHONY : spectrum-run
 ifeq ($(SPECTRUMMACHINE),fuse)
-spectrum-run : \
+SPECTRUMRUNDEPS := \
 	spectrum/orterforth.tap \
-	$(DR0) | \
+	$(DR0) \
+	$(DR1) | \
 	$(DISC) \
-	roms/spectrum/if1-2.rom \
-	roms/spectrum/spectrum.rom \
+	$(SPECTRUMROMS) \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
-spectrum-run : \
+SPECTRUMRUNDEPS := \
 	spectrum/orterforth.tap \
-	$(DR0) | \
+	$(DR0) \
+	$(DR1) | \
 	$(DISC) \
-	roms/spectrum/if1-2.rom \
-	roms/spectrum/spectrum.rom
+	$(SPECTRUMROMS)
 endif
 ifeq ($(SPECTRUMMACHINE),real)
-spectrum-run : \
+SPECTRUMRUNDEPS := \
 	spectrum/orterforth.ser \
 	target/spectrum/load-serial.bas \
-	spectrum/orterforth.tap \
-	$(DR0) | \
+	$(DR0) \
+	$(DR1) | \
 	$(DISC) \
 	$(ORTER)
 endif
 
-ifeq ($(SPECTRUMMACHINE),real)
-	@echo "On the Spectrum type: FORMAT \"b\";$(SERIALBAUD)"
-	@echo "                      LOAD *\"b\""
-	@read -p "Then press enter to start: " LINE
+.PHONY : spectrum-run
+spectrum-run : $(SPECTRUMRUNDEPS)
 
-	@echo "* Loading loader..."
+ifeq ($(SPECTRUMMACHINE),real)
+	@printf '* \035[1;35mOn the Spectrum type:\035[0;0m\n'
+	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
+	@printf '  LOAD *"b" <enter>\n'
+	@read -p '  then press enter to start: ' LINE
+
+	@printf '* \033[1;33mLoading loader\033[0;0m\n'
 	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
-	@echo "* Loading orterforth..."
+	@printf '* \033[1;33mLoading orterforth\033[0;0m\n'
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 endif
 
-	touch data.disc
 ifeq ($(SPECTRUMMACHINE),fuse)
-	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse $(DR0) data.disc
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
+	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse $(DR0) $(DR1)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@$(STARTDISCTCP) $(DR0) data.disc
 endif
 ifeq ($(SPECTRUMMACHINE),real)
-	@echo "* Starting disc..."
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) data.disc
 endif
 
@@ -1458,8 +1465,6 @@ ifeq ($(SPECTRUMMACHINE),fuse)
 		--rs232-rx spectrum/fuse-rs232-rx \
 		--rs232-tx spectrum/fuse-rs232-tx \
 		--tape $<
-
-	@$(STOPDISC)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@echo '1. Press Enter to skip the warning'
@@ -1472,7 +1477,9 @@ ifeq ($(SPECTRUMMACHINE),mame)
 		-autoboot_delay 5 \
 		-autoboot_command 'j""\n' \
 		-cassette $<
+endif
 
+ifneq ($(SPECTRUMMACHINE),real)
 	@$(STOPDISC)
 endif
 
@@ -1570,13 +1577,25 @@ spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
 
 # run inst which writes hex file to disc 01
 ifeq ($(SPECTRUMIMPL),fuse)
-SPECTRUMINSTDEPS := spectrum/inst-2.tap $(DISC) $(ORTER) $(FUSE) roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom spectrum/fuse-rs232-rx spectrum/fuse-rs232-tx
-endif
-ifeq ($(SPECTRUMIMPL),superzazu)
-SPECTRUMINSTDEPS := spectrum/inst-2.tap $(SYSTEM)/emulate_spectrum roms/spectrum/if1-2.rom roms/spectrum/spectrum.rom
+SPECTRUMINSTDEPS := \
+	spectrum/inst-2.tap | \
+	$(DISC) \
+	$(ORTER) \
+	$(SPECTRUMROMS) \
+	spectrum/fuse-rs232-rx \
+	spectrum/fuse-rs232-tx
 endif
 ifeq ($(SPECTRUMIMPL),real)
-SPECTRUMINSTDEPS := spectrum/inst-2.ser $(DISC) $(ORTER)
+SPECTRUMINSTDEPS := \
+	spectrum/inst-2.ser | \
+	$(DISC) \
+	$(ORTER)
+endif
+ifeq ($(SPECTRUMIMPL),superzazu)
+SPECTRUMINSTDEPS := \
+	spectrum/inst-2.tap | \
+	$(SYSTEM)/emulate_spectrum \
+	$(SPECTRUMROMS)
 endif
 
 spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
