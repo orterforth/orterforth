@@ -8,10 +8,9 @@ orterforth
 
 INTRODUCTION
 
-orterforth is an implementation of fig-Forth 1.1 for multiple 
-platforms. It is closely based on the fig-FORTH Installation 
-Manual, Glossary, Model, Editor created by the Forth Interest
-Group (fig) in 1980.
+orterforth is an implementation of Forth for multiple
+platforms. It is closely based on the "fig-FORTH Installation
+Manual" created by the Forth Interest Group (fig) in 1980.
 
 
 QUICK START
@@ -36,12 +35,17 @@ other platforms, particularly retro ones, type:
 
  make help
 
+Discussions and Issues are welcome:
+
+https://github.com/orterforth/orterforth/discussions
+
+https://github.com/orterforth/orterforth/issues
 
 ORTERFORTH IS IMPLEMENTED IN C
 
 A typical Forth implementation rests on a number of base words
-implemented in native machine code. Higher-level words are 
-implemented in terms of these words, making up the rest of the
+implemented in native machine code. Higher-level words,
+implemented in terms of these words, make up the rest of the
 Forth vocabulary.
 
 The Installation Manual contains source code that uses an
@@ -100,7 +104,7 @@ Most Forth implementations do not use a trampoline, but
 instead use direct jumps to and from the inner interpreter. 
 They also use registers rather than memory locations to hold 
 values such as pointers and/or stack values. Finally, they can 
-use more general hand optimisation techniques.
+use more general hand-assembled optimisation techniques.
 
 However, it is possible to implement the inner interpreter and 
 the native code words in assembly code and integrate them with 
@@ -108,20 +112,26 @@ the C code. This allows you to benefit from performance
 improvement but keep the practical advantages of C interop.
 
 This is done by providing a mechanism to switch context
-between optimised code, that uses direct jumps and registers,
+between assembly code, that uses direct jumps and registers,
 and C code that uses the trampoline and memory locations. All
 C code words must start by calling a hook to switch the
 context, and the trampoline will switch it back.
 
 NB In some cases this involves copying stack frames and other
 intricate moves, to support everything the C compiler might do
-with the stack. It is also necessary to try to prevent the C
-compiler from moving stack operations before the hook.
+with the stack before the first C statement (the hook) is
+executed. These calling conventions and techniques vary between
+C compilers.
 
 Compiler defines are provided to allow assembly code to be
 implemented incrementally, by omitting individual code words
 from the C implementation and linking the assembly code
 implemented thus far.
+
+Once most of the code words have been implemented in assembly
+code, control will flow between them via direct jumps and the
+trampoline and hook will not be called, and performance will
+generally be much better.
 
 
 ADDITIONAL WORDS - PLATFORM INDEPENDENCE
@@ -197,21 +207,26 @@ Interest Group and create a working executable model for Forth
 that could be ported to multiple machines. The Forth model
 source was intended to be illustrative, for Forth implementers
 to go away and create assembly listings of respective fig-Forth
-implementations, but orterforth takes it literally and treats
-it as the proper installation process, for generating a final
-binary.
+implementations, which they did.
+
+orterforth takes it literally and treats the model code as an
+installation process, to generate a final binary (or, in modern
+architectures, to simply run on startup).
 
 The installation process for each machine is executable on real
-hardware wherever possible - using the machine's serial port to
-connect to the emulated disc controller. (It should, in theory,
-also work with a real PerSci 1070 disc controller and 8" disc
-drives as was described in the Installation Manual, via the
-serial interface - were anyone able to locate working examples
-of these and write the model source to a disc.)
+hardware wherever possible - using the host machine's serial
+port to connect to the emulated disc controller.
 
-More practically, modern automation tools and machine emulators
-can be used to create working Forth binaries for different
-targets from the same source code on the same host machine.
+(It should, in theory, also work with a real PerSci 1070 disc
+controller and 8" disc drives as was described in the
+Installation Manual, via the serial interface - were anyone
+able to locate working examples of these and write the model
+source to a disc.)
+
+More practically, modern automation scripts and machine
+emulators can be used to create working Forth binaries for
+different targets from the same source code on the same host
+machine.
 
 The idea is extended to modern architectures, but without
 modifying the model source or the resulting Forth word set more
@@ -222,7 +237,8 @@ and capabilities; extensions like these can be added as desired
 by linking in C or assembly code implementing these words, or
 implementing them in Forth. Interesting projects in this
 direction might be implementing bindings to the C standard
-library, or creating a platform-independent graphics library.
+library, creating a platform-independent graphics library,
+implementing multitasking, implementing security, and so on.
 
 The idea of self-hosting - creating a Forth implementation that
 builds itself from the absolute minimum of bootstrap code and
