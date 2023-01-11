@@ -1346,7 +1346,7 @@ endif
 # z88dk library based
 ifeq ($(SPECTRUMOPTION),assembly-z88dk)
 # include file
-SPECTRUMINC := target/spectrum/assembly.inc
+SPECTRUMINC := target/spectrum/assembly-z88dk.inc
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
 # ORIGIN higher, 0x9200, C code is larger as uses z88dk libs
