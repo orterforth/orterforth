@@ -439,13 +439,19 @@ bbc/%.s : %.c | bbc
 
 	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
 
-# inst serial load file
+# serial load file
 bbc/%.ser : bbc/%
 
 	printf "5P.\"Loading...\"\r" > $@.io
 	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" >> $@.io
 	printf "20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" >> $@.io
 	cat -u $< >> $@.io
+	mv $@.io $@
+
+# tape WAV file
+bbc/%.wav : bbc/%.uef | tools/github.com/haerfest/uef/uef2wave.py
+
+	python3 tools/github.com/haerfest/uef/uef2wave.py < $< > $@.io
 	mv $@.io $@
 
 # custom target lib
@@ -1702,6 +1708,10 @@ tools :
 tools/bin2cas.pl : | tools
 
 	curl --output $@ https://www.6809.org.uk/dragon/bin2cas.pl
+
+tools/github.com/haerfest/uef/uef2wave.py :
+
+	git submodule init tools/github.com/haerfest/uef && git submodule update --init tools/github.com/haerfest/uef
 
 tools/RC2014/BASIC-Programs/hexload/hexload.bas : | tools
 
