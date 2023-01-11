@@ -1058,16 +1058,17 @@ endif
 RC2014OPTION := assembly
 #RC2014OPTION := default
 
+RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib 
+RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system 
+
 ifeq ($(RC2014OPTION),assembly)
-RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib rc2014/z80.lib
-RC2014INC=target/rc2014/assembly.inc
-RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system -lrc2014/z80
+RC2014DEPS += rc2014/z80.lib
+RC2014INC := target/rc2014/assembly.inc
+RC2014LIBS += -lrc2014/z80
 RC2014ORIGIN := 0x9F00
 endif
 ifeq ($(RC2014OPTION),default)
-RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
 RC2014INC := target/rc2014/default.inc
-RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
 RC2014ORIGIN := 0xAB00
 endif
 
@@ -1368,17 +1369,9 @@ SPECTRUMSYSTEM := target/spectrum/system.c
 endif
 
 # superzazu fast partial emulator can't be used for run time
-ifeq ($(SPECTRUMINSTMACHINE),fuse)
+SPECTRUMMACHINE := $(SPECTRUMINSTMACHINE)
+ifeq ($(SPECTRUMMACHINE),superzazu)
 SPECTRUMMACHINE := fuse
-endif
-ifeq ($(SPECTRUMINSTMACHINE),mame)
-SPECTRUMMACHINE := mame
-endif
-ifeq ($(SPECTRUMINSTMACHINE),superzazu)
-SPECTRUMMACHINE := fuse
-endif
-ifeq ($(SPECTRUMINSTMACHINE),real)
-SPECTRUMMACHINE := real
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
@@ -1468,11 +1461,6 @@ endif
 ifneq ($(SPECTRUMMACHINE),real)
 	@$(STOPDISC)
 endif
-
-# other Spectrum libs
-spectrum/%.lib : %.c | spectrum
-
-	zcc +zx -DRF_TARGET_INC='\"$(SPECTRUMINC)\"' -x -o spectrum/$* $<
 
 # Fuse serial named pipe
 spectrum/fuse-rs232-rx : | spectrum
@@ -1689,8 +1677,6 @@ spectrum/inst.lib : inst.c rf.h | spectrum
 spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 
 	zcc +zx \
- 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
-		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-x -o $@ \
 		$<
 
