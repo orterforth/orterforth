@@ -715,10 +715,61 @@ dragon-clean :
 
 DRAGONMACHINE := xroar
 
+.PHONY : dragon-hw
+dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+
+ifeq ($(DRAGONMACHINE),mame)
+	mame dragon64 -rompath roms -video opengl \
+		-resolution 1024x768 -skip_gameinfo -nomax -window \
+		-cassette $< \
+		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
+endif
+ifeq ($(DRAGONMACHINE),xroar)
+	xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+endif
+
 .PHONY : dragon-inst
 dragon-inst : dragon/orterforth.bin.hex
 
+dragon/hw.bin : hw.c
+
+	cmoc --dragon -o $@ $^
+
+dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+
+dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 -r 48000 $<
+
+dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
+
+	cmoc --dragon -nodefaultlibs -o $@ $^
+
+dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
+
+dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
+
+dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
+
+	cmoc --dragon -c -o $@ $<
+
+dragon/orterforth.bin : dragon/orterforth.bin.hex
+
+	$(ORTER) hex read < $< > $@
+
 dragon/orterforth.bin.hex : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+
+	@printf '* \033[1;33mChecking memory limits\033[0;0m\n'
+	@sh target/spectrum/check-memory.sh \
+		0x0600 \
+		0x3000 \
+		$(shell $(STAT) dragon/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
@@ -752,46 +803,13 @@ endif
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
-.PHONY : dragon-hw
-dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
-
-ifeq ($(DRAGONMACHINE),mame)
-	mame dragon64 -rompath roms -video opengl \
-		-resolution 1024x768 -skip_gameinfo -nomax -window \
-		-cassette $< \
-		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
-endif
-ifeq ($(DRAGONMACHINE),xroar)
-	xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
-endif
-
-dragon/hw.bin : hw.c
-
-	cmoc --dragon -o $@ $^
-
-dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
+dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
 
-dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 -r 48000 $<
-
-dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
-
-	cmoc --dragon -o $@ $^
-
-dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
+dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
-
-dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
-
-dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
-
-	cmoc --dragon -c -o $@ $<
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
@@ -800,6 +818,7 @@ dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -c -o $@ $<
+
 
 # help
 .PHONY : help
