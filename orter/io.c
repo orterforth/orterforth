@@ -15,8 +15,14 @@
 /* flag to indicate EOF */
 int orter_io_eof = 0;
 
+/* exit code to return after cleanup */
+int orter_io_exit = 0;
+
 /* flag for cleanup and exit */
 int orter_io_finished = 0;
+
+/* select handling */
+fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
 
 /* signal handler */
 static void handler(int signum)
@@ -35,8 +41,8 @@ static void handler(int signum)
 /*
   fprintf(stderr, "handler signal %s\n", name ? name : "unknown");
 */
-  /* TODO separate signal no from this flag */
-  orter_io_finished = signum;
+  orter_io_exit = signum;
+  orter_io_finished = 1;
 }
 
 void orter_io_signal_init(void)
@@ -63,8 +69,8 @@ size_t orter_io_fd_wr(int fd, char *off, size_t len)
   /* write bytes */
   n = write(fd, off, len);
   if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    /* TODO separate finished from errno */
-    orter_io_finished = errno;
+    orter_io_exit = errno;
+    orter_io_finished = 1;
     perror("write failed");
     return 0;
   }
@@ -85,8 +91,8 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
   /* read bytes */
   n = read(fd, off, len);
   if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    /* TODO separate finished from errno */
-    orter_io_finished = errno;
+    orter_io_exit = errno;
+    orter_io_finished = 1;
     perror("read failed");
     return 0;
   }
@@ -149,4 +155,69 @@ void orter_io_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **of
 {
   bufread(rd, buf, offset, pending);
   bufwrite(wr, buf, offset, pending);
+}
+
+static int orter_io_nfds;
+
+void orter_io_select_zero(void)
+{
+  FD_ZERO(&orter_io_readfds);
+  FD_ZERO(&orter_io_writefds);
+  FD_ZERO(&orter_io_exceptfds);
+  orter_io_nfds = 0;
+}
+
+void orter_io_select_fdset(int in_fd, int pending, int out_fd)
+{
+  /* if no bytes pending, select input */
+  if (in_fd != -1 && !pending) {
+    FD_SET(in_fd, &orter_io_readfds);
+/*
+    FD_SET(in_fd, &orter_io_exceptfds);
+*/
+    /* advance nfds */
+    if (orter_io_nfds <= in_fd) {
+      orter_io_nfds = in_fd + 1;
+    }
+  }
+
+  /* if some bytes pending, select output */
+  if (out_fd != -1 && pending) {
+    FD_SET(out_fd, &orter_io_writefds);
+/*
+    FD_SET(out_fd, &orter_io_exceptfds);
+*/
+    /* advance nfds */
+    if (orter_io_nfds <= out_fd) {
+      orter_io_nfds = out_fd + 1;
+    }
+  }
+}
+
+int orter_io_select(void)
+{
+  struct timeval timeout;
+  int result;
+
+  /* reset timeout */
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+
+  /* select */
+  /* TODO use pselect */
+  result = select(orter_io_nfds, &orter_io_readfds, &orter_io_writefds, &orter_io_exceptfds, &timeout);
+  if (result < 0) {
+    switch (errno) {
+      case EINTR:
+        orter_io_exit = errno;
+        perror("select interrupted");
+        orter_io_finished = 1;
+      default:
+        orter_io_exit = errno;
+        perror("select failed");
+        orter_io_finished = 1;
+    }
+  }
+
+  return result;
 }

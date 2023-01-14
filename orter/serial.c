@@ -423,24 +423,6 @@ static void opts(int argc, char **argv)
   }
 }
 
-static void buffer_select_init(int in_fd, int pending, int out_fd, fd_set *readfds, fd_set *writefds, fd_set *exceptfds)
-{
-  /* if no bytes pending, select input */
-  if (in_fd != -1 && !pending) {
-    FD_SET(in_fd, readfds);
-/*
-    FD_SET(in_fd, exceptfds);
-*/
-  }
-  /* if some bytes pending, select output */
-  if (out_fd != -1 && pending) {
-    FD_SET(out_fd, writefds);
-/*
-    FD_SET(out_fd, exceptfds);
-*/
-  }
-}
-
 int orter_serial(int argc, char **argv)
 {
   /* exit code */
@@ -448,11 +430,6 @@ int orter_serial(int argc, char **argv)
 
   /* EOF flag */
   int eof = 0;
-
-  /* select parameters */
-  fd_set readfds, writefds, exceptfds;
-  struct timeval timeout;
-  int nfds;
 
   /* command line options */
   optind = 2;
@@ -482,50 +459,25 @@ int orter_serial(int argc, char **argv)
     return exit;
   }
 
-  /* set up select */
-  nfds = 0;
-  if (0 > nfds) nfds = 0;
-  if (1 > nfds) nfds = 1;
-  if (serial_fd > nfds) nfds = serial_fd;
-  nfds++;
-
   while (!orter_io_finished) {
 
     /* init fd sets */
-    FD_ZERO(&readfds);
-    FD_ZERO(&writefds);
-    FD_ZERO(&exceptfds);
+    orter_io_select_zero();
 
     /* add to fd sets */
     if (!orter_io_eof) {
-      buffer_select_init(0, in_pending, -1, &readfds, &writefds, &exceptfds);
+      orter_io_select_fdset(0, in_pending, -1);
     }
-    buffer_select_init(-1, mapped_pending, serial_fd, &readfds, &writefds, &exceptfds);
-    buffer_select_init(serial_fd, out_pending, 1, &readfds, &writefds, &exceptfds);
-
-    /* reset timeout */
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
+    orter_io_select_fdset(-1, mapped_pending, serial_fd);
+    orter_io_select_fdset(serial_fd, out_pending, 1);
 
     /* select */
-    /* TODO use pselect */
-    if (select(nfds, &readfds, &writefds, &exceptfds, &timeout) < 0) {
-      switch (errno) {
-        case EINTR:
-          exit = errno;
-          perror("select interrupted");
-          restore();
-          return exit;
-        default:
-          exit = errno;
-          perror("select failed");
-          restore();
-          return exit;
-      }
+    if (orter_io_select() < 0) {
+      break;
     }
 
     /* check for exceptions */
-    if (FD_ISSET(1, &exceptfds)) {
+    if (FD_ISSET(1, &orter_io_exceptfds)) {
       exit = errno;
       perror("out error");
       restore();
@@ -534,13 +486,13 @@ int orter_serial(int argc, char **argv)
 
     /* exceptions expected from stdin until pipe attached */
 /*
-    if (FD_ISSET(0, &exceptfds)) {
+    if (FD_ISSET(0, &orter_io_exceptfds)) {
       perror("in error");
       restore();
       return errno;
     }
 */
-    if (FD_ISSET(serial_fd, &exceptfds)) {
+    if (FD_ISSET(serial_fd, &orter_io_exceptfds)) {
       exit = errno;
       perror("serial error");
       restore();
@@ -580,5 +532,5 @@ int orter_serial(int argc, char **argv)
 
   /* done */
   restore();
-  return orter_io_finished;
+  return orter_io_exit;
 }

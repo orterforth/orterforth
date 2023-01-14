@@ -232,7 +232,7 @@ static int serve(char *dr0, char *dr1)
   }
 
   /* finished */
-  return 0;
+  return orter_io_exit;
 }
 
 static int setconsoleunbuffered(void)
