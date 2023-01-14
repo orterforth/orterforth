@@ -305,9 +305,24 @@ static void restore(void)
   }
 }
 
+static char acked = 0;
+
 size_t orter_serial_rd(char *off, size_t len)
 {
-  return orter_io_fd_rd(serial_fd, off, len);
+  size_t size = orter_io_fd_rd(serial_fd, off, len);
+
+  /* test for ACK */
+  if (ack) {
+    size_t i;
+    for (i = 0; i < size; i++) {
+      if (off[i] == 0x06) {
+        acked = 1;
+        break;
+      }
+    }
+  }
+
+  return size;
 }
 
 size_t orter_serial_wr(char *off, size_t len)
@@ -542,7 +557,7 @@ int orter_serial(int argc, char **argv)
     orter_io_relay(orter_serial_rd, orter_io_stdout_wr, out_buf, &out_offset, &out_pending);
 
     /* terminate after ACK */
-    if (ack && out_buf[0] == 6) {
+    if (ack && acked) {
       break;
     }
 
