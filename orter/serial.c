@@ -58,21 +58,15 @@ static int            wai_wait = 1;
 static time_t         wai_timer = 0;
 
 /* buffers */
-static char           in_buf[256];
-static size_t         in_pending = 0;
-static char *         in_offset = in_buf;
+static orter_io_pipe_t in;
 
 static char           omap_buf[256];
 static size_t         omap_pending = 0;
 static char *         omap_offset = omap_buf;
 
-static char           mapped_buf[256];
-static size_t         mapped_pending = 0;
-static char *         mapped_offset = mapped_buf;
+static orter_io_pipe_t swr;
 
-static char           out_buf[256];
-static size_t         out_pending = 0;
-static char *         out_offset = out_buf;
+static orter_io_pipe_t out;
 
 static void serial_makeraw(struct termios *attr)
 {
@@ -312,6 +306,9 @@ size_t orter_serial_rd(char *off, size_t len)
   size_t size = orter_io_fd_rd(serial_fd, off, len);
 
   /* test for ACK */
+  /* TODO cannot adapt move operation to use a FD directly */
+  /* TODO until this behaviour is factored into its own pipe */
+  /* TODO where other postprocessing can live */
   if (ack) {
     size_t i;
     for (i = 0; i < size; i++) {
@@ -459,6 +456,11 @@ int orter_serial(int argc, char **argv)
     return exit;
   }
 
+  /* set up pipes */
+  orter_io_pipe_init(&in, 0, orter_io_stdin_rd, omap_wr, -1);
+  orter_io_pipe_init(&swr, -1, omap_rd, orter_serial_wr, serial_fd);
+  orter_io_pipe_init(&out, serial_fd, orter_serial_rd, orter_io_stdout_wr, 1);
+
   while (!orter_io_finished) {
 
     /* init fd sets */
@@ -466,10 +468,10 @@ int orter_serial(int argc, char **argv)
 
     /* add to fd sets */
     if (!orter_io_eof) {
-      orter_io_select_fdset(0, in_pending, -1);
+      orter_io_pipe_fdset(&in);
     }
-    orter_io_select_fdset(-1, mapped_pending, serial_fd);
-    orter_io_select_fdset(serial_fd, out_pending, 1);
+    orter_io_pipe_fdset(&swr);
+    orter_io_pipe_fdset(&out);
 
     /* select */
     if (orter_io_select() < 0) {
@@ -500,13 +502,11 @@ int orter_serial(int argc, char **argv)
     }
 
     /* stdin to mapped */
-    orter_io_relay(orter_io_stdin_rd, omap_wr, in_buf, &in_offset, &in_pending);
-
+    orter_io_pipe_move(&in);
     /* mapped to serial */
-    orter_io_relay(omap_rd, orter_serial_wr, mapped_buf, &mapped_offset, &mapped_pending);
-
+    orter_io_pipe_move(&swr);
     /* serial to stdout */
-    orter_io_relay(orter_serial_rd, orter_io_stdout_wr, out_buf, &out_offset, &out_pending);
+    orter_io_pipe_move(&out);
 
     /* terminate after ACK */
     if (ack && acked) {

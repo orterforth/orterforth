@@ -157,6 +157,21 @@ void orter_io_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **of
   bufwrite(wr, buf, offset, pending);
 }
 
+void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter_io_rdwr_t wr, int out)
+{
+  pipe->in = in;
+  pipe->rd = rd;
+  pipe->off = pipe->buf;
+  pipe->len = 0;
+  pipe->wr = wr;
+  pipe->out = out;
+}
+
+void orter_io_pipe_move(orter_io_pipe_t *pipe)
+{
+  orter_io_relay(pipe->rd, pipe->wr, pipe->buf, &pipe->off, &pipe->len);  
+}
+
 static int orter_io_nfds;
 
 void orter_io_select_zero(void)
@@ -167,29 +182,29 @@ void orter_io_select_zero(void)
   orter_io_nfds = 0;
 }
 
-void orter_io_select_fdset(int in_fd, int pending, int out_fd)
+void orter_io_pipe_fdset(orter_io_pipe_t *pipe)
 {
   /* if no bytes pending, select input */
-  if (in_fd != -1 && !pending) {
-    FD_SET(in_fd, &orter_io_readfds);
+  if (pipe->in != -1 && !pipe->len) {
+    FD_SET(pipe->in, &orter_io_readfds);
 /*
-    FD_SET(in_fd, &orter_io_exceptfds);
+    FD_SET(pipe->in, &orter_io_exceptfds);
 */
     /* advance nfds */
-    if (orter_io_nfds <= in_fd) {
-      orter_io_nfds = in_fd + 1;
+    if (orter_io_nfds <= pipe->in) {
+      orter_io_nfds = pipe->in + 1;
     }
   }
 
   /* if some bytes pending, select output */
-  if (out_fd != -1 && pending) {
-    FD_SET(out_fd, &orter_io_writefds);
+  if (pipe->out != -1 && pipe->len) {
+    FD_SET(pipe->out, &orter_io_writefds);
 /*
-    FD_SET(out_fd, &orter_io_exceptfds);
+    FD_SET(pipe->out, &orter_io_exceptfds);
 */
     /* advance nfds */
-    if (orter_io_nfds <= out_fd) {
-      orter_io_nfds = out_fd + 1;
+    if (orter_io_nfds <= pipe->out) {
+      orter_io_nfds = pipe->out + 1;
     }
   }
 }
