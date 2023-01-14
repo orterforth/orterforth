@@ -222,10 +222,12 @@ int orter_io_select(void)
         orter_io_exit = errno;
         perror("select interrupted");
         orter_io_finished = 1;
+        break;
       default:
         orter_io_exit = errno;
         perror("select failed");
         orter_io_finished = 1;
+        break;
     }
   }
 

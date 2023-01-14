@@ -205,16 +205,21 @@ static int serve(char *dr0, char *dr1)
 
   while (!orter_io_finished) {
 
-    /* init fd sets */
-    orter_io_select_zero();
+    /* NB not completely converted to select */
+    if (in_fd == -1 && out_fd == -1) {
+      usleep(1000000);
+    } else {
+      /* init fd sets */
+      orter_io_select_zero();
 
-    /* add to fd sets */
-    orter_io_pipe_fdset(&in);
-    orter_io_pipe_fdset(&out);
+      /* add to fd sets */
+      orter_io_pipe_fdset(&in);
+      orter_io_pipe_fdset(&out);
 
-    /* select */
-    if (orter_io_select() < 0) {
-      break;
+      /* select */
+      if (orter_io_select() < 0) {
+        break;
+      }
     }
 
     /* TODO stdin must be nonblocking */
@@ -279,7 +284,9 @@ static int disc_serial(int argc, char **argv)
   }
 
   rd = orter_serial_rd;
+  in_fd = orter_serial_fd;
   wr = orter_serial_wr;
+  out_fd = orter_serial_fd;
 
   exit = serve(argv[4], argv[5]);
 

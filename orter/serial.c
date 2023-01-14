@@ -27,6 +27,8 @@
 #include "io.h"
 #include "serial.h"
 
+int                   orter_serial_fd = -1;
+
 /* opts */
 static int            echo = 0;
 static int            icrnl = 0;
@@ -35,7 +37,6 @@ static int            olfcr = 0;
 static int            odelbs = 0;
 
 /* serial port */
-static int            serial_fd = -1;
 static struct termios serial_attr;
 static struct termios serial_attr_save;
 static int            serial_attr_saved = 0;
@@ -107,22 +108,22 @@ int orter_serial_open(char *name, int baud)
   speed_t br;
 
   /* open fd */
-  if ((serial_fd = open(name, O_RDWR|O_NDELAY|O_NOCTTY|O_NONBLOCK)) < 0) {
+  if ((orter_serial_fd = open(name, O_RDWR|O_NDELAY|O_NOCTTY|O_NONBLOCK)) < 0) {
     perror("serial open failed");
     return errno;
   }
   /* get lock */  
-  if (flock(serial_fd, LOCK_EX) < 0) {
+  if (flock(orter_serial_fd, LOCK_EX) < 0) {
     perror("serial flock failed");
     return errno;
   }
   /* check it's a tty */  
-  if (!isatty(serial_fd)) {
+  if (!isatty(orter_serial_fd)) {
     perror("serial not a tty");
     return -1;
   }
   /* get attr */  
-  if (tcgetattr(serial_fd, &serial_attr_save) < 0) {
+  if (tcgetattr(orter_serial_fd, &serial_attr_save) < 0) {
     perror("serial tcgetattr failed");
     return errno;
   }
@@ -172,12 +173,12 @@ int orter_serial_open(char *name, int baud)
     return errno;
   }
   /* apply settings */
-  if (tcsetattr(serial_fd, TCSADRAIN, &serial_attr)) {
+  if (tcsetattr(orter_serial_fd, TCSADRAIN, &serial_attr)) {
     perror("serial tcsetattr failed");
     return errno;
   }
   /* flush */
-  if (tcflush(serial_fd, TCIOFLUSH)) {
+  if (tcflush(orter_serial_fd, TCIOFLUSH)) {
     perror("serial tcflush failed");
     return errno;
   }
@@ -188,24 +189,24 @@ int orter_serial_open(char *name, int baud)
 int orter_serial_close(void)
 {
   /* ignore if not opened */
-  if (serial_fd < 0) {
+  if (orter_serial_fd < 0) {
     return 0;
   }
   /* drain anything pending */
-  if (tcdrain(serial_fd)) {
+  if (tcdrain(orter_serial_fd)) {
     perror("serial tcdrain failed");
   }
   /* restore if set */
-  if (serial_attr_saved && tcsetattr(serial_fd, TCSANOW, &serial_attr_save)) {
+  if (serial_attr_saved && tcsetattr(orter_serial_fd, TCSANOW, &serial_attr_save)) {
     perror("serial tcsetattr failed");
   }
   serial_attr_saved = 0;
   /* close it */
-  if (close(serial_fd)) {
+  if (close(orter_serial_fd)) {
     perror("serial close failed");
   }
   /* deref the fd */
-  serial_fd = -1;
+  orter_serial_fd = -1;
 
   return 0;
 }
@@ -299,11 +300,12 @@ static void restore(void)
   }
 }
 
+/* TODO remove and use orter_io_finished */
 static char acked = 0;
 
 size_t orter_serial_rd(char *off, size_t len)
 {
-  size_t size = orter_io_fd_rd(serial_fd, off, len);
+  size_t size = orter_io_fd_rd(orter_serial_fd, off, len);
 
   /* test for ACK */
   /* TODO cannot adapt move operation to use a FD directly */
@@ -314,6 +316,8 @@ size_t orter_serial_rd(char *off, size_t len)
     for (i = 0; i < size; i++) {
       if (off[i] == 0x06) {
         acked = 1;
+        orter_io_finished = 1;
+        orter_io_exit = 0;
         break;
       }
     }
@@ -324,7 +328,7 @@ size_t orter_serial_rd(char *off, size_t len)
 
 size_t orter_serial_wr(char *off, size_t len)
 {
-  return orter_io_fd_wr(serial_fd, off, len);
+  return orter_io_fd_wr(orter_serial_fd, off, len);
 }
 
 static int std_open(void)
@@ -458,8 +462,8 @@ int orter_serial(int argc, char **argv)
 
   /* set up pipes */
   orter_io_pipe_init(&in, 0, orter_io_stdin_rd, omap_wr, -1);
-  orter_io_pipe_init(&swr, -1, omap_rd, orter_serial_wr, serial_fd);
-  orter_io_pipe_init(&out, serial_fd, orter_serial_rd, orter_io_stdout_wr, 1);
+  orter_io_pipe_init(&swr, -1, omap_rd, orter_serial_wr, orter_serial_fd);
+  orter_io_pipe_init(&out, orter_serial_fd, orter_serial_rd, orter_io_stdout_wr, 1);
 
   while (!orter_io_finished) {
 
@@ -494,7 +498,7 @@ int orter_serial(int argc, char **argv)
       return errno;
     }
 */
-    if (FD_ISSET(serial_fd, &orter_io_exceptfds)) {
+    if (FD_ISSET(orter_serial_fd, &orter_io_exceptfds)) {
       exit = errno;
       perror("serial error");
       restore();
@@ -509,6 +513,7 @@ int orter_serial(int argc, char **argv)
     orter_io_pipe_move(&out);
 
     /* terminate after ACK */
+    /* TODO use finished */
     if (ack && acked) {
       break;
     }
