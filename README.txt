@@ -41,6 +41,7 @@ https://github.com/orterforth/orterforth/discussions
 
 https://github.com/orterforth/orterforth/issues
 
+
 ORTERFORTH IS IMPLEMENTED IN C
 
 A typical Forth implementation rests on a number of base words
@@ -73,7 +74,8 @@ The Installation Manual contains an implementation of the
 protocol used by the PerSci 1070 Intelligent Diskette
 Controller to communicate with a disc drive. Forth reads and
 writes disc sectors directly rather than using a hierarchical
-file system, providing access to "screens" of source code.
+file system. Forth source code is stored in "screens" of 1024
+bytes, corresponding directly to disc sectors.
 
 orterforth provides an emulated version of this. It partly
 implements the protocol at the controller end, uses files as
