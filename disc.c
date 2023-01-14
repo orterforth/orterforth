@@ -188,16 +188,16 @@ static size_t tcp_wr(char *off, size_t len)
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
-  char           in_buf[256];
-  size_t         in_pending = 0;
-  char *         in_offset = in_buf;
+  orter_io_pipe_t in;
+  orter_io_pipe_t out;
 
-  char           out_buf[256];
-  size_t         out_pending = 0;
-  char *         out_offset = out_buf;
-
+  /* insert the disc image files */
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
+
+  /* create pipes */
+  orter_io_pipe_init(&in, -1, rd, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, wr, -1);
 
   while (!orter_io_finished) {
 
@@ -210,8 +210,7 @@ static int serve(char *dr0, char *dr1)
     /* TODO stdin must be nonblocking */
 
     /* disc in to disc controller */
-    orter_io_relay(rd, disc_wr, in_buf, &in_offset, &in_pending);
-
+    orter_io_pipe_move(&in);
     /* TODO mux_in_rd */
     /*      relays into two buffers, the in_buf and an emit buf */
     /* TODO mux_in_disc_rd to disc_wr */
@@ -220,8 +219,7 @@ static int serve(char *dr0, char *dr1)
     /*      simple relay */
 
     /* disc controller to disc out */
-    orter_io_relay(disc_rd, wr, out_buf, &out_offset, &out_pending);
-
+    orter_io_pipe_move(&out);
     /* TODO disc_rd to mux_out_disc_wr */
     /*      disc out is written to port with high bit */
     /* TODO stdin_rd to mux_out_key_wr */

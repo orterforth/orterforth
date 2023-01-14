@@ -151,12 +151,6 @@ static void bufwrite(orter_io_rdwr_t wr, char *buf, char **offset, size_t *pendi
   }
 }
 
-void orter_io_relay(orter_io_rdwr_t rd, orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending)
-{
-  bufread(rd, buf, offset, pending);
-  bufwrite(wr, buf, offset, pending);
-}
-
 void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter_io_rdwr_t wr, int out)
 {
   pipe->in = in;
@@ -169,7 +163,8 @@ void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter
 
 void orter_io_pipe_move(orter_io_pipe_t *pipe)
 {
-  orter_io_relay(pipe->rd, pipe->wr, pipe->buf, &pipe->off, &pipe->len);  
+  bufread(pipe->rd, pipe->buf, &pipe->off, &pipe->len);
+  bufwrite(pipe->wr, pipe->buf, &pipe->off, &pipe->len);
 }
 
 static int orter_io_nfds;
