@@ -81,6 +81,10 @@ static int disc_create(void)
 
 /* DISPATCH SERIAL READ/WRITE TO FUNCTION POINTERS */
 
+static int in_fd = -1;
+
+static int out_fd = -1;
+
 static orter_io_rdwr_t rd;
 
 static orter_io_rdwr_t wr;
@@ -196,16 +200,22 @@ static int serve(char *dr0, char *dr1)
   rf_persci_insert(1, dr1);
 
   /* create pipes */
-  orter_io_pipe_init(&in, -1, rd, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, wr, -1);
+  orter_io_pipe_init(&in, in_fd, rd, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, wr, out_fd);
 
   while (!orter_io_finished) {
 
-    /* TODO use select */
-    /* don't wait on write fd if input buffer empty */
-    /* don't wait on read fd if output buffer full */
-    /* sleep if no fds to wait on */
-    usleep(100000);
+    /* init fd sets */
+    orter_io_select_zero();
+
+    /* add to fd sets */
+    orter_io_pipe_fdset(&in);
+    orter_io_pipe_fdset(&out);
+
+    /* select */
+    if (orter_io_select() < 0) {
+      break;
+    }
 
     /* TODO stdin must be nonblocking */
 
@@ -284,7 +294,9 @@ static int disc_standard(int argc, char **argv)
     return 1;
   }
   rd = orter_io_stdin_rd;
+  in_fd = 0;
   wr = orter_io_stdout_wr;
+  out_fd = 1;
 
   return serve(argv[2], argv[3]);
 }
@@ -347,7 +359,9 @@ static int disc_tcp(int argc, char **argv)
 
   /* bind the fps */
   rd = tcp_rd;
+  in_fd = tcp_fd;
   wr = tcp_wr;
+  out_fd = tcp_fd;
 
   exit = serve(argv[3], argv[4]);
 
