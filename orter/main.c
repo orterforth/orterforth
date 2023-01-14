@@ -29,7 +29,6 @@ static int usage()
 
   /* an entry for each subcommand */
   fprintf(stderr, "             bbc ...\n");
-  fprintf(stderr, "             fuse ...\n");
   fprintf(stderr, "             hex ...\n");
   fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
@@ -37,39 +36,6 @@ static int usage()
 
   return 1;
 }
-
-static int fuse(int argc, char *argv[])
-{
-  int c;
-
-  if (argc > 2) {
-    /* use unbuffered stdin/stdout */
-    setvbuf(stdin, NULL, _IONBF, 0);
-    setvbuf(stdout, NULL, _IONBF, 0);
-
-    /* read from Fuse serial named pipe and write to stdout */
-    if (!strcmp("serial", argv[2]) && !strcmp("read", argv[3])) {
-      while ((c = orter_spectrum_fuse_serial_getc(stdin)) != -1) {
-        fputc(c, stdout);
-      }
-    }
-
-    /* read from stdin and write to Fuse serial named pipe */
-    if (!strcmp("serial", argv[2]) && !strcmp("write", argv[3])) {
-      while ((c = fgetc(stdin)) != -1) {
-        orter_spectrum_fuse_serial_putc(c, stdout);
-      }
-    }
-
-    /* in case of any buffering */
-    fflush(stdout);
-
-    return 0;
-  }
-
-  return usage();
-}
-
 
 static int ql(int argc, char **argv)
 {
@@ -93,6 +59,34 @@ static int ql(int argc, char **argv)
 
 static int spectrum(int argc, char *argv[])
 {
+  /* use unbuffered stdin/stdout */
+  setvbuf(stdin, NULL, _IONBF, 0);
+  setvbuf(stdout, NULL, _IONBF, 0);
+
+  /* Fuse Emulator serial escape handling */
+  if (argc == 5 && !strcmp("fuse", argv[2]) && !strcmp("serial", argv[3])) {
+
+    int c;
+
+    /* read from Fuse serial named pipe and write to stdout */
+    if (!strcmp("read", argv[4])) {
+      while ((c = orter_spectrum_fuse_serial_getc(stdin)) != -1) {
+        fputc(c, stdout);
+      }
+    }
+
+    /* read from stdin and write to Fuse serial named pipe */
+    if (!strcmp("write", argv[4])) {
+      while ((c = fgetc(stdin)) != -1) {
+        orter_spectrum_fuse_serial_putc(c, stdout);
+      }
+    }
+
+    /* in case of any buffering */
+    fflush(stdout);
+    return 0;
+  }
+
   /* prepend a file with a header suitable for LOAD *"b" or LOAD *"n" */
   if (argc == 7 && !strcmp("header", argv[2])) {
     return orter_spectrum_header(argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
@@ -100,6 +94,8 @@ static int spectrum(int argc, char *argv[])
 
   /* usage */
   fprintf(stderr, "Usage: orter spectrum header <filename> <type> <p1> <p2>\n");
+  fprintf(stderr, "                      fuse serial read\n");
+  fprintf(stderr, "                                  write\n");
   return 1;
 }
 
@@ -137,11 +133,6 @@ int hex_include(char *name)
   unsigned int i;
   int c;
 
-  /* unbuffered */
-/*
-  setvbuf(stdin, NULL, _IONBF, 0);
-  setvbuf(stdout, NULL, _IONBF, 0);
-*/
   printf("unsigned char %s[] = {", name);
 
   /* loop until EOF */
@@ -172,6 +163,7 @@ static int hex_read()
   int b, c;
 
   /* unbuffered */
+  /* TODO remove */
   setvbuf(stdin, NULL, _IONBF, 0);
   setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -218,9 +210,10 @@ int main(int argc, char *argv[])
 {
   if (argc > 1) {
     char *arg = argv[1];
-    if (!strcmp("fuse", arg)) {
-      return fuse(argc, argv);
+    if (!strcmp("bbc", arg)) {
+      return bbc(argc, argv);
     }
+    /* TODO separate hex lib */
     if (argc > 2 && !strcmp("hex", arg) && !strcmp("read", argv[2])) {
       return hex_read();
     }
@@ -235,9 +228,6 @@ int main(int argc, char *argv[])
     }
     if (!strcmp("spectrum", arg)) {
       return spectrum(argc, argv);
-    }
-    if (!strcmp("bbc", arg)) {
-      return bbc(argc, argv);
     }
   }
 
