@@ -1,6 +1,10 @@
 #!/usr/bin/env sh
 
-set -e
+set -eu
+
+# check-memory.sh
+
+# validates that the binary fits between ORG and ORIGIN
 
 ORG=$(($1))
 ORIGIN=$(($2))
