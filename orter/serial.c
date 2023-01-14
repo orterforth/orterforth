@@ -408,6 +408,24 @@ static void opts(int argc, char **argv)
   }
 }
 
+static void buffer_select_init(int in_fd, int pending, int out_fd, fd_set *readfds, fd_set *writefds, fd_set *exceptfds)
+{
+  /* if no bytes pending, select input */
+  if (in_fd != -1 && !pending) {
+    FD_SET(in_fd, readfds);
+/*
+    FD_SET(in_fd, exceptfds);
+*/
+  }
+  /* if some bytes pending, select output */
+  if (out_fd != -1 && pending) {
+    FD_SET(out_fd, writefds);
+/*
+    FD_SET(out_fd, exceptfds);
+*/
+  }
+}
+
 int orter_serial(int argc, char **argv)
 {
   /* exit code */
@@ -463,30 +481,14 @@ int orter_serial(int argc, char **argv)
     FD_ZERO(&writefds);
     FD_ZERO(&exceptfds);
 
-    /* add in to read, err set */
-    if (!in_pending && !orter_io_eof) {
-      FD_SET(0, &readfds);
-/*
-      FD_SET(0, &exceptfds);
-*/
+    /* add to fd sets */
+    if (!orter_io_eof) {
+      buffer_select_init(0, in_pending, -1, &readfds, &writefds, &exceptfds);
     }
+    buffer_select_init(-1, mapped_pending, serial_fd, &readfds, &writefds, &exceptfds);
+    buffer_select_init(serial_fd, out_pending, 1, &readfds, &writefds, &exceptfds);
 
-    /* add out to write, err set */
-    if (out_pending) {
-      FD_SET(1, &writefds);
-      FD_SET(1, &exceptfds);
-    }
-
-    /* add port to read, write and err sets */
-    if (!out_pending) {
-      FD_SET(serial_fd, &readfds);
-      FD_SET(serial_fd, &exceptfds);
-    }
-    if (in_pending) {
-      FD_SET(serial_fd, &writefds);
-      FD_SET(serial_fd, &exceptfds);
-    }
-
+    /* reset timeout */
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
 
