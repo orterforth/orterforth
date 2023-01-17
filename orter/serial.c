@@ -300,9 +300,6 @@ static void restore(void)
   }
 }
 
-/* TODO remove and use orter_io_finished */
-static char acked = 0;
-
 size_t orter_serial_rd(char *off, size_t len)
 {
   size_t size = orter_io_fd_rd(orter_serial_fd, off, len);
@@ -315,7 +312,6 @@ size_t orter_serial_rd(char *off, size_t len)
     size_t i;
     for (i = 0; i < size; i++) {
       if (off[i] == 0x06) {
-        acked = 1;
         orter_io_finished = 1;
         orter_io_exit = 0;
         break;
@@ -340,6 +336,7 @@ static int std_open(void)
     perror("stdin fcntl failed");
     return errno;
   }
+
   /* modify stdin attr */
   if (isatty(0)) {
     /* save current stdin attr */
@@ -348,6 +345,7 @@ static int std_open(void)
       return errno;
     }
     in_attr_saved = 1;
+
     /* modify stdin attr */
     in_attr = in_attr_save;
     /* no echo, non canonical */
@@ -362,6 +360,7 @@ static int std_open(void)
       return errno;
     }
   }
+
   /* make stdout nonblocking */
   if (fcntl(1, F_SETFL, O_NONBLOCK)) {
     perror("stdout fcntl failed");
@@ -511,12 +510,6 @@ int orter_serial(int argc, char **argv)
     orter_io_pipe_move(&swr);
     /* serial to stdout */
     orter_io_pipe_move(&out);
-
-    /* terminate after ACK */
-    /* TODO use finished */
-    if (ack && acked) {
-      break;
-    }
 
     /* start EOF timer */
     if (!eof && orter_io_eof) {
