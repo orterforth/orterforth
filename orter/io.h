@@ -38,6 +38,12 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len);
 /* nonblocking write to fd */
 size_t orter_io_fd_wr(int fd, char *off, size_t len);
 
+/* set up nonblocking stdin/stdout */
+int orter_io_std_open(void);
+
+/* restore stdin/stdout */
+int orter_io_std_close(void);
+
 /* nonblocking read from stdin */
 size_t orter_io_stdin_rd(char *off, size_t len);
 

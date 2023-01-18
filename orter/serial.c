@@ -41,15 +41,6 @@ static struct termios serial_attr;
 static struct termios serial_attr_save;
 static int            serial_attr_saved = 0;
 
-/* stdin */
-static int            in_fl;
-static int            in_fl_saved = 0;
-static struct termios in_attr;
-static struct termios in_attr_save;
-static int            in_attr_saved = 0;
-
-/* stdout */
-
 /* ACK received */
 static char           ack = 0;
 
@@ -69,6 +60,7 @@ static orter_io_pipe_t swr;
 
 static orter_io_pipe_t out;
 
+/* TODO compare with std_open stuff */
 static void serial_makeraw(struct termios *attr)
 {
   /* raw mode, read, no echo */
@@ -265,28 +257,6 @@ static size_t omap_wr(char *off, size_t len)
   return len;
 }
 
-static int std_close(void)
-{
-  /* stdin */
-  if (in_fl_saved) {
-    if (fcntl(0, F_SETFL, in_fl)) {
-      perror("stdin fcntl failed");
-    }
-    in_fl_saved = 0;
-  }
-  if (in_attr_saved && isatty(0)) {
-    if (tcsetattr(0, TCSANOW, &in_attr_save)) {
-      perror("stdin tcsetattr failed");
-    }
-    in_attr_saved = 0;
-  }
-
-  /* stdout */
-  /* TODO fl */
-
-  return 0;
-}
-
 static void restore(void)
 {
   /* serial port */
@@ -295,7 +265,7 @@ static void restore(void)
   }
 
   /* stdin/stdout */
-  if (std_close()) {
+  if (orter_io_std_close()) {
     perror("stdin/stdout close failed");
   }
 }
@@ -325,49 +295,6 @@ size_t orter_serial_rd(char *off, size_t len)
 size_t orter_serial_wr(char *off, size_t len)
 {
   return orter_io_fd_wr(orter_serial_fd, off, len);
-}
-
-static int std_open(void)
-{
-  /* make stdin nonblocking */
-  in_fl = fcntl(0, F_GETFL, 0);
-  in_fl_saved = 1;
-  if (fcntl(0, F_SETFL, O_NONBLOCK)) {
-    perror("stdin fcntl failed");
-    return errno;
-  }
-
-  /* modify stdin attr */
-  if (isatty(0)) {
-    /* save current stdin attr */
-    if (tcgetattr(0, &in_attr_save)) {
-      perror("stdin tcgetattr failed");
-      return errno;
-    }
-    in_attr_saved = 1;
-
-    /* modify stdin attr */
-    in_attr = in_attr_save;
-    /* no echo, non canonical */
-    in_attr.c_lflag &= ~(ECHO|ICANON);
-    /* VTIME/VMIN */
-    in_attr.c_cc[VTIME] = 0;
-    in_attr.c_cc[VMIN] = 1;
-    /* BRKINT */
-    in_attr.c_iflag |= BRKINT;
-    if (tcsetattr(0, TCSANOW, &in_attr)) {
-      perror("stdin tcsetattr failed");
-      return errno;
-    }
-  }
-
-  /* make stdout nonblocking */
-  if (fcntl(1, F_SETFL, O_NONBLOCK)) {
-    perror("stdout fcntl failed");
-    return errno;
-  }
-
-  return 0;
 }
 
 /* usage message */
@@ -452,7 +379,7 @@ int orter_serial(int argc, char **argv)
   }
 
   /* stdin/stdout */
-  if (std_open()) {
+  if (orter_io_std_open()) {
     exit = errno;
     perror("stdin/stdout open failed");
     restore();
@@ -518,13 +445,11 @@ int orter_serial(int argc, char **argv)
     }
 
     /* terminate after EOF */
-    if (!ack && !wai && eof) {
-      break;
-    }
-
-    /* terminate after EOF and timer */
-    if (!ack && wai && eof && time(0) >= wai_timer) {
-      break;
+    /* immediately or after timer */
+    if (eof && !ack) {
+      if (!wai || time(0) >= wai_timer) {
+        break;
+      }
     }
   }
 

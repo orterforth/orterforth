@@ -60,14 +60,14 @@ void rf_code_cr(void)
 void rf_disc_read(char *c, unsigned char len)
 {
   for (; len; len--) {
-    *(c++) = getchar();
+    *(c++) = getchar() & 0x7F;
   }
 }
 
 void rf_disc_write(char *p, unsigned char len)
 {
   for (; len; len--) {
-    putchar(*(p++));
+    putchar(*(p++) | 0x80);
   }
 }
 

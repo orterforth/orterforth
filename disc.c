@@ -91,14 +91,18 @@ static orter_io_rdwr_t wr;
 
 static char fetch = 0;
 
+static char log = 1;
+
 static size_t disc_wr(char *off, size_t len)
 {
   char c;
   size_t i;
 
   /* log */
-  fputs("\033[0;33m", stderr);
-  fwrite(off, 1, len, stderr);
+  if (log) {
+    fputs("\033[0;33m", stderr);
+    fwrite(off, 1, len, stderr);
+  }
 
   for (i = 0; i < len; i++) {
     c = *(off++);
@@ -107,8 +111,10 @@ static size_t disc_wr(char *off, size_t len)
       i++;
       fetch = 1;
       /* log line */
-      fputs("\033[0m\n", stderr);
-      fflush(stderr);
+      if (log) {
+        fputs("\033[0m\n", stderr);
+        fflush(stderr);
+      }
       break;
     }
   }
@@ -137,9 +143,11 @@ static size_t disc_rd(char *off, size_t len)
   }
 
   /* log */
-  fwrite(off - i, 1, i, stderr);
-  fputc('\n', stderr);
-  fflush(stderr);
+  if (log) {
+    fwrite(off - i, 1, i, stderr);
+    fputc('\n', stderr);
+    fflush(stderr);
+  }
 
   return i;
 }
@@ -189,6 +197,44 @@ static size_t tcp_wr(char *off, size_t len)
   return orter_io_fd_wr(tcp_fd, off, len);
 }
 
+static size_t serial_mux_rd(char *off, size_t len)
+{
+  char buf[256], out[256];
+  size_t i, j = 0, k = 0;
+  /* read for disc and console output */
+  size_t size = orter_io_fd_rd(orter_serial_fd, buf, len);
+  for (i = 0; i < size; i++) {
+    char c = buf[i];
+    if (c & 0x80) {
+      off[j++] = c & 0x7F;
+    } else {
+      out[k++] = c;
+    }
+  }
+  /* console output */
+  size = orter_io_fd_wr(1, out, k);
+  return j;
+}
+
+static size_t serial_mux_wr(char *off, size_t len)
+{
+  char buf[256];
+  size_t i, k = 0, size;
+  /* console input */
+  k = orter_io_fd_rd(0, buf, 256);
+  size = orter_io_fd_wr(orter_serial_fd, buf, k);
+  /* if any issue writing keys then fail */
+  if (size != k) {
+    return 0;
+  }
+  /* disc */
+  for (i = 0; i < len; i++) {
+    buf[i] = off[i] | 0x80;
+  }
+  size = orter_io_fd_wr(orter_serial_fd, buf, len);
+  return size;
+}
+
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
@@ -222,26 +268,10 @@ static int serve(char *dr0, char *dr1)
       }
     }
 
-    /* TODO stdin must be nonblocking */
-
     /* disc in to disc controller */
     orter_io_pipe_move(&in);
-    /* TODO mux_in_rd */
-    /*      relays into two buffers, the in_buf and an emit buf */
-    /* TODO mux_in_disc_rd to disc_wr */
-    /*      simple relay */
-    /* TODO mux_in_emit_rd to stdout_wr */
-    /*      simple relay */
-
     /* disc controller to disc out */
     orter_io_pipe_move(&out);
-    /* TODO disc_rd to mux_out_disc_wr */
-    /*      disc out is written to port with high bit */
-    /* TODO stdin_rd to mux_out_key_wr */
-    /*      stdin is written to port with no high bit */
-    /* NB   if there are bytes from the disc then prob drop stdin bytes */
-    /* TODO mux_out_rd to wr */
-    /*      relay one buffer to wr. */
   }
 
   /* finished */
@@ -282,7 +312,6 @@ static int disc_serial(int argc, char **argv)
   if (exit) {
     return exit;
   }
-
   rd = orter_serial_rd;
   in_fd = orter_serial_fd;
   wr = orter_serial_wr;
@@ -291,6 +320,39 @@ static int disc_serial(int argc, char **argv)
   exit = serve(argv[4], argv[5]);
 
   orter_serial_close();
+
+  return exit;
+}
+
+static int disc_mux(int argc, char **argv)
+{
+  int exit = 0;
+
+  if (setconsoleunbuffered()) {
+    return 1;
+  }
+  if (orter_io_std_open()) {
+    return 1;
+  }
+
+  orter_io_signal_init();
+
+  exit = orter_serial_open(argv[2], atoi(argv[3]));
+  if (exit) {
+    return exit;
+  }
+  rd = serial_mux_rd;
+  in_fd = orter_serial_fd;
+  wr = serial_mux_wr;
+  out_fd = orter_serial_fd;
+
+  log = 0;
+
+  exit = serve(argv[4], argv[5]);
+
+  orter_serial_close();
+
+  orter_io_std_close();
 
   return exit;
 }
@@ -389,6 +451,11 @@ int main(int argc, char *argv[])
     return disc_fuse(argc, argv);
   }
 
+  /* Physical serial port but multiplex serial and disc */
+  if (argc == 6 && !strcmp("mux", argv[1])) {
+    return disc_mux(argc, argv);
+  }
+
   /* Physical serial port */
   if (argc == 6 && !strcmp("serial", argv[1])) {
     return disc_serial(argc, argv);
@@ -407,6 +474,7 @@ int main(int argc, char *argv[])
   /* Usage */
   fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n", stderr);
   fputs("       disc fuse <dr0> <dr1>                 Run disc controller over stdin/stdout with Fuse Emulator escape\n", stderr);
+  fputs("       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
   fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n", stderr);
   fputs("       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n", stderr);
   fputs("       disc tcp <port> <dr0> <dr1>           Run disc controller over tcp port\n", stderr);

@@ -4,13 +4,22 @@
 #endif
 
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "io.h"
+
+/* stdin */
+static int            in_fl;
+static int            in_fl_saved = 0;
+static struct termios in_attr;
+static struct termios in_attr_save;
+static int            in_attr_saved = 0;
 
 /* flag to indicate EOF */
 int orter_io_eof = 0;
@@ -106,6 +115,71 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
   return (n < 0) ? 0 : n;
 }
 
+int orter_io_std_open(void)
+{
+  /* make stdin nonblocking */
+  in_fl = fcntl(0, F_GETFL, 0);
+  in_fl_saved = 1;
+  if (fcntl(0, F_SETFL, O_NONBLOCK)) {
+    perror("stdin fcntl failed");
+    return errno;
+  }
+
+  /* modify stdin attr */
+  if (isatty(0)) {
+    /* save current stdin attr */
+    if (tcgetattr(0, &in_attr_save)) {
+      perror("stdin tcgetattr failed");
+      return errno;
+    }
+    in_attr_saved = 1;
+
+    /* modify stdin attr */
+    in_attr = in_attr_save;
+    /* no echo, non canonical */
+    in_attr.c_lflag &= ~(ECHO|ICANON);
+    /* VTIME/VMIN */
+    in_attr.c_cc[VTIME] = 0;
+    in_attr.c_cc[VMIN] = 1;
+    /* BRKINT */
+    in_attr.c_iflag |= BRKINT;
+    if (tcsetattr(0, TCSANOW, &in_attr)) {
+      perror("stdin tcsetattr failed");
+      return errno;
+    }
+  }
+
+  /* make stdout nonblocking */
+  if (fcntl(1, F_SETFL, O_NONBLOCK)) {
+    perror("stdout fcntl failed");
+    return errno;
+  }
+
+  return 0;
+}
+
+int orter_io_std_close(void)
+{
+  /* stdin */
+  if (in_fl_saved) {
+    if (fcntl(0, F_SETFL, in_fl)) {
+      perror("stdin fcntl failed");
+    }
+    in_fl_saved = 0;
+  }
+  if (in_attr_saved && isatty(0)) {
+    if (tcsetattr(0, TCSANOW, &in_attr_save)) {
+      perror("stdin tcsetattr failed");
+    }
+    in_attr_saved = 0;
+  }
+
+  /* stdout */
+  /* TODO fl */
+
+  return 0;
+}
+
 size_t orter_io_stdin_rd(char *off, size_t len)
 {
   return orter_io_fd_rd(0, off, len);
@@ -136,10 +210,11 @@ static void bufwrite(orter_io_rdwr_t wr, char *buf, char **offset, size_t *pendi
   size_t n;
 
   /* no op if no pending bytes */
+/*
   if (!*pending) {
     return;
   }
-
+*/
   /* write bytes and advance pointers */
   n = wr(*offset, *pending);
   *offset += n;

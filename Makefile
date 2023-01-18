@@ -252,8 +252,10 @@ $(TARGET)-help :
 
 
 # common inst script commands
-STARTDISCSERIAL := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) serial
-STARTDISCTCP := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 5705
+STARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC)
+# TODO superfluous
+STARTDISCSERIAL := $(STARTDISC) serial
+STARTDISCTCP := $(STARTDISC) tcp 5705
 STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh disc.pid
 STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout mame.pid mame
 STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
@@ -745,7 +747,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
-	cmoc --dragon -nodefaultlibs -o $@ $^
+	cmoc --dragon -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -1226,7 +1228,7 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) 
 	rm -f $@.io
 	touch $@.io
 
-	@$(STARTDISCSERIAL) $(RC2014SERIALPORT) 115200 model.disc $@.io
+	@$(STARTDISC) mux $(RC2014SERIALPORT) 115200 model.disc $@.io
 
 	@$(WAITUNTILSAVED) $@.io
 
