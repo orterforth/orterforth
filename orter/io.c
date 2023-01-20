@@ -210,11 +210,10 @@ static void bufwrite(orter_io_rdwr_t wr, char *buf, char **offset, size_t *pendi
   size_t n;
 
   /* no op if no pending bytes */
-/*
   if (!*pending) {
     return;
   }
-*/
+
   /* write bytes and advance pointers */
   n = wr(*offset, *pending);
   *offset += n;

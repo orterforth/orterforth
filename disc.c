@@ -82,8 +82,9 @@ static int disc_create(void)
 /* DISPATCH SERIAL READ/WRITE TO FUNCTION POINTERS */
 
 static orter_io_pipe_t in;
-
 static orter_io_pipe_t out;
+static char mux = 0;
+static orter_io_pipe_t mux_in;
 
 static char fetch = 0;
 
@@ -212,23 +213,15 @@ static size_t serial_mux_rd(char *off, size_t len)
   return j;
 }
 
-static size_t serial_mux_wr(char *off, size_t len)
+static size_t mux_disc_wr(char *off, size_t len)
 {
+  size_t i;
   char buf[256];
-  size_t i, k = 0, size;
-  /* console input */
-  k = orter_io_fd_rd(0, buf, 256);
-  size = orter_io_fd_wr(orter_serial_fd, buf, k);
-  /* if any issue writing keys then fail */
-  if (size != k) {
-    return 0;
-  }
-  /* disc */
+
   for (i = 0; i < len; i++) {
     buf[i] = off[i] | 0x80;
   }
-  size = orter_io_fd_wr(orter_serial_fd, buf, len);
-  return size;
+  return orter_io_fd_wr(orter_serial_fd, buf, len);
 }
 
 /* Server loop */
@@ -250,6 +243,9 @@ static int serve(char *dr0, char *dr1)
       /* add to fd sets */
       orter_io_pipe_fdset(&in);
       orter_io_pipe_fdset(&out);
+      if (mux) {
+        orter_io_pipe_fdset(&mux_in);
+      }
 
       /* select */
       if (orter_io_select() < 0) {
@@ -261,6 +257,10 @@ static int serve(char *dr0, char *dr1)
     orter_io_pipe_move(&in);
     /* disc controller to disc out */
     orter_io_pipe_move(&out);
+    if (mux) {
+      /* stdin to console in */
+      orter_io_pipe_move(&mux_in);
+    }
   }
 
   /* finished */
@@ -355,8 +355,10 @@ static int disc_mux(int argc, char **argv)
   }
 
   /* create pipelines */
+  mux = 1;
   orter_io_pipe_init(&in, orter_serial_fd, serial_mux_rd, disc_wr, 1);
-  orter_io_pipe_init(&out, 0, disc_rd, serial_mux_wr, orter_serial_fd);
+  orter_io_pipe_init(&mux_in, 0, orter_io_stdin_rd, orter_serial_wr, orter_serial_fd);
+  orter_io_pipe_init(&out, -1, disc_rd, mux_disc_wr, orter_serial_fd);
 
   /* don't log as we are using the console for output */
   log = 0;

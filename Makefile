@@ -1226,7 +1226,7 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) 
 	@$(STOPDISC)
 
 	@printf '* \033[1;33mDone\033[0;0m\n'
-	mv $@.io $@
+	@mv $@.io $@
 
 # final binary as IHEX
 rc2014/orterforth.ihx : rc2014/orterforth
