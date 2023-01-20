@@ -1105,20 +1105,21 @@ RC2014INC := target/rc2014/default.inc
 RC2014ORIGIN := 0xAB00
 endif
 
-.PHONY : rc2014-run
-rc2014-run : rc2014/orterforth.ser | $(ORTER)
-
-	# reset and get ready
-	@echo "On the RC2014: Connect via serial"
-	@echo "               Press reset"
-	@read -p "Then press enter to start: " LINE
+RC2014RESET := printf '* \033[1;35mOn the RC2014: connect serial and press reset\033[0;0m\n' && \
+	read -p "Then press enter to start: " LINE && \
+	printf '* \033[1;33mResetting\033[0;0m\n' && \
 	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
 
-	# load via serial
+.PHONY : rc2014-run
+rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
+
+	@$(RC2014RESET)
+
+	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
 	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
 
-	# start interactive session
-	@$(ORTER) serial $(RC2014SERIALPORT) 115200
+	@printf '* \033[1;33mConnecting console/disc mux\033[0;0m\n'
+	@$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 # hexload
 rc2014/hexload.bas : tools/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
@@ -1208,25 +1209,22 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 # saved hex result
 rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) $(ORTER)
 
-	# validate that code does not overlap ORIGIN
-	sh target/spectrum/check-memory.sh \
+	@printf '* \033[1;33mChecking memory limits\033[0;0m\n'
+	@sh target/spectrum/check-memory.sh \
 		0x9000 \
 		$(RC2014ORIGIN) \
 		$(shell $(STAT) rc2014/inst_CODE.bin)
 
-	# reset and get ready
-	@echo "On the RC2014: Connect via serial"
-	@echo "               Press reset"
-	@read -p "Then press enter to start: " LINE
-	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
+	@$(RC2014RESET)
 
-	# load inst via hexload
-	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/hexload.bas
-	$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
+	@printf '* \033[1;33mLoading hexload\033[0;0m\n'
+	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/hexload.bas
+	@printf '* \033[1;33mLoading inst\033[0;0m\n'
+	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
-	# empty disc
-	rm -f $@.io
-	touch $@.io
+	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
+	@rm -f $@.io
+	@touch $@.io
 
 	@$(STARTDISC) mux $(RC2014SERIALPORT) 115200 model.disc $@.io
 
@@ -1234,7 +1232,7 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) 
 
 	@$(STOPDISC)
 
-	# file complete
+	@printf '* \033[1;33mDone\033[0;0m\n'
 	mv $@.io $@
 
 # final binary as IHEX

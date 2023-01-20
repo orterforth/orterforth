@@ -81,13 +81,9 @@ static int disc_create(void)
 
 /* DISPATCH SERIAL READ/WRITE TO FUNCTION POINTERS */
 
-static int in_fd = -1;
+static orter_io_pipe_t in;
 
-static int out_fd = -1;
-
-static orter_io_rdwr_t rd;
-
-static orter_io_rdwr_t wr;
+static orter_io_pipe_t out;
 
 static char fetch = 0;
 
@@ -238,21 +234,14 @@ static size_t serial_mux_wr(char *off, size_t len)
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
-  orter_io_pipe_t in;
-  orter_io_pipe_t out;
-
   /* insert the disc image files */
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
 
-  /* create pipes */
-  orter_io_pipe_init(&in, in_fd, rd, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, wr, out_fd);
-
   while (!orter_io_finished) {
 
     /* NB not completely converted to select */
-    if (in_fd == -1 && out_fd == -1) {
+    if (in.in == -1 && out.out == -1) {
       usleep(1000000);
     } else {
       /* init fd sets */
@@ -296,8 +285,10 @@ static int disc_fuse(int argc, char **argv)
   if (setconsoleunbuffered()) {
     return 1;
   }
-  rd = fuse_rd;
-  wr = fuse_wr;
+
+  /* create pipelines */
+  orter_io_pipe_init(&in, -1, fuse_rd, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, fuse_wr, -1);
 
   return serve(argv[2], argv[3]);
 }
@@ -316,10 +307,8 @@ static int disc_serial(int argc, char **argv)
   }
 
   /* create pipelines */
-  rd = orter_serial_rd;
-  in_fd = orter_serial_fd;
-  wr = orter_serial_wr;
-  out_fd = orter_serial_fd;
+  orter_io_pipe_init(&in, orter_serial_fd, orter_serial_rd, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, orter_serial_wr, orter_serial_fd);
 
   /* run */
   exit = serve(argv[4], argv[5]);
@@ -354,10 +343,8 @@ static int disc_mux(int argc, char **argv)
   }
 
   /* create pipelines */
-  rd = serial_mux_rd;
-  in_fd = orter_serial_fd;
-  wr = serial_mux_wr;
-  out_fd = orter_serial_fd;
+  orter_io_pipe_init(&in, orter_serial_fd, serial_mux_rd, disc_wr, 1);
+  orter_io_pipe_init(&out, 0, disc_rd, serial_mux_wr, orter_serial_fd);
 
   /* don't log as we are using the console for output */
   log = 0;
@@ -373,15 +360,27 @@ static int disc_mux(int argc, char **argv)
 
 static int disc_standard(int argc, char **argv)
 {
-  if (setconsoleunbuffered()) {
-    return 1;
-  }
-  rd = orter_io_stdin_rd;
-  in_fd = 0;
-  wr = orter_io_stdout_wr;
-  out_fd = 1;
+  int exit = 0;
 
-  return serve(argv[2], argv[3]);
+  exit = setconsoleunbuffered();
+  if (exit) {
+    return exit;
+  }
+  exit = orter_io_std_open();
+  if (exit) {
+    return exit;
+  }
+
+  /* create pipelines */
+  orter_io_pipe_init(&in, 0, orter_io_stdin_rd, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, orter_io_stdout_wr, 1);
+
+  /* run */
+  exit = serve(argv[2], argv[3]);
+
+  /* close and exit */
+  orter_io_std_close();
+  return exit;
 }
 
 static int disc_tcp(int argc, char **argv)
@@ -440,16 +439,14 @@ static int disc_tcp(int argc, char **argv)
     return exit;
   }
 
-  /* bind the fps */
-  rd = tcp_rd;
-  in_fd = tcp_fd;
-  wr = tcp_wr;
-  out_fd = tcp_fd;
+  /* create pipelines */
+  orter_io_pipe_init(&in, tcp_fd, tcp_rd, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, tcp_wr, tcp_fd);
 
   exit = serve(argv[3], argv[4]);
 
+  /* close and exit */
   close(sock);
-
   return exit;
 }
 
