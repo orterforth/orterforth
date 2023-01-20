@@ -1426,7 +1426,20 @@ SPECTRUMRUNDEPS := \
 	$(ORTER)
 endif
 
-STARTDISCFUSE := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse
+STARTDISCFUSE := \
+	printf '* \033[1;33mStarting disc\033[0;0m\n' ; \
+	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse
+
+FUSEOPTS := \
+	--machine 48 \
+	--graphics-filter 2x \
+	--interface1 \
+	--rom-48 roms/spectrum/spectrum.rom \
+	--rom-interface-1 roms/spectrum/if1-2.rom \
+	--auto-load \
+	--phantom-typist-mode keyword \
+	--rs232-rx spectrum/fuse-rs232-rx \
+	--rs232-tx spectrum/fuse-rs232-tx
 
 .PHONY : spectrum-run
 spectrum-run : $(SPECTRUMRUNDEPS)
@@ -1456,19 +1469,9 @@ ifeq ($(SPECTRUMMACHINE),real)
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
-	# run fuse
-	$(FUSE) \
-		--speed=100 \
-		--machine 48 \
-		--graphics-filter 2x \
-		--interface1 \
-		--rom-48 roms/spectrum/spectrum.rom \
-		--rom-interface-1 roms/spectrum/if1-2.rom \
-		--auto-load \
-		--phantom-typist-mode keyword \
-		--rs232-rx spectrum/fuse-rs232-rx \
-		--rs232-tx spectrum/fuse-rs232-tx \
-		--tape $<
+	@printf '* \033[1;33mRunning Fuse\033[0;0m\n'
+	@printf '  \033[1;35mNB please type LOAD "" (phantom typist not working currently)\033[0;0m\n'
+	$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@echo '1. Press Enter to skip the warning'
@@ -1639,17 +1642,7 @@ ifeq ($(SPECTRUMINSTMACHINE),fuse)
 
 	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
 	@printf '  \033[1;35mNB please type LOAD "" (phantom typist not working currently)\033[0;0m\n'
-	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) \
-		--speed=1000 \
-		--machine 48 \
-		--interface1 \
-		--rom-48 roms/spectrum/spectrum.rom \
-		--rom-interface-1 roms/spectrum/if1-2.rom \
-		--auto-load \
-		--phantom-typist-mode keyword \
-		--rs232-rx spectrum/fuse-rs232-rx \
-		--rs232-tx spectrum/fuse-rs232-tx \
-		--tape spectrum/inst-2.tap
+	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) $(FUSEOPTS) --speed=1000 --tape spectrum/inst-2.tap
 endif
 
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
