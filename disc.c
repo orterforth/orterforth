@@ -287,8 +287,8 @@ static int disc_fuse(int argc, char **argv)
   }
 
   /* create pipelines */
-  orter_io_pipe_init(&in, -1, fuse_rd, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, fuse_wr, -1);
+  orter_io_pipe_init(&in, 0, fuse_rd, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, fuse_wr, 1);
 
   return serve(argv[2], argv[3]);
 }
