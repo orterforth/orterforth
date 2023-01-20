@@ -1,3 +1,6 @@
 [submodule "tools/github.com/haerfest/uef"]
 	path = tools/github.com/haerfest/uef
 	url = https://github.com/haerfest/uef.git
+[submodule "tools/github.com/RC2014Z80/RC2014"]
+	path = tools/github.com/RC2014Z80/RC2014
+	url = https://github.com/RC2014Z80/RC2014.git

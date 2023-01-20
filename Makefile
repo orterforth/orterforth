@@ -1122,7 +1122,7 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 	@$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 # hexload
-rc2014/hexload.bas : tools/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
+rc2014/hexload.bas : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
 
 	cp $< $@
 
@@ -1735,9 +1735,9 @@ tools/github.com/haerfest/uef/uef2wave.py :
 
 	git submodule init tools/github.com/haerfest/uef && git submodule update --init tools/github.com/haerfest/uef
 
-tools/RC2014/BASIC-Programs/hexload/hexload.bas : | tools
+tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas :
 
-	cd tools && git clone https://github.com/RC2014.git
+	git submodule init tools/github.com/RC2014Z80/RC2014 && git submodule update --init tools/github.com/RC2014Z80/RC2014
 
 tools/z80/z80.c tools/z80/z80.h : | tools
 
