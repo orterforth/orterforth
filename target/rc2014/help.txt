@@ -24,7 +24,17 @@ The target files are:
  rc2014/orterforth.ser (hexload.bas and the .ihx file bundled
                        together)
 
-
 To run, call:
 
  make run TARGET=rc2014
+
+The disc executable provides both disc and console access:
+
+ <system>/disc mux <serial-port> 115200 <dr0> <dr1>
+
+with disc I/O bytes flagged with bit 7 set. (Console I/O bytes
+will have bit 7 clear, and so the command:
+
+ <system>/orter serial <serial-port> 115200 <dr0> <dr1>
+
+will also work, but there will be no disc access.)
