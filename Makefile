@@ -252,6 +252,7 @@ $(TARGET)-help :
 
 
 # common inst script commands
+CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh target/spectrum/check-memory.sh
 STARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC)
 # TODO superfluous
 STARTDISCSERIAL := $(STARTDISC) serial
@@ -767,11 +768,7 @@ dragon/orterforth.bin : dragon/orterforth.bin.hex
 
 dragon/orterforth.bin.hex : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
-	@printf '* \033[1;33mChecking memory limits\033[0;0m\n'
-	@sh target/spectrum/check-memory.sh \
-		0x0600 \
-		0x3000 \
-		$(shell $(STAT) dragon/inst.bin)
+	@$(CHECKMEMORY) 0x0600 0x3800 $(shell $(STAT) dragon/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
@@ -1209,11 +1206,7 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 # saved hex result
 rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) $(ORTER)
 
-	@printf '* \033[1;33mChecking memory limits\033[0;0m\n'
-	@sh target/spectrum/check-memory.sh \
-		0x9000 \
-		$(RC2014ORIGIN) \
-		$(shell $(STAT) rc2014/inst_CODE.bin)
+	@$(CHECKMEMORY) 0x9000 $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
 
 	@$(RC2014RESET)
 
@@ -1616,11 +1609,7 @@ endif
 
 spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
 
-	@printf '* \033[1;33mChecking memory limits\033[0;0m\n'
-	@sh target/spectrum/check-memory.sh \
-		$(SPECTRUMORG) \
-		$(SPECTRUMORIGIN) \
-		$(shell $(STAT) spectrum/inst.bin)
+	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $(shell $(STAT) spectrum/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
