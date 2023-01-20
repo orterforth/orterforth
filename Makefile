@@ -1426,6 +1426,8 @@ SPECTRUMRUNDEPS := \
 	$(ORTER)
 endif
 
+STARTDISCFUSE := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse
+
 .PHONY : spectrum-run
 spectrum-run : $(SPECTRUMRUNDEPS)
 
@@ -1443,15 +1445,14 @@ ifeq ($(SPECTRUMMACHINE),real)
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse $(DR0) $(DR1)
+	@$(STARTDISCFUSE) $(DR0) $(DR1)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
-	@$(STARTDISCTCP) $(DR0) data.disc
+	@$(STARTDISCTCP) $(DR0) $(DR1)
 endif
 ifeq ($(SPECTRUMMACHINE),real)
 	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) data.disc
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
@@ -1634,8 +1635,7 @@ ifeq ($(SPECTRUMINSTMACHINE),real)
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 endif
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse model.disc $@.io
+	@$(STARTDISCFUSE) model.disc $@.io
 
 	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
 	@printf '  \033[1;35mNB please type LOAD "" (phantom typist not working currently)\033[0;0m\n'
