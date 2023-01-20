@@ -306,21 +306,26 @@ static int disc_serial(int argc, char **argv)
 {
   int exit = 0;
 
+  /* signals TODO explain */
   orter_io_signal_init();
 
+  /* serial port */
   exit = orter_serial_open(argv[2], atoi(argv[3]));
   if (exit) {
     return exit;
   }
+
+  /* create pipelines */
   rd = orter_serial_rd;
   in_fd = orter_serial_fd;
   wr = orter_serial_wr;
   out_fd = orter_serial_fd;
 
+  /* run */
   exit = serve(argv[4], argv[5]);
 
+  /* close and exit */
   orter_serial_close();
-
   return exit;
 }
 
@@ -328,32 +333,41 @@ static int disc_mux(int argc, char **argv)
 {
   int exit = 0;
 
-  if (setconsoleunbuffered()) {
-    return 1;
-  }
-  if (orter_io_std_open()) {
-    return 1;
-  }
-
-  orter_io_signal_init();
-
-  exit = orter_serial_open(argv[2], atoi(argv[3]));
+  /* stdin/stdout */
+  exit = setconsoleunbuffered();
   if (exit) {
     return exit;
   }
+  exit = orter_io_std_open();
+  if (exit) {
+    return exit;
+  }
+
+  /* signals TODO explain */
+  orter_io_signal_init();
+
+  /* serial port */
+  exit = orter_serial_open(argv[2], atoi(argv[3]));
+  if (exit) {
+    orter_io_std_close();
+    return exit;
+  }
+
+  /* create pipelines */
   rd = serial_mux_rd;
   in_fd = orter_serial_fd;
   wr = serial_mux_wr;
   out_fd = orter_serial_fd;
 
+  /* don't log as we are using the console for output */
   log = 0;
 
+  /* run */
   exit = serve(argv[4], argv[5]);
 
+  /* close and exit */
   orter_serial_close();
-
   orter_io_std_close();
-
   return exit;
 }
 
