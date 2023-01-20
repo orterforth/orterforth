@@ -282,15 +282,27 @@ static int setconsoleunbuffered(void)
 
 static int disc_fuse(int argc, char **argv)
 {
-  if (setconsoleunbuffered()) {
-    return 1;
+  int exit = 0;
+
+  exit = setconsoleunbuffered();
+  if (exit) {
+    return exit;
+  }
+  exit = orter_io_std_open();
+  if (exit) {
+    return exit;
   }
 
   /* create pipelines */
   orter_io_pipe_init(&in, 0, fuse_rd, disc_wr, -1);
   orter_io_pipe_init(&out, -1, disc_rd, fuse_wr, 1);
 
-  return serve(argv[2], argv[3]);
+  /* run */
+  exit = serve(argv[2], argv[3]);
+
+  /* close and exit */
+  orter_serial_close();
+  return exit;
 }
 
 static int disc_serial(int argc, char **argv)
