@@ -254,8 +254,6 @@ $(TARGET)-help :
 # common inst script commands
 CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh scripts/check-memory.sh
 STARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC)
-# TODO superfluous
-STARTDISCSERIAL := $(STARTDISC) serial
 STARTDISCTCP := $(STARTDISC) tcp 5705
 STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh disc.pid
 STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout mame.pid mame
@@ -557,7 +555,7 @@ ifeq ($(BBCMACHINE),real)
 	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
 
-	@$(STARTDISCSERIAL) $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
 
 	@$(WAITUNTILSAVED) $@.io
@@ -1634,7 +1632,7 @@ ifeq ($(SPECTRUMINSTMACHINE),real)
 endif
 
 ifeq ($(SPECTRUMINSTMACHINE),real)
-	@$(STARTDISCSERIAL) $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 endif
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
