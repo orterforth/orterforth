@@ -85,6 +85,7 @@ static orter_io_pipe_t in;
 static orter_io_pipe_t out;
 static char mux = 0;
 static orter_io_pipe_t mux_in;
+static orter_io_pipe_t mux_out;
 
 static char fetch = 0;
 
@@ -194,9 +195,12 @@ static size_t tcp_wr(char *off, size_t len)
   return orter_io_fd_wr(tcp_fd, off, len);
 }
 
-static size_t serial_mux_rd(char *off, size_t len)
+static char mux_out_buf[256];
+static size_t mux_out_len;
+
+static size_t mux_disc_rd(char *off, size_t len)
 {
-  char buf[256], out[256];
+  char buf[256];
   size_t i, j = 0, k = 0;
   /* read for disc and console output */
   size_t size = orter_io_fd_rd(orter_serial_fd, buf, len);
@@ -205,12 +209,25 @@ static size_t serial_mux_rd(char *off, size_t len)
     if (c & 0x80) {
       off[j++] = c & 0x7F;
     } else {
-      out[k++] = c;
+      mux_out_buf[k++] = c;
     }
   }
-  /* console output */
-  size = orter_io_fd_wr(1, out, k);
+
+  mux_out_len = k;
   return j;
+}
+
+static size_t mux_console_rd(char *off, size_t len)
+{
+  /* TODO proper flow control */
+  if (mux_out_len > len) {
+    fprintf(stderr, "buffer full\n");
+    exit(1);
+  }
+  memcpy(off, mux_out_buf, mux_out_len);
+  len = mux_out_len;
+  mux_out_len = 0;
+  return len;
 }
 
 static size_t mux_disc_wr(char *off, size_t len)
@@ -245,6 +262,7 @@ static int serve(char *dr0, char *dr1)
       orter_io_pipe_fdset(&out);
       if (mux) {
         orter_io_pipe_fdset(&mux_in);
+        orter_io_pipe_fdset(&mux_out);
       }
 
       /* select */
@@ -260,6 +278,7 @@ static int serve(char *dr0, char *dr1)
     if (mux) {
       /* stdin to console in */
       orter_io_pipe_move(&mux_in);
+      orter_io_pipe_move(&mux_out);
     }
   }
 
@@ -356,9 +375,10 @@ static int disc_mux(int argc, char **argv)
 
   /* create pipelines */
   mux = 1;
-  orter_io_pipe_init(&in, orter_serial_fd, serial_mux_rd, disc_wr, 1);
+  orter_io_pipe_init(&in, orter_serial_fd, mux_disc_rd, disc_wr, -1);
   orter_io_pipe_init(&mux_in, 0, orter_io_stdin_rd, orter_serial_wr, orter_serial_fd);
   orter_io_pipe_init(&out, -1, disc_rd, mux_disc_wr, orter_serial_fd);
+  orter_io_pipe_init(&mux_out, -1, mux_console_rd, orter_io_stdout_wr, 1);
 
   /* don't log as we are using the console for output */
   log = 0;
