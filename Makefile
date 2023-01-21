@@ -354,6 +354,12 @@ BBCMAMEFAST := bbcb -rompath roms -video none -sound none \
 	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
 	-rs423 null_modem -bitb socket.127.0.0.1:5705
 
+# Prompt to load via serial
+BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033[0;0m\n' ; \
+	read -p "  then on this machine press enter" LINE ; \
+	printf '* \033[1;33mLoading via serial\033[0;0m\n' ; \
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
+
 # load and run example disc
 .PHONY : bbc-example
 bbc-example : $(BBCMEDIA) $(BBCROMS) | $(DISC) example/$(EXAMPLE).disc $(DR1)
@@ -376,18 +382,7 @@ endif
 	@$(STOPDISC)
 endif
 ifeq ($(BBCMACHINE),real)
-	@# prompt user
-	@echo "  ensure RS423 connected to serial port"
-	@echo "  type the following"
-	@# TODO baud settings parameterised
-	@echo "   *FX7,7 <enter>"
-	@echo "   *FX8,7 <enter>"
-	@echo "   *FX2,1 <enter>"
-	@read -p "  then on this machine press enter " LINE
-
-	@# load via serial
-	@echo "* loading via serial..."
-	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/orterforth.ser
+	@$(BBCLOADSERIAL) bbc/orterforth.ser
 
 	@# prompt user
 	@echo "* now type EMPTY-BUFFERS 1 LOAD"
@@ -413,18 +408,7 @@ ifeq ($(BBCMACHINE),mame)
 	@$(STOPDISC)
 endif
 ifeq ($(BBCMACHINE),real)
-	@# prompt user
-	@echo "  ensure RS423 connected to serial port"
-	@echo "  type the following"
-	@# TODO baud settings parameterised
-	@echo "   *FX7,7 <enter>"
-	@echo "   *FX8,7 <enter>"
-	@echo "   *FX2,1 <enter>"
-	@read -p "  then on this machine press enter " LINE
-
-	@# load via serial
-	@echo "* loading via serial..."
-	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < bbc/orterforth.ser
+	@$(BBCLOADSERIAL) bbc/orterforth.ser
 
 	# run disc
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
@@ -546,14 +530,7 @@ ifeq ($(BBCMACHINE),mame)
 	@$(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
 endif
 ifeq ($(BBCMACHINE),real)
-	@printf '* \033[1;35mEnsure RS423 connected to serial port\033[0;0m\n'
-	@printf '  \033[1;35mType the following:\033[0;0m\n'
-	@# TODO baud settings parameterised
-	@printf '  *FX2,1 <enter>\n'
-	@read -p "  then on this machine press enter" LINE
-
-	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
-	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < $(BBCINSTMEDIA)
+	@$(BBCLOADSERIAL) $(BBCINSTMEDIA)
 
 	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
 endif
@@ -746,7 +723,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
-	cmoc --dragon -o $@ $^
+	cmoc --dragon --stack-space=256 -O0 -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -758,7 +735,7 @@ dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -c -o $@ $<
+	cmoc --dragon -O0 -c -o $@ $<
 
 dragon/orterforth.bin : dragon/orterforth.bin.hex
 
@@ -766,7 +743,7 @@ dragon/orterforth.bin : dragon/orterforth.bin.hex
 
 dragon/orterforth.bin.hex : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
-	@$(CHECKMEMORY) 0x0600 0x3800 $(shell $(STAT) dragon/inst.bin)
+	@$(CHECKMEMORY) 0x0600 0x3A00 $(shell $(STAT) dragon/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
@@ -810,11 +787,11 @@ dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -c -o $@ $<
+	cmoc --dragon -O0 -c -o $@ $<
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -c -o $@ $<
+	cmoc --dragon -O0 -c -o $@ $<
 
 
 # help
