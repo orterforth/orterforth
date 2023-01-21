@@ -36,7 +36,7 @@ static void rf_inst_puti(uint8_t idx, uint8_t i)
 static void rf_inst_disc_cmd_set(char c, uintptr_t blk)
 {
   uintptr_t offset = blk % 2000;
-  
+
   /* set command */
   cmd[0] = c;
   /* convert block number into drive, track and sector */
@@ -643,10 +643,9 @@ static void rf_inst_forward(void)
   rf_inst_compile("LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 "
     "SWAP BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S");
 
-  /* number */
-  /* TODO NUMBER ( c-addr -- d )*/
-  rf_inst_colon("number");
-  rf_inst_compile("HERE LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (number) "
+  /* NUMBER */
+  rf_inst_colon("NUMBER");
+  rf_inst_compile("LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (number) "
     "R> 0BRANCH ^2 MINUS ;S");
 
   /* INTERPRET */
@@ -654,8 +653,8 @@ static void rf_inst_forward(void)
   rf_inst_colon("INTERPRET");
   rf_inst_compile(
     "-FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
-    "EXECUTE BRANCH ^-18 number STATE @ 0BRANCH ^-23 COMPILE LIT , "
-    "BRANCH ^-28");
+    "EXECUTE BRANCH ^-18 HERE NUMBER STATE @ 0BRANCH ^-24 COMPILE LIT , "
+    "BRANCH ^-29");
 
   /* CREATE */
   rf_inst_colon("CREATE");
