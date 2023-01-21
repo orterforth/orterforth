@@ -252,7 +252,7 @@ $(TARGET)-help :
 
 
 # common inst script commands
-CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh target/spectrum/check-memory.sh
+CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh scripts/check-memory.sh
 STARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC)
 # TODO superfluous
 STARTDISCSERIAL := $(STARTDISC) serial
