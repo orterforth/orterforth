@@ -250,25 +250,20 @@ static int serve(char *dr0, char *dr1)
 
   while (!orter_io_finished) {
 
-    /* NB not completely converted to select */
-    if (in.in == -1 && out.out == -1) {
-      usleep(1000000);
-    } else {
-      /* init fd sets */
-      orter_io_select_zero();
+    /* init fd sets */
+    orter_io_select_zero();
 
-      /* add to fd sets */
-      orter_io_pipe_fdset(&in);
-      orter_io_pipe_fdset(&out);
-      if (mux) {
-        orter_io_pipe_fdset(&mux_in);
-        orter_io_pipe_fdset(&mux_out);
-      }
+    /* add to fd sets */
+    orter_io_pipe_fdset(&in);
+    orter_io_pipe_fdset(&out);
+    if (mux) {
+      orter_io_pipe_fdset(&mux_in);
+      orter_io_pipe_fdset(&mux_out);
+    }
 
-      /* select */
-      if (orter_io_select() < 0) {
-        break;
-      }
+    /* select */
+    if (orter_io_select() < 0) {
+      break;
     }
 
     /* disc in to disc controller */
@@ -278,6 +273,7 @@ static int serve(char *dr0, char *dr1)
     if (mux) {
       /* stdin to console in */
       orter_io_pipe_move(&mux_in);
+      /* console out to stdout  */
       orter_io_pipe_move(&mux_out);
     }
   }
