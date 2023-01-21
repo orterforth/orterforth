@@ -638,14 +638,14 @@ static void rf_inst_forward(void)
   rf_inst_colon("COMPILE");
   rf_inst_compile("R> DUP cl + >R @ , ;S");
 
-  /* (number) */
-  rf_inst_colon("(number)");
+  /* (NUMBER) */
+  rf_inst_colon("(NUMBER)");
   rf_inst_compile("LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 "
     "SWAP BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S");
 
   /* NUMBER */
   rf_inst_colon("NUMBER");
-  rf_inst_compile("LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (number) "
+  rf_inst_compile("LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (NUMBER) "
     "R> 0BRANCH ^2 MINUS ;S");
 
   /* INTERPRET */
