@@ -723,7 +723,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
-	cmoc --dragon --stack-space=256 -O0 -o $@ $^
+	cmoc --dragon --org=0x0600 --limit=0x3D00 --stack-space=256 -O0 --no-relocate -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -735,7 +735,7 @@ dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -O0 -c -o $@ $<
+	cmoc --dragon -O0 --no-relocate -c -o $@ $<
 
 dragon/orterforth.bin : dragon/orterforth.bin.hex
 
@@ -743,7 +743,7 @@ dragon/orterforth.bin : dragon/orterforth.bin.hex
 
 dragon/orterforth.bin.hex : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
-	@$(CHECKMEMORY) 0x0600 0x3A00 $(shell $(STAT) dragon/inst.bin)
+	@$(CHECKMEMORY) 0x0600 0x3D00 $(shell $(STAT) dragon/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
@@ -766,11 +766,15 @@ ifeq ($(DRAGONMACHINE),mame)
 		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
+	@printf '* \033[1;33mStarting XRoar\033[0;0m\n'
 	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
-	@xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+	@sh scripts/start.sh /dev/stdin /dev/stdout xroar.pid xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
 endif
 
 	@$(WAITUNTILSAVED) $@.io
+
+	@printf '* \033[1;33mStopping XRoar\033[0;0m\n'
+	@sh scripts/stop.sh xroar.pid
 
 	@$(STOPDISC)
 
@@ -787,11 +791,11 @@ dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -O0 -c -o $@ $<
+	cmoc --dragon -O0 --no-relocate -c -o $@ $<
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -O0 -c -o $@ $<
+	cmoc --dragon -O0 --no-relocate -c -o $@ $<
 
 
 # help
