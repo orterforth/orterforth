@@ -749,7 +749,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
-	cmoc --dragon --org=0x0600 --limit=0x3D00 --stack-space=256 -O0 --no-relocate -o $@ $^
+	cmoc --dragon --org=0x0600 --limit=0x3800 --stack-space=256 -O0 --no-relocate -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -769,13 +769,13 @@ dragon/orterforth : dragon/orterforth.hex
 
 dragon/orterforth.bin : dragon/orterforth
 
-	# TODO bin file header
+	sh target/dragon/bin-header.sh $(shell $(STAT) $<) > $@.io
 	cat $< >> $@.io
 	mv $@.io $@
 
 dragon/orterforth.hex : dragon/inst.cas | dragon/rx dragon/tx roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
-	@$(CHECKMEMORY) 0x0600 0x3D00 $(shell $(STAT) dragon/inst.bin)
+	@$(CHECKMEMORY) 0x0600 0x3800 $(shell $(STAT) dragon/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
