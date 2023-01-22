@@ -707,7 +707,7 @@ ifeq ($(DRAGONMACHINE),xroar)
 endif
 
 .PHONY : dragon-inst
-dragon-inst : dragon/orterforth.bin.hex
+dragon-inst : dragon/orterforth.hex
 
 dragon-run : dragon/orterforth.cas | dragon/rx dragon/tx roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
