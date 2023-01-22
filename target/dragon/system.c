@@ -17,9 +17,15 @@ void rf_code_emit(void)
 void rf_code_key(void)
 {
   RF_START;
-  /* TODO show cursor, fetch key */
-  for (;;) {}
-  RF_SP_PUSH(0);
+  /* TODO show cursor */
+  {
+    char ch;
+    asm {
+      jsr $852B
+      sta :ch
+    }
+    RF_SP_PUSH(ch);
+  }
   RF_JUMP_NEXT;
 }
 
