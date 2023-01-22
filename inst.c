@@ -610,7 +610,7 @@ static void rf_inst_forward(void)
   /* ?DISC */
   rf_inst_colon("?DISC");
   rf_inst_compile(
-    "LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 0 D/CHAR DROP DROP ;S");
+    "LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
 
   /* BLOCK */
   rf_inst_colon("BLOCK");
@@ -747,7 +747,7 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
 }
 
 /* disc buffer start */
-static uint8_t * buf = (uint8_t *) RF_FIRST + RF_WORD_SIZE;
+static uint8_t * buf;
 
 /* save the installation as hex on DR1 */
 void rf_inst_save(void)
@@ -778,6 +778,7 @@ void rf_inst_save(void)
 #endif
 
   /* now write hex blocks to DR1 */
+  buf = (uint8_t *) RF_FIRST + RF_WORD_SIZE;
   while (i < e) {
     for (j = 0; j < 128;) {
       uint8_t b = *i++;

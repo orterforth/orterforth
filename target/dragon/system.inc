@@ -2,7 +2,7 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
-/*#define RF_INST_SAVE*/
+#define RF_INST_SAVE
 
 /* C code start address */
 #define RF_ORG 0x0600

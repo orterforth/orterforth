@@ -709,6 +709,32 @@ endif
 .PHONY : dragon-inst
 dragon-inst : dragon/orterforth.bin.hex
 
+dragon-run : dragon/orterforth.cas | dragon/rx dragon/tx roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+
+ifeq ($(DRAGONMACHINE),mame)
+	@$(STARTDISCTCP) $(DR0) $(DR1)
+endif
+ifeq ($(DRAGONMACHINE),xroar)
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
+	@sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC) standard $(DR0) $(DR1)
+endif
+
+ifeq ($(DRAGONMACHINE),mame)
+	@printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
+	@mame dragon64 -rompath roms -video opengl \
+		-resolution 1024x768 -skip_gameinfo -nomax -window \
+		-rs232 null_modem -bitb socket.localhost:5705 \
+		-cassette $< \
+		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
+endif
+ifeq ($(DRAGONMACHINE),xroar)
+	@printf '* \033[1;33mRunning XRoar\033[0;0m\n'
+	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
+	@xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+endif
+
+	@$(STOPDISC)
+
 dragon/hw.bin : hw.c
 
 	cmoc --dragon -o $@ $^
@@ -737,11 +763,17 @@ dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -O0 --no-relocate -c -o $@ $<
 
-dragon/orterforth.bin : dragon/orterforth.bin.hex
+dragon/orterforth : dragon/orterforth.hex
 
 	$(ORTER) hex read < $< > $@
 
-dragon/orterforth.bin.hex : dragon/inst.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+dragon/orterforth.bin : dragon/orterforth
+
+	# TODO bin file header
+	cat $< >> $@.io
+	mv $@.io $@
+
+dragon/orterforth.hex : dragon/inst.cas | dragon/rx dragon/tx roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 
 	@$(CHECKMEMORY) 0x0600 0x3D00 $(shell $(STAT) dragon/inst.bin)
 
@@ -783,19 +815,29 @@ endif
 
 dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
 
 dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -O0 --no-relocate -c -o $@ $<
 
+# Dragon serial named pipe
+dragon/rx : | dragon
+
+	mkfifo $@
+
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -O0 --no-relocate -c -o $@ $<
+
+# Dragon serial named pipe
+dragon/tx : | dragon
+
+	mkfifo $@
 
 
 # help
