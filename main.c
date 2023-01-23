@@ -9,7 +9,11 @@
 /* indicates whether installation has been completed */
 char rf_installed = 0;
 
+#ifdef RF_ARGS
 int main(int argc, char *argv[])
+#else
+int main(void)
+#endif
 {
   /* initialise */
   rf_init();
