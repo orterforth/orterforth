@@ -749,7 +749,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
-	cmoc --dragon --org=0x0600 --limit=0x3800 --stack-space=256 --no-relocate -o $@ $^
+	cmoc --dragon --org=0x0600 --limit=0x3800 --stack-space=256 -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -761,7 +761,7 @@ dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon --no-relocate -c -o $@ $<
+	cmoc --dragon -c -o $@ $<
 
 dragon/orterforth : dragon/orterforth.hex
 
@@ -823,7 +823,7 @@ dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon --no-relocate -c -o $@ $<
+	cmoc --dragon -c -o $@ $<
 
 # Dragon serial named pipe
 dragon/rx : | dragon
@@ -832,7 +832,7 @@ dragon/rx : | dragon
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon --no-relocate -c -o $@ $<
+	cmoc --dragon -c -o $@ $<
 
 # Dragon serial named pipe
 dragon/tx : | dragon
