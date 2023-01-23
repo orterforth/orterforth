@@ -1172,6 +1172,8 @@ void rf_code_stod(void)
 #ifndef RF_TARGET_CODE_COLD
 void rf_cold(void)
 {
+  int i;
+
   /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
@@ -1180,28 +1182,18 @@ void rf_cold(void)
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
   *((uintptr_t *) origin[17]) = origin[6];
 
-  /* UP and USER vars */
-
+  /* UP */
   /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
   /* 11 +ORIGIN LDA, UP 1+ STA, */
   rf_up = (uintptr_t *) origin[8];
 
+  /* USER vars */
   /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
   /* UP )Y STA, ( TO USER AREA ) */
   /* DEY, 0< END, */
-
-  rf_up[0] = origin[6];
-  rf_up[1] = origin[7];
-  rf_up[2] = origin[8];
-  RF_USER_S0 = origin[9];
-  RF_USER_R0 = origin[10];
-  RF_USER_TIB = origin[11];
-  RF_USER_WIDTH = origin[12];
-  RF_USER_WARNING = origin[13];
-
-  RF_USER_FENCE = origin[14];
-  RF_USER_DP = origin[15];
-  RF_USER_VOCLINK = origin[16];
+  for (i = 11; i >= 0; --i) {
+    rf_up[i] = origin[i + 6];
+  }
 
   /* jump to RP! then to ABORT - PFA set at inst time */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
@@ -1210,7 +1202,7 @@ void rf_cold(void)
 
   /* 6C # LDA, W 1 - STA,  */
   /* 'T RP! JMP, ( RUN )  */
-  RF_RP_SET((uintptr_t *) RF_USER_R0);
+  RF_JUMP(rf_code_rpsto);
 }
 
 void rf_code_cold(void)
@@ -1218,7 +1210,6 @@ void rf_code_cold(void)
   RF_START;
   RF_LOG("cold");
   rf_cold();
-  RF_JUMP_NEXT;
 }
 #endif
 
