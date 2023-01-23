@@ -985,21 +985,12 @@ ELSE
   jp hpush
 ENDIF
 
-PUBLIC _rf_cold_abort
-
-_rf_cold_abort equ cold2+$0001  ; modify at inst time
-
-PUBLIC _rf_cold_forth
-
-_rf_cold_forth equ cold1+$0001  ; modify at inst time
-
 PUBLIC _rf_code_cold
 
 _rf_code_cold:
 
   ld hl, RF_ORIGIN+$000C        ; set FORTH vocab addr to ORIGIN + 6
-cold1:
-  ld de, $0000                  ; modify at inst time
+  ld de, (RF_ORIGIN+$0022)      ; coldforth
   ldi
   ldi
 
@@ -1013,8 +1004,7 @@ cold1:
   ld bc, $0016                  ; copy 11 words
   ldir
 
-cold2:
-  ld bc, $0000                  ; modify at inst time: set IP to ABORT
+  ld bc, (RF_ORIGIN+$0024)      ; coldabort
   ld hl, (_rf_up)               ; set RP to R0
   ld de, $0008
   add hl, de

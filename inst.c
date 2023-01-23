@@ -440,6 +440,10 @@ static void rf_inst_cold(void)
 static void rf_inst_code_add(void)
 {
   RF_START;
+  /* coldforth, coldabort boot-up literals */
+  rf_inst_comma(0);
+  rf_inst_comma(0);
+  /* orterforth additional words */
   rf_inst_def_code("cl", rf_code_cl);
   rf_inst_def_code("cs", rf_code_cs);
   rf_inst_def_code("ln", rf_code_ln);
@@ -588,9 +592,8 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
 
   /* COLD routine forward references */
-  rf_inst_def_literal("coldforth", (uintptr_t) &rf_cold_forth);
-  rf_inst_def_literal("coldabort", (uintptr_t) &rf_cold_abort);
-
+  rf_inst_def_literal("coldforth", (uintptr_t) RF_ORIGIN + (17 * RF_WORD_SIZE));
+  rf_inst_def_literal("coldabort", (uintptr_t) RF_ORIGIN + (18 * RF_WORD_SIZE));
   /* installed flag now set from Forth */
   rf_inst_def_literal("installed", (uintptr_t) &rf_installed);
 
@@ -771,10 +774,13 @@ void rf_inst_save(void)
     e += RF_WORD_SIZE;
   }
   /* and write two links used in COLD */
+  /* TODO test again with working QL now these moved to dict */
+/*
   *((rf_code_t *) e) = (rf_code_t) rf_cold_forth;
   e += RF_WORD_SIZE;
   *((rf_code_t *) e) = (rf_code_t) rf_cold_abort;
   e += RF_WORD_SIZE;
+*/
 #endif
 
   /* now write hex blocks to DR1 */

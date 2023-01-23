@@ -387,12 +387,6 @@ void rf_init(void);
 
 void rf_fin(void);
 
-/* COLD START */
-
-extern uintptr_t *rf_cold_forth;
-
-extern uintptr_t *rf_cold_abort;
-
 /* CODE */
 
 void rf_code_lit(void);

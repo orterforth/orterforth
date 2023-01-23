@@ -914,39 +914,32 @@ _rf_code_dodoe:
 
 .export _rf_code_cold
 
-.export _rf_cold_abort
-
-_rf_cold_abort:
-	.word $0001                   ; modify at inst time
-
-.export _rf_cold_forth
-
-_rf_cold_forth := cold3+1       ; modify at inst time
-
 _rf_code_cold:
 
 cold1:
-	lda cold3+1                   ; move cold3 to cold4
+	lda RF_ORIGIN+$0022           ; move coldforth to cold3 and cold4
+	sta cold3+1
 	sta cold4+1
-	lda cold3+2
+	lda RF_ORIGIN+$0023
+	sta cold3+2
 	sta cold4+2
 
 	inc cold4+1                   ; increment cold4 by 1
 	bne cold2
 	inc cold4+2
-cold2:
 
-	lda _rf_cold_abort+1          ; move ABORT to cold7, cold8
+cold2:
+	lda RF_ORIGIN+$0025           ; move coldabort to cold7, cold8
 	sta cold7+1
-	lda _rf_cold_abort
+	lda RF_ORIGIN+$0024
 	sta cold8+1
 
 	lda RF_ORIGIN+$000C           ; set FORTH vocab to ORIGIN + 6
 cold3:
-	sta $1000                     ; self modified
+	sta $FFFF                     ; self modified
 	lda RF_ORIGIN+$000D
 cold4:
-	sta $1000                     ; self modified
+	sta $FFFF                     ; self modified
 	ldy #$15                      ; cold, copy 11 words
 	bne cold5
 warm:

@@ -67,7 +67,6 @@ void rf_trampoline(void)
   while (rf_fp) {
     /* target implementations can switch machine state into registers */
     /* default implementation does nothing */
-
     rf_fp();
     /* C-based code returns here and the loop repeats */
   }
@@ -304,8 +303,8 @@ void rf_code_digit(void)
   {
     uint8_t b, c, d;
 
-    b = RF_SP_POP;
-    c = RF_SP_POP;
+    b = (uint8_t) RF_SP_POP;
+    c = (uint8_t) RF_SP_POP;
     d = rf_digit(b, c);
     if (d == 255) {
       RF_SP_PUSH(0);
@@ -1171,19 +1170,15 @@ void rf_code_stod(void)
 #endif
 
 #ifndef RF_TARGET_CODE_COLD
-/* non-zero so not allocated in BSS and not zeroed on entry */
-uintptr_t *rf_cold_forth = (uintptr_t *) 1;
-uintptr_t *rf_cold_abort = (uintptr_t *) 1;
-
 void rf_cold(void)
 {
   /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
-  /* FORTH vocabulary */
+  /* FORTH vocabulary - coldforth set at inst time */
   /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
-  *rf_cold_forth = origin[6];
+  *((uintptr_t *) origin[17]) = origin[6];
 
   /* UP and USER vars */
 
@@ -1208,10 +1203,11 @@ void rf_cold(void)
   RF_USER_DP = origin[15];
   RF_USER_VOCLINK = origin[16];
 
-  /* jump to RP! then to ABORT */
+  /* jump to RP! then to ABORT - coldabort set at inst time */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
   /* # LDA, IP STA, */
-  RF_IP_SET(rf_cold_abort);
+  RF_IP_SET((uintptr_t *) (origin[18]));
+
   /* 6C # LDA, W 1 - STA,  */
   /* 'T RP! JMP, ( RUN )  */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
@@ -1233,7 +1229,7 @@ void rf_code_dchar(void)
   {
     char a, c;
 
-    a = RF_SP_POP;
+    a = (char) RF_SP_POP;
     rf_disc_read(&c, 1);
     RF_SP_PUSH(c == a);
     RF_SP_PUSH(c);
@@ -1258,7 +1254,7 @@ void rf_code_bwrit(void)
 {
   RF_START;
   {
-    uint8_t a = RF_SP_POP;
+    uint8_t a = (uint8_t) RF_SP_POP;
     char *b = (char *) RF_SP_POP;
 
     rf_disc_write(b, a);

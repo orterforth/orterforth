@@ -123,9 +123,11 @@ void rf_inst(void)
   }
 
   /* links used in COLD */
+  /* TODO test again with working QL now these moved to dict */
+/*
   rf_cold_forth = (uintptr_t *) here[SIZE];
   rf_cold_abort = (uintptr_t *) here[SIZE + 1];
-
+*/
   /* now flag as installed */
   rf_installed = 1;
 }
