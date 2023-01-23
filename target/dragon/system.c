@@ -4,6 +4,19 @@
 
 void rf_init(void)
 {
+  /* Speedkey http://archive.worldofdragon.org/phpBB3/viewtopic.php?f=8&t=314 */
+  if (*((uint8_t *) 269) + *((uint8_t *) 270) != 250) {
+    *((uint8_t *) 65283) &= 254;
+    *((uint8_t *) 250) = 116;
+    *((uint8_t *) 251) = 1;
+    *((uint8_t *) 252) = 81;
+    *((uint8_t *) 253) = 126;
+    *((uint8_t *) 254) = *((uint8_t *) 269);
+    *((uint8_t *) 255) = *((uint8_t *) 270);
+    *((uint8_t *) 269) = 0;
+    *((uint8_t *) 270) = 250;
+    *((uint8_t *) 65283) |= 1;
+  }
 }
 
 void rf_code_emit(void)
@@ -17,11 +30,10 @@ void rf_code_emit(void)
 void rf_code_key(void)
 {
   RF_START;
-  /* TODO show cursor */
   {
     char ch;
     asm {
-      jsr $852B
+      jsr $B538
       sta :ch
     }
     RF_SP_PUSH(ch);
