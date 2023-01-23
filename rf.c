@@ -1175,7 +1175,7 @@ void rf_cold(void)
   /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
-  /* FORTH vocabulary - coldforth set at inst time */
+  /* FORTH vocabulary - parameter field set at inst time */
   /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
   *((uintptr_t *) origin[17]) = origin[6];
@@ -1203,7 +1203,7 @@ void rf_cold(void)
   RF_USER_DP = origin[15];
   RF_USER_VOCLINK = origin[16];
 
-  /* jump to RP! then to ABORT - coldabort set at inst time */
+  /* jump to RP! then to ABORT - PFA set at inst time */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
   /* # LDA, IP STA, */
   RF_IP_SET((uintptr_t *) (origin[18]));

@@ -990,7 +990,7 @@ PUBLIC _rf_code_cold
 _rf_code_cold:
 
   ld hl, RF_ORIGIN+$000C        ; set FORTH vocab addr to ORIGIN + 6
-  ld de, (RF_ORIGIN+$0022)      ; coldforth
+  ld de, (RF_ORIGIN+$0022)      ; get the FORTH vocab addr
   ldi
   ldi
 
@@ -1004,7 +1004,7 @@ _rf_code_cold:
   ld bc, $0016                  ; copy 11 words
   ldir
 
-  ld bc, (RF_ORIGIN+$0024)      ; coldabort
+  ld bc, (RF_ORIGIN+$0024)      ; get the ABORT PFA
   ld hl, (_rf_up)               ; set RP to R0
   ld de, $0008
   add hl, de

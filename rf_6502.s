@@ -916,8 +916,13 @@ _rf_code_dodoe:
 
 _rf_code_cold:
 
+    ; This preamble modifies the following code to hold the
+	; parameter field addresses required. The original Forth
+	; model source compiled these values inline using the 
+	; Forth 6502 assembler, which we cannot do. The rest of
+	; the code is close to the original.
 cold1:
-	lda RF_ORIGIN+$0022           ; move coldforth to cold3 and cold4
+	lda RF_ORIGIN+$0022           ; move FORTH field to cold3 and cold4
 	sta cold3+1
 	sta cold4+1
 	lda RF_ORIGIN+$0023
@@ -929,7 +934,7 @@ cold1:
 	inc cold4+2
 
 cold2:
-	lda RF_ORIGIN+$0025           ; move coldabort to cold7, cold8
+	lda RF_ORIGIN+$0025           ; move ABORT PFA to cold7, cold8
 	sta cold7+1
 	lda RF_ORIGIN+$0024
 	sta cold8+1
@@ -964,7 +969,6 @@ cold8:
 	lda #$6C                      ; set JMP
 	sta _rf_w-1
 	jmp _rf_code_rpsto            ; to RP!
-
 
 .export _rf_code_stod
 

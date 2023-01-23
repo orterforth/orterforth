@@ -440,7 +440,7 @@ static void rf_inst_cold(void)
 static void rf_inst_code_add(void)
 {
   RF_START;
-  /* coldforth, coldabort boot-up literals */
+  /* extra boot-up literals for COLD */
   rf_inst_comma(0);
   rf_inst_comma(0);
   /* orterforth additional words */
@@ -591,9 +591,6 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("s0", (uintptr_t) RF_S0);
   rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
 
-  /* COLD routine forward references */
-  rf_inst_def_literal("coldforth", (uintptr_t) RF_ORIGIN + (17 * RF_WORD_SIZE));
-  rf_inst_def_literal("coldabort", (uintptr_t) RF_ORIGIN + (18 * RF_WORD_SIZE));
   /* installed flag now set from Forth */
   rf_inst_def_literal("installed", (uintptr_t) &rf_installed);
 
