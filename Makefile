@@ -692,9 +692,11 @@ dragon-clean :
 	rm -f dragon/*
 
 DRAGONMACHINE := xroar
+DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
 .PHONY : dragon-hw
-dragon-hw : dragon/hw.cas | roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+dragon-hw : dragon/hw.cas | $(DRAGONROMS)
 
 ifeq ($(DRAGONMACHINE),mame)
 	mame dragon64 -rompath roms -video opengl \
@@ -703,13 +705,14 @@ ifeq ($(DRAGONMACHINE),mame)
 		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
-	xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+	xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM:EXEC\r"
 endif
 
 .PHONY : dragon-inst
 dragon-inst : dragon/orterforth.hex
 
-dragon-run : dragon/orterforth.cas | dragon/rx dragon/tx roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+.PHONY : dragon-run
+dragon-run : dragon/orterforth.cas | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
 ifeq ($(DRAGONMACHINE),mame)
 	@$(STARTDISCTCP) $(DR0) $(DR1)
@@ -720,6 +723,8 @@ ifeq ($(DRAGONMACHINE),xroar)
 endif
 
 ifeq ($(DRAGONMACHINE),mame)
+	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
+	@printf '* \033[1;35mNB not currently 64 mode compatible\033[0;0m\n'
 	@printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
 	@mame dragon64 -rompath roms -video opengl \
 		-resolution 1024x768 -skip_gameinfo -nomax -window \
@@ -730,7 +735,7 @@ endif
 ifeq ($(DRAGONMACHINE),xroar)
 	@printf '* \033[1;33mRunning XRoar\033[0;0m\n'
 	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
-	@xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+	@xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM:EXEC\r"
 endif
 
 	@$(STOPDISC)
@@ -749,7 +754,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
-	cmoc --dragon --org=0x0600 --limit=0x3800 --stack-space=256 -o $@ $^
+	cmoc --dragon --org=0x0600 --limit=0x3300 --stack-space=256 -nodefaultlibs -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -763,7 +768,7 @@ dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -c -o $@ $<
 
-dragon/orterforth : dragon/orterforth.hex
+dragon/orterforth : dragon/orterforth.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
@@ -773,9 +778,9 @@ dragon/orterforth.bin : dragon/orterforth
 	cat $< >> $@.io
 	mv $@.io $@
 
-dragon/orterforth.hex : dragon/inst.cas | dragon/rx dragon/tx roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+dragon/orterforth.hex : dragon/inst.cas model.disc | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
-	@$(CHECKMEMORY) 0x0600 0x3800 $(shell $(STAT) dragon/inst.bin)
+	@$(CHECKMEMORY) 0x0600 0x3300 $(shell $(STAT) dragon/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
@@ -790,6 +795,8 @@ ifeq ($(DRAGONMACHINE),xroar)
 endif
 
 ifeq ($(DRAGONMACHINE),mame)
+	@printf '* \033[1;33mStarting MAME\033[0;0m\n'
+	@printf '* \033[1;35mNB not currently 64 mode compatible\033[0;0m\n'
 	@printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
 	@mame dragon64 -rompath roms -video opengl \
 		-resolution 1024x768 -skip_gameinfo -nomax -window \
@@ -800,7 +807,7 @@ endif
 ifeq ($(DRAGONMACHINE),xroar)
 	@printf '* \033[1;33mStarting XRoar\033[0;0m\n'
 	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
-	@sh scripts/start.sh /dev/stdin /dev/stdout xroar.pid xroar -machine-arch dragon64 -rompath roms/dragon64 -load-tape $< -type "CLOADM:EXEC\r"
+	@sh scripts/start.sh /dev/stdin /dev/stdout xroar.pid xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM:EXEC\r"
 endif
 
 	@$(WAITUNTILSAVED) $@.io

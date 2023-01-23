@@ -1,5 +1,3 @@
-#include <cmoc.h>
-
 #include "../../rf.h"
 
 void rf_init(void)
@@ -22,8 +20,14 @@ void rf_init(void)
 void rf_code_emit(void)
 {
   RF_START;
-  putchar(RF_SP_POP & 0x7F);
-  RF_USER_OUT++;
+  {
+    char ch = (char) RF_SP_POP & 0x7F;
+    asm {
+      lda :ch
+      jsr $B54A
+    }
+    RF_USER_OUT++;
+  }
   RF_JUMP_NEXT;
 }
 
@@ -51,7 +55,10 @@ void rf_code_qterm(void)
 void rf_code_cr(void)
 {
   RF_START;
-  putchar(10);
+  asm {
+    lda #$0D
+    jsr $B54A
+  }
   RF_JUMP_NEXT;
 }
 

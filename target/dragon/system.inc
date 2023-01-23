@@ -11,7 +11,7 @@
 #define RF_ORG 0x0600
 
 /* Forth ORIGIN start address */
-#define RF_ORIGIN 0x3800
+#define RF_ORIGIN 0x3300
 
 /* End of disc buffers and usable RAM */
-#define RF_LIMIT 0x7D00
+#define RF_LIMIT 0x7E00
