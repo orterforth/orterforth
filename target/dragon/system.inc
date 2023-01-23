@@ -4,6 +4,9 @@
 
 #define RF_INST_SAVE
 
+/* backspace key */
+#define RF_BS 0x0008
+
 /* C code start address */
 #define RF_ORG 0x0600
 
