@@ -414,6 +414,11 @@ ifeq ($(BBCMACHINE),real)
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 endif
 
+BBCCC65OPTS := -O -t none \
+	-D__BBC__ \
+	-DRF_ORIGIN='0x$(BBCORIGIN)' \
+	-DRF_TARGET_INC='"$(BBCINC)"'
+
 # general assemble rule
 bbc/%.o : bbc/%.s
 
@@ -422,7 +427,7 @@ bbc/%.o : bbc/%.s
 # general compile rule
 bbc/%.s : %.c | bbc
 
-	cc65 -O -t none -D__BBC__ -DRF_TARGET_INC='"$(BBCINC)"' -o $@ $<
+	cc65 $(BBCCC65OPTS) -o $@ $<
 
 # serial load file
 bbc/%.ser : bbc/%
@@ -485,9 +490,7 @@ bbc/inst.inf : | bbc
 # inst lib
 bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 
-	cc65 -O -t none -D__BBC__ \
-		-DRF_ORIGIN='0x$(BBCORIGIN)' \
-		-DRF_TARGET_INC='"$(BBCINC)"' \
+	cc65 $(BBCCC65OPTS) \
 		--bss-name INST \
 		--code-name INST \
 		--data-name INST \
@@ -567,10 +570,7 @@ bbc/orterforth.uef : bbc/orterforth $(ORTER)
 # main lib
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
-	cc65 -O -t none -D__BBC__ \
-		-DRF_ORIGIN='0x$(BBCORIGIN)' \
-		-DRF_TARGET_INC='"$(BBCINC)"' \
-		-o $@ $<
+	cc65 $(BBCCC65OPTS) -o $@ $<
 
 # main lib, assembly
 bbc/rf_6502.o : rf_6502.s | bbc
@@ -580,17 +580,12 @@ bbc/rf_6502.o : rf_6502.s | bbc
 # system lib, assembly
 bbc/system_asm.o : target/bbc/system.s | bbc
 
-	ca65 \
-		-DRF_ORIGIN='0x$(BBCORIGIN)' \
-		-o $@ $<
+	ca65 -o $@ $<
 
 # system lib, C
 bbc/system_c.s : target/bbc/system.c | bbc
 
-	cc65 -O -t none -D__BBC__ \
-		-DRF_ORIGIN='0x$(BBCORIGIN)' \
-		-DRF_TARGET_INC='"$(BBCINC)"' \
-		-o $@ $<
+	cc65 $(BBCCC65OPTS) -o $@ $<
 
 
 # build
