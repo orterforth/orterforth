@@ -755,13 +755,13 @@ dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
 
-dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
-
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
 	cmoc --dragon -c -o $@ $<
+
+dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
 
 dragon/orterforth : dragon/orterforth.hex | $(ORTER)
 
@@ -772,6 +772,10 @@ dragon/orterforth.bin : dragon/orterforth
 	sh target/dragon/bin-header.sh $(shell $(STAT) $<) > $@.io
 	cat $< >> $@.io
 	mv $@.io $@
+
+dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
 
 dragon/orterforth.hex : dragon/inst.cas model.disc | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
@@ -814,10 +818,6 @@ endif
 
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
-
-dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
 
 dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
@@ -980,6 +980,21 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 	@touch data.disc
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.disc data.disc
 
+# inst executable
+ql/inst : ql/inst.o $(QLDEPS)
+
+	qld -ms -o $@ $^
+
+# installer
+ql/inst.o : inst.c rf.h $(QLINC) | ql
+
+	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
+
+# inst executable with serial header
+ql/inst.ser : ql/inst | $(ORTER)
+
+	$(ORTER) ql serial-xtcc $< > $@
+
 # loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader-inst.ser : target/ql/loader-inst.bas
 
@@ -994,20 +1009,15 @@ ql/loader.ser : target/ql/loader.bas
 	printf '\032' >> $@.io
 	mv $@.io $@
 
+# main program
+ql/main.o : main.c rf.h $(QLINC) inst.h | ql
+
+	qcc -o $@ -c $<
+
 # final executable
 ql/orterforth : ql/relink.o $(QLDEPS)
 
 	qld -ms -o $@ $^
-
-# inst executable
-ql/inst : ql/inst.o $(QLDEPS)
-
-	qld -ms -o $@ $^
-
-# inst executable with serial header
-ql/inst.ser : ql/inst | $(ORTER)
-
-	$(ORTER) ql serial-xtcc $< > $@
 
 # saved binary
 ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
@@ -1043,11 +1053,6 @@ ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
 
 	$(ORTER) ql serial-bytes $< > $@
 
-# main program
-ql/main.o : main.c rf.h $(QLINC) inst.h | ql
-
-	qcc -o $@ -c $<
-
 # final binary with serial header
 ql/orterforth.ser : ql/orterforth | $(ORTER)
 
@@ -1071,11 +1076,6 @@ ql/rf.s : rf.c rf.h $(QLINC) | ql
 ql/rf_m68k.o : rf_m68k.s | ql
 
 	qcc -o $@ -c $<
-
-# installer
-ql/inst.o : inst.c rf.h $(QLINC) | ql
-
-	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
 # system support
 ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
