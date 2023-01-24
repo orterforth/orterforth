@@ -48,7 +48,14 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  RF_SP_PUSH(0);
+  {
+    char k;
+    asm {
+      jsr $8006
+      sta :k
+    }
+    RF_SP_PUSH(k == 0x03);
+  }
   RF_JUMP_NEXT;
 }
 
