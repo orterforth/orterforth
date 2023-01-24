@@ -1173,14 +1173,26 @@ void rf_code_stod(void)
 void rf_cold(void)
 {
   int i;
-
-  /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
+
+  /* cold start vector */
+  /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
+  origin[1] = (uintptr_t) rf_code_cold;
 
   /* FORTH vocabulary - parameter field set at inst time */
   /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
   *((uintptr_t *) origin[17]) = origin[6];
+
+  /* warm start vector */
+  /* 15 # LDY, ( INDEX TO VOC-LINK ) 0= IF, ( FORCED ) */
+  /* HERE 06 +ORIGIN ! ( POINT RE-ENTRY TO HERE ) */
+  /* 0F # LDY,  ( INDEX TO WARNING )   THEN, ( FROM IF, ) */
+  i = 11;
+  /*if (0) {
+    origin[3] = rf_code_warm;
+    i = 8;
+  }*/
 
   /* UP */
   /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
@@ -1191,14 +1203,14 @@ void rf_cold(void)
   /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
   /* UP )Y STA, ( TO USER AREA ) */
   /* DEY, 0< END, */
-  for (i = 11; i >= 0; --i) {
+  for (; i >= 0; --i) {
     rf_up[i] = origin[i + 6];
   }
 
   /* jump to RP! then to ABORT - PFA set at inst time */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
   /* # LDA, IP STA, */
-  RF_IP_SET((uintptr_t *) (origin[18]));
+  RF_IP_SET((uintptr_t *) origin[18]);
 
   /* 6C # LDA, W 1 - STA,  */
   /* 'T RP! JMP, ( RUN )  */
