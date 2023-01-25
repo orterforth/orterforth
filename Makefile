@@ -260,6 +260,7 @@ STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; sh scripts/start.sh
 STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
 WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
 
+MAMEOPTS := -rompath roms -video opengl -skip_gameinfo -nomax -window
 
 # === BBC Micro ===
 
@@ -344,9 +345,7 @@ bbc-clean :
 	rm -f bbc/*
 
 # MAME command line
-BBCMAME := bbcb -rompath roms -video opengl \
-	-skip_gameinfo -nomax -window \
-	-rs423 null_modem -bitb socket.127.0.0.1:5705
+BBCMAME := bbcb $(MAMEOPTS) -rs423 null_modem -bitb socket.127.0.0.1:5705
 
 # MAME command line for fast inst, no video and timeout
 BBCMAMEFAST := bbcb -rompath roms -video none -sound none \
@@ -687,6 +686,8 @@ dragon-clean :
 	rm -f dragon/*
 
 DRAGONMACHINE := xroar
+DRAGONORG := 0x0600
+DRAGONORIGIN := 0x3300
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
@@ -694,9 +695,7 @@ DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 dragon-hw : dragon/hw.cas | $(DRAGONROMS)
 
 ifeq ($(DRAGONMACHINE),mame)
-	mame dragon64 -rompath roms -video opengl \
-		-resolution 1024x768 -skip_gameinfo -nomax -window \
-		-cassette $< \
+	mame dragon64 $(MAMEOPTS) -cassette $< \
 		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
@@ -704,7 +703,7 @@ ifeq ($(DRAGONMACHINE),xroar)
 endif
 
 .PHONY : dragon-inst
-dragon-inst : dragon/orterforth.hex
+dragon-inst : dragon/orterforth.cas
 
 .PHONY : dragon-run
 dragon-run : dragon/orterforth.cas | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
@@ -721,8 +720,7 @@ ifeq ($(DRAGONMACHINE),mame)
 	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
 	@printf '* \033[1;35mNB not currently 64 mode compatible\033[0;0m\n'
 	@printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
-	@mame dragon64 -rompath roms -video opengl \
-		-resolution 1024x768 -skip_gameinfo -nomax -window \
+	@mame dragon64 $(MAMEOPTS) \
 		-rs232 null_modem -bitb socket.localhost:5705 \
 		-cassette $< \
 		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
@@ -749,11 +747,11 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
 
-	cmoc --dragon --org=0x0600 --limit=0x3300 --stack-space=256 -nodefaultlibs -o $@ $^
+	cmoc --dragon --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=256 -nodefaultlibs -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
+	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
 
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
@@ -761,7 +759,7 @@ dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
 dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
+	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
 
 dragon/orterforth : dragon/orterforth.hex | $(ORTER)
 
@@ -775,11 +773,11 @@ dragon/orterforth.bin : dragon/orterforth
 
 dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
+	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
 
 dragon/orterforth.hex : dragon/inst.cas model.disc | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
-	@$(CHECKMEMORY) 0x0600 0x3300 $(shell $(STAT) dragon/inst.bin)
+	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/inst.bin)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
@@ -797,8 +795,7 @@ ifeq ($(DRAGONMACHINE),mame)
 	@printf '* \033[1;33mStarting MAME\033[0;0m\n'
 	@printf '* \033[1;35mNB not currently 64 mode compatible\033[0;0m\n'
 	@printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
-	@mame dragon64 -rompath roms -video opengl \
-		-resolution 1024x768 -skip_gameinfo -nomax -window \
+	@mame dragon64 $(MAMEOPTS) \
 		-rs232 null_modem -bitb socket.localhost:5705 \
 		-cassette $< \
 		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
@@ -821,7 +818,7 @@ endif
 
 dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x0600 --exec 0x0600 $<
+	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
@@ -1111,8 +1108,10 @@ endif
 RC2014OPTION := assembly
 #RC2014OPTION := default
 
-RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib 
-RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system 
+RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
+RC2014INSTOFFSET := 0x5000
+RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
+RC2014ORG := 0x9000
 
 ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/z80.lib
@@ -1155,8 +1154,8 @@ rc2014/inst_CODE.bin : \
 	zcc +rc2014 -subtype=basic -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' \
 		$(RC2014LIBS) \
 		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
-	 	-Ca-DRF_ORG=0x9000 \
-	 	-Ca-DRF_INST_OFFSET=0x5000 \
+	 	-Ca-DRF_ORG=$(RC2014ORG) \
+	 	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
 		-m \
 		-o rc2014/inst \
 		z80_memory.asm main.c
@@ -1188,7 +1187,7 @@ rc2014/inst-2.bin : \
 	z88dk-appmake +inject \
 		--binfile $< \
 		--inject rc2014/inst_INST.bin \
-		--offset 0x5000 \
+		--offset $(RC2014INSTOFFSET) \
 		--output $@
 
 # make inst tap from inst bin
@@ -1196,7 +1195,7 @@ rc2014/inst.ihx : rc2014/inst-2.bin
 
 	z88dk-appmake +hex \
 		--binfile $< \
-		--org 0x9000 \
+		--org $(RC2014ORG) \
 		--output $@
 
 # both CODE and INST bin files are built by same command
@@ -1229,7 +1228,7 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 # saved hex result
 rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) $(ORTER)
 
-	@$(CHECKMEMORY) 0x9000 $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
+	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
 
 	@$(RC2014RESET)
 
@@ -1254,7 +1253,7 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) 
 # final binary as IHEX
 rc2014/orterforth.ihx : rc2014/orterforth
 
-	z88dk-appmake +hex --org 0x9000 --binfile $< --output $@
+	z88dk-appmake +hex --org $(RC2014ORG) --binfile $< --output $@
 
 # serial load file
 rc2014/orterforth.ser : rc2014/hexload.bas rc2014/orterforth.ihx
@@ -1300,6 +1299,11 @@ roms/bbcb : | roms
 roms/bbcb/% : | roms/bbcb
 
 	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
+
+# Dragon 64 ROM files dir
+roms/dragon64 : | roms
+
+	mkdir $@
 
 # Dragon 64 ROM files
 roms/dragon64/% :
@@ -1499,11 +1503,10 @@ endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@echo '1. Press Enter to skip the warning'
 	@echo '2. Start the tape via F2 or the Tape Control menu'
-	@mame spectrum -rompath roms -video opengl \
+	@mame spectrum $(MAMEOPTS) \
 		-exp intf1 \
 		-exp:intf1:rs232 null_modem \
 		-bitb socket.localhost:5705 \
-		-window -skip_gameinfo \
 		-autoboot_delay 5 \
 		-autoboot_command 'j""\n' \
 		-cassette $<
