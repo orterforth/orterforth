@@ -19,4 +19,5 @@
 /* assembly code definitions */
 #ifdef RF_ASSEMBLY
 #define RF_TARGET_TRAMPOLINE
+#define RF_TARGET_NEXT
 #endif
