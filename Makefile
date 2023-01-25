@@ -431,8 +431,7 @@ bbc/%.s : %.c | bbc
 # serial load file
 bbc/%.ser : bbc/%
 
-	printf "5P.\"Loading...\"\r" > $@.io
-	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" >> $@.io
+	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" > $@.io
 	printf "20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" >> $@.io
 	cat -u $< >> $@.io
 	mv $@.io $@
@@ -685,11 +684,21 @@ dragon-clean :
 
 	rm -f dragon/*
 
+DRAGONOPTION := assembly
+# DRAGONOPTION := default
+
+DRAGONCMOCOPTS := --dragon
+DRAGONDEPS := dragon/rf.o dragon/inst.o dragon/system.o
 DRAGONMACHINE := xroar
 DRAGONORG := 0x0600
 DRAGONORIGIN := 0x3300
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
+
+ifeq ($(DRAGONOPTION),assembly)
+DRAGONCMOCOPTS += -DRF_ASSEMBLY
+DRAGONDEPS += dragon/rf_6809.o
+endif
 
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | $(DRAGONROMS)
@@ -745,9 +754,9 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 -r 48000 $<
 
-dragon/inst.bin : dragon/rf.o dragon/inst.o dragon/system.o main.c
+dragon/inst.bin : $(DRAGONDEPS) main.c
 
-	cmoc --dragon --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=256 -nodefaultlibs -o $@ $^
+	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=256 -nodefaultlibs -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -755,7 +764,7 @@ dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -c -o $@ $<
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
@@ -822,7 +831,11 @@ dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -c -o $@ $<
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+
+dragon/rf_6809.o : rf_6809.s | dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 # Dragon serial named pipe
 dragon/rx : | dragon
@@ -831,7 +844,7 @@ dragon/rx : | dragon
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 
-	cmoc --dragon -c -o $@ $<
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 # Dragon serial named pipe
 dragon/tx : | dragon
@@ -1124,7 +1137,8 @@ RC2014INC := target/rc2014/default.inc
 RC2014ORIGIN := 0xAB00
 endif
 
-RC2014RESET := printf '* \033[1;35mOn the RC2014: connect serial and press reset\033[0;0m\n' && \
+RC2014RESET := \
+	printf '* \033[1;35mOn the RC2014: connect serial and press reset\033[0;0m\n' && \
 	read -p "Then press enter to start: " LINE && \
 	printf '* \033[1;33mResetting\033[0;0m\n' && \
 	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
@@ -1137,7 +1151,7 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
 	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
 
-	@printf '* \033[1;33mConnecting console/disc mux\033[0;0m\n'
+	@printf '* \033[1;33mStarting disc with console mux\033[0;0m\n'
 	@$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 # hexload

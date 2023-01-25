@@ -15,3 +15,8 @@
 
 /* End of disc buffers and usable RAM */
 #define RF_LIMIT 0x7E00
+
+/* assembly code definitions */
+#ifdef RF_ASSEMBLY
+#define RF_TARGET_TRAMPOLINE
+#endif
