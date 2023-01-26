@@ -183,6 +183,59 @@ PFINDE EQU *
 funcend_rf_code_pfind EQU *
 funcsize_rf_code_pfind EQU funcend_rf_code_pfind-_rf_code_pfind
 
+_rf_code_encl EXPORT
+_rf_code_encl EQU *
+	PULU   D         get char off stack to use as delim into B
+	LDX    ,U        addr to begin
+	CLR    N
+	STB    N+1       save delim to use
+*  wait for a non-delimiter or NUL
+ENCL2 EQU *
+	LDA    0,X
+	BEQ    ENCL6
+	CMPA   N+1       check for delim
+	BNE    ENCL3
+	LEAX   1,X
+	INC    N
+	BRA    ENCL2
+*    found first character, Push PC
+ENCL3 EQU *
+	LDB    N         found first character
+	CLRA
+	PSHU   D
+*   wait for a delimiter or NUL
+ENCL4 EQU *
+	LDA    ,X+
+	BEQ    ENCL7
+	CMPA   N+1       check for delim
+	BEQ    ENCL5
+	INC    N
+	BRA    ENCL4
+*   found EW,  Push it
+ENCL5 EQU *
+	LDB    N
+	CLRA
+	PSHU   D
+*advance and push NC
+	INCB
+	LBRA   PUSHD
+* found NUL before non delimiter, therefore, no word
+ENCL6 EQU *
+	LDB    N         A is zero
+	PSHU   D
+	INCB
+	BRA    ENCL7P
+* found NUL following word instead of SPACE
+ENCL7 EQU *
+	LDB    N
+ENCL7P EQU *
+	PSHU   D         save EW
+ENCL8 EQU *
+	LDB    N         save NC
+	LBRA   PUSHD
+funcend_rf_code_encl EQU *
+funcsize_rf_code_encl EQU funcend_rf_code_encl-_rf_code_encl
+
 	ENDSECTION
 
 	SECTION	rwdata

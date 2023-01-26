@@ -27,4 +27,5 @@
 #define RF_TARGET_CODE_BRAN
 #define RF_TARGET_CODE_DIGIT
 #define RF_TARGET_CODE_PFIND
+#define RF_TARGET_CODE_ENCL
 #endif
