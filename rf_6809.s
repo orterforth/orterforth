@@ -236,6 +236,30 @@ ENCL8 EQU *
 funcend_rf_code_encl EQU *
 funcsize_rf_code_encl EQU funcend_rf_code_encl-_rf_code_encl
 
+_rf_code_cmove EXPORT
+_rf_code_cmove EQU *
+	BSR    PCMOVE
+	LBRA   NEXT
+PCMOVE EQU *
+	PSHS   X,Y
+	PULU   D,X,Y     D=ct, X=dest, Y=source
+	PSHS   U
+	TFR    Y,U
+	TFR    D,Y       use Y as COUNTER
+	LEAY   1,Y
+CMOV2 EQU *
+	LEAY   -1,Y
+	BEQ    CMOV3
+	LDA    ,U+
+	STA    ,X+
+	BRA    CMOV2
+CMOV3 EQU *
+	PULS   U
+	PULS   X,Y
+	RTS
+funcend_rf_code_cmove EQU *
+funcsize_rf_code_cmove EQU funcend_rf_code_cmove-_rf_code_cmove
+
 	ENDSECTION
 
 	SECTION	rwdata
