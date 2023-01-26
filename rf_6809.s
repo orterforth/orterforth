@@ -284,6 +284,34 @@ USTAR4 EQU *
 funcend_rf_code_ustar EQU *
 funcsize_rf_code_ustar EQU funcend_rf_code_ustar-_rf_code_ustar
 
+_rf_code_uslas EXPORT
+_rf_code_uslas EQU *
+	LDD    2,U
+	LDX    4,U
+	STX    2,U
+	STD    4,U
+	ASL    3,U
+	ROL    2,U
+	LDX    #$10
+USLL1 EQU *
+	ROL    5,U
+	ROL    4,U
+	LDD    4,U
+	SUBD   ,U
+	ANDCC  #$FE      CLC
+	BMI    USLL2
+	STD    4,U
+	ORCC   #1        SEC
+USLL2 EQU *
+	ROL    3,U
+	ROL    2,U
+	LEAX   -$1,X
+	BNE    USLL1
+	LEAU   2,U
+	LBRA   NEXT
+funcend_rf_code_uslas EQU *
+funcsize_rf_code_uslas EQU funcend_rf_code_uslas-_rf_code_uslas
+
 	ENDSECTION
 
 	SECTION	rwdata
