@@ -462,6 +462,49 @@ _rf_code_dup EQU *
 funcend_rf_code_dup EQU *
 funcsize_rf_code_dup EQU funcend_rf_code_dup-_rf_code_dup
 
+_rf_code_pstor EXPORT
+_rf_code_pstor EQU *
+	LDX    ,U++
+	LDD    ,U++
+	ADDD   ,X
+	STD    ,X
+	LBRA   NEXT
+funcend_rf_code_pstor EQU *
+funcsize_rf_code_pstor EQU funcend_rf_code_pstor-_rf_code_pstor
+
+_rf_code_at EXPORT
+_rf_code_at EQU *
+	LDD    [,U]      U points to address on stack, get # there
+	LBRA   PUTD      replace stack add with #
+funcend_rf_code_at EQU *
+funcsize_rf_code_at EQU funcend_rf_code_at-_rf_code_at
+
+_rf_code_cat EXPORT
+_rf_code_cat EQU *
+	LDB    [,U]
+	CLRA
+	LBRA   PUTD
+funcend_rf_code_cat EQU *
+funcsize_rf_code_cat EQU funcend_rf_code_cat-_rf_code_cat
+
+_rf_code_store EXPORT
+_rf_code_store EQU *
+	PULU   X
+	PULU   D         forced to do this because in wrong order
+	STD    ,X
+	LBRA   NEXT
+funcend_rf_code_store EQU *
+funcsize_rf_code_store EQU funcend_rf_code_store-_rf_code_store
+
+_rf_code_cstor EXPORT
+_rf_code_cstor EQU *
+	PULU   X
+	PULU   D
+	STB    ,X
+	LBRA   NEXT
+funcend_rf_code_cstor EQU *
+funcsize_rf_code_cstor EQU funcend_rf_code_cstor-_rf_code_cstor
+
 	ENDSECTION
 
 	SECTION	rwdata
