@@ -46,6 +46,9 @@ trampoline2 EQU *
 funcend_rf_trampoline EQU *
 funcsize_rf_trampoline EQU funcend_rf_trampoline-_rf_trampoline
 
+N EQU *
+	RMB    10
+
 PUSHD EQU *
 	PSHU   D
 	BRA    NEXT
@@ -61,7 +64,7 @@ funcsize_rf_next EQU funcend_rf_next-_rf_next
 
 _rf_code_spat EXPORT
 _rf_code_spat EQU *
-	LEAX   ,U
+	LEAX   ,U        X = VALUE OF SP
 	PSHU   X
 	LBRA   NEXT
 funcend_rf_code_spat EQU *
@@ -69,8 +72,8 @@ funcsize_rf_code_spat EQU funcend_rf_code_spat-_rf_code_spat
 
 _rf_code_lit EXPORT
 _rf_code_lit EQU *
-	LDD    ,Y++
-	LBRA   PUSHD
+	LDD    ,Y++      get word pointed to by Y=IP and increment
+	LBRA   PUSHD     push D to data stack and then NEXT
 funcend_rf_code_lit EQU *
 funcsize_rf_code_lit EQU funcend_rf_code_lit-_rf_code_lit
 
@@ -83,22 +86,102 @@ funcsize_rf_code_exec EQU funcend_rf_code_exec-_rf_code_exec
 
 _rf_code_zbran EXPORT
 _rf_code_zbran EQU *
-	LDD    ,U++ get quantity on stack and drop it
+	LDD    ,U++      get quantity on stack and drop it
 	BNE    ZBNO
 _rf_code_bran EXPORT
 _rf_code_bran EQU *
 ZBYES EQU *
-	TFR    Y,D  puts IP = Y into D for arithmetic
-	ADDD   ,Y   adds offset to which IP is pointing
-	TFR    D,Y  sets new IP
+	TFR    Y,D       puts IP = Y into D for arithmetic
+	ADDD   ,Y        adds offset to which IP is pointing
+	TFR    D,Y       sets new IP
 	LBRA   NEXT
 ZBNO EQU *
-	LEAY   2,Y  skip over branch
+	LEAY   2,Y       skip over branch
 	LBRA   NEXT
 funcend_rf_code_zbran EQU *
 funcsize_rf_code_zbran EQU funcend_rf_code_zbran-_rf_code_zbran
 funcend_rf_code_bran EQU *
 funcsize_rf_code_bran EQU funcend_rf_code_bran-_rf_code_bran
+
+_rf_code_digit EXPORT
+_rf_code_digit EQU *
+	LDA    3,U       second item is char of interest
+	SUBA   #$30      ascii zero
+	BMI    DIGIT2    if less than '0', ILLEGAL
+	CMPA   #$A
+	BMI    DIGIT0    if '9' or less
+	CMPA   #$11
+	BMI    DIGIT2    if less than 'A'
+	CMPA   #$2B
+	BPL    DIGIT2    if greater than 'Z'
+	SUBA   #$7       translate 'A' thru 'Z'
+DIGIT0 EQU *
+	CMPA   1,U
+	BPL    DIGIT2    if not less than base
+	LDB    #1
+	STA    3,U
+DIGIT1 EQU *
+	STB    1,U       store flag
+	LBRA   NEXT
+DIGIT2 EQU *
+	CLRB
+	LEAU   2,U       pop top off
+	STB    0,U       make sure both bytes 0
+	BRA    DIGIT1
+funcend_rf_code_digit EQU *
+funcsize_rf_code_digit EQU funcend_rf_code_digit-_rf_code_digit
+
+_rf_code_pfind EXPORT
+_rf_code_pfind EQU *
+PD EQU N
+PA0 EQU N+2
+PA EQU N+4
+PCHR EQU N+6
+	PSHS   Y         save Y
+PFIND0 EQU *
+	PULU   X,Y
+	STY    PA0
+PFIND1 EQU *
+	LDB    ,X+       get count from dict
+	STB    PCHR
+	ANDB   #$3F      mask sign and precedence
+	LDY    PA0
+	CMPB   ,Y+
+	BNE    PFIND4    not equal
+PFIND2 EQU *
+	LDA    ,Y+
+	TST    ,X        is dict entry neg?
+	BPL    PFIND8
+	ORA    #$80      make A neg also
+	CMPA   ,X+
+	BEQ    FOUND
+PFIND3 EQU *
+	LDX    0,X       get new link in dict
+	BNE    PFIND1    continue if new link not = 0
+*   not found :
+	TFR    X,D
+	BRA    PFINDE
+*
+PFIND8 EQU *
+	CMPA   ,X+
+	BEQ    PFIND2
+PFIND4 EQU *
+	LDB    ,X+
+	BPL    PFIND4
+	BRA    PFIND3
+*
+* found :
+FOUND EQU *
+	LEAX   4,X       point to parameter field
+	LDB    PCHR
+	CLRA
+	PSHU   X,D
+	LDB    #1
+PFINDE EQU *
+	PULS   Y
+	LBRA   PUSHD
+funcend_rf_code_pfind EQU *
+funcsize_rf_code_pfind EQU funcend_rf_code_pfind-_rf_code_pfind
 
 	ENDSECTION
 
