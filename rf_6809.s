@@ -392,6 +392,19 @@ DMINX EQU *
 funcend_rf_code_dminu EQU *
 funcsize_rf_code_dminu EQU funcend_rf_code_dminu-_rf_code_dminu
 
+_rf_code_stod EXPORT
+_rf_code_stod EQU *
+	LDD    #0
+	TST    ,U
+	BPL    STOD2
+	COMA
+	COMB
+STOD2 EQU *
+	STD    ,--U
+	LBRA   NEXT
+funcend_rf_code_stod EQU *
+funcsize_rf_code_stod EQU funcend_rf_code_stod-_rf_code_stod
+
 	ENDSECTION
 
 	SECTION	rwdata
