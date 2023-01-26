@@ -341,6 +341,28 @@ _rf_code_xorr EQU *
 funcend_rf_code_xorr EQU *
 funcsize_rf_code_xorr EQU funcend_rf_code_xorr-_rf_code_xorr
 
+_rf_code_plus EXPORT
+_rf_code_plus EQU *
+	PULU   D
+	ADDD   ,U
+	LBRA   PUTD
+funcend_rf_code_plus EQU *
+funcsize_rf_code_plus EQU funcend_rf_code_plus-_rf_code_plus
+
+_rf_code_dplus EXPORT
+_rf_code_dplus EQU *
+	LDD    2,U
+	ADDD   6,U
+	STD    6,U
+	LDD    ,U
+	ADCB   5,U
+	ADCA   4,U
+	LEAU   4,U
+	STD    ,U
+	LBRA   NEXT
+funcend_rf_code_dplus EQU *
+funcsize_rf_code_dplus EQU funcend_rf_code_dplus-_rf_code_dplus
+
 	ENDSECTION
 
 	SECTION	rwdata
