@@ -312,6 +312,35 @@ USLL2 EQU *
 funcend_rf_code_uslas EQU *
 funcsize_rf_code_uslas EQU funcend_rf_code_uslas-_rf_code_uslas
 
+_rf_code_andd EXPORT
+_rf_code_andd EQU *
+	PULU   D
+	ANDB   1,U
+	ANDA   0,U
+PUTD EQU *
+	STD    ,U
+	LBRA   NEXT
+funcend_rf_code_andd EQU *
+funcsize_rf_code_andd EQU funcend_rf_code_andd-_rf_code_andd
+
+_rf_code_orr EXPORT
+_rf_code_orr EQU *
+	PULU   D
+	ORB    1,U
+	ORA    0,U
+	BRA    PUTD
+funcend_rf_code_orr EQU *
+funcsize_rf_code_orr EQU funcend_rf_code_orr-_rf_code_orr
+
+_rf_code_xorr EXPORT
+_rf_code_xorr EQU *
+	PULU   D
+	EORB   1,U
+	EORA   0,U
+	BRA    PUTD
+funcend_rf_code_xorr EQU *
+funcsize_rf_code_xorr EQU funcend_rf_code_xorr-_rf_code_xorr
+
 	ENDSECTION
 
 	SECTION	rwdata
