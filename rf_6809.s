@@ -59,6 +59,14 @@ NEXT3 EQU *
 funcend_rf_next EQU *
 funcsize_rf_next EQU funcend_rf_next-_rf_next
 
+_rf_code_spat EXPORT
+_rf_code_spat EQU *
+	LEAX   ,U
+	PSHU   X
+	LBRA   NEXT
+funcend_rf_code_spat EQU *
+funcsize_rf_code_spat EQU funcend_rf_code_spat-_rf_code_spat
+
 _rf_code_lit EXPORT
 _rf_code_lit EQU *
 	LDD    ,Y++
@@ -72,6 +80,25 @@ _rf_code_exec EQU *
 	BRA    NEXT3
 funcend_rf_code_exec EQU *
 funcsize_rf_code_exec EQU funcend_rf_code_exec-_rf_code_exec
+
+_rf_code_zbran EXPORT
+_rf_code_zbran EQU *
+	LDD    ,U++ get quantity on stack and drop it
+	BNE    ZBNO
+_rf_code_bran EXPORT
+_rf_code_bran EQU *
+ZBYES EQU *
+	TFR    Y,D  puts IP = Y into D for arithmetic
+	ADDD   ,Y   adds offset to which IP is pointing
+	TFR    D,Y  sets new IP
+	LBRA   NEXT
+ZBNO EQU *
+	LEAY   2,Y  skip over branch
+	LBRA   NEXT
+funcend_rf_code_zbran EQU *
+funcsize_rf_code_zbran EQU funcend_rf_code_zbran-_rf_code_zbran
+funcend_rf_code_bran EQU *
+funcsize_rf_code_bran EQU funcend_rf_code_bran-_rf_code_bran
 
 	ENDSECTION
 
