@@ -260,6 +260,30 @@ CMOV3 EQU *
 funcend_rf_code_cmove EQU *
 funcsize_rf_code_cmove EQU funcend_rf_code_cmove-_rf_code_cmove
 
+_rf_code_ustar EXPORT
+_rf_code_ustar EQU *
+	BSR    USTARS
+	LEAU   2,U
+	LBRA   PUSHD
+USTARS EQU *
+	LDX    #17
+	LDD    #0
+USTAR2 EQU *
+	ROR    2,U       shift mult
+	ROR    3,U
+	LEAX   -1,X      done ?
+	BEQ    USTAR4
+	BCC    USTAR3
+	ADDD   ,U
+USTAR3 EQU *
+	RORA
+	RORB
+	BRA    USTAR2
+USTAR4 EQU *
+	RTS
+funcend_rf_code_ustar EQU *
+funcsize_rf_code_ustar EQU funcend_rf_code_ustar-_rf_code_ustar
+
 	ENDSECTION
 
 	SECTION	rwdata
