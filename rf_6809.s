@@ -363,6 +363,35 @@ _rf_code_dplus EQU *
 funcend_rf_code_dplus EQU *
 funcsize_rf_code_dplus EQU funcend_rf_code_dplus-_rf_code_dplus
 
+_rf_code_minus EXPORT
+_rf_code_minus EQU *
+	NEG    1,U
+	BCS    MINUS2
+	NEG    ,U
+	LBRA   NEXT
+MINUS2 EQU *
+	COM    ,U
+	LBRA   NEXT
+funcend_rf_code_minus EQU *
+funcsize_rf_code_minus EQU funcend_rf_code_minus-_rf_code_minus
+
+_rf_code_dminu EXPORT
+_rf_code_dminu EQU *
+	COM    0,U
+	COM    1,U
+	COM    2,U
+	NEG    3,U
+	BNE    DMINX
+	INC    2,U
+	BNE    DMINX
+	INC    1,U
+	BNE    DMINX
+	INC    ,U
+DMINX EQU *
+	LBRA   NEXT
+funcend_rf_code_dminu EQU *
+funcsize_rf_code_dminu EQU funcend_rf_code_dminu-_rf_code_dminu
+
 	ENDSECTION
 
 	SECTION	rwdata
