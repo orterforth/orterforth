@@ -432,6 +432,36 @@ ZLESS2 EQU *
 funcend_rf_code_zless EQU *
 funcsize_rf_code_zless EQU funcend_rf_code_zless-_rf_code_zless
 
+_rf_code_over EXPORT
+_rf_code_over EQU *
+	LDD    2,U
+	LBRA   PUSHD
+funcend_rf_code_over EQU *
+funcsize_rf_code_over EQU funcend_rf_code_over-_rf_code_over
+
+_rf_code_drop EXPORT
+_rf_code_drop EQU *
+	LEAU   2,U
+	LBRA   NEXT
+funcend_rf_code_drop EQU *
+funcsize_rf_code_drop EQU funcend_rf_code_drop-_rf_code_drop
+
+_rf_code_swap EXPORT
+_rf_code_swap EQU *
+	PULU   D,X
+	EXG    D,X       swap order
+	PSHU   D,X
+	LBRA   NEXT
+funcend_rf_code_swap EQU *
+funcsize_rf_code_swap EQU funcend_rf_code_swap-_rf_code_swap
+
+_rf_code_dup EXPORT
+_rf_code_dup EQU *
+	LDD    ,U
+	LBRA   PUSHD
+funcend_rf_code_dup EQU *
+funcsize_rf_code_dup EQU funcend_rf_code_dup-_rf_code_dup
+
 	ENDSECTION
 
 	SECTION	rwdata
