@@ -405,6 +405,33 @@ STOD2 EQU *
 funcend_rf_code_stod EQU *
 funcsize_rf_code_stod EQU funcend_rf_code_stod-_rf_code_stod
 
+_rf_code_zequ EXPORT
+_rf_code_zequ EQU *
+	CLRA
+	CLRB
+	LDX    ,U
+	BNE    ZEQU2
+	INCB
+ZEQU2 EQU *
+	STD    ,U
+	LBRA   NEXT
+funcend_rf_code_zequ EQU *
+funcsize_rf_code_zequ EQU funcend_rf_code_zequ-_rf_code_zequ
+
+_rf_code_zless EXPORT
+_rf_code_zless EQU *
+	LDA    #$80      check sign bit
+	ANDA   ,U
+	BEQ    ZLESS2
+	CLRA
+	LDB    #1
+	LBRA   PUTD
+ZLESS2 EQU *
+	CLRB
+	LBRA   PUTD
+funcend_rf_code_zless EQU *
+funcsize_rf_code_zless EQU funcend_rf_code_zless-_rf_code_zless
+
 	ENDSECTION
 
 	SECTION	rwdata
