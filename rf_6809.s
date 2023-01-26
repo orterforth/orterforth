@@ -13,38 +13,70 @@ _rf_w IMPORT
 
 _rf_start EXPORT
 _rf_start EQU *
-	STY _rf_ip+0,PCR
-	STX _rf_w+0,PCR
+	STY    _rf_ip+0,PCR
+	STX    _rf_w+0,PCR
+	PSHS   U            * detect the stack frame
+	CMPS   ,S
+	PULS   U
+	BLT    start1
+	STU    _rf_sp+0,PCR * no stack frame pushed
+	BRA    start2
+start1 EQU *
+	LDX    ,U           * stack frame pushed, get previous U
+	STX    _rf_sp+0,PCR
+start2 EQU *
 	RTS
 funcend_rf_start EQU *
 funcsize_rf_start EQU funcend_rf_start-_rf_start
 
 _rf_trampoline EXPORT
 _rf_trampoline EQU *
-	BRA	trampoline2
+	STU    usave+0,PCR
+	BRA	   trampoline2
 trampoline1 EQU *
-	LDX _rf_w+0,PCR
-	LDY _rf_ip+0,PCR
-	JSR	[_rf_fp+0,PCR]
+	LDU    _rf_sp+0,PCR
+	LDX    _rf_w+0,PCR
+	LDY    _rf_ip+0,PCR
+	JSR	   [_rf_fp+0,PCR]
 trampoline2 EQU *
-	LDD	_rf_fp+0,PCR
-	BNE	trampoline1
+	LDD	   _rf_fp+0,PCR
+	BNE	   trampoline1
+	LDU    usave+0,PCR
 	RTS
 funcend_rf_trampoline EQU *
 funcsize_rf_trampoline EQU funcend_rf_trampoline-_rf_trampoline
 
+PUSHD EQU *
+	PSHU   D
+	BRA    NEXT
+
 _rf_next EXPORT
 _rf_next EQU *
-	LDX ,Y++
-	JMP [,X]
+NEXT EQU *
+	LDX    ,Y++
+NEXT3 EQU *
+	JMP    [,X]
 funcend_rf_next EQU *
 funcsize_rf_next EQU funcend_rf_next-_rf_next
+
+_rf_code_lit EXPORT
+_rf_code_lit EQU *
+	LDD    ,Y++
+	LBRA   PUSHD
+funcend_rf_code_lit EQU *
+funcsize_rf_code_lit EQU funcend_rf_code_lit-_rf_code_lit
+
+_rf_code_exec EXPORT
+_rf_code_exec EQU *
+	PULU   X
+	BRA    NEXT3
+funcend_rf_code_exec EQU *
+funcsize_rf_code_exec EQU funcend_rf_code_exec-_rf_code_exec
 
 	ENDSECTION
 
 	SECTION	rwdata
 
-* Statically-initialized global variables
 usave EQU *
 	FDB	$00
 

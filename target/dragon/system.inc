@@ -20,4 +20,6 @@
 #ifdef RF_ASSEMBLY
 #define RF_TARGET_TRAMPOLINE
 #define RF_TARGET_NEXT
+#define RF_TARGET_CODE_LIT
+#define RF_TARGET_CODE_EXEC
 #endif
