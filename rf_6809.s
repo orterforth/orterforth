@@ -3,6 +3,7 @@
 _rf_ip IMPORT
 _rf_fp IMPORT
 _rf_sp IMPORT
+_rf_up IMPORT
 _rf_w IMPORT
 
 * TODO Under OS-9, CMOC uses Y to refer to the data section of
@@ -504,6 +505,29 @@ _rf_code_cstor EQU *
 	LBRA   NEXT
 funcend_rf_code_cstor EQU *
 funcsize_rf_code_cstor EQU funcend_rf_code_cstor-_rf_code_cstor
+
+_rf_code_docon EXPORT
+_rf_code_docon EQU *
+	LDD    2,X
+	LBRA   PUSHD
+funcend_rf_code_docon EQU *
+funcsize_rf_code_docon EQU funcend_rf_code_docon-_rf_code_docon
+
+_rf_code_dovar EXPORT
+_rf_code_dovar EQU *
+	LEAX   2,X
+	PSHU   X
+	LBRA NEXT
+funcend_rf_code_dovar EQU *
+funcsize_rf_code_dovar EQU funcend_rf_code_dovar-_rf_code_dovar
+
+_rf_code_douse EXPORT
+_rf_code_douse EQU *
+	LDD    2,X
+	ADDD   _rf_up+0,PCR
+	LBRA   PUSHD
+funcend_rf_code_douse EQU *
+funcsize_rf_code_douse EQU funcend_rf_code_douse-_rf_code_douse
 
 	ENDSECTION
 
