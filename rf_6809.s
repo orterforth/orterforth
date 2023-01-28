@@ -529,6 +529,30 @@ ZLESS2 EQU *
 funcend_rf_code_zless EQU *
 funcsize_rf_code_zless EQU funcend_rf_code_zless-_rf_code_zless
 
+_rf_code_leave EXPORT
+_rf_code_leave EQU *
+	LDD    ,S
+	STD    2,S
+	LBRA   NEXT
+funcend_rf_code_leave EQU *
+funcsize_rf_code_leave EQU funcend_rf_code_leave-_rf_code_leave
+
+_rf_code_tor EXPORT
+_rf_code_tor EQU *
+	PULU   D
+	PSHS   D
+	LBRA   NEXT
+funcend_rf_code_tor EQU *
+funcsize_rf_code_tor EQU funcend_rf_code_tor-_rf_code_tor
+
+_rf_code_fromr EXPORT
+_rf_code_fromr EQU *
+	PULS   D
+	PSHU   D
+	LBRA   NEXT
+funcend_rf_code_fromr EQU *
+funcsize_rf_code_fromr EQU funcend_rf_code_fromr-_rf_code_fromr
+
 _rf_code_over EXPORT
 _rf_code_over EQU *
 	LDD    2,U
