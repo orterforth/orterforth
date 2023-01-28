@@ -184,6 +184,15 @@ funcsize_rf_code_xloop EQU funcend_rf_code_xloop-_rf_code_xloop
 funcend_rf_code_xploo EQU *
 funcsize_rf_code_xploo EQU funcend_rf_code_xploo-_rf_code_xploo
 
+_rf_code_xdo EXPORT
+_rf_code_xdo EQU *
+	PULU   D         counter
+	PULU   X         limit
+	PSHS   X,D       X goes first, so becomes second on RP=S
+	LBRA   NEXT
+funcend_rf_code_xdo EQU *
+funcsize_rf_code_xdo EQU funcend_rf_code_xdo-_rf_code_xdo
+
 _rf_code_digit EXPORT
 _rf_code_digit EQU *
 	LDA    3,U       second item is char of interest
