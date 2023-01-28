@@ -193,6 +193,13 @@ _rf_code_xdo EQU *
 funcend_rf_code_xdo EQU *
 funcsize_rf_code_xdo EQU funcend_rf_code_xdo-_rf_code_xdo
 
+_rf_code_rr EXPORT
+_rf_code_rr EQU *
+	LDD    ,S        get counter from RP
+	LBRA   PUSHD
+funcend_rf_code_rr EQU *
+funcsize_rf_code_rr EQU funcend_rf_code_rr-_rf_code_rr
+
 _rf_code_digit EXPORT
 _rf_code_digit EQU *
 	LDA    3,U       second item is char of interest
