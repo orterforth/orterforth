@@ -157,6 +157,10 @@ _rf_code_xloop EXPORT
 _rf_code_xloop EQU *
 	LDD    #1
 	BRA    XPLOP2
+_rf_code_xploo EXPORT
+_rf_code_xploo EQU *
+XPLOOP EQU *
+	PULU   D
 XPLOP2 EQU *
 	TSTA
 	BPL    XPLOF     forward loopint
@@ -177,6 +181,8 @@ XPLONO EQU *
 	BRA    ZBNO      use ZBRAN to skip over unused delta
 funcend_rf_code_xloop EQU *
 funcsize_rf_code_xloop EQU funcend_rf_code_xloop-_rf_code_xloop
+funcend_rf_code_xploo EQU *
+funcsize_rf_code_xploo EQU funcend_rf_code_xploo-_rf_code_xploo
 
 _rf_code_digit EXPORT
 _rf_code_digit EQU *
