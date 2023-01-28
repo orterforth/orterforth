@@ -636,6 +636,16 @@ _rf_code_dodoe EQU *
 funcend_rf_code_dodoe EQU *
 funcsize_rf_code_dodoe EQU funcend_rf_code_dodoe-_rf_code_dodoe
 
+_rf_code_toggl EXPORT
+_rf_code_toggl EQU *
+	PULU   D
+	PULU   X
+	EORB   ,X
+	STB    ,X
+	LBRA   NEXT
+funcend_rf_code_toggl EQU *
+funcsize_rf_code_toggl EQU funcend_rf_code_toggl-_rf_code_toggl
+
 _rf_code_docon EXPORT
 _rf_code_docon EQU *
 	LDD    2,X
