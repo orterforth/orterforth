@@ -89,6 +89,13 @@ PUSHD EQU *
 	PSHU   D
 	BRA    NEXT
 
+_rf_code_docol EXPORT
+_rf_code_docol EQU *
+	PSHS   Y         save present IP on ret stack RP
+	LEAY   2,X       kick Y up to first param after CFA in W=X
+funcend_rf_code_docol EQU *
+funcsize_rf_code_docol EQU funcend_rf_code_docol-_rf_code_docol
+
 _rf_next EXPORT
 _rf_next EQU *
 NEXT EQU *
