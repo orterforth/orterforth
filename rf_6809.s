@@ -105,6 +105,13 @@ NEXT3 EQU *
 funcend_rf_next EQU *
 funcsize_rf_next EQU funcend_rf_next-_rf_next
 
+_rf_code_semis EXPORT
+_rf_code_semis EQU *
+	LDY    ,S++      reset Y=IP to next addr and drop frm S=RP
+	BRA    NEXT
+funcend_rf_code_semis EQU *
+funcsize_rf_code_semis EQU funcend_rf_code_semis-_rf_code_semis
+
 _rf_code_spat EXPORT
 _rf_code_spat EQU *
 	LEAX   ,U        X = VALUE OF SP
