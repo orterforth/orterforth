@@ -626,6 +626,16 @@ _rf_code_cstor EQU *
 funcend_rf_code_cstor EQU *
 funcsize_rf_code_cstor EQU funcend_rf_code_cstor-_rf_code_cstor
 
+_rf_code_dodoe EXPORT
+_rf_code_dodoe EQU *
+	PSHS   Y         push return address to RP=S
+	LDY    2,X       get new IP
+	LEAX   4,X       get address of parameter
+	PSHU   X
+	LBRA   NEXT
+funcend_rf_code_dodoe EQU *
+funcsize_rf_code_dodoe EQU funcend_rf_code_dodoe-_rf_code_dodoe
+
 _rf_code_docon EXPORT
 _rf_code_docon EQU *
 	LDD    2,X
