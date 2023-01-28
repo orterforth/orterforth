@@ -22,35 +22,31 @@ _rf_start EQU *
 	                    * NO STACK FRAME PUSHED
 
 	STU    _rf_sp+0,PCR * save U into SP
-			
 	STS    _rf_rp+0,PCR * save S into RP
-	LDD    ssave+0,PCR  * get saved S
-    SUBD   #2           * keep fp return
-	TFR    D,S
+
+	LDY    ssave+0,PCR  * get saved S
+	LEAS   -2,Y         * keep fp return
 
 	JMP    ,X           * return
 
 	                    * STACK FRAME PUSHED
 
 start1 EQU *
-	LDD    ,U           *     get previous U
-	STD    _rf_sp+0,PCR *     save it into SP
+	LDD    ,U           * get previous U
+	STD    _rf_sp+0,PCR * save it into SP
 
-	TFR    U,D          *     calculate original S (RP)
-	ADDD   #2           *     skip BP old U
-	STD    _rf_rp+0,PCR *     save into RP
+	LEAY   2,U          * get original S (RP), skip pushed BP
+	STY    _rf_rp+0,PCR * save into RP
 
-	PSHS   U            *     save U
-	TFR    S,D          *     get S before last PSHS
-	ADDD   #2
-	SUBD   ,S           *     now D = S-U
-	PULS   U
+	TFR    S,D          * get S
+	PSHS   U            * save U for arithmetic
+	SUBD   ,S           * now D = S-U, i.e., frame size
 
-	LDU    ssave+0,PCR  *     to make U the base pointer of C stack
-	LEAU   -4,U         *     keep fp return and BP (old U)
+	LDU    ssave+0,PCR  * to make U the C stack base pointer
+	LEAU   -4,U         * keep fp return and BP
 
-	ADDD   ssave+0,PCR  *     to make S the C stack pointer
-    SUBD   #4           *     again keep fp return and BP (old U)
+	PSHS   U            * to make S the C stack pointer
+	ADDD   ,S           * D = (S-U) + U
 	TFR    D,S
 
 	JMP    ,X           * return
