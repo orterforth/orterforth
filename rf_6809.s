@@ -116,6 +116,22 @@ _rf_code_spat EQU *
 funcend_rf_code_spat EQU *
 funcsize_rf_code_spat EQU funcend_rf_code_spat-_rf_code_spat
 
+_rf_code_spsto EXPORT
+_rf_code_spsto EQU *
+	LDU    _rf_up+0,PCR
+	LDU    6,U
+	LBRA   NEXT
+funcend_rf_code_spsto EQU *
+funcsize_rf_code_spsto EQU funcend_rf_code_spsto-_rf_code_spsto
+
+_rf_code_rpsto EXPORT
+_rf_code_rpsto EQU *
+	LDX    _rf_up+0,PCR
+	LDS    8,X
+	LBRA   NEXT
+funcend_rf_code_rpsto EQU *
+funcsize_rf_code_rpsto EQU funcend_rf_code_rpsto-_rf_code_rpsto
+
 _rf_code_lit EXPORT
 _rf_code_lit EQU *
 	LDD    ,Y++      get word pointed to by Y=IP and increment
