@@ -153,6 +153,31 @@ funcsize_rf_code_zbran EQU funcend_rf_code_zbran-_rf_code_zbran
 funcend_rf_code_bran EQU *
 funcsize_rf_code_bran EQU funcend_rf_code_bran-_rf_code_bran
 
+_rf_code_xloop EXPORT
+_rf_code_xloop EQU *
+	LDD    #1
+	BRA    XPLOP2
+XPLOP2 EQU *
+	TSTA
+	BPL    XPLOF     forward loopint
+	ADDD   ,S        add D to counter on RP=S
+	STD    ,S
+	ANDCC  #$1       set c bit
+	SBCB   3,S
+	SBCA   2,S
+	BPL    ZBYES
+	BRA    XPLONO    fall thru
+XPLOF EQU *
+	ADDD   ,S
+	STD    ,S
+	SUBD   2,S
+	BMI    ZBYES
+XPLONO EQU *
+	LEAS   4,S       drop 4 bytes of counter and limit
+	BRA    ZBNO      use ZBRAN to skip over unused delta
+funcend_rf_code_xloop EQU *
+funcsize_rf_code_xloop EQU funcend_rf_code_xloop-_rf_code_xloop
+
 _rf_code_digit EXPORT
 _rf_code_digit EQU *
 	LDA    3,U       second item is char of interest
