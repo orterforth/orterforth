@@ -8,10 +8,12 @@
 #define RF_BS 0x0008
 
 /* C code start address */
-#define RF_ORG 0x0600
+/* passed in command line */
+/*#define RF_ORG 0xxxxx*/
 
 /* Forth ORIGIN start address */
-#define RF_ORIGIN 0x3300
+/* passed in command line */
+/*#define RF_ORIGIN 0xxxxx*/
 
 /* End of disc buffers and usable RAM */
 #define RF_LIMIT 0x7E00
