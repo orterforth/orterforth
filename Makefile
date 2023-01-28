@@ -748,11 +748,11 @@ dragon/hw.bin : hw.c
 
 dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 $<
+	tools/bin2cas.pl --output $@ -D $<
 
 dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load 0x2800 --exec 0x2800 -r 48000 $<
+	tools/bin2cas.pl --output $@ -D $<
 
 dragon/inst.bin : $(DRAGONDEPS) main.c
 
@@ -760,7 +760,7 @@ dragon/inst.bin : $(DRAGONDEPS) main.c
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
+	tools/bin2cas.pl --output $@ -D $<
 
 dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
@@ -768,7 +768,7 @@ dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
 
 dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
+	tools/bin2cas.pl --output $@ -D $<
 
 dragon/orterforth : dragon/orterforth.hex | $(ORTER)
 
@@ -782,7 +782,7 @@ dragon/orterforth.bin : dragon/orterforth
 
 dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
+	tools/bin2cas.pl --output $@ -D $<
 
 dragon/orterforth.hex : dragon/inst.cas model.disc | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
@@ -812,7 +812,14 @@ endif
 ifeq ($(DRAGONMACHINE),xroar)
 	@printf '* \033[1;33mStarting XRoar\033[0;0m\n'
 	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
-	@sh scripts/start.sh /dev/stdin /dev/stdout xroar.pid xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM:EXEC\r"
+	@sh scripts/start.sh \
+		/dev/stdin \
+		/dev/stdout \
+		xroar.pid \
+		xroar \
+		$(DRAGONXROAROPTS) \
+		-load-tape $< \
+		-type "CLOADM:EXEC\r"
 endif
 
 	@$(WAITUNTILSAVED) $@.io
@@ -827,7 +834,7 @@ endif
 
 dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D --load $(DRAGONORG) --exec $(DRAGONORG) $<
+	tools/bin2cas.pl --output $@ -D $<
 
 dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
