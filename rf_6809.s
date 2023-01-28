@@ -92,6 +92,8 @@ _rf_code_docol EQU *
 funcend_rf_code_docol EQU *
 funcsize_rf_code_docol EQU funcend_rf_code_docol-_rf_code_docol
 
+_rf_code_ln EXPORT
+_rf_code_ln EQU *
 _rf_next EXPORT
 _rf_next EQU *
 NEXT EQU *
@@ -680,6 +682,31 @@ _rf_code_douse EQU *
 	LBRA   PUSHD
 funcend_rf_code_douse EQU *
 funcsize_rf_code_douse EQU funcend_rf_code_douse-_rf_code_douse
+
+_rf_code_xt EXPORT
+_rf_code_xt EQU *
+	LDD    #0
+	STD    _rf_fp+0,PCR
+	LBSR   _rf_start
+	RTS
+funcend_rf_code_xt EQU *
+funcsize_rf_code_xt EQU funcend_rf_code_xt-_rf_code_xt
+
+_rf_code_cl EXPORT
+_rf_code_cl EQU *
+	LDD    #2
+	LBRA   PUSHD
+funcend_rf_code_cl EQU *
+funcsize_rf_code_cl EQU funcend_rf_code_cl-_rf_code_cl
+
+_rf_code_cs EXPORT
+_rf_code_cs EQU *
+	PULU   D
+	ASLB
+	ROLA
+	LBRA   PUSHD
+funcend_rf_code_cs EQU *
+funcsize_rf_code_cs EQU funcend_rf_code_cs-_rf_code_cs
 
 	ENDSECTION
 
