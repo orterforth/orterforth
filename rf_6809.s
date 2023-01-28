@@ -2,47 +2,82 @@
 
 _rf_ip IMPORT
 _rf_fp IMPORT
+_rf_rp IMPORT
 _rf_sp IMPORT
 _rf_up IMPORT
 _rf_w IMPORT
 
-* TODO Under OS-9, CMOC uses Y to refer to the data section of
-* the current process. Any code that needs to use Y must 
-* preserve its value and restore it when finished. For 
-* portability, this rule should also be observed on platforms 
-* other than OS-9.
-
 _rf_start EXPORT
 _rf_start EQU *
-	STY    _rf_ip+0,PCR
-	STX    _rf_w+0,PCR
+	STY    _rf_ip+0,PCR * Y to IP
+	STX    _rf_w+0,PCR  * X to W
+
+	PULS   X			* pull rf_start return
+
 	PSHS   U            * detect the stack frame
 	CMPS   ,S
 	PULS   U
 	BLT    start1
-	STU    _rf_sp+0,PCR * no stack frame pushed
-	BRA    start2
+
+	                    * NO STACK FRAME PUSHED
+
+	STU    _rf_sp+0,PCR * save U into SP
+			
+	STS    _rf_rp+0,PCR * save S into RP
+	LDD    ssave+0,PCR  * get saved S
+    SUBD   #2           * keep fp return
+	TFR    D,S
+
+	JMP    ,X           * return
+
+	                    * STACK FRAME PUSHED
+
 start1 EQU *
-	LDX    ,U           * stack frame pushed, get previous U
-	STX    _rf_sp+0,PCR
-start2 EQU *
-	RTS
+	LDD    ,U           *     get previous U
+	STD    _rf_sp+0,PCR *     save it into SP
+
+	TFR    U,D          *     calculate original S (RP)
+	ADDD   #2           *     skip BP old U
+	STD    _rf_rp+0,PCR *     save into RP
+
+	PSHS   U            *     save U
+	TFR    S,D          *     get S before last PSHS
+	ADDD   #2
+	SUBD   ,S           *     now D = S-U
+	PULS   U
+
+	LDU    ssave+0,PCR  *     to make U the base pointer of C stack
+	LEAU   -4,U         *     keep fp return and BP (old U)
+
+	ADDD   ssave+0,PCR  *     to make S the C stack pointer
+    SUBD   #4           *     again keep fp return and BP (old U)
+	TFR    D,S
+
+	JMP    ,X           * return
+
 funcend_rf_start EQU *
 funcsize_rf_start EQU funcend_rf_start-_rf_start
 
 _rf_trampoline EXPORT
 _rf_trampoline EQU *
+	STS    ssave+0,PCR
 	STU    usave+0,PCR
+	STY    ysave+0,PCR
 	BRA	   trampoline2
 trampoline1 EQU *
-	LDU    _rf_sp+0,PCR
-	LDX    _rf_w+0,PCR
-	LDY    _rf_ip+0,PCR
-	JSR	   [_rf_fp+0,PCR]
+	LEAX   trampoline2+0,PCR * push return address before modifying S
+	PSHS   X
+	LDS    _rf_rp+0,PCR  * S to RP (after pushing return address)
+	LDU    _rf_sp+0,PCR  * U to SP
+	LDX    _rf_w+0,PCR   * X to W
+	LDY    _rf_ip+0,PCR  * Y to IP
+	JMP	   [_rf_fp+0,PCR]
 trampoline2 EQU *
 	LDD	   _rf_fp+0,PCR
 	BNE	   trampoline1
+	LDY    ysave+0,PCR
 	LDU    usave+0,PCR
+	LDS    ssave+0,PCR
 	RTS
 funcend_rf_trampoline EQU *
 funcsize_rf_trampoline EQU funcend_rf_trampoline-_rf_trampoline
@@ -533,7 +568,13 @@ funcsize_rf_code_douse EQU funcend_rf_code_douse-_rf_code_douse
 
 	SECTION	rwdata
 
+ssave EQU *
+	FDB	$0000
+
 usave EQU *
-	FDB	$00
+	FDB	$0000
+
+ysave EQU *
+	FDB	$0000
 
 	ENDSECTION
