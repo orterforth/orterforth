@@ -30,6 +30,10 @@ Type:
 for a list of all fig-Forth words and a few additional ones 
 defined in orterforth.
 
+To exit orterforth, type:
+
+ MON
+
 For more information on building and running, including for
 other platforms, particularly retro ones, type:
 
