@@ -298,17 +298,7 @@ install : $(ORTER) $(ORTERFORTH)
 	cp "$(ORTER)" /usr/local/bin/orter
 	cp "$(ORTERFORTH)" /usr/local/bin/orterforth
 
-
-# === TRS-80 Model 100 ===
-
-m100 :
-
-	mkdir $@
-
-m100/hw.co : | m100
-
-	zcc +m100 -subtype=default hw.c -o $@ -create-app
-
+include target/m100/m100.mk
 
 # disc image as C include
 model.inc : model.disc | $(ORTER)
@@ -316,7 +306,6 @@ model.inc : model.disc | $(ORTER)
 	# xxd -i $< > $@.io
 	$(ORTER) hex include model_disc < $< > $@.io
 	mv $@.io $@
-
 
 include target/pico/pico.mk
 
