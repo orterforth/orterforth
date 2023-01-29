@@ -699,10 +699,9 @@ funcsize_rf_code_cl EQU funcend_rf_code_cl-_rf_code_cl
 
 _rf_code_cs EXPORT
 _rf_code_cs EQU *
-	PULU   D
-	ASLB
-	ROLA
-	LBRA   PUSHD
+	ASL    1,U
+	ROL    0,U
+	LBRA   NEXT
 funcend_rf_code_cs EQU *
 funcsize_rf_code_cs EQU funcend_rf_code_cs-_rf_code_cs
 
