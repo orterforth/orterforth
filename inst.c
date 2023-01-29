@@ -563,8 +563,8 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
   rf_inst_def_literal("bs", (uintptr_t) RF_BS);
   rf_inst_def_literal("user", (uintptr_t) RF_USER);
-  rf_inst_def_literal("inits0", (uintptr_t) RF_S0);
-  rf_inst_def_literal("initr0", (uintptr_t) RF_R0);
+  rf_inst_def_literal("s0", (uintptr_t) RF_S0);
+  rf_inst_def_literal("r0", (uintptr_t) RF_R0);
   rf_inst_def_literal("tib", (uintptr_t) RF_TIB);
 
   /* code address literals */
@@ -587,8 +587,7 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
   rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
 
-  /* stack limit literals */
-  rf_inst_def_literal("s0", (uintptr_t) RF_S0);
+  /* stack limit */
   rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
 
   /* installed flag now set from Forth */
