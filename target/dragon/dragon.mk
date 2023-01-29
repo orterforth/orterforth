@@ -188,3 +188,13 @@ dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 dragon/tx : | dragon
 
 	mkfifo $@
+
+# ROM files dir
+roms/dragon64 : | roms
+
+	mkdir $@
+
+# ROM files
+roms/dragon64/% :
+
+	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
