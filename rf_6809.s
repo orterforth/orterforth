@@ -56,9 +56,8 @@ funcsize_rf_start EQU funcend_rf_start-_rf_start
 
 _rf_trampoline EXPORT
 _rf_trampoline EQU *
+	PSHS   U,Y
 	STS    ssave+0,PCR
-	STU    usave+0,PCR
-	STY    ysave+0,PCR
 	BRA	   trampoline2
 trampoline1 EQU *
 	LEAX   trampoline2+0,PCR * push return address before modifying S
@@ -71,9 +70,8 @@ trampoline1 EQU *
 trampoline2 EQU *
 	LDD	   _rf_fp+0,PCR
 	BNE	   trampoline1
-	LDY    ysave+0,PCR
-	LDU    usave+0,PCR
 	LDS    ssave+0,PCR
+	PULS   U,Y
 	RTS
 funcend_rf_trampoline EQU *
 funcsize_rf_trampoline EQU funcend_rf_trampoline-_rf_trampoline
@@ -713,12 +711,6 @@ funcsize_rf_code_cs EQU funcend_rf_code_cs-_rf_code_cs
 	SECTION	rwdata
 
 ssave EQU *
-	FDB	$0000
-
-usave EQU *
-	FDB	$0000
-
-ysave EQU *
 	FDB	$0000
 
 	ENDSECTION
