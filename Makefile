@@ -227,7 +227,6 @@ $(TARGET)-help :
 	$(DISC) create <$< >$@.io
 	mv $@.io $@
 
-
 # common inst script commands
 CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh scripts/check-memory.sh
 STARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC)
@@ -260,7 +259,6 @@ clean-all : $(SYSTEM)-clean spectrum-clean
 disc : $(DISC) $(DR0) $(DR1)
 
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
-
 
 include target/dragon/dragon.mk
 
