@@ -80,6 +80,14 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/bbc/default.inc"
 #endif
 #endif
+#ifdef __C64__
+/* C64 */
+#define RF_TARGET_HI 0x0000
+#define RF_TARGET_LO 0x3d9c
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/c64/default.inc"
+#endif
+#endif
 #endif
 
 /* cmoc */
@@ -93,6 +101,7 @@ typedef unsigned int uintptr_t;
 typedef unsigned long rf_double_t;
 #define RF_BE
 #ifdef DRAGON
+/* DRAGON */
 #define RF_TARGET_HI 0x3195
 #define RF_TARGET_LO 0xC1F7
 #ifndef RF_TARGET_INC
@@ -309,6 +318,7 @@ typedef unsigned long uintptr_t;
 
 /* FORTH MACHINE */
 
+/* macro for introducing diagnostics */
 #define RF_LOG(name)
 
 /* SP */
@@ -318,9 +328,11 @@ extern uintptr_t *rf_sp;
 #define RF_SP_SET(a) { rf_sp = (a); }
 
 #ifdef RF_INLINE_SP
+/* inline SP operations */
 #define RF_SP_POP (*(rf_sp++))
 #define RF_SP_PUSH(a) { *(--rf_sp) = (a); }
 #else
+/* non-inline SP operations */
 uintptr_t rf_sp_pop(void);
 
 void __FASTCALL__ rf_sp_push(uintptr_t a);
@@ -336,9 +348,11 @@ extern uintptr_t *rf_rp;
 #define RF_RP_SET(a) { rf_rp = (a); }
 
 #ifdef RF_INLINE_RP
+/* inline RP operations */
 #define RF_RP_POP (*(rf_rp++))
 #define RF_RP_PUSH(a) { *(--rf_rp) = ((uintptr_t) (a)); }
 #else
+/* non-inline RP operations */
 uintptr_t rf_rp_pop(void);
 
 void __FASTCALL__ rf_rp_push(uintptr_t a);
