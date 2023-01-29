@@ -112,7 +112,7 @@ _rf_code_spat EXPORT
 _rf_code_spat EQU *
 	LEAX   ,U        X = VALUE OF SP
 	PSHU   X
-	LBRA   NEXT
+	BRA   NEXT
 funcend_rf_code_spat EQU *
 funcsize_rf_code_spat EQU funcend_rf_code_spat-_rf_code_spat
 
@@ -120,7 +120,7 @@ _rf_code_spsto EXPORT
 _rf_code_spsto EQU *
 	LDU    _rf_up+0,PCR
 	LDU    6,U
-	LBRA   NEXT
+	BRA   NEXT
 funcend_rf_code_spsto EQU *
 funcsize_rf_code_spsto EQU funcend_rf_code_spsto-_rf_code_spsto
 
@@ -128,14 +128,14 @@ _rf_code_rpsto EXPORT
 _rf_code_rpsto EQU *
 	LDX    _rf_up+0,PCR
 	LDS    8,X
-	LBRA   NEXT
+	BRA   NEXT
 funcend_rf_code_rpsto EQU *
 funcsize_rf_code_rpsto EQU funcend_rf_code_rpsto-_rf_code_rpsto
 
 _rf_code_lit EXPORT
 _rf_code_lit EQU *
 	LDD    ,Y++      get word pointed to by Y=IP and increment
-	LBRA   PUSHD     push D to data stack and then NEXT
+	BRA   PUSHD     push D to data stack and then NEXT
 funcend_rf_code_lit EQU *
 funcsize_rf_code_lit EQU funcend_rf_code_lit-_rf_code_lit
 
@@ -156,10 +156,10 @@ ZBYES EQU *
 	TFR    Y,D       puts IP = Y into D for arithmetic
 	ADDD   ,Y        adds offset to which IP is pointing
 	TFR    D,Y       sets new IP
-	LBRA   NEXT
+	BRA   NEXT
 ZBNO EQU *
 	LEAY   2,Y       skip over branch
-	LBRA   NEXT
+	BRA   NEXT
 funcend_rf_code_zbran EQU *
 funcsize_rf_code_zbran EQU funcend_rf_code_zbran-_rf_code_zbran
 funcend_rf_code_bran EQU *
@@ -201,14 +201,14 @@ _rf_code_xdo EQU *
 	PULU   D         counter
 	PULU   X         limit
 	PSHS   X,D       X goes first, so becomes second on RP=S
-	LBRA   NEXT
+	BRA   NEXT
 funcend_rf_code_xdo EQU *
 funcsize_rf_code_xdo EQU funcend_rf_code_xdo-_rf_code_xdo
 
 _rf_code_rr EXPORT
 _rf_code_rr EQU *
 	LDD    ,S        get counter from RP
-	LBRA   PUSHD
+	BRA   PUSHD
 funcend_rf_code_rr EQU *
 funcsize_rf_code_rr EQU funcend_rf_code_rr-_rf_code_rr
 
