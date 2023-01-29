@@ -330,3 +330,7 @@ roms/bbcb : | roms
 roms/bbcb/% : | roms/bbcb
 
 	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
+
+tools/github.com/haerfest/uef/uef2wave.py :
+
+	git submodule init tools/github.com/haerfest/uef && git submodule update --init tools/github.com/haerfest/uef

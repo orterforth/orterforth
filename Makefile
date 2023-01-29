@@ -165,19 +165,6 @@ $(SYSTEM)/%.s : %.c | $(SYSTEM)
 
 	$(CC) -S $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# emulator to build fast
-$(SYSTEM)/emulate_spectrum : \
-	$(SYSTEM)/emulate_spectrum.o \
-	$(SYSTEM)/z80.o \
-	$(SYSTEM)/persci.o
-
-	$(CC) -o $@ $^
-
-# spectrum emulator
-$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c persci.h | $(SYSTEM)
-
-	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
-
 # inst lib
 $(SYSTEM)/inst.o : inst.c model.inc rf.h system.inc persci.h | $(SYSTEM)
 
@@ -227,16 +214,6 @@ $(SYSTEM)/rf_$(PROC).o : rf_$(PROC).s | $(SYSTEM)
 $(SYSTEM)/system.o : system.c rf.h system.inc persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-
-# https://github.com/superzazu/z80.git
-$(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
-
-	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
-
-# https://github.com/mcleod-ideafix/zx81putil
-$(SYSTEM)/zx81putil : tools/zx81putil/zx81putil.c | $(SYSTEM)
-
-	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -o $@ $<
 
 # help
 .PHONY : $(TARGET)-help
@@ -344,62 +321,9 @@ tools :
 
 	mkdir $@
 
-tools/bin2cas.pl : | tools
-
-	curl --output $@ https://www.6809.org.uk/dragon/bin2cas.pl
-
-tools/github.com/haerfest/uef/uef2wave.py :
-
-	git submodule init tools/github.com/haerfest/uef && git submodule update --init tools/github.com/haerfest/uef
-
-tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas :
-
-	git submodule init tools/github.com/RC2014Z80/RC2014 && git submodule update --init tools/github.com/RC2014Z80/RC2014
-
-tools/z80/z80.c tools/z80/z80.h : | tools
-
-	cd tools && git clone https://github.com/superzazu/z80.git
-
-tools/zx81putil/zx81putil.c : | tools
-
-	cd tools && git clone https://github.com/mcleod-ideafix/zx81putil.git
-
 # uninstall from local
 .PHONY : uninstall
 uninstall :
 
 	rm -f /usr/local/bin/orter
 	rm -f /usr/local/bin/orterforth
-
-zx81 :
-
-	mkdir $@
-
-.PHONY : zx81-run
-zx81-run : zx81/inst.tzx | zx81/jtyone.jar
-
-	java -jar zx81/jtyone.jar zx81/inst.tzx@0 -scale 3 -machine ZX81
-
-zx81/%.tzx : zx81/%.P $(SYSTEM)/zx81putil
-
-	$(SYSTEM)/zx81putil -tzx $<
-
-zx81/inst.bin zx81/inst.P : zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
-
-	zcc +zx81 -lm -lzx81/rf -lzx81/system -lzx81/inst -create-app -m -o zx81/inst.bin main.c
-
-zx81/inst.lib : inst.c rf.h | zx81
-
-	zcc +zx81 -x -o $@ $<
-
-zx81/jtyone.jar : | zx81
-
-	curl --output $@ http://www.zx81stuff.org.uk/zx81/jtyone.jar
-
-zx81/rf.lib : rf.c rf.h target/zx81/system.inc | zx81
-
-	zcc +zx81 -x -o $@ $<
-
-zx81/system.lib : target/zx81/system.c rf.h | zx81
-
-	zcc +zx81 -x -o $@ $<

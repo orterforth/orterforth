@@ -1,5 +1,23 @@
 # === ZX Spectrum ===
 
+# emulator to build fast
+$(SYSTEM)/emulate_spectrum : \
+	$(SYSTEM)/emulate_spectrum.o \
+	$(SYSTEM)/z80.o \
+	$(SYSTEM)/persci.o
+
+	$(CC) -o $@ $^
+
+# spectrum emulator
+$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c persci.h | $(SYSTEM)
+
+	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
+
+# https://github.com/superzazu/z80.git
+$(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
+
+	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
+
 # ROM files dir
 roms/spectrum : | roms
 
@@ -77,7 +95,7 @@ ifeq ($(SPECTRUMOPTION),assembly-z88dk)
 SPECTRUMINC := target/spectrum/assembly-z88dk.inc
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
-# ORIGIN higher, 0x9200, C code is larger as uses z88dk libs
+# ORIGIN higher, C code is larger as uses z88dk libs
 SPECTRUMORIGIN := 0x9200
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
@@ -89,7 +107,7 @@ ifeq ($(SPECTRUMOPTION),default)
 SPECTRUMINC := target/spectrum/default.inc
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lrs232if1
-# ORIGIN higher, 0x9B00, C code is larger as uses z88dk libs and pure C impl
+# ORIGIN higher, C code is larger as uses z88dk libs and pure C impl
 SPECTRUMORIGIN := 0x9D00
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
@@ -402,3 +420,7 @@ spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 	zcc +zx \
 		-x -o $@ \
 		$<
+
+tools/z80/z80.c tools/z80/z80.h : | tools
+
+	cd tools && git clone https://github.com/superzazu/z80.git

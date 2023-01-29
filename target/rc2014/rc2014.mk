@@ -198,3 +198,7 @@ rc2014/z80.lib : rf_z80.asm | rc2014
 		-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
 		-x -o $@ \
 		$<
+
+tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas :
+
+	git submodule init tools/github.com/RC2014Z80/RC2014 && git submodule update --init tools/github.com/RC2014Z80/RC2014
