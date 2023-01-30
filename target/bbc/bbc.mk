@@ -151,6 +151,7 @@ endif
 
 BBCCC65OPTS := -O -t none \
 	-D__BBC__ \
+	-DRF_ORG='0x$(BBCORG)' \
 	-DRF_ORIGIN='0x$(BBCORIGIN)' \
 	-DRF_TARGET_INC='"$(BBCINC)"'
 

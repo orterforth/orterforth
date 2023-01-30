@@ -19,11 +19,11 @@
 /* for TIB, use the BASIC text input buffer area at 0x0700 */
 #define RF_TIB 0x0700
 
-/* place disc buffers before origin at 0x0E00 - 0x1220 */
-#define RF_LIMIT 0x1220
+/* place disc buffers before origin */
+#define RF_LIMIT RF_ORG
 
-/* C code start address */
-#define RF_ORG 0x1220
+/* C code start address, passed in command line */
+/*#define RF_ORG xxxx*/
 
 /* origin passed in command line, follows the C code */
 /*#define RF_ORIGIN xxxx*/

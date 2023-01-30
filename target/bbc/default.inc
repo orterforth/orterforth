@@ -21,8 +21,8 @@
 /* and below C stack if this is at 0x7C00 */
 #define RF_LIMIT 0x7B00
 
-/* C code start address */
-#define RF_ORG 0x1720
+/* C code start address, passed in command line */
+/*#define RF_ORG xxxx*/
 
 /* origin passed in command line, follows the C code */
 /*#define RF_ORIGIN xxxx*/
