@@ -1,11 +1,7 @@
 # https://github.com/mcleod-ideafix/zx81putil
-$(SYSTEM)/zx81putil : tools/zx81putil/zx81putil.c | $(SYSTEM)
+tools/github.com/mcleod-ideafix/zx81putil/zx81putil.c :
 
-	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -o $@ $<
-
-tools/zx81putil/zx81putil.c : | tools
-
-	cd tools && git clone https://github.com/mcleod-ideafix/zx81putil.git
+	git submodule update --init tools/github.com/mcleod-ideafix/zx81putil
 
 zx81 :
 

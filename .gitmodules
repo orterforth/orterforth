@@ -7,3 +7,6 @@
 [submodule "tools/github.com/superzazu/z80"]
 	path = tools/github.com/superzazu/z80
 	url = https://github.com/superzazu/z80.git
+[submodule "tools/github.com/mcleod-ideafix/zx81putil"]
+	path = tools/github.com/mcleod-ideafix/zx81putil
+	url = https://github.com/mcleod-ideafix/zx81putil.git
