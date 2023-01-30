@@ -4,3 +4,6 @@
 [submodule "tools/github.com/RC2014Z80/RC2014"]
 	path = tools/github.com/RC2014Z80/RC2014
 	url = https://github.com/RC2014Z80/RC2014.git
+[submodule "tools/github.com/superzazu/z80"]
+	path = tools/github.com/superzazu/z80
+	url = https://github.com/superzazu/z80.git

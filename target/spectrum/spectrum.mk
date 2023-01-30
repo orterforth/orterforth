@@ -14,7 +14,10 @@ $(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c persci.h | $(SYSTEM)
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
 # https://github.com/superzazu/z80.git
-$(SYSTEM)/z80.o : tools/z80/z80.c tools/z80/z80.h | $(SYSTEM)
+$(SYSTEM)/z80.o : \
+	tools/github.com/superzazu/z80/z80.c \
+	tools/github.com/superzazu/z80/z80.h | \
+	$(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
@@ -163,7 +166,7 @@ FUSEOPTS := \
 	--rs232-tx spectrum/fuse-rs232-tx
 
 .PHONY : spectrum-run
-spectrum-run : $(SPECTRUMRUNDEPS)
+spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
 
 ifeq ($(SPECTRUMMACHINE),real)
 	@printf '* \035[1;35mOn the Spectrum type:\035[0;0m\n'
@@ -421,6 +424,6 @@ spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 		-x -o $@ \
 		$<
 
-tools/z80/z80.c tools/z80/z80.h : | tools
+tools/github.com/superzazu/z80/z80.c tools/github.com/superzazu/z80/z80.h :
 
-	cd tools && git clone https://github.com/superzazu/z80.git
+	git submodule update --init tools/github.com/superzazu/z80

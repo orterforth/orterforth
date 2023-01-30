@@ -254,6 +254,11 @@ clean : $(TARGET)-clean
 .PHONY : clean-all
 clean-all : $(SYSTEM)-clean spectrum-clean
 
+# create empty to use as default DR1
+data.disc :
+
+	touch $@
+
 # run disc on physical serial port
 .PHONY : disc
 disc : $(DISC) $(DR0) $(DR1)
