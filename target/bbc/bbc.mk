@@ -1,9 +1,23 @@
 # === BBC Micro ===
 
+# common dependencies
+BBCDEPS := bbc/inst.o bbc/main.o bbc/rf.o
+
+# default loading method
+BBCLOADINGMETHOD := disk
+
+# default is to run MAME
+BBCMACHINE := mame
+#BBCMACHINE := real
+
 # build config option
 # BBCOPTION := assembly
 BBCOPTION := default
 # BBCOPTION := tape
+
+# default ORG and ORIGIN
+BBCORG := 1720
+BBCORIGIN := 3000
 
 # emulator ROM files
 BBCROMS := \
@@ -13,36 +27,32 @@ BBCROMS := \
 	roms/bbcb/phroma.bin \
 	roms/bbcb/saa5050
 
+# include file maps to option
+BBCINC := target/bbc/$(BBCOPTION).inc
+
 # assembly code
 ifeq ($(BBCOPTION),assembly)
-	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/system_asm.o bbc/bbc.lib
-	BBCINC := target/bbc/assembly.inc
-	BBCLOADINGMETHOD := disk
-	BBCORG := 1720
+	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
 	BBCORIGIN := 2200
 endif
 
 # default C code
 ifeq ($(BBCOPTION),default)
-	BBCDEPS := bbc/mos.o bbc/main.o bbc/rf.o bbc/inst.o bbc/system_c.o bbc/bbc.lib
-	BBCINC := target/bbc/default.inc
-	BBCLOADINGMETHOD := disk
-	BBCORG := 1720
-	BBCORIGIN := 3000
+	BBCDEPS += bbc/mos.o bbc/system_c.o
 endif
 
-# assembly code, tape only config starting at 0xE00
+# assembly code, tape only config starting at 0x0E00
+# BBCORG can be moved back to 0x0F20 if 0x0B00 onwards not used
+# and BBCORIGIN by the same amount, then MODE 0, 1, 2 are available
 ifeq ($(BBCOPTION),tape)
-	BBCDEPS := bbc/main.o bbc/rf.o bbc/rf_6502.o bbc/inst.o bbc/system_asm.o bbc/bbc.lib
-	BBCINC := target/bbc/tape.inc
+	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
 	BBCLOADINGMETHOD := tape
 	BBCORG := 1220
 	BBCORIGIN := 1D00
 endif
 
-# default is to run MAME
-BBCMACHINE := mame
-#BBCMACHINE := real
+# apparently bbc.lib must be the last dep
+BBCDEPS += bbc/bbc.lib
 
 # physical machine loading method serial by default, ROM files not needed
 ifeq ($(BBCMACHINE),real)
