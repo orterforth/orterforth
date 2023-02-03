@@ -35,7 +35,7 @@ ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/z80.lib
 RC2014INC := target/rc2014/assembly.inc
 RC2014LIBS += -lrc2014/z80
-RC2014ORIGIN := 0x9F00
+RC2014ORIGIN := 0x9F80
 endif
 ifeq ($(RC2014OPTION),default)
 RC2014INC := target/rc2014/default.inc
@@ -47,6 +47,17 @@ RC2014RESET := \
 	read -p "Then press enter to start: " LINE && \
 	printf '* \033[1;33mResetting\033[0;0m\n' && \
 	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
+
+RC2014ZCCOPTS := \
+	+rc2014 -subtype=basic -clib=new -m \
+	-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
+	-DRF_ORIGIN=$(RC2014ORIGIN) \
+	-DRF_ORG=$(RC2014ORG) \
+	-DRF_TARGET_INC='\"$(RC2014INC)\"' \
+	-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
+	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
+	-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
+	-Ca-DRF_ORG=$(RC2014ORG)
 
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
@@ -70,12 +81,9 @@ rc2014/inst_CODE.bin : \
 	z80_memory.asm \
 	main.c
 
-	zcc +rc2014 -subtype=basic -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' \
+	zcc \
+		$(RC2014ZCCOPTS) \
 		$(RC2014LIBS) \
-		-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
-	 	-Ca-DRF_ORG=$(RC2014ORG) \
-	 	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
-		-m \
 		-o rc2014/inst \
 		z80_memory.asm main.c
 
@@ -123,8 +131,8 @@ rc2014/inst_INST.bin : rc2014/inst_CODE.bin
 # inst code
 rc2014/inst.lib : inst.c rf.h $(RC2014INC) inst.h | rc2014
 
-	zcc +rc2014 -clib=new \
-		-DRF_TARGET_INC='\"$(RC2014INC)\"' \
+	zcc \
+		$(RC2014ZCCOPTS) \
 		-x -o $@ $< \
 		--codeseg=INST \
 		--dataseg=INST \
@@ -184,20 +192,17 @@ rc2014/orterforth.ser : rc2014/hexload.bas rc2014/orterforth.ihx
 # base orterforth code
 rc2014/rf.lib : rf.c rf.h $(RC2014INC) | rc2014
 
-	zcc +rc2014 -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' -x -o $@ $<
+	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
 # system code
 rc2014/system.lib : target/rc2014/system.c rf.h $(RC2014INC) | rc2014
 
-	zcc +rc2014 -clib=new -DRF_TARGET_INC='\"$(RC2014INC)\"' -x -o $@ $<
+	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
 # Z80 assembly optimised code
 rc2014/z80.lib : rf_z80.asm | rc2014
 
-	zcc +rc2014 -clib=new \
-		-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
-		-x -o $@ \
-		$<
+	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
 tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas :
 

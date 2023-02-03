@@ -11,13 +11,13 @@
 #define RF_INST_SAVE
 
 /* Start of C code */
-#define RF_ORG 0x9000
+/*#define RF_ORG xxxx*/
 
 /* Start of Forth origin */
-#define RF_ORIGIN 0x9F00
+/*#define RF_ORIGIN xxxx*/
 
 /* Offset of C inst code */
-#define RF_INST_OFFSET 0x5000
+/*#define RF_INST_OFFSET xxxx*/
 
 /* end of disc buffers - leave space for C stack in high memory */
 #define RF_LIMIT 0xFF00
