@@ -27,18 +27,17 @@ RC2014OPTION := assembly
 #RC2014OPTION := default
 
 RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
+RC2014INC := target/rc2014/$(RC2014OPTION).inc
 RC2014INSTOFFSET := 0x5000
 RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
 RC2014ORG := 0x9000
 
 ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/z80.lib
-RC2014INC := target/rc2014/assembly.inc
 RC2014LIBS += -lrc2014/z80
 RC2014ORIGIN := 0x9F80
 endif
 ifeq ($(RC2014OPTION),default)
-RC2014INC := target/rc2014/default.inc
 RC2014ORIGIN := 0xAB00
 endif
 
@@ -155,6 +154,7 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 # saved hex result
 rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) $(ORTER)
 
+	@# NB this does not allow for BSS
 	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
 
 	@$(RC2014RESET)

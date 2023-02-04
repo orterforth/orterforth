@@ -236,6 +236,7 @@ STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; sh scripts/start.sh
 STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
 WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
 
+# common options for MAME
 MAMEOPTS := -rompath roms -video opengl -skip_gameinfo -nomax -window
 
 # build
