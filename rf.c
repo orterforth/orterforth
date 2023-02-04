@@ -620,7 +620,6 @@ static uintptr_t rf_uslas(uintptr_t uh, uintptr_t ul, uintptr_t v, uintptr_t *r)
 	int i;
 
   /* overflow or divide by zero */
-  /* TODO is this TOPBIT check correct */
 	if (v >= RF_TOPBIT || uh >= v) {
     *r = (uintptr_t) -1;
     return (uintptr_t) -1;
