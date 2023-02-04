@@ -95,53 +95,53 @@ DECLARE VOCABULARY
 
 
 (  INPUT-OUTPUT,  TIM                              WFR-780519 )
+CODE EMIT   XSAVE STX,  BOT 1+ LDA,  7F # AND,
+            72C6 JSR,  XSAVE LDX,  POP JMP,
+CODE KEY   XSAVE STX,  BEGIN,  BEGIN,  8 # LDX,
+      BEGIN,  6E02 LDA,  .A LSR,  CS END,  7320 JSR,
+      BEGIN,  731D JSR,  0 X) CMP,  0 X) CMP,  0 X) CMP,
+      0 X) CMP,  0 X) CMP,  6E02 LDA,  .A LSR,  PHP,  TYA,
+      .A LSR,  PLP,  CS IF,  80 # ORA,  THEN,  TAY,  DEX,
+      0= END,  731D JSR,  FF # EOR,  7F # AND,  0= NOT END,
+      7F # CMP,  0= NOT END,  XSAVE LDX,  PUSH0A JMP,
+CODE CR  XSAVE STX,  728A JSR,  XSAVE LDX, NEXT JMP,
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-DECIMAL     ;S    
+CODE ?TERMINAL   1 # LDA,  6E02 BIT,  0= NOT IF,
+     BEGIN,  731D JSR,  6E02 BIT,  0= END,  INY,  THEN,
+     TYA,  PUSH0A  JMP,
+DECIMAL       ;S
 (  INPUT-OUTPUT,  APPLE                            WFR-780730 )
+CODE HOME   FC58 JSR,  NEXT JMP,
+CODE SCROLL   FC70 JSR,  NEXT JMP,
 
+HERE  '  KEY  2  -  !    ( POINT KEY TO HERE )
+   FD0C JSR,  7F # AND,  PUSH0A JMP,
+HERE  ' EMIT  2  -  !   (  POINT EMIT TO HERE  )
+   BOT 1+ LDA,  80 # ORA,  FDED JSR,  POP JMP,
+HERE  '  CR  2  -  !      ( POINT CR TO HERE )
+    FD8E JSR,  NEXT JMP,
+HERE  '  ?TERMINAL  2  -  !   ( POINT ?TERM TO HERE )
+   C000 BIT,  0<
+      IF,  BEGIN,  C010 BIT,  C000 BIT,  0< NOT END,  INY,
+        THEN,  TYA,  PUSH0A JMP,
 
-
-
-
-
-
-
-
-
-
-
-
-
-DECIMAL  ;S    
+DECIMAL    ;S
 (  INPUT-OUTPUT,  SYM-1                            WFR-781015 )
 HEX
+CODE KEY    8A58 JSR,  7F # AND,  PUSH0A JMP,
+
+CODE EMIT   BOT 1+ LDA,    8A47 JSR,  POP JMP,
+
+CODE CR    834D JSR,  NEXT JMP,
+
+CODE ?TERMINAL  ( BREAK TEST FOR ANY KEY )
+    8B3C JSR,  CS
+    IF,  BEGIN,  8B3C JSR,  CS NOT  END,  INY,  THEN,
+           TYA,  PUSH0A  JMP,
 
 
 
-
-
-
-
-
-
-
-
-
-
-DECIMAL  ;S    
+DECIMAL    ;S
 
 
 
@@ -191,7 +191,7 @@ DECIMAL  ;S
 
 
 (  COLD AND WARM ENTRY,  USER PARAMETERS          WFR-79APR29 )
-( ASSEMBLER   OBJECT  MEM ) HEX
+( ASSEMBLER OBJECT MEM ) HEX
 0000 , 0000 ,      ( WORD ALIGNED VECTOR TO COLD )
 0000 , 0000 ,      ( WORD ALIGNED VECTOR TO WARM )
 relrev , ver  ,  ( CPU, AND REVISION PARAMETERS )
