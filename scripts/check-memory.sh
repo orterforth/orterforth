@@ -1,7 +1,5 @@
 #!/usr/bin/env sh
 
-# TODO move to scripts
-
 set -eu
 
 # check-memory.sh
