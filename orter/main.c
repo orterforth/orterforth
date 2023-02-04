@@ -162,11 +162,6 @@ static int hex_read()
 {
   int b, c;
 
-  /* unbuffered */
-  /* TODO remove */
-  setvbuf(stdin, NULL, _IONBF, 0);
-  setvbuf(stdout, NULL, _IONBF, 0);
-
   /* loop until EOF */
   for (b = 0;;) {
     /* high digit */
