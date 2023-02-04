@@ -190,7 +190,7 @@ size_t orter_io_stdout_wr(char *off, size_t len)
   return orter_io_fd_wr(1, off, len);
 }
 
-static void bufread(orter_io_rdwr_t rd, char *buf, char **offset, size_t *pending)
+static void bufread(int in, orter_io_rdwr_t rd, char *buf, char **offset, size_t *pending)
 {
   size_t n;
 
@@ -200,12 +200,17 @@ static void bufread(orter_io_rdwr_t rd, char *buf, char **offset, size_t *pendin
   }
 
   /* read bytes and initialise buffer */
-  n = rd(buf, 256);
+  if (rd) {
+    n = rd(buf, 256);
+  } else {
+    /* no fp provided, use fd */
+    n = orter_io_fd_rd(in, buf, 256);
+  }
   *offset = buf;
   *pending = n;
 }
 
-static void bufwrite(orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending)
+static void bufwrite(int out, orter_io_rdwr_t wr, char *buf, char **offset, size_t *pending)
 {
   size_t n;
 
@@ -215,7 +220,12 @@ static void bufwrite(orter_io_rdwr_t wr, char *buf, char **offset, size_t *pendi
   }
 
   /* write bytes and advance pointers */
-  n = wr(*offset, *pending);
+  if (wr) {
+    n = wr(*offset, *pending);
+  } else {
+    /* no fp provided, use fd */
+    n = orter_io_fd_wr(out, *offset, *pending);
+  }
   *offset += n;
   *pending -= n;
 
@@ -237,8 +247,8 @@ void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter
 
 void orter_io_pipe_move(orter_io_pipe_t *pipe)
 {
-  bufread(pipe->rd, pipe->buf, &pipe->off, &pipe->len);
-  bufwrite(pipe->wr, pipe->buf, &pipe->off, &pipe->len);
+  bufread(pipe->in, pipe->rd, pipe->buf, &pipe->off, &pipe->len);
+  bufwrite(pipe->out, pipe->wr, pipe->buf, &pipe->off, &pipe->len);
 }
 
 static int orter_io_nfds;

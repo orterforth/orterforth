@@ -24,7 +24,7 @@ static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
   size_t len;
 
   /* read line from input file */
-  if (!fgets(line, 80, stream)) {
+  if (!fgets(line, 66, stream)) {
     if (feof(stream)) {
       return 0;
     }
@@ -49,7 +49,7 @@ static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
 
 static int disc_create(void)
 {
-	char line[82]; 
+	char line[66];
   int lineno = 0;
   char block[RF_BBLK];
   int i, status;
@@ -83,31 +83,41 @@ static int disc_create(void)
 
 static orter_io_pipe_t in;
 static orter_io_pipe_t out;
+
+/* mux of disc and serial console using bit 7 */
 static char mux = 0;
 static orter_io_pipe_t mux_in;
 static orter_io_pipe_t mux_out;
 
+/* determines whether to read data from disc */
 static char fetch = 0;
 
+/* determines whether to log disc I/O to stderr */
 static char log = 1;
 
+/* write data to disc */
 static size_t disc_wr(char *off, size_t len)
 {
   char c;
   size_t i;
 
-  /* log */
+  /* start log line */
   if (log) {
     fputs("\033[0;33m", stderr);
     fwrite(off, 1, len, stderr);
   }
 
   for (i = 0; i < len; i++) {
+    /* write byte */
     c = *(off++);
     rf_persci_putc(c);
+
+    /* allow read once EOT written */
     if (c == RF_ASCII_EOT) {
+      /* need to return correct length */
       i++;
       fetch = 1;
+
       /* log line */
       if (log) {
         fputs("\033[0m\n", stderr);
@@ -120,6 +130,7 @@ static size_t disc_wr(char *off, size_t len)
   return i;
 }
 
+/* read data from disc */
 static size_t disc_rd(char *off, size_t len)
 {
   char c;
@@ -131,16 +142,20 @@ static size_t disc_rd(char *off, size_t len)
   }
 
   for (i = 0; i < len; i++) {
+    /* read byte */
     c = rf_persci_getc();
     *(off++) = c;
+
+    /* stop read once EOT read */
     if (c == RF_ASCII_EOT) {
+      /* return correct length */
       i++;
       fetch = 0;
       break;
     }
   }
 
-  /* log */
+  /* log line */
   if (log) {
     fwrite(off - i, 1, i, stderr);
     fputc('\n', stderr);
@@ -150,6 +165,7 @@ static size_t disc_rd(char *off, size_t len)
   return i;
 }
 
+/* read data from Fuse Emulator RS232 */
 static size_t fuse_rd(char *off, size_t len)
 {
   size_t i;
@@ -172,6 +188,7 @@ static size_t fuse_rd(char *off, size_t len)
   return i;
 }
 
+/* write data to Fuse Emulator RS232 */
 static size_t fuse_wr(char *off, size_t len)
 {
   size_t i;
@@ -185,51 +202,58 @@ static size_t fuse_wr(char *off, size_t len)
 
 static int tcp_fd;
 
-static size_t tcp_rd(char *off, size_t len)
-{
-  return orter_io_fd_rd(tcp_fd, off, len);
-}
-
-static size_t tcp_wr(char *off, size_t len)
-{
-  return orter_io_fd_wr(tcp_fd, off, len);
-}
-
 static char mux_out_buf[256];
+static char *mux_out_off = mux_out_buf;
 static size_t mux_out_len;
 
+/* read data from serial and mux into two buffers */
 static size_t mux_disc_rd(char *off, size_t len)
 {
   char buf[256];
-  size_t i, j = 0, k = 0;
+  size_t i, j = 0, k = 0, size;
+
+  /* don't read if mux out buff full */
+  if (mux_out_len) {
+    return 0;
+  }
+
   /* read for disc and console output */
-  size_t size = orter_io_fd_rd(orter_serial_fd, buf, len);
+  size = orter_io_fd_rd(orter_serial_fd, buf, len);
   for (i = 0; i < size; i++) {
     char c = buf[i];
     if (c & 0x80) {
       off[j++] = c & 0x7F;
     } else {
-      mux_out_buf[k++] = c;
+      mux_out_off[k++] = c;
     }
   }
 
+  /* record/return both lengths */
   mux_out_len = k;
   return j;
 }
 
+/* read from mux console buffer */
 static size_t mux_console_rd(char *off, size_t len)
 {
-  /* TODO proper flow control */
-  if (mux_out_len > len) {
-    fprintf(stderr, "buffer full\n");
-    exit(1);
+  /* number of bytes to read */
+  size_t s = (mux_out_len > len) ? len : mux_out_len;
+
+  /* read bytes from mux buffer */
+  memcpy(off, mux_out_off, s);
+  mux_out_off += s;
+  mux_out_len -= s;
+
+  /* reset mux buffer */
+  if (!mux_out_len) {
+    mux_out_off = mux_out_buf;
+    mux_out_len = 0;
   }
-  memcpy(off, mux_out_buf, mux_out_len);
-  len = mux_out_len;
-  mux_out_len = 0;
-  return len;
+
+  return s;
 }
 
+/* write disc data to serial */
 static size_t mux_disc_wr(char *off, size_t len)
 {
   size_t i;
@@ -282,6 +306,7 @@ static int serve(char *dr0, char *dr1)
   return orter_io_exit;
 }
 
+/* TODO migrate fuse to fds, then can remove */
 static int setconsoleunbuffered(void)
 {
   if (setvbuf(stdin, NULL, _IONBF, 0)) {
@@ -334,6 +359,7 @@ static int disc_serial(int argc, char **argv)
   }
 
   /* create pipelines */
+  /* TODO omit fps */
   orter_io_pipe_init(&in, orter_serial_fd, orter_serial_rd, disc_wr, -1);
   orter_io_pipe_init(&out, -1, disc_rd, orter_serial_wr, orter_serial_fd);
 
@@ -350,10 +376,6 @@ static int disc_mux(int argc, char **argv)
   int exit = 0;
 
   /* stdin/stdout */
-  exit = setconsoleunbuffered();
-  if (exit) {
-    return exit;
-  }
   exit = orter_io_std_open();
   if (exit) {
     return exit;
@@ -369,12 +391,16 @@ static int disc_mux(int argc, char **argv)
     return exit;
   }
 
-  /* create pipelines */
+  /* enable mux, create pipelines */
   mux = 1;
+  /* serial in to disc (and stdout buffer) */
   orter_io_pipe_init(&in, orter_serial_fd, mux_disc_rd, disc_wr, -1);
-  orter_io_pipe_init(&mux_in, 0, orter_io_stdin_rd, orter_serial_wr, orter_serial_fd);
+  /* stdin to serial out */
+  orter_io_pipe_init(&mux_in, 0, 0, 0, orter_serial_fd);
+  /* disc read to serial out */
   orter_io_pipe_init(&out, -1, disc_rd, mux_disc_wr, orter_serial_fd);
-  orter_io_pipe_init(&mux_out, -1, mux_console_rd, orter_io_stdout_wr, 1);
+  /* stdout buffer to stdout */
+  orter_io_pipe_init(&mux_out, -1, mux_console_rd, 0, 1);
 
   /* don't log as we are using the console for output */
   log = 0;
@@ -392,18 +418,15 @@ static int disc_standard(int argc, char **argv)
 {
   int exit = 0;
 
-  exit = setconsoleunbuffered();
-  if (exit) {
-    return exit;
-  }
+  /* stdin/stdout */
   exit = orter_io_std_open();
   if (exit) {
     return exit;
   }
 
   /* create pipelines */
-  orter_io_pipe_init(&in, 0, orter_io_stdin_rd, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, orter_io_stdout_wr, 1);
+  orter_io_pipe_init(&in, 0, 0, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, 0, 1);
 
   /* run */
   exit = serve(argv[2], argv[3]);
@@ -413,6 +436,7 @@ static int disc_standard(int argc, char **argv)
   return exit;
 }
 
+/* TODO tcp into own lib */
 static int disc_tcp(int argc, char **argv)
 {
   int exit = 0;
@@ -470,8 +494,8 @@ static int disc_tcp(int argc, char **argv)
   }
 
   /* create pipelines */
-  orter_io_pipe_init(&in, tcp_fd, tcp_rd, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, tcp_wr, tcp_fd);
+  orter_io_pipe_init(&in, tcp_fd, 0, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, 0, tcp_fd);
 
   exit = serve(argv[3], argv[4]);
 
@@ -513,11 +537,11 @@ int main(int argc, char *argv[])
   }
 
   /* Usage */
-  fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n", stderr);
-  fputs("       disc fuse <dr0> <dr1>                 Run disc controller over stdin/stdout with Fuse Emulator escape\n", stderr);
-  fputs("       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
-  fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n", stderr);
-  fputs("       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n", stderr);
-  fputs("       disc tcp <port> <dr0> <dr1>           Run disc controller over tcp port\n", stderr);
+  fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n"
+        "       disc fuse <dr0> <dr1>                 Run disc controller over stdin/stdout with Fuse Emulator escape\n"
+        "       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
+  fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n"
+        "       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n"
+        "       disc tcp <port> <dr0> <dr1>           Run disc controller over tcp port\n", stderr);
   return 1;
 }
