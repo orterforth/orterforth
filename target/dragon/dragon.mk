@@ -87,7 +87,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : $(DRAGONDEPS) main.c
 
-	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=256 -nodefaultlibs -o $@ $^
+	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 

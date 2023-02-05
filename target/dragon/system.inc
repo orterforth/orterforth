@@ -2,10 +2,14 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
-#define RF_INST_SAVE
-
 /* backspace key */
 #define RF_BS 0x0008
+
+/* save to DR1 once installed */
+#define RF_INST_SAVE
+
+/* End of disc buffers and usable RAM */
+#define RF_LIMIT 0x7EF0
 
 /* C code start address */
 /* passed in command line */
@@ -14,9 +18,6 @@
 /* Forth ORIGIN start address */
 /* passed in command line */
 /*#define RF_ORIGIN 0xxxxx*/
-
-/* End of disc buffers and usable RAM */
-#define RF_LIMIT 0x7E00
 
 /* assembly code definitions */
 #ifdef RF_ASSEMBLY
