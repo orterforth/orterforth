@@ -1294,7 +1294,7 @@ LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
 
 
 
-DECIMAL
+
 CREATE : docol DP @ cl MINUS + ! 192 STATE !
 CREATE 192 STATE ! docol DP @ cl MINUS + !
 ;S [ CURRENT @ @ 96 TOGGLE
@@ -1316,13 +1316,13 @@ CREATE 192 STATE ! docol DP @ cl MINUS + !
 : MESSAGE ; : QUIT ; : MIN ; : DR0 ; : R/W ; : . DROP ;
 ( required by the model source                                )
 : HEX 16 BASE ! ; : HERE DP @ ; : CODE CREATE SMUDGE ;
+: DECIMAL 10 BASE ! ;
 : , HERE ! cl DP +! ; : LITERAL COMPILE noop , ; IMMEDIATE
 : +ORIGIN origin + ; : -FIND 32 WORD HERE CONTEXT @ @ (FIND) ;
 : [COMPILE] -FIND DROP DROP cl - , ; IMMEDIATE
 : BYTE.IN -FIND DROP DROP + ;
 : REPLACED.BY -FIND DROP DROP cl - SWAP ! ;
 -->
-
 
 
 

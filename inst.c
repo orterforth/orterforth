@@ -59,14 +59,6 @@ static void rf_inst_code_noop(void)
 }
 #endif
 
-/* PREV - always use just first buffer */
-static void rf_inst_code_prev(void)
-{
-  RF_START;
-  RF_SP_PUSH((uintptr_t) RF_FIRST);
-  RF_JUMP_NEXT;
-}
-
 /* block-cmd - write I nn nn /n and return buffer address */
 static void rf_inst_code_block_cmd(void)
 {
@@ -81,16 +73,6 @@ static void rf_inst_code_block_cmd(void)
     RF_SP_PUSH((uintptr_t) cmd);
   }
   RF_JUMP_NEXT;
-}
-
-/* replaces strlen */
-static uint8_t __FASTCALL__ rf_inst_strlen(const char *s)
-{
-  uint8_t i;
-
-  for (i = 0; *(s++); ++i) {
-  }
-  return i;
 }
 
 /* replaces memset */
@@ -111,20 +93,22 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 /* CURRENT and CONTEXT vocabulary during inst */
 static char *rf_inst_vocabulary = 0;
 
-/* CREATE */
-static void rf_inst_create(uint8_t length, uint8_t *name)
+/* CREATE + SMUDGE */
+static void rf_inst_def(char *name)
 {
   uint8_t *here = (uint8_t *) RF_USER_DP;
   uint8_t *there = here;
-
-  /* length byte with smudge */
-  *here = length | 0xA0;
+  uint8_t length;
 
   /* name */
-  while (length--) {
+  while (*name) {
     *(++here) = *(name++);
   }
+  length = (uintptr_t) (here - there);
   ++here;
+
+  /* length byte, unsmudged */
+  *there = length | 0x80;
 
 #ifdef __CC65__
   /* 6502 bug workaround */
@@ -150,15 +134,6 @@ static void rf_inst_create(uint8_t length, uint8_t *name)
 
   /* vocabulary */
   rf_inst_vocabulary = (char *) there;
-}
-
-/* create and un-smudge */
-static void __FASTCALL__ rf_inst_def(char *name)
-{
-  /* create */
-  rf_inst_create(rf_inst_strlen(name), (uint8_t *) name);
-  /* un-smudge */
-  *rf_inst_vocabulary ^= 0x20;
 }
 
 /* NUMBER */
@@ -460,7 +435,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 64
+#define RF_INST_CODE_LIT_LIST_SIZE 63
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, "cl", rf_code_cl },
@@ -533,7 +508,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "bwrit", "BLOCK-WRITE", rf_code_bwrit },
   { "bread", "BLOCK-READ", rf_code_bread },
   { 0, "add", rf_inst_code_add },
-  { 0, "prev", rf_inst_code_prev },
   { 0, "block-cmd", rf_inst_code_block_cmd }
 };
 
@@ -583,7 +557,9 @@ static void rf_inst_forward(void)
   /* for +ORIGIN */
   rf_inst_def_literal("origin", (uintptr_t) RF_ORIGIN);
 
-  /* disc buffer literals */
+  /* disc buffer constant and literals */
+  rf_inst_def_code("FIRST", rf_code_docon);
+  rf_inst_comma((uintptr_t) RF_FIRST);
   rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
   rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
 
@@ -614,8 +590,8 @@ static void rf_inst_forward(void)
   /* BLOCK */
   rf_inst_colon("BLOCK");
   rf_inst_compile(
-    "DUP prev @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC prev "
-    "cl + BLOCK-READ ?DISC DUP prev ! DROP prev cl + ;S");
+    "DUP FIRST @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
+    "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
   /* WORD */
   rf_inst_colon("WORD");
@@ -690,10 +666,6 @@ static void rf_inst_forward(void)
   rf_inst_colon("[");
   rf_inst_compile("LIT 0 STATE ! ;S");
   rf_inst_immediate();
-
-  /* DECIMAL */
-  rf_inst_colon("DECIMAL");
-  rf_inst_compile("LIT 10 BASE ! ;S");
 }
 
 static void rf_inst_emptybuffers(void)
