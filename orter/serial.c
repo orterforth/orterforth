@@ -33,8 +33,8 @@ int                   orter_serial_fd = -1;
 static int            echo = 0;
 static int            icrnl = 0;
 static int            ocrnl = 0;
-static int            olfcr = 0;
 static int            odelbs = 0;
+static int            onlcrx = 0;
 
 /* serial port */
 static struct termios serial_attr;
@@ -219,9 +219,8 @@ static size_t omap_rd(char *off, size_t len)
     /* read char */
     c = *(omap_offset++);
 
-    /* olfcr */
-    /* TODO rename to onlcrx? */
-    if (c == 10 && olfcr) {
+    /* onlcrx */
+    if (c == 10 && onlcrx) {
       c = 13;
     }
 
@@ -305,7 +304,7 @@ static int usage(void)
                   "                    -e <wait> : wait <wait> s after EOF\n"
                   "                    -o echo   : enable echoing\n"
                   "                    -o icrnl  : read  0x0d->0x0a\n"
-                  "                    -o olfcr  : write 0x0a->0x0d\n"
+                  "                    -o onlcrx : write 0x0a->0x0d\n"
                   "                    -o ocrnl  : write 0x0d->0x0a\n"
                   "                    -o odelbs : write 0x7f->0x08\n");
   return 1;
@@ -336,8 +335,8 @@ static void opts(int argc, char **argv)
         if (!strcmp(optarg, "odelbs")) {
           odelbs = 1;
         }
-        if (!strcmp(optarg, "olfcr")) {
-          olfcr = 1;
+        if (!strcmp(optarg, "onlcrx")) {
+          onlcrx = 1;
         }
         if (!strcmp(optarg, "ocrnl")) {
           ocrnl = 1;

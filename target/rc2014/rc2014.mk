@@ -45,7 +45,7 @@ RC2014RESET := \
 	printf '* \033[1;35mOn the RC2014: connect serial and press reset\033[0;0m\n' && \
 	read -p "Then press enter to start: " LINE && \
 	printf '* \033[1;33mResetting\033[0;0m\n' && \
-	sh target/rc2014/reset.sh | $(ORTER) serial -o olfcr -a $(RC2014SERIALPORT) 115200
+	sh target/rc2014/reset.sh | $(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200
 
 RC2014ZCCOPTS := \
 	+rc2014 -subtype=basic -clib=new -m \
@@ -64,7 +64,7 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 	@$(RC2014RESET)
 
 	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
-	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
+	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
 
 	@printf '* \033[1;33mStarting disc with console mux\033[0;0m\n'
 	@$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
@@ -160,9 +160,9 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) 
 	@$(RC2014RESET)
 
 	@printf '* \033[1;33mLoading hexload\033[0;0m\n'
-	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/hexload.bas
+	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/hexload.bas
 	@printf '* \033[1;33mLoading inst\033[0;0m\n'
-	@$(ORTER) serial -o olfcr -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
+	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
