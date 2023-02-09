@@ -180,12 +180,13 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
 }
 
 /* (FIND) */
-static char *rf_inst_find(char *t, uint8_t length, char *nfa)
+static char *rf_inst_find(char *t, uint8_t length)
 {
   uint8_t l;
   uint8_t i;
   uintptr_t *lfa;
   char *n;
+  char *nfa = rf_inst_vocabulary;
 
   while (nfa) {
     /* length from name field incl smudge bit */
@@ -224,7 +225,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
     for (p = name; *p != ' ' && *p != '\0'; p++) { }
 
     /* find in dictionary */
-    nfa = rf_inst_find(name, p - name, rf_inst_vocabulary);
+    nfa = rf_inst_find(name, p - name);
 
     if (nfa) {
       /* compile word */
@@ -263,7 +264,7 @@ static void rf_inst_immediate(void)
 static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
 {
   /* compile LIT */
-  rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3, rf_inst_vocabulary)));
+  rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3)));
   /* compile value */
 	rf_inst_comma(literal);
 }
