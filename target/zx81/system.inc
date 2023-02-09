@@ -7,6 +7,6 @@
 
 #define RF_ORG 0x4082
 
-#define RF_ORIGIN 0x6D00
+#define RF_ORIGIN 0x6700
 
 #define RF_LIMIT 0x7F00

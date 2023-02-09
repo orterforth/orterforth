@@ -1,4 +1,9 @@
 # https://github.com/mcleod-ideafix/zx81putil
+$(SYSTEM)/zx81putil : tools/github.com/mcleod-ideafix/zx81putil/zx81putil.c | $(SYSTEM)
+
+	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -o $@ $<
+	
+# https://github.com/mcleod-ideafix/zx81putil
 tools/github.com/mcleod-ideafix/zx81putil/zx81putil.c :
 
 	git submodule update --init tools/github.com/mcleod-ideafix/zx81putil
@@ -7,12 +12,22 @@ zx81 :
 
 	mkdir $@
 
+.PHONY : zx81-clean
+zx81-clean :
+
+	rm -f zx81/*
+
+ZX81ORG := 0x4082
+ZX81ORIGIN := 0x6700
+
 .PHONY : zx81-run
-zx81-run : zx81/inst.tzx | zx81/jtyone.jar
+zx81-run : zx81/inst.bin zx81/inst.tzx | zx81/jtyone.jar
+
+	@$(CHECKMEMORY) $(ZX81ORG) $(ZX81ORIGIN) $(shell $(STAT) zx81/inst.bin)
 
 	java -jar zx81/jtyone.jar zx81/inst.tzx@0 -scale 3 -machine ZX81
 
-zx81/%.tzx : zx81/%.P $(SYSTEM)/zx81putil
+zx81/inst.tzx : zx81/inst.P | $(SYSTEM)/zx81putil
 
 	$(SYSTEM)/zx81putil -tzx $<
 
