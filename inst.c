@@ -419,6 +419,8 @@ static void rf_inst_code_add(void)
   /* extra boot-up literals for COLD */
   rf_inst_comma(0);
   rf_inst_comma(0);
+  rf_inst_comma(RF_TARGET_HI);
+  rf_inst_comma(RF_TARGET_LO);
   /* orterforth additional words */
   rf_inst_def_code("cl", rf_code_cl);
   rf_inst_def_code("cs", rf_code_cs);

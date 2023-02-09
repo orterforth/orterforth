@@ -249,13 +249,6 @@ writ0:
   inc hl                        ; advance addr
   jp writ0                      ; loop back for more bytes
 
-PUBLIC _rf_code_tg
-
-_rf_code_tg:
-  ld de, $E16F                  ; SPECTR
-  ld hl, $6774
-  jp _rf_z80_dpush
-
 PUBLIC _rf_fin
 
 _rf_fin:

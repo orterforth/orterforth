@@ -1041,6 +1041,14 @@ PUBLIC _rf_code_ln
 
 DEFC _rf_code_ln = _rf_next
 
+PUBLIC _rf_code_tg
+
+_rf_code_tg:
+
+  ld hl, (RF_ORIGIN+$0026)
+  ld de, (RF_ORIGIN+$0028)
+  jp dpush
+
 PUBLIC _rf_code_xt
 
 _rf_code_xt:
