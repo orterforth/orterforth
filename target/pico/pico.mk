@@ -24,9 +24,9 @@ PICOSERIALPORT := /dev/ttyACM0
 endif
 
 .PHONY : pico-run
-pico-run :
+pico-run : | $(ORTER) $(DISC)
 
-	$(ORTER) serial $(PICOSERIALPORT) 115200
+	$(DISC) mux $(PICOSERIALPORT) 115200 $(DR0) $(DR1)
 
 pico/Makefile : target/pico/CMakeLists.txt | pico
 
