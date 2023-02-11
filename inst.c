@@ -770,6 +770,10 @@ void rf_inst_save(void)
 }
 #endif
 
+#ifdef PICO
+char rf_local_disc = 1;
+#endif
+
 void rf_inst(void)
 {
 #ifndef RF_INST_LOCAL_DISC
@@ -798,6 +802,9 @@ void rf_inst(void)
 #ifdef RF_INST_LOCAL_DISC
   /* now "eject" the inst disc */
   rf_persci_eject(0);
+#ifdef PICO
+  rf_local_disc = 0;
+#endif
 #endif
 
 #ifdef RF_INST_SAVE

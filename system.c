@@ -121,18 +121,42 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
+#ifdef PICO
+extern char rf_local_disc;
+#endif
+
 void rf_disc_read(char *p, uint8_t len)
 {
-  for (; len; --len) {
-    *(p++) = rf_persci_getc();
+#ifdef PICO
+  if (rf_local_disc) {
+#endif
+    for (; len; --len) {
+      *(p++) = rf_persci_getc();
+    }
+#ifdef PICO
+  } else {
+    for (; len; --len) {
+      *(p++) = fgetc(stdin) & 0x7F;
+    }
   }
+#endif
 }
 
 void rf_disc_write(char *p, uint8_t len)
 {
-  for (; len; --len) {
-    rf_persci_putc(*(p++));
+#ifdef PICO
+  if (rf_local_disc) {
+#endif
+    for (; len; --len) {
+      rf_persci_putc(*(p++));
+    }
+#ifdef PICO
+  } else {
+    for (; len; --len) {
+      putchar(*(p++) | 0x80);
+    }
   }
+#endif
 }
 
 void rf_fin(void)
