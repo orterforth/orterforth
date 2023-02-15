@@ -223,6 +223,14 @@ spectrum/fuse-rs232-tx : | spectrum
 
 	mkfifo $@
 
+SPECTRUMZCCOPTS := +zx \
+		-Ca-DRF_INST_OFFSET=$(SPECTRUMINSTOFFSET) \
+		-Ca-DRF_ORG=$(SPECTRUMORG) \
+		-Ca-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+		-DRF_ORG=$(SPECTRUMORG) \
+		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"'
+
 # inst executable
 spectrum/inst.bin : \
 	spectrum/inst.lib \
@@ -232,12 +240,7 @@ spectrum/inst.bin : \
 	z80_memory.asm \
 	main.c
 
-	zcc +zx \
- 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
- 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-Ca-DRF_ORG=$(SPECTRUMORG) \
-		-Ca-DRF_INST_OFFSET=$(SPECTRUMINSTOFFSET) \
-		$(SPECTRUMLIBS) \
+	zcc $(SPECTRUMZCCOPTS) $(SPECTRUMLIBS) \
 		-pragma-define:CRT_ENABLE_STDIO=0 \
 		-pragma-define:CRT_INITIALIZE_BSS=0 \
 		-m \
@@ -247,12 +250,7 @@ spectrum/inst.bin : \
 # inst code, which is located to be overwritten when complete
 spectrum/inst.lib : inst.c rf.h | spectrum
 
-	zcc +zx \
-		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
-		-DRF_ORG=$(SPECTRUMORG) \
-		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-x -o $@ \
-		$< \
+	zcc $(SPECTRUMZCCOPTS) -x -o $@ $< \
 		--codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
 
 # start with an empty bin file to build the multi segment bin
@@ -403,26 +401,17 @@ spectrum/orterforth.tap : spectrum/orterforth.bin
 # base orterforth code
 spectrum/rf.lib : rf.c rf.h | spectrum
 
-	zcc +zx \
- 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"' \
- 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-x -o $@ \
-		$<
+	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
 
 # Z80 assembly optimised code
 spectrum/rf_z80.lib : rf_z80.asm | spectrum
 
-	zcc +zx \
-		-Ca-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-x -o $@ \
-		$<
+	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
 
 # system code, which may be C or assembler
 spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 
-	zcc +zx \
-		-x -o $@ \
-		$<
+	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
 
 tools/github.com/superzazu/z80/z80.c tools/github.com/superzazu/z80/z80.h :
 
