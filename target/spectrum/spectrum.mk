@@ -165,6 +165,11 @@ FUSEOPTS := \
 	--rs232-rx spectrum/fuse-rs232-rx \
 	--rs232-tx spectrum/fuse-rs232-tx
 
+.PHONY : spectrum-hw
+spectrum-hw : spectrum/hw.tap
+
+	$(FUSE) $(FUSEOPTS) --tape $<
+
 .PHONY : spectrum-run
 spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
 
@@ -230,6 +235,10 @@ SPECTRUMZCCOPTS := +zx \
 		-DRF_ORG=$(SPECTRUMORG) \
 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"'
+
+spectrum/hw.tap : hw.c
+
+	zcc +zx -lndos -create-app -o spectrum/hw.bin $<
 
 # inst executable
 spectrum/inst.bin : \
