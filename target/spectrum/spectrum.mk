@@ -92,7 +92,7 @@ ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORIGIN
-SPECTRUMORIGIN := 0x8A00
+SPECTRUMORIGIN := 0x8800
 # assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
 # superzazu emulator is minimal and launches no GUI
@@ -105,7 +105,7 @@ ifeq ($(SPECTRUMOPTION),assembly-z88dk)
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs
-SPECTRUMORIGIN := 0x9200
+SPECTRUMORIGIN := 0x9080
 endif
 
 # z88dk / pure C based
@@ -113,7 +113,7 @@ ifeq ($(SPECTRUMOPTION),default)
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs and pure C impl
-SPECTRUMORIGIN := 0x9D00
+SPECTRUMORIGIN := 0x9B80
 endif
 
 # superzazu fast partial emulator can't be used for run time
