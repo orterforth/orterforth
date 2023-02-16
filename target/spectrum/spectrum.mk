@@ -3,13 +3,17 @@
 # emulator to build fast
 $(SYSTEM)/emulate_spectrum : \
 	$(SYSTEM)/emulate_spectrum.o \
-	$(SYSTEM)/z80.o \
-	$(SYSTEM)/persci.o
+	$(SYSTEM)/persci.o \
+	$(SYSTEM)/z80.o
 
 	$(CC) -o $@ $^
 
 # spectrum emulator
-$(SYSTEM)/emulate_spectrum.o : target/spectrum/emulate.c persci.h | $(SYSTEM)
+$(SYSTEM)/emulate_spectrum.o : \
+	target/spectrum/emulate.c \
+	persci.h \
+	tools/github.com/superzazu/z80/z80.h | \
+	$(SYSTEM)
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 

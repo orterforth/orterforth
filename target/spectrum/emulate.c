@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "../../persci.h"
-#include "../../tools/z80/z80.h"
+#include "../../tools/github.com/superzazu/z80/z80.h"
 
 static z80 *z = 0;
 
