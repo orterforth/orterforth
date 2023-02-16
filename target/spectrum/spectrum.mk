@@ -84,6 +84,9 @@ SPECTRUMROMS := \
 	roms/spectrum/if1-2.rom \
 	roms/spectrum/spectrum.rom
 
+# C impl of system dependent code uses z88dk libs
+SPECTRUMSYSTEM := target/spectrum/system.c
+
 # minimal ROM-based
 ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
@@ -103,8 +106,6 @@ ifeq ($(SPECTRUMOPTION),assembly-z88dk)
 SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs
 SPECTRUMORIGIN := 0x9200
-# C impl of system dependent code uses z88dk libs
-SPECTRUMSYSTEM := target/spectrum/system.c
 endif
 
 # z88dk / pure C based
@@ -113,8 +114,6 @@ ifeq ($(SPECTRUMOPTION),default)
 SPECTRUMLIBS += -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs and pure C impl
 SPECTRUMORIGIN := 0x9D00
-# C impl of system dependent code uses z88dk libs
-SPECTRUMSYSTEM := target/spectrum/system.c
 endif
 
 # superzazu fast partial emulator can't be used for run time
@@ -169,7 +168,7 @@ FUSEOPTS := \
 .PHONY : spectrum-hw
 spectrum-hw : spectrum/hw.tap
 
-	$(FUSE) $<
+	$(FUSE) $(FUSEOPTS) --tape $<
 
 .PHONY : spectrum-run
 spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
@@ -303,7 +302,6 @@ spectrum/inst-2.bin : \
 	# head -c 32768 /dev/null >> $@.io
 	# head -c $(SPECTRUMINSTOFFSET) $@.io > $@
 	# cat spectrum/inst_INST.bin >> $@
-
 
 # make inst serial load file from inst bin
 spectrum/inst-2.ser : spectrum/inst-2.bin | $(ORTER)
