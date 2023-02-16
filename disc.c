@@ -349,7 +349,7 @@ static int disc_serial(int argc, char **argv)
 {
   int exit = 0;
 
-  /* signals TODO explain */
+  /* finish if interrupted by signal */
   orter_io_signal_init();
 
   /* serial port */
@@ -359,7 +359,7 @@ static int disc_serial(int argc, char **argv)
   }
 
   /* create pipelines */
-  /* TODO omit fps */
+  /* TODO omit fps once tested */
   orter_io_pipe_init(&in, orter_serial_fd, orter_serial_rd, disc_wr, -1);
   orter_io_pipe_init(&out, -1, disc_rd, orter_serial_wr, orter_serial_fd);
 
@@ -381,7 +381,7 @@ static int disc_mux(int argc, char **argv)
     return exit;
   }
 
-  /* signals TODO explain */
+  /* finish if interrupted by signal */
   orter_io_signal_init();
 
   /* serial port */
@@ -451,7 +451,7 @@ static int disc_tcp(int argc, char **argv)
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0) {
     perror("socket failed");
-    return 1;
+    return errno;
   }
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) {
     exit = errno;
