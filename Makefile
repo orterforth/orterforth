@@ -251,10 +251,6 @@ include target/c64/c64.mk
 .PHONY : clean
 clean : $(TARGET)-clean
 
-# clean all
-.PHONY : clean-all
-clean-all : $(SYSTEM)-clean spectrum-clean
-
 # create empty to use as default DR1
 data.disc :
 
