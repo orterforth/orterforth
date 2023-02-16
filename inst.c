@@ -94,21 +94,19 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 static char *rf_inst_vocabulary = 0;
 
 /* CREATE + SMUDGE */
-static void rf_inst_def(char *name)
+static void __FASTCALL__ rf_inst_def(char *name)
 {
   uint8_t *here = (uint8_t *) RF_USER_DP;
   uint8_t *there = here;
-  uint8_t length;
 
   /* name */
   while (*name) {
     *(++here) = *(name++);
   }
-  length = (uintptr_t) (here - there);
-  ++here;
 
   /* length byte, unsmudged */
-  *there = length | 0x80;
+  *there = (uintptr_t) (here - there) | 0x80;
+  ++here;
 
 #ifdef __CC65__
   /* 6502 bug workaround */
@@ -131,8 +129,6 @@ static void rf_inst_def(char *name)
   /* link field */
   RF_USER_DP = (uintptr_t) here;
   rf_inst_comma((uintptr_t) rf_inst_vocabulary);
-
-  /* vocabulary */
   rf_inst_vocabulary = (char *) there;
 }
 
@@ -657,7 +653,7 @@ static void rf_inst_forward(void)
   rf_inst_load_cfa = (rf_code_t *) RF_USER_DP - 1;
   rf_inst_compile("LIT 1 LOAD xt");
 
-  /* X */  
+  /* X */
   here = (uint8_t *) RF_USER_DP;
   rf_inst_colon("X");
   rf_inst_compile(
@@ -673,7 +669,7 @@ static void rf_inst_forward(void)
 
 static void rf_inst_emptybuffers(void)
 {
-  rf_inst_memset((uint8_t *) RF_FIRST, '\0', (char *) RF_LIMIT - (char *) RF_FIRST);
+  rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
 }
 
 static void rf_inst_load(void)
@@ -754,6 +750,7 @@ void rf_inst_save(void)
 */
 #endif
 
+  /* TODO move hex block write and run via Forth */
   /* now write hex blocks to DR1 */
   buf = (uint8_t *) RF_FIRST + RF_WORD_SIZE;
   while (i < e) {
