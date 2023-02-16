@@ -90,28 +90,80 @@ trampoline2 EQU *
 funcend_rf_trampoline EQU *
 funcsize_rf_trampoline EQU funcend_rf_trampoline-_rf_trampoline
 
-N EQU *
-	RMB    10
+* What follows is adapted from the original document to create compatible 
+* assembly source for the orterforth project in January 2023.
 
+* 6809
+* fig-FORTH
+* ASSEMBLY SOURCE LISTING
+* RELEASE 1
+* WITH COMPILER SECURITY
+* AND
+* VARIABLE LENGTH NAMES
+*
+* V 1.0
+*
+* JUNE 1980
+*
+* This public domain publication is provided through the courtesy of the 
+* FORTH Interest Group. Further distribution must include this notice.
+
+*** * * *
+*  CONVENTIONS USED IN THIS  PROGRAM ARE -
+*
+*  IP   = register Y points towards the next word to execute
+*  SP   = register U points to LAST BYTE on the data stack
+*  RP   = register S points to LAST WORD on return stack
+*         register X is used as a general index register for pointing
+*                at things. For some indexing purposes, Y,U, or S are
+*                saved so X and Y, U, or S may be used at same time.
+*  W    upon entry to a word, X = W = location of word containing
+*                address of code to execute.
+*
+*
+*  When A and B are used seperately, in order to maintain compatibility
+*             with D register, A contains high byte, B the low byte.
+*
+*** * * *
+
+N EQU *
+	RMB    10        used as scratch
+
+*
+* Start of FORTH Kernel
+*
 PUSHD EQU *
 	PSHU   D
 	BRA    NEXT
 
+*
+* Here is the IP pusher for allowing nested words
+* ;S is the equivalent  unnester
+*
 _rf_code_docol EXPORT
 _rf_code_docol EQU *
 	PSHS   Y         save present IP on ret stack RP
 	LEAY   2,X       kick Y up to first param after CFA in W=X
+* LBRA NEXT  JUST DROP ON THROUGH T NEXT
 funcend_rf_code_docol EQU *
 funcsize_rf_code_docol EQU funcend_rf_code_docol-_rf_code_docol
-
+*
+*  NEXT takes 14 cycles
+*
+****  BEGINNING OF SIMULATION OF VIRTUAL FORTH MACHINE
+*
 _rf_code_ln EXPORT
 _rf_code_ln EQU *
 _rf_next EXPORT
 _rf_next EQU *
 NEXT EQU *
-	LDX    ,Y++
+	LDX    ,Y++      get W to X and then increment Y=IP
+* the address of the pointer to the present code is in X now
+*  if need it at any time, it may be computed by LDX -2,Y
 NEXT3 EQU *
-	JMP    [,X]
+	JMP    [,X]      jump indirect to code pointed to by W
+*
+****  END OF SIMULATION OF THE VIRTUAL  FORTH MACHINE
 funcend_rf_next EQU *
 funcsize_rf_next EQU funcend_rf_next-_rf_next
 
