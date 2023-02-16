@@ -17,7 +17,7 @@ BBCOPTION := default
 
 # default ORG and ORIGIN
 BBCORG := 1720
-BBCORIGIN := 3000
+BBCORIGIN := 2F00
 
 # emulator ROM files
 BBCROMS := \
