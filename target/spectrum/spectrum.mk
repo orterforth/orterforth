@@ -50,6 +50,9 @@ else
 FUSE := $(shell which fuse)
 endif
 
+# include file
+SPECTRUMINC := target/spectrum/spectrum.inc
+
 # default inst time emulator
 SPECTRUMINSTMACHINE := fuse
 
@@ -81,8 +84,6 @@ SPECTRUMROMS := \
 ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
-# include file
-SPECTRUMINC := target/spectrum/assembly.inc
 # ORIGIN
 SPECTRUMORIGIN := 0x8A00
 # assembly system dependent code uses ROM routines
@@ -94,8 +95,6 @@ endif
 
 # z88dk library based
 ifeq ($(SPECTRUMOPTION),assembly-z88dk)
-# include file
-SPECTRUMINC := target/spectrum/assembly-z88dk.inc
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs
@@ -106,8 +105,6 @@ endif
 
 # z88dk / pure C based
 ifeq ($(SPECTRUMOPTION),default)
-# include file
-SPECTRUMINC := target/spectrum/default.inc
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs and pure C impl
@@ -168,7 +165,7 @@ FUSEOPTS := \
 .PHONY : spectrum-hw
 spectrum-hw : spectrum/hw.tap
 
-	$(FUSE) $(FUSEOPTS) --tape $<
+	$(FUSE) $<
 
 .PHONY : spectrum-run
 spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
@@ -235,6 +232,13 @@ SPECTRUMZCCOPTS := +zx \
 		-DRF_ORG=$(SPECTRUMORG) \
 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"'
+
+ifeq ($(SPECTRUMOPTION),assembly)
+SPECTRUMZCCOPTS += -DRF_ASSEMBLY
+endif
+ifeq ($(SPECTRUMOPTION),assembly-z88dk)
+SPECTRUMZCCOPTS += -DRF_ASSEMBLY
+endif
 
 spectrum/hw.tap : hw.c
 
