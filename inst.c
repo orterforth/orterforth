@@ -519,7 +519,6 @@ static rf_code_t *rf_inst_load_cfa = 0;
 static void rf_inst_forward(void)
 {
   int i;
-  uint8_t *here;
 
   /* user variables */
   rf_inst_def_user("DP", RF_USER_DP_IDX);
@@ -648,22 +647,22 @@ static void rf_inst_forward(void)
     "BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET R> IN ! R> BLK "
     "! ;S");
 
-  /* inst load sequence */
-  rf_inst_colon("load");
-  rf_inst_load_cfa = (rf_code_t *) RF_USER_DP - 1;
-  rf_inst_compile("LIT 1 LOAD xt");
-
-  /* X */
-  here = (uint8_t *) RF_USER_DP;
-  rf_inst_colon("X");
-  rf_inst_compile(
-    "LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
-  here[1] ^= 0x58;
-  rf_inst_immediate();
-
   /* [ */
   rf_inst_colon("[");
   rf_inst_compile("LIT 0 STATE ! ;S");
+  rf_inst_immediate();
+
+  /* inst load sequence */
+  rf_inst_colon("load");
+  /* now renaming of 'X' to '\0' takes place here */
+  rf_inst_compile("CURRENT @ @ LIT 1 + LIT 88 TOGGLE LIT 1 LOAD xt");
+
+  /* X */
+  /* to make renaming simple this is the last word defined and */
+  /* can be located easily via CURRENT */
+  rf_inst_colon("X");
+  rf_inst_compile(
+    "LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
   rf_inst_immediate();
 }
 
@@ -681,6 +680,7 @@ static void rf_inst_load(void)
   RF_RP_SET((uintptr_t *) RF_USER_R0);
 
   /* jump to "load" */
+  rf_inst_load_cfa = rf_inst_cfa(rf_inst_find("load", 4));
   RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
   RF_JUMP(rf_next);
   rf_trampoline();
