@@ -19,14 +19,14 @@ DRAGONCMOCOPTS := --dragon
 DRAGONDEPS := dragon/rf.o dragon/inst.o dragon/system.o
 DRAGONMACHINE := xroar
 DRAGONORG := 0x0600
-DRAGONORIGIN := 0x3280
+DRAGONORIGIN := 0x3180
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
 ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
 DRAGONDEPS += dragon/rf_6809.o
-DRAGONORIGIN := 0x2780
+DRAGONORIGIN := 0x2640
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)
