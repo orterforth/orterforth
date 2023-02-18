@@ -100,7 +100,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
   uint8_t *there = here;
 
   /* name */
-  while (*name) {
+  while (*name && *name != ' ') {
     *(++here) = *(name++);
   }
 
@@ -210,6 +210,25 @@ static char *rf_inst_find(char *t, uint8_t length)
   return 0;
 }
 
+/* compile a definition and set CFA */
+static void rf_inst_def_code(char *name, rf_code_t code)
+{
+  rf_inst_def(name);
+  rf_inst_comma((uintptr_t) code);
+}
+
+/* compile a colon definition */
+static void __FASTCALL__ rf_inst_colon(char *name)
+{
+  rf_inst_def_code(name, rf_code_docol);
+}
+
+/* IMMEDIATE */
+static void rf_inst_immediate(void)
+{
+  *rf_inst_vocabulary ^= 0x40;
+}
+
 /* proto outer interpreter */
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
@@ -217,8 +236,24 @@ static void __FASTCALL__ rf_inst_compile(char *name)
   char *nfa;
 
   for (;;) {
+
     /* read until space or null */
     for (p = name; *p != ' ' && *p != '\0'; p++) { }
+
+    /* create colon definition */
+    if (*name == ':') {
+      /* two colons means immediate */
+      if (*(++name) == ':') {
+        rf_inst_colon(++name);
+        rf_inst_immediate();
+      } else {
+        rf_inst_colon(name);
+      }
+
+      if (!*p) break;
+      name = ++p;
+      continue;
+    }
 
     /* find in dictionary */
     nfa = rf_inst_find(name, p - name);
@@ -250,12 +285,6 @@ static void __FASTCALL__ rf_inst_compile(char *name)
   }
 }
 
-/* IMMEDIATE */
-static void rf_inst_immediate(void)
-{
-  *rf_inst_vocabulary ^= 0x40;
-}
-
 /* compile a LIT value */
 static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
 {
@@ -263,19 +292,6 @@ static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
   rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3)));
   /* compile value */
 	rf_inst_comma(literal);
-}
-
-/* compile a definition and set CFA */
-static void rf_inst_def_code(char *name, rf_code_t code)
-{
-  rf_inst_def(name);
-  rf_inst_comma((uintptr_t) code);
-}
-
-/* compile a colon definition */
-static void __FASTCALL__ rf_inst_colon(char *name)
-{
-  rf_inst_def_code(name, rf_code_docol);
 }
 
 /* inst time literal code */
@@ -568,71 +584,58 @@ static void rf_inst_forward(void)
   rf_inst_def_literal("installed", (uintptr_t) &rf_installed);
 
   /* - */
-  rf_inst_colon("-");
-  rf_inst_compile("MINUS + ;S");
+  rf_inst_compile(":- MINUS + ;S");
 
   /* HERE */
-  rf_inst_colon("HERE");
-  rf_inst_compile("DP @ ;S");
+  rf_inst_compile(":HERE DP @ ;S");
 
   /* BLANKS */
-  rf_inst_colon("BLANKS");
   rf_inst_compile(
-    "LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S");
+    ":BLANKS LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S");
 
   /* ?DISC */
-  rf_inst_colon("?DISC");
   rf_inst_compile(
-    "LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
+    ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
 
   /* BLOCK */
-  rf_inst_colon("BLOCK");
   rf_inst_compile(
-    "DUP FIRST @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
+    ":BLOCK DUP FIRST @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
   /* WORD */
-  rf_inst_colon("WORD");
   /* wider align may need more blanks in edge case of long words */
   /* maybe not here but in final model source version of WORD */
   rf_inst_compile(
-    "BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +! "
+    ":WORD BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +! "
     "OVER - >R R HERE C! + HERE LIT 1 + R> CMOVE ;S");
  
   /* -FIND */
-  rf_inst_colon("-FIND");
-  rf_inst_compile("LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S");
+  rf_inst_compile(":-FIND LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S");
 
   /* , */
-  rf_inst_colon(",");
-  rf_inst_compile("HERE ! cl DP +! ;S");
+  rf_inst_compile(":, HERE ! cl DP +! ;S");
 
   /* COMPILE */
-  rf_inst_colon("COMPILE");
-  rf_inst_compile("R> DUP cl + >R @ , ;S");
+  rf_inst_compile(":COMPILE R> DUP cl + >R @ , ;S");
 
   /* (NUMBER) */
-  rf_inst_colon("(NUMBER)");
-  rf_inst_compile("LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 "
+  rf_inst_compile(":(NUMBER) LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 "
     "SWAP BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S");
 
   /* NUMBER */
-  rf_inst_colon("NUMBER");
-  rf_inst_compile("LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (NUMBER) "
+  rf_inst_compile(":NUMBER LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (NUMBER) "
     "R> 0BRANCH ^2 MINUS ;S");
 
   /* INTERPRET */
   /* LIT must be resolved later to final value of LIT CFA */
-  rf_inst_colon("INTERPRET");
   rf_inst_compile(
-    "-FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
+    ":INTERPRET -FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
     "EXECUTE BRANCH ^-18 HERE NUMBER STATE @ 0BRANCH ^-24 COMPILE LIT , "
     "BRANCH ^-29");
 
   /* CREATE */
-  rf_inst_colon("CREATE");
   rf_inst_compile(
-    "-FIND 0BRANCH ^3 DROP DROP HERE DUP C@ LIT 1 + DP +! DP C@ "
+    ":CREATE -FIND 0BRANCH ^3 DROP DROP HERE DUP C@ LIT 1 + DP +! DP C@ "
     "LIT 253 - 0= DP +!");
 #ifdef RF_ALIGN
   rf_inst_compile("HERE ln DP !");
@@ -642,28 +645,22 @@ static void rf_inst_forward(void)
     ", CURRENT @ ! HERE cl + , ;S");
 
   /* LOAD */
-  rf_inst_colon("LOAD");
   rf_inst_compile(
-    "BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET R> IN ! R> BLK "
+    ":LOAD BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET R> IN ! R> BLK "
     "! ;S");
 
   /* [ */
-  rf_inst_colon("[");
-  rf_inst_compile("LIT 0 STATE ! ;S");
-  rf_inst_immediate();
+  rf_inst_compile("::[ LIT 0 STATE ! ;S");
 
   /* inst load sequence */
-  rf_inst_colon("load");
   /* now renaming of 'X' to '\0' takes place here */
-  rf_inst_compile("CURRENT @ @ LIT 1 + LIT 88 TOGGLE LIT 1 LOAD xt");
+  rf_inst_compile(":load CURRENT @ @ LIT 1 + LIT 88 TOGGLE LIT 1 LOAD xt");
 
   /* X */
   /* to make renaming simple this is the last word defined and */
   /* can be located easily via CURRENT */
-  rf_inst_colon("X");
   rf_inst_compile(
-    "LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
-  rf_inst_immediate();
+    "::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
 }
 
 static void rf_inst_emptybuffers(void)
