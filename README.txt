@@ -54,7 +54,7 @@ implemented in terms of these words, make up the rest of the
 Forth vocabulary.
 
 The Installation Manual contains source code that uses an
-assembler implemented in Forth to assemble 6502 native code
+assembler (implemented in Forth) to assemble 6502 native code
 immediately following each base word in memory. The word's code
 field address (CFA) points at this code.
 
@@ -70,6 +70,37 @@ transfer control through successive native code, rather than
 subroutine calls. Because C does not properly allow such jumps,
 orterforth emulates them using a trampoline - a loop that 
 successively calls function pointers.
+
+
+THE INSTALLATION PROCESS
+
+orterforth is bootstrapped from Forth source code derived from
+the Installation Manual, loaded from an emulated disc drive.
+The code is modified to allow for different platforms' 
+processor architectures, cell sizes, I/O, memory layouts, and
+so on.
+
+On historical platforms, when install is complete, the memory
+map containing the installation and the required native code
+is saved to the emulated disc drive. (This is in a hex format
+to avoid issues with control characters used by the disc
+controller.)
+
+This is then used to create completed installation binaries.
+
+(On modern platforms, this whole installation process takes
+place on startup every time the program is launched - the 
+installation code and disc contents are part of the binary.)
+
+To save space, the original installation code is loaded into a
+memory location outside this area and does not form part of the
+final binary.
+
+When installation is complete, or when the final binary is
+loaded, Forth starts with an interactive prompt.
+
+The emulated disc drive is available to the user to load
+programs in the same way it was used for install.
 
 
 THE RETRO DISC CONTROLLER - EMULATED HERE
@@ -170,40 +201,6 @@ system-independent:
  xt ( -- )               Exits orterforth (and returns to the
                          shell, BASIC prompt or equivalent).
                          Used to exit the install process.
-
-
-THE INSTALLATION PROCESS
-
-First, installation code written in C reads and interprets
-Forth source code from the emulated disc drive, in the manner
-described in the Installation Manual. This compiles and builds
-up the complete Forth installation.
-
-The fig-Forth source code comes from the Installation Manual, 
-but is modified to allow for different platforms' processor 
-architectures, cell sizes, I/O, memory layouts, and so on.
-
-On historical platforms, when install is complete, the memory
-map containing the installation and the required native code
-is saved to the emulated disc drive. (This is in a hex format
-to avoid issues with control characters used by the disc
-controller.)
-
-This is then used to create completed installation binaries.
-
-To save space, the original installation code is loaded into a
-memory location outside this area and does not form part of the
-final binary.
-
-(On modern platforms, this whole installation process takes
-place on startup every time the program is launched - the 
-installation code and disc contents are part of the binary.)
-
-When installation is complete, or when the final binary is
-loaded, the user is placed at Forth's interactive prompt.
-
-The emulated disc drive is available to the user to load
-programs in the same way it was used for install.
 
 
 BACKGROUND
