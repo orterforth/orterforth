@@ -359,9 +359,8 @@ static int disc_serial(int argc, char **argv)
   }
 
   /* create pipelines */
-  /* TODO omit fps once tested */
-  orter_io_pipe_init(&in, orter_serial_fd, orter_serial_rd, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, orter_serial_wr, orter_serial_fd);
+  orter_io_pipe_init(&in, orter_serial_fd, 0, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, 0, orter_serial_fd);
 
   /* run */
   exit = serve(argv[4], argv[5]);
