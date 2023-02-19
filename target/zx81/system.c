@@ -4,7 +4,9 @@
 
 void rf_init()
 {
+/*
   fputc_cons('A');
+*/
 }
 
 void rf_code_emit()
@@ -14,7 +16,9 @@ void rf_code_emit()
     unsigned char c;
     
     c = RF_SP_POP & 0x7F;
+/*
     fputc_cons(c);
+*/
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
@@ -27,14 +31,16 @@ void rf_code_key(void)
     int c;
 
     /* show cursor */
+/*
     fputc_cons('_');
     fputc_cons(32);
     fputc_cons(8);
     fputc_cons(8);
-
+*/
     /* get key */
+/*
     c = fgetc_cons();
-
+*/
     /* eof */
     if (c == -1) {
       exit(0);
@@ -61,14 +67,18 @@ void rf_code_qterm(void)
 void rf_code_cr()
 {
   RF_START;
+/*
   fputc_cons(10);
+*/
   RF_JUMP_NEXT;
 }
 
 void rf_disc_read(char *c, unsigned char len)
 {
   for (; len; len--) {
+/*
     *(c++) = fgetc_cons();
+*/
   }
 }
 

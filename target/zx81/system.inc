@@ -2,11 +2,13 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
-/* Save result to disc 1 after inst */
+/* For now, don't save result to disc 1 after inst */
 #undef RF_INST_SAVE
 
-#define RF_ORG 0x4082
+/* Passed in command line */
+/*#define RF_ORG xxxx*/
 
-#define RF_ORIGIN 0x6700
+/* Passed in command line */
+/*#define RF_ORIGIN xxxx*/
 
 #define RF_LIMIT 0x7F00

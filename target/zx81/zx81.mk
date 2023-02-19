@@ -18,7 +18,11 @@ zx81-clean :
 	rm -f zx81/*
 
 ZX81ORG := 0x4082
-ZX81ORIGIN := 0x6700
+ZX81ORIGIN := 0x6600
+
+ZX81ZCCOPTS := +zx81 \
+	-DRF_ORG=$(ZX81ORG) \
+	-DRF_ORIGIN=$(ZX81ORIGIN)
 
 .PHONY : zx81-run
 zx81-run : zx81/inst.bin zx81/inst.tzx | zx81/jtyone.jar
@@ -33,11 +37,12 @@ zx81/inst.tzx : zx81/inst.P | $(SYSTEM)/zx81putil
 
 zx81/inst.bin zx81/inst.P : zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
 
-	zcc +zx81 -lm -lzx81/rf -lzx81/system -lzx81/inst -create-app -m -o zx81/inst.bin main.c
+	zcc $(ZX81ZCCOPTS) -lm -lzx81/rf -lzx81/system -lzx81/inst \
+		-create-app -m -o zx81/inst.bin main.c
 
 zx81/inst.lib : inst.c rf.h | zx81
 
-	zcc +zx81 -x -o $@ $<
+	zcc $(ZX81ZCCOPTS) -x -o $@ $<
 
 zx81/jtyone.jar : | zx81
 
@@ -45,8 +50,8 @@ zx81/jtyone.jar : | zx81
 
 zx81/rf.lib : rf.c rf.h target/zx81/system.inc | zx81
 
-	zcc +zx81 -x -o $@ $<
+	zcc $(ZX81ZCCOPTS) -x -o $@ $<
 
 zx81/system.lib : target/zx81/system.c rf.h | zx81
 
-	zcc +zx81 -x -o $@ $<
+	zcc $(ZX81ZCCOPTS) -x -o $@ $<
