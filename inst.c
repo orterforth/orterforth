@@ -33,31 +33,14 @@ static void rf_inst_puti(uint8_t idx, uint8_t i)
 }
 
 /* PerSci disc command, I or O */
-static void rf_inst_disc_cmd_set(char c, uintptr_t blk)
+static void __FASTCALL__ rf_inst_disc_cmd_set(uintptr_t blk)
 {
-  uintptr_t offset = blk % 2000;
-
-  /* set command */
-  cmd[0] = c;
-  /* convert block number into drive, track and sector */
-  rf_inst_puti(2, offset / 26);
-  rf_inst_puti(5, (offset % 26) + 1);
-  cmd[9] = 48 + (blk / 2000);
+  /* convert block number into track and sector */
+  rf_inst_puti(2, blk / 26);
+  rf_inst_puti(5, (blk % 26) + 1);
 }
 
 /* INST TIME CODE */
-
-/* flag to indicate completion of install */
-extern char rf_installed;
-
-/* do nothing - only used to create a no op CR */
-#ifdef RF_INST_SILENT
-static void rf_inst_code_noop(void)
-{
-  RF_START;
-  RF_JUMP_NEXT;
-}
-#endif
 
 /* block-cmd - write I nn nn /n and return buffer address */
 static void rf_inst_code_block_cmd(void)
@@ -67,20 +50,12 @@ static void rf_inst_code_block_cmd(void)
     uintptr_t block = RF_SP_POP;
 
     /* create command */
-    rf_inst_disc_cmd_set('I', block);
+    rf_inst_disc_cmd_set(block);
 
     /* return command addr */
     RF_SP_PUSH((uintptr_t) cmd);
   }
   RF_JUMP_NEXT;
-}
-
-/* replaces memset */
-static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
-{
-  while (num--) {
-    *(ptr++) = value;
-  }
 }
 
 /* , */
@@ -135,14 +110,20 @@ static void __FASTCALL__ rf_inst_def(char *name)
 /* NUMBER */
 static intptr_t __FASTCALL__ rf_inst_number(char *t)
 {
+  intptr_t factor = 1;
   intptr_t l = 0;
-  uint8_t sign;
   uint8_t d;
 
-  /* - */
-  sign = (*t == '-');
-  if (sign) {
+  /* ^ to * by word size */
+  if (*t == '^') {
     t++;
+    factor = RF_WORD_SIZE;
+  }
+
+  /* - to negate */
+  if (*t == '-') {
+    t++;
+    factor = -factor;
   }
 
   /* ASCII 0-9 */
@@ -156,7 +137,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
     l += d;
   }
 
-  return sign ? -l : l;
+  return l * factor;
 }
 
 /* LFA */
@@ -180,7 +161,6 @@ static char *rf_inst_find(char *t, uint8_t length)
 {
   uint8_t l;
   uint8_t i;
-  uintptr_t *lfa;
   char *n;
   char *nfa = rf_inst_vocabulary;
 
@@ -202,8 +182,7 @@ static char *rf_inst_find(char *t, uint8_t length)
     }
 
     /* if no match, follow link */
-    lfa = rf_inst_lfa(nfa);
-    nfa = (char *) *(lfa);
+    nfa = (char *) *(rf_inst_lfa(nfa));
   }
 
   /* not found */
@@ -238,7 +217,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
   for (;;) {
 
     /* read until space or null */
-    for (p = name; *p != ' ' && *p != '\0'; p++) { }
+    for (p = name; *p && *p != ' '; p++) { }
 
     /* create colon definition */
     if (*name == ':') {
@@ -249,34 +228,18 @@ static void __FASTCALL__ rf_inst_compile(char *name)
       } else {
         rf_inst_colon(name);
       }
-
-      if (!*p) break;
-      name = ++p;
-      continue;
-    }
-
-    /* find in dictionary */
-    nfa = rf_inst_find(name, p - name);
-
-    if (nfa) {
-      /* compile word */
-      rf_inst_comma((uintptr_t) rf_inst_cfa(nfa));
     } else {
-      /* compile number */
-      intptr_t factor = 1;
-      intptr_t accum = 0;
-      char *q = name;
+      /* find in dictionary */
+      nfa = rf_inst_find(name, p - name);
 
-      /* ^ to * by word size */
-      if (*q == '^') {
-        q++;
-        factor = RF_WORD_SIZE;
+      if (nfa) {
+        /* compile word */
+        rf_inst_comma((uintptr_t) rf_inst_cfa(nfa));
+      } else {
+        /* compile number */
+        /* to prefix with LIT, BRANCH or 0BRANCH */
+        rf_inst_comma((uintptr_t) rf_inst_number(name));
       }
-      /* now read decimal number */
-      accum = rf_inst_number(q);
-
-      /* to prefix with LIT, BRANCH or 0BRANCH */
-      rf_inst_comma((uintptr_t) (factor * accum));
     }
 
     /* look for more */
@@ -431,6 +394,7 @@ static void rf_inst_code_add(void)
   /* extra boot-up literals for COLD */
   rf_inst_comma(0);
   rf_inst_comma(0);
+  /* extra boot-up literals for tg */
   rf_inst_comma(RF_TARGET_HI);
   rf_inst_comma(RF_TARGET_LO);
   /* orterforth additional words */
@@ -441,6 +405,15 @@ static void rf_inst_code_add(void)
   rf_inst_def_code("xt", rf_code_xt);
   RF_JUMP_NEXT;
 }
+
+/* do nothing - only used to create a no op CR */
+#ifdef RF_INST_SILENT
+static void rf_inst_code_noop(void)
+{
+  RF_START;
+  RF_JUMP_NEXT;
+}
+#endif
 
 /* Table of inst time code addresses */
 
@@ -530,8 +503,13 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 #define RF_BS 0x007F
 #endif
 
+/* flag to indicate completion of install */
+extern char rf_installed;
+
+/* static location for IP to run inst */
 static rf_code_t *rf_inst_load_cfa = 0;
 
+/* bootstrap the installing Forth vocabulary */
 static void rf_inst_forward(void)
 {
   int i;
@@ -663,6 +641,15 @@ static void rf_inst_forward(void)
     "::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
 }
 
+/* replaces memset */
+static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
+{
+  while (num--) {
+    *(ptr++) = value;
+  }
+}
+
+/* EMPTY-BUFFERS */
 static void rf_inst_emptybuffers(void)
 {
   rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
@@ -693,7 +680,7 @@ static void rf_inst_disc_w(char *b, uintptr_t blk)
   char d[2];
 
   /* send command */
-  rf_inst_disc_cmd_set('O', blk);
+  rf_inst_disc_cmd_set(blk);
   rf_disc_write((char *) cmd, 11);
 
   /* expect ENQ EOT */
@@ -716,11 +703,25 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
 /* disc buffer start */
 static uint8_t * buf;
 
+/* inner hex loop */
+char *rf_inst_save_hex(char *i)
+{
+  uint8_t j;
+
+  for (j = 0; j < 128;) {
+    uint8_t b = *i++;
+    buf[j++] = rf_inst_hex(b >> 4);
+    buf[j++] = rf_inst_hex(b & 15);
+  }
+
+  return i;
+}
+
 /* save the installation as hex on DR1 */
 void rf_inst_save(void)
 {
-  /* write to DR1 */
-  unsigned int blk = 2000;
+  /* write to DR1 - offset to DR1 is now assumed */
+  unsigned int blk = 0;
 #ifdef RF_INST_RELINK
   /* start from ORIGIN, if code is separate and to be relinked */
   char *i = (char *) RF_ORIGIN;
@@ -747,15 +748,12 @@ void rf_inst_save(void)
 */
 #endif
 
-  /* TODO move hex block write and run via Forth */
   /* now write hex blocks to DR1 */
+  cmd[0] = 'O';
+  cmd[9] = '1';
   buf = (uint8_t *) RF_FIRST + RF_WORD_SIZE;
   while (i < e) {
-    for (j = 0; j < 128;) {
-      uint8_t b = *i++;
-      buf[j++] = rf_inst_hex(b >> 4);
-      buf[j++] = rf_inst_hex(b & 15);
-    }
+    i = rf_inst_save_hex(i);
     rf_inst_disc_w(buf, blk++);
   }
   /* write a block of 'Z's as a signal to terminate */
@@ -765,6 +763,7 @@ void rf_inst_save(void)
 #endif
 
 #ifdef PICO
+/* TODO solve within eject? */
 char rf_local_disc = 1;
 #endif
 
