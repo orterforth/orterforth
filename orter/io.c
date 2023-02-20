@@ -235,6 +235,21 @@ static void bufwrite(int out, orter_io_rdwr_t wr, char *buf, char **offset, size
   }
 }
 
+size_t orter_io_buf_wr(char *off, size_t len, char *buf, char **offset, size_t *pending)
+{
+  /* need empty buffer */
+  if (*pending) {
+    return 0;
+  }
+
+  /* copy into buffer */
+  memcpy(buf, off, len);
+  *offset = buf;
+  *pending = len;
+
+  return len;
+}
+
 void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter_io_rdwr_t wr, int out)
 {
   pipe->in = in;

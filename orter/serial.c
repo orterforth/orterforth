@@ -243,17 +243,7 @@ static size_t omap_rd(char *off, size_t len)
 
 static size_t omap_wr(char *off, size_t len)
 {
-  /* need empty buffer */
-  if (omap_pending) {
-    return 0;
-  }
-
-  /* copy into buffer */
-  memcpy(omap_buf, off, len);
-  omap_offset = omap_buf;
-  omap_pending = len;
-
-  return len;
+  return orter_io_buf_wr(off, len, omap_buf, &omap_offset, &omap_pending);
 }
 
 static void restore(void)
@@ -386,6 +376,7 @@ int orter_serial(int argc, char **argv)
   }
 
   /* set up pipes */
+  /* TODO omit stdin/stdout fps */
   orter_io_pipe_init(&in, 0, orter_io_stdin_rd, omap_wr, -1);
   orter_io_pipe_init(&swr, -1, omap_rd, orter_serial_wr, orter_serial_fd);
   orter_io_pipe_init(&out, orter_serial_fd, orter_serial_rd, orter_io_stdout_wr, 1);
