@@ -91,7 +91,8 @@ funcend_rf_trampoline EQU *
 funcsize_rf_trampoline EQU funcend_rf_trampoline-_rf_trampoline
 
 * What follows is adapted from the original document to create compatible 
-* assembly source for the orterforth project in January 2023.
+* assembly source for the orterforth project in January 2023. Some comments
+* are preserved, although apart from acknowledgements much no longer applies.
 
 * 6809
 * fig-FORTH
@@ -107,6 +108,62 @@ funcsize_rf_trampoline EQU funcend_rf_trampoline-_rf_trampoline
 *
 * This public domain publication is provided through the courtesy of the 
 * FORTH Interest Group. Further distribution must include this notice.
+
+*       TTL    (C)1980 TALBOT MICROSYSTEMS
+*       STTL   68'FORTH FOR 6809  : FIG MODEL
+*       OPT    PAG,NOC,MAG,NOE
+*
+*
+*** FORTH FOR 6809  By R. J. Talbot, Jr.         80.03.20
+*
+*** TALBOT  MICROSYSTEMS
+***
+***
+***
+*  This  version of FORTH follows the model created by the
+*     The FORTH Interest Group   (FIG)
+*    PO Box 1105,    San Carlos, CA 94070
+*            (415) 962-8653
+*  The  model is described in a document which nay be obtained from
+*  them for $15.00 entitled  "fig-FORTH Installation Manual"
+*
+*  This version was developed for a  SWTPC 6809 system with FLEX, but
+*  all terminal I/O is done by internal code, so it is independent
+*  of the rom monitor or operating system such as FLEX.
+*  The only systm dependent terminal I/O code which night need
+*  changing is the location of the control ACIA port in memory
+*  space - - the present assignments to E004 and the data word is
+*  the control address + 1.
+*
+*  All terminal I/O is done in three assembly language subroutines:
+*     PEMIT  - emits a character to terninal
+*     PKEY   - reads a character from terminal (no echo)
+*     PQTERM - tests terminal for a character having been typed
+*
+* The FORTH words for disk  I/O follow the model of the FORTH
+* Interest Group -there are both a RAM simulation of disk I/O and real
+* disk I/O of standard FORTH SCREENS. Also, there is an interface
+* which allows  input or output using DOS fomat TEXT files, and
+* there is a link to the DOS command structure so that
+* DOS  commands may be executed from FORTH, including read into
+* or write from  RAM simulated disk using TAPE or DISK SAVE or LOAD.
+*
+* This 68'FORTH Vers 1.1 assembled machine code program is available on
+* a FLEX 9.0 soft-sectored 5-1/4 " diskette or
+* on a 300 baud KCS cassette from TALBOT MICROSYSTEMS.
+*              The cassette version may be used in conjunction with the
+* RAM simulation of disk to implement a cassette-only version or to
+* modify the DOS interface to something other than FLEX.
+*
+* Advanced versions are available ( in
+* diskette form only) which contains a full 6809 assembler in FORTH,
+* a screen oriented FORTH source text editor, and many other
+* useful vocabularies -- contact TALBOT Microsystems.
+*
+* This assembly source code is available ( on FLEX 9.0 soft sectored
+* 5 1/4" diskette only) -- contact TALBOT Microsystems.
+*
+*
 
 *** * * *
 *  CONVENTIONS USED IN THIS  PROGRAM ARE -
