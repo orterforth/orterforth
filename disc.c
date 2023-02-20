@@ -171,6 +171,7 @@ static size_t fuse_rd(char *off, size_t len)
   size_t i;
   int c;
 
+  /* TODO read/escape from fd 0 into read buffer */
   for (i = 0; i < len; i++) {
     c = orter_spectrum_fuse_serial_getc(stdin);
     /* EOF */
@@ -193,6 +194,7 @@ static size_t fuse_wr(char *off, size_t len)
 {
   size_t i;
 
+  /* TODO read/escape into a buffer and then write to fd 1 */
   for (i = 0; i < len; i++) {
     orter_spectrum_fuse_serial_putc(off[i], stdout);
   }  
