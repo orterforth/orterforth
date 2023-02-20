@@ -122,13 +122,13 @@ void rf_code_cr(void)
 }
 
 #ifdef PICO
-extern char rf_local_disc;
+char rf_system_local_disc = 1;
 #endif
 
 void rf_disc_read(char *p, uint8_t len)
 {
 #ifdef PICO
-  if (rf_local_disc) {
+  if (rf_system_local_disc) {
 #endif
     for (; len; --len) {
       *(p++) = rf_persci_getc();
@@ -145,7 +145,7 @@ void rf_disc_read(char *p, uint8_t len)
 void rf_disc_write(char *p, uint8_t len)
 {
 #ifdef PICO
-  if (rf_local_disc) {
+  if (rf_system_local_disc) {
 #endif
     for (; len; --len) {
       rf_persci_putc(*(p++));

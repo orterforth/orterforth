@@ -763,8 +763,7 @@ void rf_inst_save(void)
 #endif
 
 #ifdef PICO
-/* TODO solve within eject? */
-char rf_local_disc = 1;
+extern char rf_system_local_disc;
 #endif
 
 void rf_inst(void)
@@ -786,7 +785,7 @@ void rf_inst(void)
 
 #ifdef RF_INST_LOCAL_DISC
   /* "insert" the inst disc */
-  rf_persci_insert_bytes(0, "model.disc", model_disc, model_disc_len);
+  rf_persci_insert_bytes(0, model_disc);
 #endif
 
   /* LOAD all Forth model source from disc */
@@ -796,7 +795,7 @@ void rf_inst(void)
   /* now "eject" the inst disc */
   rf_persci_eject(0);
 #ifdef PICO
-  rf_local_disc = 0;
+  rf_system_local_disc = 0;
 #endif
 #endif
 

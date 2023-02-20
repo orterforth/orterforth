@@ -65,7 +65,7 @@ void rf_persci_insert(int drive, char *filename)
   rf_persci_state = RF_PERSCI_STATE_IDLE;
 }
 
-void rf_persci_insert_bytes(int drive, char *filename, const uint8_t *bytes, unsigned int len)
+void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
 {
   validate_drive_no(drive);
 
