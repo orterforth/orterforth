@@ -31,6 +31,13 @@ endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)
 
+ifeq ($(DRAGONMACHINE),mame)
+	DRAGONSTARTDISC := $(STARTDISCTCP)
+endif
+ifeq ($(DRAGONMACHINE),xroar)
+	DRAGONSTARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC) standard
+endif
+
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | $(DRAGONROMS)
 
@@ -48,13 +55,7 @@ dragon-inst : dragon/orterforth.cas
 .PHONY : dragon-run
 dragon-run : dragon/orterforth.cas | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
-ifeq ($(DRAGONMACHINE),mame)
-	@$(STARTDISCTCP) $(DR0) $(DR1)
-endif
-ifeq ($(DRAGONMACHINE),xroar)
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC) standard $(DR0) $(DR1)
-endif
+	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
 
 ifeq ($(DRAGONMACHINE),mame)
 	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
@@ -123,13 +124,7 @@ dragon/orterforth.hex : dragon/inst.cas model.disc | $(DISC) dragon/rx dragon/tx
 	@rm -f $@.io
 	@touch $@.io
 
-ifeq ($(DRAGONMACHINE),mame)
-	@$(STARTDISCTCP) model.disc $@.io
-endif
-ifeq ($(DRAGONMACHINE),xroar)
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC) standard model.disc $@.io
-endif
+	@$(DRAGONSTARTDISC) model.disc $@.io
 
 ifeq ($(DRAGONMACHINE),mame)
 	@printf '* \033[1;33mStarting MAME\033[0;0m\n'
