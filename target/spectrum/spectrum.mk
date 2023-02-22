@@ -92,7 +92,7 @@ ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORIGIN
-SPECTRUMORIGIN := 0x8800
+SPECTRUMORIGIN := 0x87A0
 # assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
 # superzazu emulator is minimal and launches no GUI
@@ -130,7 +130,9 @@ SPECTRUMRUNDEPS := \
 	$(DISC) \
 	$(SPECTRUMROMS) \
 	spectrum/fuse-rs232-rx \
-	spectrum/fuse-rs232-tx
+	spectrum/fuse-rs232-tx \
+	spectrum/rx \
+	spectrum/tx
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 SPECTRUMRUNDEPS := \
@@ -187,7 +189,10 @@ ifeq ($(SPECTRUMMACHINE),real)
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
-	@$(STARTDISCFUSE) $(DR0) $(DR1)
+	# @$(STARTDISCFUSE) $(DR0) $(DR1)
+	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard $(DR0) $(DR1)
+	$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
+	$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@$(STARTDISCTCP) $(DR0) $(DR1)
@@ -332,7 +337,9 @@ SPECTRUMINSTDEPS := \
 	$(ORTER) \
 	$(SPECTRUMROMS) \
 	spectrum/fuse-rs232-rx \
-	spectrum/fuse-rs232-tx
+	spectrum/fuse-rs232-tx \
+	spectrum/rx \
+	spectrum/tx
 endif
 ifeq ($(SPECTRUMINSTMACHINE),real)
 SPECTRUMINSTDEPS := \
@@ -346,6 +353,14 @@ SPECTRUMINSTDEPS := \
 	$(SYSTEM)/emulate_spectrum \
 	$(SPECTRUMROMS)
 endif
+
+spectrum/rx : | spectrum
+
+	mkfifo $@
+
+spectrum/tx : | spectrum
+
+	mkfifo $@
 
 spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
 
@@ -374,11 +389,14 @@ ifeq ($(SPECTRUMINSTMACHINE),real)
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 endif
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
-	@$(STARTDISCFUSE) model.disc $@.io
+	# @$(STARTDISCFUSE) model.disc $@.io
+	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard model.disc $@.io
+	$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
+	$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
 
 	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
 	@printf '  \033[1;35mNB please type LOAD "" (phantom typist not working currently)\033[0;0m\n'
-	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) $(FUSEOPTS) --speed=1000 --tape spectrum/inst-2.tap
+	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
 endif
 
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)

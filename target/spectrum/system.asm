@@ -23,10 +23,11 @@ ENDIF
 
   call $0DAF                    ; CL_ALL clear screen
 
-  ld hl, $5CC3                  ; BAUD
-  ld (hl), $0C                  ; $000C = 9600 ; $0005 = 19200
-  inc hl
-  ld (hl), $00
+  ; ld hl, $01BE                  ; 300 baud
+  ; ld hl, $006E                  ; 1200 baud
+  ld hl, $000C                  ; 9600 baud
+  ; ld hl, $0005                  ; 19200 baud
+  ld ($5CC3), hl                ; BAUD
 
   rst $0008                     ; create Interface 1 system vars
   defb $31
