@@ -1,3 +1,4 @@
+( mandelbrot.f - derived from fract.fs in openbios            )
 
 
 
@@ -12,17 +13,32 @@
 
 
 
-
-
+-->
 ( mandelbrot.f - derived from fract.fs in openbios            )
 HEX
-: D= ROT = >R = R> AND ;        ( compare double numbers      )
-: columns                       ( system specific screen width)
-  tg 3948. D= IF 28 ;S ENDIF    ( BBC 40 columns              )
+
+( compare double numbers                                      )
+: D=                            ( d1 d2 -- f )
+  ROT = >R = R> AND ;           ( compare high and low words  )
+
+( system specific screen width                                )
+: columns                       ( -- u )
+  tg     3948. D= IF 28 ;S ENDIF ( BBC 40 columns             )
+  tg 3195C1F7. D= IF 20 ;S ENDIF ( Dragon 32 columns          )
   tg 6774E16F. D= IF 20 ;S ENDIF ( Spectrum 32 columns        )
   50                            ( default 80 columns          )
 ;
 
+-->
+( mandelbrot.f - derived from fract.fs in openbios            )
+
+( system specific screen height                               )
+: rows                           ( -- u )
+  tg     3948. D= IF 19 ;S ENDIF ( BBC 25 rows                )
+  tg 3195C1F7. D= IF 10 ;S ENDIF ( Dragon 16 rows             )
+  tg 6774E16F. D= IF 18 ;S ENDIF ( Spectrum 24 rows           )
+  18                            ( default 24 rows             )
+;
 
 
 
@@ -57,8 +73,6 @@ HEX
         [ 400 3 * columns 2 - / ] ( compute step from cols    )
         LITERAL +LOOP
         CR DROP                 ( end of line                 )
-    5E +LOOP ;
+    [ 466 2+ 2 * rows / ] LITERAL +LOOP ;
 
-DECIMAL
-mandelbrot
-;S
+mandelbrot DECIMAL ;S
