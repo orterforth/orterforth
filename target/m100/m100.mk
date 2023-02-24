@@ -14,9 +14,8 @@ m100-hw : m100/hw.ba
 
 m100/hw.ba : | m100
 
-	printf '\r\n\r\n10 PRINT "Hello World ";\r\n' > $@.io
-	printf '20 GOTO 10\r\n' >> $@.io
-	printf '\r\n\032' >> $@.io
+	printf '10 PRINT "Hello World ";\r\n' > $@.io
+	printf '20 GOTO 10\r\n\032' >> $@.io
 	mv $@.io $@
 
 m100/hw.co : | m100
