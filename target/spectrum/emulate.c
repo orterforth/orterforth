@@ -396,11 +396,8 @@ static void run(void)
   while (!finished) {
     /* hooks */
     hook();
-
-    /* CPU step */
-    z80_step(z);
 /*
-    printf("PC=%04X AF=%04X BC=%04X DE=%04X HL=%04X AF'=%04X BC'=%04X DE'=%04X HL'=%04X IR=%04X\n",
+    printf("T:PC=%04X AF=%04X BC=%04X DE=%04X HL=%04X AF'=%04X BC'=%04X DE'=%04X HL'=%04X SP=%04X IR=%04X\n",
       z->pc, 
       (uint16_t) (z->a) << 8 | (uint16_t) get_f(z),
       (uint16_t) (z->b) << 8 | (uint16_t) (z->c),
@@ -410,8 +407,16 @@ static void run(void)
       (uint16_t) (z->b_) << 8 | (uint16_t) (z->c_),
       (uint16_t) (z->d_) << 8 | (uint16_t) (z->e_),
       (uint16_t) (z->h_) << 8 | (uint16_t) (z->l_),
+      z->sp,
       (uint16_t) (z->i) << 8 | (uint16_t) (z->r)
-      );
+    );
+    if (bus_rd(0, z->pc) == 0x78) {
+      exit(0);
+    }
+*/
+    /* CPU step */
+    z80_step(z);
+/*
     steps++;
 */
     /* interrupt */
