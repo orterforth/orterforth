@@ -107,11 +107,11 @@ BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033
 
 # load and run example disc
 .PHONY : bbc-example
-bbc-example : $(BBCMEDIA) $(BBCROMS) | $(DISC) example/$(EXAMPLE).disc $(DR1)
+bbc-example : $(BBCMEDIA) $(BBCROMS) | $(DISC) example/$(EXAMPLE).img $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
 	@touch $(DR1)
-	@$(STARTDISCTCP) example/$(EXAMPLE).disc $(DR1)
+	@$(STARTDISCTCP) example/$(EXAMPLE).img $(DR1)
 
 	# run mame
 ifeq ($(BBCLOADINGMETHOD),disk)
@@ -133,7 +133,7 @@ ifeq ($(BBCMACHINE),real)
 	@echo "* now type EMPTY-BUFFERS 1 LOAD"
 
 	# run disc
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) example/$(EXAMPLE).disc $(DR1)
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) example/$(EXAMPLE).img $(DR1)
 endif
 
 # Hello World - NB this doesn't work because bbc.lib is incomplete
@@ -266,21 +266,21 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # binary hex
-bbc/orterforth.hex : $(BBCINSTMEDIA) model.disc $(BBCROMS) | $(DISC)
+bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	@$(STARTDISCTCP) model.disc $@.io
+	@$(STARTDISCTCP) model.img $@.io
 
 	@$(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
 endif
 ifeq ($(BBCMACHINE),real)
 	@$(BBCLOADSERIAL) $(BBCINSTMEDIA)
 
-	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 endif
 
 	@$(WAITUNTILSAVED) $@.io

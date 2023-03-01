@@ -116,7 +116,7 @@ dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/orterforth.hex : dragon/inst.cas model.disc | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
+dragon/orterforth.hex : dragon/inst.cas model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
 	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/inst.bin)
 
@@ -124,7 +124,7 @@ dragon/orterforth.hex : dragon/inst.cas model.disc | $(DISC) dragon/rx dragon/tx
 	@rm -f $@.io
 	@touch $@.io
 
-	@$(DRAGONSTARTDISC) model.disc $@.io
+	@$(DRAGONSTARTDISC) model.img $@.io
 
 ifeq ($(DRAGONMACHINE),mame)
 	@printf '* \033[1;33mStarting MAME\033[0;0m\n'

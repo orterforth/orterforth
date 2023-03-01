@@ -362,7 +362,7 @@ spectrum/tx : | spectrum
 
 	mkfifo $@
 
-spectrum/orterforth.bin.hex : model.disc $(SPECTRUMINSTDEPS)
+spectrum/orterforth.bin.hex : model.img $(SPECTRUMINSTDEPS)
 
 	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $(shell $(STAT) spectrum/inst.bin)
 
@@ -385,12 +385,12 @@ ifeq ($(SPECTRUMINSTMACHINE),real)
 endif
 
 ifeq ($(SPECTRUMINSTMACHINE),real)
-	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.disc $@.io
+	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 endif
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
-	# @$(STARTDISCFUSE) model.disc $@.io
-	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard model.disc $@.io
+	# @$(STARTDISCFUSE) model.img $@.io
+	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard model.img $@.io
 	$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
 	$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
 

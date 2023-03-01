@@ -366,7 +366,7 @@ static void init(void)
   tape_load("spectrum/inst-2.tap");
 
   /* disc */
-  rf_persci_insert(0, "model.disc");
+  rf_persci_insert(0, "model.img");
   rf_persci_insert(1, "spectrum/orterforth.bin.hex.io");
 }
 

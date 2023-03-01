@@ -185,6 +185,7 @@ int orter_serial_close(void)
     return 0;
   }
   /* drain anything pending */
+  /* TODO don't drain, hangs */
   if (tcdrain(orter_serial_fd)) {
     perror("serial tcdrain failed");
   }

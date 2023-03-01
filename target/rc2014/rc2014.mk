@@ -152,7 +152,7 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 	mv $@.io $@
 
 # saved hex result
-rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) $(ORTER)
+rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.img | $(DISC) $(ORTER)
 
 	@# NB this does not allow for BSS
 	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
@@ -168,7 +168,7 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.disc | $(DISC) 
 	@rm -f $@.io
 	@touch $@.io
 
-	@$(STARTDISC) mux $(RC2014SERIALPORT) 115200 model.disc $@.io
+	@$(STARTDISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
 
 	@$(WAITUNTILSAVED) $@.io
 

@@ -139,7 +139,7 @@ $(SYSTEM)-build : \
 $(SYSTEM)-clean :
 
 	rm -rf $(SYSTEM)/*
-	rm -f model.disc
+	rm -f model.img
 	rm -f model.inc
 
 # default example
@@ -147,13 +147,13 @@ EXAMPLE=test
 
 # run local build with example disc
 .PHONY : $(SYSTEM)-example
-$(SYSTEM)-example : $(ORTERFORTH) example/$(EXAMPLE).disc
+$(SYSTEM)-example : $(ORTERFORTH) example/$(EXAMPLE).img
 
-	echo "EMPTY-BUFFERS 1 LOAD" | $< example/$(EXAMPLE).disc
+	echo "EMPTY-BUFFERS 1 LOAD" | $< example/$(EXAMPLE).img
 
 # runtime disc images
-DR0=messages.disc
-DR1=data.disc
+DR0=messages.img
+DR1=data.img
 
 # run local build
 .PHONY : $(SYSTEM)-run
@@ -223,9 +223,9 @@ $(TARGET)-help :
 	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then more help.txt ; else more target/$(TARGET)/help.txt ; fi
 
 # disc images from %.f files including model.f
-%.disc : %.f | $(DISC)
+%.img : %.f | $(DISC)
 
-	$(DISC) create <$< >$@.io
+	$(DISC) create < $< > $@.io
 	mv $@.io $@
 
 # common inst script commands
@@ -253,7 +253,7 @@ include target/c64/c64.mk
 clean : $(TARGET)-clean
 
 # create empty to use as default DR1
-data.disc :
+data.img :
 
 	touch $@
 
@@ -283,7 +283,7 @@ install : $(ORTER) $(ORTERFORTH)
 include target/m100/m100.mk
 
 # disc image as C include
-model.inc : model.disc | $(ORTER)
+model.inc : model.img | $(ORTER)
 
 	# xxd -i $< > $@.io
 	$(ORTER) hex include model_disc < $< > $@.io
@@ -328,5 +328,7 @@ uninstall :
 
 	rm -f /usr/local/bin/orter
 	rm -f /usr/local/bin/orterforth
+
+# include target/z88/z88.mk
 
 include target/zx81/zx81.mk

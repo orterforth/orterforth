@@ -50,8 +50,8 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 	@sleep 3
 
 	@echo "* Starting disc..."
-	@touch data.disc
-	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.disc data.disc
+	@touch data.img
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.img data.img
 
 # inst executable
 ql/inst : ql/inst.o $(QLDEPS)
@@ -113,7 +113,7 @@ ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 	# TODO use disc start/stop script
 	@echo "* Starting disc and waiting for completion..."
 	@touch $@.io
-	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.disc $@.io & pid=$$! ; \
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.img $@.io & pid=$$! ; \
 		scripts/wait-until-saved.sh $@.io ; \
 		kill -9 $$pid
 

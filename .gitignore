@@ -1,5 +1,5 @@
 .vscode/
-*.disc
+*.img
 *.io
 *.pid
 /bbc/
