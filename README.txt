@@ -270,8 +270,10 @@ orterforth builds upon the work of many, most obviously the
 Forth Interest Group and those involved in putting together the
 Installation Manual and their other public domain works.
 
-Dependencies (compilers, emulators, system ROMs, utilities) have
-their own licence terms of course.
+GPLv3 does not, of course, apply to the works copied and/or
+modified - they have their own terms. Dependencies (compilers,
+emulators, system ROMs, utilities) have their own licence
+terms.
 
 If any attribution has been missed I am happy to add it in here 
 or in the appropriate place in the source code.
