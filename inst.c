@@ -1,3 +1,4 @@
+/* TODO generic rf_inst_sleep */
 /* TODO remove if not necessary */
 #ifdef __RC2014
 #include <z80.h>
@@ -57,6 +58,9 @@ static void rf_inst_code_block_cmd(void)
   }
   RF_JUMP_NEXT;
 }
+
+/* TODO block load for proto compile rf_inst_block */
+/* TODO RF_USER_DP cached in a ptr? rf_inst_dp? */
 
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
@@ -159,6 +163,7 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
 /* (FIND) */
 static char *rf_inst_find(char *t, uint8_t length)
 {
+  /* TODO l required? */
   uint8_t l;
   uint8_t i;
   char *n;
@@ -219,8 +224,9 @@ static void __FASTCALL__ rf_inst_compile(char *name)
     /* read until space or null */
     for (p = name; *p && *p != ' '; p++) { }
 
-    /* create colon definition */
+    /* interpret what we have */
     if (*name == ':') {
+      /* create colon definition */
       /* two colons means immediate */
       if (*(++name) == ':') {
         rf_inst_colon(++name);
@@ -243,6 +249,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
     }
 
     /* look for more */
+    /* TODO will need to deal with trailing spaces */
     if (!*p) break;
     name = ++p;
   }
