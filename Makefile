@@ -329,6 +329,6 @@ uninstall :
 	rm -f /usr/local/bin/orter
 	rm -f /usr/local/bin/orterforth
 
-# include target/z88/z88.mk
+include target/z88/z88.mk
 
 include target/zx81/zx81.mk
