@@ -32,8 +32,11 @@ int                   orter_serial_fd = -1;
 /* opts */
 static int            echo = 0;
 static int            icrnl = 0;
+static int            ixoff = 0;
+static int            ixon = 0;
 static int            ocrnl = 0;
 static int            odelbs = 0;
+static int            onlcr = 0;
 static int            onlcrx = 0;
 
 /* serial port */
@@ -86,8 +89,17 @@ static void serial_makeraw(struct termios *attr)
   if (icrnl) {
     attr->c_iflag |= ICRNL;
   }
+  if (ixoff) {
+    attr->c_iflag |= IXOFF;
+  }
+  if (ixon) {
+    attr->c_iflag |= IXON;
+  }
   if (ocrnl) {
-    attr->c_oflag |= OCRNL;
+    attr->c_oflag |= OPOST | OCRNL;
+  }
+  if (onlcr) {
+    attr->c_oflag |= OPOST | ONLCR;
   }
 
   /* timing */
@@ -295,9 +307,12 @@ static int usage(void)
                   "                    -e <wait> : wait <wait> s after EOF\n"
                   "                    -o echo   : enable echoing\n"
                   "                    -o icrnl  : read  0x0d->0x0a\n"
-                  "                    -o onlcrx : write 0x0a->0x0d\n"
-                  "                    -o ocrnl  : write 0x0d->0x0a\n"
-                  "                    -o odelbs : write 0x7f->0x08\n");
+                  "                    -o ixoff  : enable XON/XOFF on input\n"
+                  "                    -o ixon   : enable XON/XOFF on output\n");
+  fprintf(stderr, "                    -o ocrnl  : write 0x0d->0x0a\n"
+                  "                    -o odelbs : write 0x7f->0x08\n"
+                  "                    -o onlcr  : write 0x0a->0x0d 0x0a\n"
+                  "                    -o onlcrx : write 0x0a->0x0d\n");
   return 1;
 }
 
@@ -323,14 +338,23 @@ static void opts(int argc, char **argv)
         if (!strcmp(optarg, "icrnl")) {
           icrnl = 1;
         }
-        if (!strcmp(optarg, "odelbs")) {
-          odelbs = 1;
+        if (!strcmp(optarg, "ixoff")) {
+          ixoff = 1;
         }
-        if (!strcmp(optarg, "onlcrx")) {
-          onlcrx = 1;
+        if (!strcmp(optarg, "ixon")) {
+          ixon = 1;
         }
         if (!strcmp(optarg, "ocrnl")) {
           ocrnl = 1;
+        }
+        if (!strcmp(optarg, "odelbs")) {
+          odelbs = 1;
+        }
+        if (!strcmp(optarg, "onlcr")) {
+          onlcr = 1;
+        }
+        if (!strcmp(optarg, "onlcrx")) {
+          onlcrx = 1;
         }
         break;
       default:
