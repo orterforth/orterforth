@@ -10,9 +10,9 @@ z88 :
 
 	mkdir $@
 
-z88/hw.bin z88/HW.BAS : hw.c
+z88/hw.bin z88/hw.map : hw.c
 
-	zcc $(Z88ZCCOPTS) -create-app -o z88/hw.bin hw.c
+	zcc $(Z88ZCCOPTS) -m -o z88/hw.bin hw.c
 
 z88/inst.bin z88/inst.map z88/INST.BAS : z88/rf.lib z88/system.lib z88/inst.lib main.c
 
