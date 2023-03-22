@@ -109,47 +109,9 @@ dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/link : dragon/link.bin
-
-	# link bin, minus its own header
-	dd bs=1 skip=9 if=dragon/link.bin > dragon/link
-
-dragon/link.bin : $(DRAGONLINKDEPS) main.c
-
-	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
-
-dragon/link.o : link.c rf.h target/dragon/system.inc | dragon
-
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
-
 dragon/installed : dragon/installed.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
-
-dragon/spacer : dragon/link
-
-	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $(shell $(STAT) dragon/link) )) > $@
-
-ifeq ($(DRAGONLINK),true)
-dragon/orterforth : dragon/link dragon/spacer dragon/installed
-
-	cat dragon/link > $@.io
-	cat dragon/spacer >> $@.io
-else
-dragon/orterforth : dragon/installed
-
-endif
-	cat dragon/installed >> $@.io
-	mv $@.io $@
-
-dragon/orterforth.bin : dragon/orterforth
-
-	sh target/dragon/bin-header.sh $(shell $(STAT) $<) > $@
-	cat $< >> $@
-
-dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D $<
 
 dragon/installed.hex : dragon/inst.cas model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
@@ -193,6 +155,40 @@ endif
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
+dragon/link : dragon/link.bin
+
+	# link bin, minus its own header
+	dd bs=1 skip=9 if=dragon/link.bin > dragon/link
+
+dragon/link.bin : $(DRAGONLINKDEPS) main.c
+
+	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
+
+dragon/link.o : link.c rf.h target/dragon/system.inc | dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+
+ifeq ($(DRAGONLINK),true)
+dragon/orterforth : dragon/link dragon/spacer dragon/installed
+
+	cat dragon/link > $@.io
+	cat dragon/spacer >> $@.io
+else
+dragon/orterforth : dragon/installed
+
+endif
+	cat dragon/installed >> $@.io
+	mv $@.io $@
+
+dragon/orterforth.bin : dragon/orterforth
+
+	sh target/dragon/bin-header.sh $(shell $(STAT) $<) > $@
+	cat $< >> $@
+
+dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D $<
+
 dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
@@ -205,26 +201,26 @@ dragon/rf_6809.o : rf_6809.s | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
-# Dragon serial named pipe
 dragon/rx : | dragon
 
 	mkfifo $@
+
+dragon/spacer : dragon/link
+
+	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $(shell $(STAT) dragon/link) )) > $@
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
-# Dragon serial named pipe
 dragon/tx : | dragon
 
 	mkfifo $@
 
-# ROM files dir
 roms/dragon64 : | roms
 
 	mkdir $@
 
-# ROM files
 roms/dragon64/% :
 
 	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
