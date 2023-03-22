@@ -2,7 +2,7 @@
 #define RF_INST_SAVE
 
 /* links code fields to the loaded job on startup */
-#define RF_INST_RELINK
+#define RF_INST_LINK
 
 /* default C impl code is larger and no room to reserve from 188416 */
 /*#define RF_ORIGIN 188416*/

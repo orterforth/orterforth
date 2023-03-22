@@ -2,7 +2,7 @@
 #define RF_INST_SAVE
 
 /* links code fields to the loaded job on startup */
-#define RF_INST_RELINK
+#define RF_INST_LINK
 
 /* assembly code small enough to reserve 72 KB */
 /*#define RF_ORIGIN 188416*/

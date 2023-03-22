@@ -34,7 +34,7 @@ RESPR but loads the executable as a job). The table is used on
 startup to relink code fields, and other fields that need to
 be relocated.
 */
-#undef RF_INST_RELINK
+#undef RF_INST_LINK
 
 /*
 Define this to save the resulting installation once inst is

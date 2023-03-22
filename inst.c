@@ -723,7 +723,7 @@ void rf_inst_save(void)
 {
   /* write to DR1 - offset to DR1 is now assumed */
   unsigned int blk = 0;
-#ifdef RF_INST_RELINK
+#ifdef RF_INST_LINK
   /* start from ORIGIN, if code is separate and to be relinked */
   char *i = (char *) RF_ORIGIN;
 #else
@@ -733,7 +733,7 @@ void rf_inst_save(void)
   char *e = (char *) RF_USER_DP;
   uint8_t j;
 
-#ifdef RF_INST_RELINK
+#ifdef RF_INST_LINK
   /* write table of code addresses after HERE */
   for (j = 0; j < RF_INST_CODE_LIT_LIST_SIZE; j++) {
     *((rf_code_t *) e) = rf_inst_code_lit_list[j].value;
