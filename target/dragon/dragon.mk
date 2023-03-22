@@ -17,6 +17,8 @@ DRAGONOPTION := assembly
 
 DRAGONCMOCOPTS := --dragon
 DRAGONDEPS := dragon/rf.o dragon/inst.o dragon/system.o
+DRAGONLINK := true
+DRAGONLINKDEPS := dragon/link.o dragon/rf.o dragon/system.o
 DRAGONMACHINE := xroar
 DRAGONORG := 0x0600
 DRAGONORIGIN := 0x3180
@@ -26,10 +28,15 @@ DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
 DRAGONDEPS += dragon/rf_6809.o
+DRAGONLINKDEPS += dragon/rf_6809.o
 DRAGONORIGIN := 0x2640
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)
+
+ifeq ($(DRAGONLINK),true)
+	DRAGONCMOCOPTS += -DRF_INST_RELINK
+endif
 
 ifeq ($(DRAGONMACHINE),mame)
 	DRAGONSTARTDISC := $(STARTDISCTCP)
@@ -102,21 +109,49 @@ dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/orterforth : dragon/orterforth.hex | $(ORTER)
+dragon/link : dragon/link.bin
+
+	# link bin, minus its own header
+	dd bs=1 skip=9 if=dragon/link.bin > dragon/link
+
+dragon/link.bin : $(DRAGONLINKDEPS) main.c
+
+	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
+
+dragon/link.o : target/ql/relink.c rf.h target/dragon/system.inc | dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+
+dragon/installed : dragon/installed.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
+dragon/spacer : dragon/link
+
+	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $(shell $(STAT) dragon/link) )) > $@
+
+ifeq ($(DRAGONLINK),true)
+dragon/orterforth : dragon/link dragon/spacer dragon/installed
+
+	cat dragon/link > $@.io
+	cat dragon/spacer >> $@.io
+else
+dragon/orterforth : dragon/installed
+
+endif
+	cat dragon/installed >> $@.io
+	mv $@.io $@
+
 dragon/orterforth.bin : dragon/orterforth
 
-	sh target/dragon/bin-header.sh $(shell $(STAT) $<) > $@.io
-	cat $< >> $@.io
-	mv $@.io $@
+	sh target/dragon/bin-header.sh $(shell $(STAT) $<) > $@
+	cat $< >> $@
 
 dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/orterforth.hex : dragon/inst.cas model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
+dragon/installed.hex : dragon/inst.cas model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
 	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/inst.bin)
 

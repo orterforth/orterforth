@@ -1,4 +1,4 @@
-#include "rf.h"
+#include "../../rf.h"
 
 #define SIZE 61
 
@@ -71,11 +71,10 @@ extern char rf_installed;
 void rf_inst(void)
 {
   /* LATEST */
-  uint8_t *p = *((uint8_t **) (RF_ORIGIN + 24));
+  uint8_t *p = *((uint8_t **) (RF_ORIGIN + (6 * RF_WORD_SIZE)));
   /* HERE */
-  uintptr_t *here = *((uintptr_t **) (RF_ORIGIN + 60));
+  uintptr_t *here = *((uintptr_t **) (RF_ORIGIN + (15 * RF_WORD_SIZE)));
   int i;
-  
   while (p) {
     uint8_t *nfa = p;
     rf_code_t *cfa;
@@ -122,12 +121,11 @@ void rf_inst(void)
     p = *((uint8_t **) p);
   }
 
-  /* links used in COLD */
-  /* TODO test again with working QL now these moved to dict */
-/*
-  rf_cold_forth = (uintptr_t *) here[SIZE];
-  rf_cold_abort = (uintptr_t *) here[SIZE + 1];
-*/
   /* now flag as installed */
   rf_installed = 1;
+
+  /* some target code needs RP and SP initialised before COLD */
+  /* e.g., 6809 assembly stack frame handling */
+  RF_RP_SET((uintptr_t *) RF_R0);
+  RF_SP_SET((uintptr_t *) RF_S0);
 }
