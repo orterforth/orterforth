@@ -1,9 +1,3 @@
-/* TODO generic rf_inst_sleep */
-/* TODO remove if not necessary */
-#ifdef __RC2014
-#include <z80.h>
-#endif
-
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
 /* disc controller runs in process */
@@ -773,15 +767,29 @@ void rf_inst_save(void)
 extern char rf_system_local_disc;
 #endif
 
+#ifndef RF_INST_LOCAL_DISC
+/* TODO remove if not necessary */
+#ifdef __RC2014
+#include <z80.h>
+#endif
+
+static void rf_inst_sleep(void)
+{
+#ifdef __RC2014
+  z80_delay_ms(5000);
+#else
+/*
+  sleep(5);
+*/
+#endif
+}
+#endif
+
 void rf_inst(void)
 {
 #ifndef RF_INST_LOCAL_DISC
   /* wait for disc server to init */
-  /* TODO remove if not necessary */
-#ifdef __RC2014
-  z80_delay_ms(5000);
-#else
-#endif
+  rf_inst_sleep();
 #endif
 
   /* cold start */
