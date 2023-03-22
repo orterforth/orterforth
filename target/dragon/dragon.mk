@@ -118,7 +118,7 @@ dragon/link.bin : $(DRAGONLINKDEPS) main.c
 
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 
-dragon/link.o : target/ql/relink.c rf.h target/dragon/system.inc | dragon
+dragon/link.o : link.c rf.h target/dragon/system.inc | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 

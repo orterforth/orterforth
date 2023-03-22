@@ -88,7 +88,7 @@ ql/main.o : main.c rf.h $(QLINC) inst.h | ql
 	qcc -o $@ -c $<
 
 # final executable
-ql/orterforth : ql/relink.o $(QLDEPS)
+ql/orterforth : ql/link.o $(QLDEPS)
 
 	qld -ms -o $@ $^
 
@@ -132,7 +132,7 @@ ql/orterforth.ser : ql/orterforth | $(ORTER)
 	$(ORTER) ql serial-xtcc $< > $@
 
 # relinker
-ql/relink.o : target/ql/relink.c rf.h $(QLINC) | ql
+ql/link.o : link.c rf.h $(QLINC) | ql
 
 	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 

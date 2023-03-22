@@ -1,4 +1,4 @@
-#include "../../rf.h"
+#include "rf.h"
 
 #define SIZE 61
 
