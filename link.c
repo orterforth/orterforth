@@ -68,13 +68,27 @@ static rf_code_t codes[] = {
 
 extern char rf_installed;
 
+static int rf_inst_name(uint8_t *nfa, uint8_t len, char *name)
+{
+  if ((*nfa & 0x3F) == len) {
+    while (*name) {
+      if ((*(++nfa) & 0x7F) != *(name++)) {
+        return 0;
+      }
+    }
+    return 1;
+  }
+  return 0;
+}
+
 void rf_inst(void)
 {
   /* LATEST */
-  uint8_t *p = *((uint8_t **) (RF_ORIGIN + (6 * RF_WORD_SIZE)));
+  uint8_t *p = *((uint8_t **) ((uintptr_t *) (RF_ORIGIN) + 6));
   /* HERE */
-  uintptr_t *here = *((uintptr_t **) (RF_ORIGIN + (15 * RF_WORD_SIZE)));
+  uintptr_t *here = *((uintptr_t **) ((uintptr_t *) (RF_ORIGIN) + 15));
   int i;
+
   while (p) {
     uint8_t *nfa = p;
     rf_code_t *cfa;
@@ -86,8 +100,10 @@ void rf_inst(void)
       p++;
     }
     p++;
+
     /* CFA */
     cfa = (((rf_code_t *) p) + 1);
+
     /* find CFA code address in table */
     for (i = 0; i < SIZE; i++) {
       if (*cfa == (rf_code_t) here[i]) {
@@ -95,26 +111,29 @@ void rf_inst(void)
         *cfa = codes[i];
       }
     }
+
     /* PFA */
     pfa = (uintptr_t *) cfa + 1;
+
+    /* defining words that need links */
     /* : */
-    if (nfa[0] == 0xC1 && (nfa[1] & 0x7F) == ':') {
+    if (rf_inst_name(nfa, 1, ":")) {
       *(pfa + 9) = (uintptr_t) rf_code_docol;
     }
     /* CONSTANT */
-    if (nfa[0] == 0x88 && nfa[1] == 'C' && nfa[2] == 'O' && nfa[3] == 'N' && nfa[4] == 'S') {
+    if (rf_inst_name(nfa, 8, "CONS")) {
       *(pfa + 4) = (uintptr_t) rf_code_docon;
     }
     /* VARIABLE */
-    if (nfa[0] == 0x88 && nfa[1] == 'V' && nfa[2] == 'A' && nfa[3] == 'R' && nfa[4] == 'I') {
+    if (rf_inst_name(nfa, 8, "VARI")) {
       *(pfa + 2) = (uintptr_t) rf_code_dovar;
     }
     /* USER */
-    if (nfa[0] == 0x84 && nfa[1] == 'U' && nfa[2] == 'S' && nfa[3] == 'E' && nfa[4] == 'R') {
+    if (rf_inst_name(nfa, 4, "USER")) {
       *(pfa + 2) = (uintptr_t) rf_code_douse;
     }
     /* DOES> */
-    if (nfa[0] == 0x85 && nfa[1] == 'D' && nfa[2] == 'O' && nfa[3] == 'E' && nfa[4] == 'S') {
+    if (rf_inst_name(nfa, 5, "DOES")) {
       *(pfa + 5) = (uintptr_t) rf_code_dodoe;
     }
     /* LFA */
