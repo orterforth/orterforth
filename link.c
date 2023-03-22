@@ -96,10 +96,8 @@ void rf_inst(void)
 
     /* NFA */
     p++;
-    while ((*p & 0x80) == 0) {
-      p++;
+    while ((*(p++) & 0x80) == 0) {
     }
-    p++;
 
     /* CFA */
     cfa = (((rf_code_t *) p) + 1);
