@@ -1,0 +1,33 @@
+Building for the Dragon 64
+================================
+
+You will need:
+
+* cmoc http://perso.b2b2c.ca/~sarrazip/dev/cmoc.html
+* XRoar emulator with a modification to support serial 
+  emulation over two named pipes (currently a private code
+  change) http://www.6809.org.uk/xroar/
+* Dragon 64 ROM files
+
+To build, call:
+
+ make TARGET=dragon DRAGONOPTION=assembly (6809 assembler)
+ make TARGET=dragon DRAGONOPTION=default (default C build)
+
+Target files built at:
+
+ dragon/orterforth.bin
+ dragon/orterforth.cas
+ dragon/orterforth.wav
+
+To run in XRoar, call:
+
+ make run TARGET=dragon
+
+Currently there doesn't seem to be working support for Dragon
+64 serial port in Mame. XRoar does not provide it and a crude
+modification was made to the source to implement it for this
+purpose.
+
+The resulting binary can be loaded on a Dragon 32, obviously
+without serial support.
