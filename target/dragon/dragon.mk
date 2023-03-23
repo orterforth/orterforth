@@ -22,8 +22,7 @@ DRAGONLINKDEPS := dragon/link.o dragon/rf.o dragon/system.o
 DRAGONMACHINE := xroar
 DRAGONORG := 0x0600
 ifeq ($(DRAGONLINK),true)
-# TODO support link under default, move inst and lower link origin
-DRAGONORIGIN := 0x3180
+DRAGONORIGIN := 0x1D00
 else
 DRAGONORIGIN := 0x3180
 endif
@@ -105,7 +104,7 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 dragon/inst.bin : $(DRAGONDEPS) main.c
 
 ifeq ($(DRAGONLINK),true)
-	cmoc $(DRAGONCMOCOPTS) --org=0x4C00 --stack-space=64 -nodefaultlibs -o $@ $^
+	cmoc $(DRAGONCMOCOPTS) --org=0x4c00 --limit=0x7800 --stack-space=64 -nodefaultlibs -o $@ $^
 else
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 endif
