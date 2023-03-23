@@ -75,5 +75,5 @@
 #define RF_TARGET_CODE_CL
 #define RF_TARGET_CODE_CS
 #define RF_TARGET_CODE_LN
-/*#define RF_TARGET_CODE_TG*/
+#define RF_TARGET_CODE_TG
 #define RF_TARGET_CODE_XT
