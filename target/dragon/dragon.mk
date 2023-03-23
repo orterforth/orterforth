@@ -21,7 +21,12 @@ DRAGONLINK := true
 DRAGONLINKDEPS := dragon/link.o dragon/rf.o dragon/system.o
 DRAGONMACHINE := xroar
 DRAGONORG := 0x0600
+ifeq ($(DRAGONLINK),true)
+# TODO support link under default, move inst and lower link origin
 DRAGONORIGIN := 0x3180
+else
+DRAGONORIGIN := 0x3180
+endif
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
@@ -29,7 +34,11 @@ ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
 DRAGONDEPS += dragon/rf_6809.o
 DRAGONLINKDEPS += dragon/rf_6809.o
+ifeq ($(DRAGONLINK),true)
+DRAGONORIGIN := 0x11C0
+else
 DRAGONORIGIN := 0x2640
+endif
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)
@@ -95,7 +104,11 @@ dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
 
 dragon/inst.bin : $(DRAGONDEPS) main.c
 
+ifeq ($(DRAGONLINK),true)
+	cmoc $(DRAGONCMOCOPTS) --org=0x4C00 --stack-space=64 -nodefaultlibs -o $@ $^
+else
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
+endif
 
 dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
@@ -115,7 +128,11 @@ dragon/installed : dragon/installed.hex | $(ORTER)
 
 dragon/installed.hex : dragon/inst.cas model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
+# TODO if link true, check memory for dragon/link instead (earlier)
+# TODO should this operate on a headerless dragon/inst
+ifneq ($(DRAGONLINK),true)
 	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/inst.bin)
+endif
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
