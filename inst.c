@@ -739,14 +739,6 @@ void rf_inst_save(void)
     *((rf_code_t *) e) = rf_inst_code_lit_list[j].value;
     e += RF_WORD_SIZE;
   }
-  /* and write two links used in COLD */
-  /* TODO test again with working QL now these moved to dict */
-/*
-  *((rf_code_t *) e) = (rf_code_t) rf_cold_forth;
-  e += RF_WORD_SIZE;
-  *((rf_code_t *) e) = (rf_code_t) rf_cold_abort;
-  e += RF_WORD_SIZE;
-*/
 #endif
 
   /* now write hex blocks to DR1 */
