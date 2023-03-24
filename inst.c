@@ -157,25 +157,22 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
 /* (FIND) */
 static char *rf_inst_find(char *t, uint8_t length)
 {
-  /* TODO l required? */
-  uint8_t l;
   uint8_t i;
   char *n;
   char *nfa = rf_inst_vocabulary;
 
   while (nfa) {
-    /* length from name field incl smudge bit */
-    l = *nfa & 0x3F;
     /* start of name */
     n = nfa + 1;
-    /* match name */
-    if (l == length) {
-      for (i = 0; i < l; i++) {
+    /* test length from name field incl smudge bit */
+    if ((*nfa & 0x3F) == length) {
+      /* match name */
+      for (i = 0; i < length; i++) {
         if (t[i] != (*(n++) & 0x7F)) {
           break;
         }
       }
-      if (i == l) {
+      if (i == length) {
         return nfa;
       }
     }
