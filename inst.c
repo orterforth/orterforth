@@ -54,7 +54,6 @@ static void rf_inst_code_block_cmd(void)
 }
 
 /* TODO block load for proto compile rf_inst_block */
-/* TODO RF_USER_DP cached in a ptr? rf_inst_dp? */
 
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
@@ -162,16 +161,16 @@ static char *rf_inst_find(char *t, uint8_t length)
   char *nfa = rf_inst_vocabulary;
 
   while (nfa) {
-    /* start of name */
-    n = nfa + 1;
     /* test length from name field incl smudge bit */
     if ((*nfa & 0x3F) == length) {
       /* match name */
-      for (i = 0; i < length; i++) {
-        if (t[i] != (*(n++) & 0x7F)) {
+      n = nfa;
+      for (i = 0; i < length; ++i) {
+        if (t[i] != (*(++n) & 0x7F)) {
           break;
         }
       }
+      /* if we have a match */
       if (i == length) {
         return nfa;
       }
