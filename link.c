@@ -113,27 +113,24 @@ void rf_inst(void)
     /* PFA */
     pfa = (uintptr_t *) cfa + 1;
 
-    /* defining words that need links */
-    /* : */
+    /* defining words that need links with the body */
     if (rf_inst_name(nfa, 1, ":")) {
+      /* : */
       *(pfa + 9) = (uintptr_t) rf_code_docol;
-    }
-    /* CONSTANT */
-    if (rf_inst_name(nfa, 8, "CONS")) {
+    } else if (rf_inst_name(nfa, 8, "CONS")) {
+      /* CONSTANT */
       *(pfa + 4) = (uintptr_t) rf_code_docon;
-    }
-    /* VARIABLE */
-    if (rf_inst_name(nfa, 8, "VARI")) {
+    } else if (rf_inst_name(nfa, 8, "VARI")) {
+      /* VARIABLE */
       *(pfa + 2) = (uintptr_t) rf_code_dovar;
-    }
-    /* USER */
-    if (rf_inst_name(nfa, 4, "USER")) {
+    } else if (rf_inst_name(nfa, 4, "USER")) {
+      /* USER */
       *(pfa + 2) = (uintptr_t) rf_code_douse;
-    }
-    /* DOES> */
-    if (rf_inst_name(nfa, 5, "DOES")) {
+    } else if (rf_inst_name(nfa, 5, "DOES")) {
+      /* DOES> */
       *(pfa + 5) = (uintptr_t) rf_code_dodoe;
     }
+
     /* LFA */
     p = *((uint8_t **) p);
   }
