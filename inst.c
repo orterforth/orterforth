@@ -560,13 +560,6 @@ static void rf_inst_forward(void)
   /* - */
   rf_inst_compile(":- MINUS + ;S");
 
-  /* HERE */
-  rf_inst_compile(":HERE DP @ ;S");
-
-  /* BLANKS */
-  rf_inst_compile(
-    ":BLANKS LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S");
-
   /* ?DISC */
   rf_inst_compile(
     ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
@@ -575,6 +568,13 @@ static void rf_inst_forward(void)
   rf_inst_compile(
     ":BLOCK DUP FIRST @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
+
+  /* HERE */
+  rf_inst_compile(":HERE DP @ ;S");
+
+  /* BLANKS */
+  rf_inst_compile(
+    ":BLANKS LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S");
 
   /* WORD */
   /* wider align may need more blanks in edge case of long words */
