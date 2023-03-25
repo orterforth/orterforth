@@ -63,7 +63,7 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 }
 
 /* CURRENT and CONTEXT vocabulary during inst */
-static char *rf_inst_vocabulary = 0;
+static uint8_t *rf_inst_vocabulary = 0;
 
 /* CREATE + SMUDGE */
 static void __FASTCALL__ rf_inst_def(char *name)
@@ -101,7 +101,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
   /* link field */
   RF_USER_DP = (uintptr_t) here;
   rf_inst_comma((uintptr_t) rf_inst_vocabulary);
-  rf_inst_vocabulary = (char *) there;
+  rf_inst_vocabulary = there;
 }
 
 /* NUMBER */
@@ -138,7 +138,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
 }
 
 /* LFA */
-static uintptr_t __FASTCALL__ *rf_inst_lfa(char *nfa)
+static uintptr_t __FASTCALL__ *rf_inst_lfa(uint8_t *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
   }
@@ -146,7 +146,7 @@ static uintptr_t __FASTCALL__ *rf_inst_lfa(char *nfa)
 }
 
 /* CFA */
-static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
+static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
 {
   uintptr_t *lfa = rf_inst_lfa(nfa);
   uintptr_t *cfa = lfa + 1;
@@ -154,11 +154,11 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(char *nfa)
 }
 
 /* (FIND) */
-static char *rf_inst_find(char *t, uint8_t length)
+static uint8_t *rf_inst_find(char *t, uint8_t length)
 {
   uint8_t i;
-  char *n;
-  char *nfa = rf_inst_vocabulary;
+  uint8_t *n;
+  uint8_t *nfa = rf_inst_vocabulary;
 
   while (nfa) {
     /* test length from name field incl smudge bit */
@@ -177,7 +177,7 @@ static char *rf_inst_find(char *t, uint8_t length)
     }
 
     /* if no match, follow link */
-    nfa = (char *) *(rf_inst_lfa(nfa));
+    nfa = (uint8_t *) *(rf_inst_lfa(nfa));
   }
 
   /* not found */
@@ -207,7 +207,7 @@ static void rf_inst_immediate(void)
 static void __FASTCALL__ rf_inst_compile(char *name)
 {
   char *p;
-  char *nfa;
+  uint8_t *nfa;
 
   for (;;) {
 
