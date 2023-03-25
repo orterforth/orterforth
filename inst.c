@@ -77,8 +77,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
   }
 
   /* length byte, unsmudged */
-  *there = (uintptr_t) (here - there) | 0x80;
-  ++here;
+  *there = (here++ - there) | 0x80;
 
 #ifdef __CC65__
   /* 6502 bug workaround */
@@ -111,7 +110,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
   intptr_t l = 0;
   uint8_t d;
 
-  /* ^ to * by word size */
+  /* ^ to * by cell size */
   if (*t == '^') {
     t++;
     factor = RF_WORD_SIZE;
@@ -134,6 +133,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
     l += d;
   }
 
+  /* result */
   return l * factor;
 }
 
@@ -176,7 +176,7 @@ static uint8_t *rf_inst_find(char *t, uint8_t length)
     }
 
     /* if no match, follow link */
-    nfa = *(rf_inst_lfa(nfa));
+    nfa = *rf_inst_lfa(nfa);
   }
 
   /* not found */
@@ -532,7 +532,7 @@ static void rf_inst_forward(void)
   /* code address literals */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    /* model source builds code word with the address */
+    /* model source builds code word with the code address */
     if (code->name) {
       rf_inst_def_literal(code->name, (uintptr_t) code->value);
     }
