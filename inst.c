@@ -138,19 +138,18 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
 }
 
 /* LFA */
-static uintptr_t __FASTCALL__ *rf_inst_lfa(uint8_t *nfa)
+static uint8_t __FASTCALL__ **rf_inst_lfa(uint8_t *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
   }
-  return (uintptr_t *) ++nfa;
+  return (uint8_t **) ++nfa;
 }
 
 /* CFA */
 static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
 {
-  uintptr_t *lfa = rf_inst_lfa(nfa);
-  uintptr_t *cfa = lfa + 1;
-  return (rf_code_t *) cfa;
+  uint8_t **lfa = rf_inst_lfa(nfa);
+  return (rf_code_t *) ++lfa;
 }
 
 /* (FIND) */
@@ -177,7 +176,7 @@ static uint8_t *rf_inst_find(char *t, uint8_t length)
     }
 
     /* if no match, follow link */
-    nfa = (uint8_t *) *(rf_inst_lfa(nfa));
+    nfa = *(rf_inst_lfa(nfa));
   }
 
   /* not found */
