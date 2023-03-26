@@ -1361,7 +1361,7 @@ IMMEDIATE
 ( load high level utility definitions                         )
 33 LOAD
 ( some forward references to HERE                             )
-0A cs BYTE.IN :        REPLACED.BY HERE
+10 cs BYTE.IN :        REPLACED.BY HERE
 05 cs BYTE.IN CONSTANT REPLACED.BY HERE
 03 cs BYTE.IN VARIABLE REPLACED.BY HERE
 03 cs BYTE.IN USER     REPLACED.BY HERE
