@@ -990,7 +990,7 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
         ELSE  ." MSG # "          .    ENDIF  ;
 -->    
 
-(  LOAD, -->                                      WFR-79APR02 )
+(  LOAD,  -->                                     WFR-79APR02 )
 
 : LOAD                         ( INTERPRET SCREENS FROM DISC *)
     BLK  @  >R  IN  @  >R  0  IN  !  B/SCR  *  BLK !
@@ -1000,11 +1000,11 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
      ?LOADING  0  IN  !  B/SCR  BLK  @  OVER
      MOD  -  BLK  +!  ;    IMMEDIATE
 
-0A cs BYTE.IN :        REPLACED.BY HERE
-05 cs BYTE.IN CONSTANT REPLACED.BY HERE
-03 cs BYTE.IN VARIABLE REPLACED.BY HERE
-03 cs BYTE.IN USER     REPLACED.BY HERE
 -->
+
+
+
+
 
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR26 )
 ( EMIT )
@@ -1360,6 +1360,11 @@ IMMEDIATE
 
 ( load high level utility definitions                         )
 33 LOAD
+( some forward references to HERE                             )
+0A cs BYTE.IN :        REPLACED.BY HERE
+05 cs BYTE.IN CONSTANT REPLACED.BY HERE
+03 cs BYTE.IN VARIABLE REPLACED.BY HERE
+03 cs BYTE.IN USER     REPLACED.BY HERE
 ( load high level definitions                                 )
 72 LOAD
 ( set EMIT and CR CFAs after silent install                   )
@@ -1368,7 +1373,8 @@ emit2 ' EMIT CFA ! cr2 ' CR CFA !
 1 installed C!
 ( break dictionary link with inst time code                   )
 0 ' cl LFA !
+-->
 ( WARNING = 1                                                 )
-1 13 cs +ORIGIN !             
+1 13 cs +ORIGIN !
 ( install complete                                            )
 ;S
