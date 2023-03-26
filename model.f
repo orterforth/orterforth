@@ -1310,11 +1310,12 @@ CREATE 192 STATE ! docol DP @ cl MINUS + !
 
 
 
-( forward reference words                                     )
+( forward reference words - these may be no-ops but may need  )
+( stack effects e.g. . calls DROP. Others may never be called )
 : noop ; : ?EXEC ; : !CSP SP@ CSP ! ; : ] 192 STATE ! ;
 : ?CSP ; : SMUDGE CURRENT @ @ 32 TOGGLE ; : ERROR ; : ABORT ;
 : MESSAGE ; : QUIT ; : MIN ; : DR0 ; : R/W ; : . DROP ;
-( required by the model source                                )
+( these words are called by the model source                  )
 : HEX 16 BASE ! ; : HERE DP @ ; : CODE CREATE SMUDGE ;
 : DECIMAL 10 BASE ! ;
 : , HERE ! cl DP +! ; : LITERAL COMPILE noop , ; IMMEDIATE
@@ -1325,8 +1326,7 @@ CREATE 192 STATE ! docol DP @ cl MINUS + !
 -->
 
 
-
-( control words                                               )
+( control words - some contain 'noop' forward references      )
 : BACK HERE - , ;
 : BEGIN HERE 1 ; IMMEDIATE
 : ENDIF DROP HERE OVER - SWAP ! ; IMMEDIATE
@@ -1346,7 +1346,7 @@ IMMEDIATE
 0 +ORIGIN DP !
 ( load boot-up parameters and machine code definitions        )
 12 LOAD
-( resolve forward references in control words                 )
+( now resolve forward references in control words             )
 01 cs BYTE.IN LITERAL REPLACED.BY LIT
 01 cs BYTE.IN DO REPLACED.BY (DO)
 02 cs BYTE.IN LOOP REPLACED.BY (LOOP)
@@ -1364,10 +1364,11 @@ IMMEDIATE
 72 LOAD
 ( set EMIT and CR CFAs after silent install                   )
 emit2 ' EMIT CFA ! cr2 ' CR CFA !
-( installed = 1                                               )
+( installed flag = 1                                          )
 1 installed C!
-( break link with inst time code                              )
+( break dictionary link with inst time code                   )
 0 ' cl LFA !
 ( WARNING = 1                                                 )
 1 13 cs +ORIGIN !             
+( install complete                                            )
 ;S
