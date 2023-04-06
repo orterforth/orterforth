@@ -9,11 +9,6 @@ const
 #include "model.inc"
 #endif
 
-/* ASCII CONTROL CHARS */
-#define RF_ASCII_EOT 4
-#define RF_ASCII_ENQ 5
-#define RF_ASCII_ACK 6
-
 /* INST TIME DISC OPERATIONS */
 
 /* inst time disc command buffer */
@@ -90,8 +85,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
 #ifdef RF_ALIGN
   /* word alignment */
   while ((uintptr_t) here % RF_ALIGN) {
-    *here = 0x20;
-    ++here;
+    *(here++) = 0x20;
   }
 #endif
 
@@ -148,13 +142,6 @@ static uint8_t __FASTCALL__ **rf_inst_lfa(uint8_t *nfa)
   return (uint8_t **) ++nfa;
 }
 
-/* CFA */
-static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
-{
-  uint8_t **lfa = rf_inst_lfa(nfa);
-  return (rf_code_t *) ++lfa;
-}
-
 /* (FIND) */
 static uint8_t *rf_inst_find(char *t, uint8_t length)
 {
@@ -203,6 +190,13 @@ static void __FASTCALL__ rf_inst_colon(char *name)
 static void rf_inst_immediate(void)
 {
   *rf_inst_vocabulary ^= 0x40;
+}
+
+/* CFA */
+static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
+{
+  uint8_t **lfa = rf_inst_lfa(nfa);
+  return (rf_code_t *) ++lfa;
 }
 
 /* proto outer interpreter */
@@ -505,9 +499,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 /* flag to indicate completion of install */
 extern char rf_installed;
 
-/* static location for IP to run inst */
-static rf_code_t *rf_inst_load_cfa = 0;
-
 /* bootstrap the installing Forth vocabulary */
 static void rf_inst_forward(void)
 {
@@ -654,6 +645,9 @@ static void rf_inst_emptybuffers(void)
   rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
 }
 
+/* static location for IP to run inst */
+static rf_code_t *rf_inst_load_cfa = 0;
+
 static void rf_inst_load(void)
 {
   /* initialise buffers */
@@ -670,7 +664,7 @@ static void rf_inst_load(void)
 }
 
 #ifdef RF_INST_SAVE
-static char rf_inst_disc_eot = RF_ASCII_EOT;
+static char rf_inst_disc_eot = 4;
 
 /* write block */
 static void rf_inst_disc_w(char *b, uintptr_t blk)
