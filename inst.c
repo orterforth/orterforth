@@ -1,3 +1,4 @@
+#include "inst.h"
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
 /* disc controller runs in process */
@@ -97,8 +98,10 @@ static void __FASTCALL__ rf_inst_def(char *name)
   /* terminating bit */
   *(here - 1) |= 0x80;
 
-  /* link field */
+  /* update DP */
   RF_USER_DP = (uintptr_t) here;
+
+  /* link field */
   rf_inst_comma((uintptr_t) rf_inst_vocabulary);
   rf_inst_vocabulary = there;
 }

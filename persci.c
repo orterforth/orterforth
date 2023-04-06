@@ -261,7 +261,7 @@ static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
 }
 
 /* write data after O */
-static void rf_persci_write()
+static void rf_persci_write(void)
 {
   FILE *ptr;
   size_t s;

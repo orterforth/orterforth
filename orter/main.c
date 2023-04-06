@@ -22,8 +22,10 @@
 #include "ql.h"
 #include "serial.h"
 #include "spectrum.h"
-
-static int usage()
+/*
+#include "z88.h"
+*/
+static int usage(void)
 {
   fprintf(stderr, "Usage: orter <subcommand> ...\n");
 
@@ -99,7 +101,7 @@ static int spectrum(int argc, char *argv[])
   return 1;
 }
 
-static int hex_getdigit()
+static int hex_getdigit(void)
 {
   int c;
 
@@ -128,7 +130,7 @@ static int hex_getdigit()
   return c;
 }
 
-int hex_include(char *name)
+static int hex_include(char *name)
 {
   unsigned int i;
   int c;
@@ -158,7 +160,7 @@ int hex_include(char *name)
 }
 
 /* read hex, write binary */
-static int hex_read()
+static int hex_read(void)
 {
   int b, c;
 
@@ -224,6 +226,11 @@ int main(int argc, char *argv[])
     if (!strcmp("spectrum", arg)) {
       return spectrum(argc, argv);
     }
+/*
+    if (!strcmp("z88", arg)) {
+      return orter_z88(argc, argv);
+    }
+*/
   }
 
   return usage();

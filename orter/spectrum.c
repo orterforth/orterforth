@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "spectrum.h"
+
 /* save CTS status received from Fuse */
 static char cts = 0;
 

@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -331,4 +332,10 @@ int orter_io_select(void)
   }
 
   return result;
+}
+
+void orter_io_put_16be(uint16_t u)
+{
+  fputc((uint8_t) (u >> 8), stdout);
+  fputc((uint8_t) (u & 0x00FF), stdout);
 }

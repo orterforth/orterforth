@@ -2,6 +2,8 @@
 #define ORTER_IO_H_
 
 #include <stddef.h>
+#include <stdint.h>
+#include <sys/select.h>
 
 /* function pointer type for a read or write operation */
 typedef size_t (*orter_io_rdwr_t)(char *, size_t);
@@ -67,5 +69,8 @@ void orter_io_select_zero(void);
 
 /* carry out select on fd sets */
 int orter_io_select(void);
+
+/* write 16 bit BE int */
+void orter_io_put_16be(uint16_t u);
 
 #endif /* ORTER_IO_H_ */

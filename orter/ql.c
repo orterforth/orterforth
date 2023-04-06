@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ql.h"
+
 static uint32_t getu32be(uint8_t *p)
 {
   uint32_t n;

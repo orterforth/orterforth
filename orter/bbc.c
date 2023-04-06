@@ -3,12 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* TODO consolidate this byte io handling */
-static void put16be(uint16_t n)
-{
-  fputc((uint8_t) (n >> 8), stdout);
-  fputc((uint8_t) (n & 0x00FF), stdout);
-}
+#include "bbc.h"
+#include "io.h"
 
 static void put16le(uint16_t n)
 {
@@ -122,10 +118,10 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
     fputc('*', stdout);
     /* header */
     fwrite(header, 1, lenhdr, stdout);
-    put16be(crc(header, lenhdr));
+    orter_io_put_16be(crc(header, lenhdr));
     /* block */
     fwrite(block, 1, j - i, stdout);
-    put16be(crc(block, j - i));
+    orter_io_put_16be(crc(block, j - i));
 
     /* carrier tone */
     carrier(600);

@@ -1169,7 +1169,7 @@ void rf_code_stod(void)
 #endif
 
 #ifndef RF_TARGET_CODE_COLD
-void rf_cold(void)
+static void rf_cold(void)
 {
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
