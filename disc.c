@@ -437,14 +437,11 @@ static int disc_standard(int argc, char **argv)
   return exit;
 }
 
-/* TODO tcp into own lib */
-static int disc_tcp(int argc, char **argv)
+static int orter_tcp_open(int *result, int port)
 {
   int exit = 0;
-
   int optval = 1;
   int sock;
-  int port;
   struct sockaddr_in svr_addr, cli_addr;
   socklen_t sin_len = sizeof(cli_addr);
 
@@ -462,7 +459,6 @@ static int disc_tcp(int argc, char **argv)
   }
 
   /* bind, listen, accept */
-  port = atoi(argv[2]);
   svr_addr.sin_family = AF_INET;
   svr_addr.sin_addr.s_addr = INADDR_ANY;
   svr_addr.sin_port = htons(port);
@@ -491,6 +487,21 @@ static int disc_tcp(int argc, char **argv)
     exit = errno;
     perror("fcntl failed");
     close(sock);
+    return exit;
+  }
+
+  *result = sock;
+  return 0;
+}
+
+/* TODO tcp into own lib */
+static int disc_tcp(int argc, char **argv)
+{
+  int exit = 0;
+  int sock;
+
+  exit = orter_tcp_open(&sock, atoi(argv[2]));
+  if (exit) {
     return exit;
   }
 
