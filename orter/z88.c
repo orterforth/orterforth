@@ -99,7 +99,7 @@ static int orter_z88_impexport_read(void)
     return 0;
 }
 
-static int orter_z88_impexport_putchar(char c)
+static int orter_z88_impexport_putchar(unsigned char c)
 {
     if (c >= 0x20 && c <= 0x7E) {
         /* write unescaped */
@@ -122,8 +122,6 @@ static int orter_z88_impexport_write(char *filename)
     int r;
     int c;
 
-    /* TODO is XON \021 needed */
-    PUTCHAR('\021');
     PUTS("\033N");
     while (*filename) {
         if ((r = orter_z88_impexport_putchar(*(filename++)))) {
