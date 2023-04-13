@@ -84,6 +84,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
+	$(SYSTEM)/orter_z88.o \
 	orter/main.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
@@ -193,6 +194,11 @@ $(SYSTEM)/orter_serial.o : orter/serial.c orter/io.h orter/serial.h | $(SYSTEM)
 
 # orter libs - Sinclair ZX Spectrum
 $(SYSTEM)/orter_spectrum.o : orter/spectrum.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# orter libs - Cambridge Z88
+$(SYSTEM)/orter_z88.o : orter/z88.c orter/z88.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

@@ -22,9 +22,8 @@
 #include "ql.h"
 #include "serial.h"
 #include "spectrum.h"
-/*
 #include "z88.h"
-*/
+
 static int usage(void)
 {
   fprintf(stderr, "Usage: orter <subcommand> ...\n");
@@ -226,11 +225,9 @@ int main(int argc, char *argv[])
     if (!strcmp("spectrum", arg)) {
       return spectrum(argc, argv);
     }
-/*
     if (!strcmp("z88", arg)) {
       return orter_z88(argc, argv);
     }
-*/
   }
 
   return usage();
