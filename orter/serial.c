@@ -27,6 +27,7 @@
 #include "io.h"
 #include "serial.h"
 
+/* serial port file descriptor */
 int                   orter_serial_fd = -1;
 
 /* opts */
@@ -44,10 +45,10 @@ static struct termios serial_attr;
 static struct termios serial_attr_save;
 static int            serial_attr_saved = 0;
 
-/* ACK received */
+/* exit after ACK */
 static char           ack = 0;
 
-/* EOF timer */
+/* exit after EOF timer */
 static char           wai = 0;
 static int            wai_wait = 1;
 static time_t         wai_timer = 0;
@@ -116,15 +117,15 @@ int orter_serial_open(char *name, int baud)
     perror("serial open failed");
     return errno;
   }
-  /* get lock */  
-  if (flock(orter_serial_fd, LOCK_EX) < 0) {
-    perror("serial flock failed");
-    return errno;
-  }
   /* check it's a tty */  
   if (!isatty(orter_serial_fd)) {
     perror("serial not a tty");
     return -1;
+  }
+  /* get lock */  
+  if (flock(orter_serial_fd, LOCK_EX) < 0) {
+    perror("serial flock failed");
+    return errno;
   }
   /* get attr */  
   if (tcgetattr(orter_serial_fd, &serial_attr_save) < 0) {
@@ -197,10 +198,12 @@ int orter_serial_close(void)
     return 0;
   }
   /* drain anything pending */
-  /* TODO don't drain, hangs */
+  /* don't drain, hangs */
+/*
   if (tcdrain(orter_serial_fd)) {
     perror("serial tcdrain failed");
   }
+*/
   /* restore if set */
   if (serial_attr_saved && tcsetattr(orter_serial_fd, TCSANOW, &serial_attr_save)) {
     perror("serial tcsetattr failed");
