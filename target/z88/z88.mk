@@ -10,14 +10,34 @@ z88 :
 
 	mkdir $@
 
-z88/hw.bin z88/hw.map : hw.c
+.PHONY : z88-hw
+z88-hw : z88/hw.imp
 
-	zcc $(Z88ZCCOPTS) -m -o z88/hw.bin hw.c
+	$(ORTER) serial -o ixon -o ixoff -e 15 $(SERIALPORT) 9600 < $<
 
-z88/inst.bin z88/inst.map z88/INST.BAS : z88/rf.lib z88/system.lib z88/inst.lib main.c
+.PHONY : z88-inst
+z88-inst : z88/inst.imp
+
+	$(ORTER) serial -o ixon -o ixoff -e 15 $(SERIALPORT) 9600 < $<
+
+z88/hw.bin : hw.c | z88
+
+	zcc $(Z88ZCCOPTS) -o $@ $<
+
+z88/hw.imp : z88/hw.bin
+
+	$(ORTER) z88 imp-export write HW < $< > $@.io
+	mv $@.io $@
+
+z88/inst.bin z88/inst.map : z88/rf.lib z88/system.lib z88/inst.lib main.c
 
 	zcc $(Z88ZCCOPTS) -lm -lz88/rf -lz88/system -lz88/inst \
-		-create-app -m -o z88/inst.bin main.c
+		-m -o z88/inst.bin main.c
+
+z88/inst.imp : z88/inst.bin
+
+	$(ORTER) z88 imp-export write INST < $< > $@.io
+	mv $@.io $@
 
 z88/inst.lib : inst.c rf.h | z88
 

@@ -4,6 +4,7 @@
 
 void rf_init()
 {
+    fputc_cons('1');
 }
 
 void rf_code_emit()
