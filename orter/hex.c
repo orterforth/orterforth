@@ -1,5 +1,19 @@
 #include <stdio.h>
 
+int orter_hex_digit(unsigned char c)
+{
+  if (c >= '0' && c <= '9') {
+    return c - 48;
+  }
+  if (c >= 'A' && c <= 'F') {
+    return c - 55;
+  }
+  if (c >= 'a' && c <= 'f') {
+    return c - 87;
+  }
+  return -1;
+}
+
 static int hex_getdigit(void)
 {
   int c;
@@ -13,14 +27,9 @@ static int hex_getdigit(void)
     }
 
     /* convert */
-    if (c >= '0' && c <= '9') {
-      return c - 48;
-    }
-    if (c >= 'A' && c <= 'F') {
-      return c - 55;
-    }
-    if (c >= 'a' && c <= 'f') {
-      return c - 87;
+    c = orter_hex_digit(c);
+    if (c != -1) {
+      return c;
     }
 
     /* ignore non-digits */

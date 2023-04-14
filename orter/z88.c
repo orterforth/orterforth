@@ -2,19 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "hex.h"
 #include "z88.h"
-
-/* TODO move to util */
-static int hex(char c)
-{
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    }
-    if (c >= 'A' && c <= 'F') {
-        return c - '7';
-    }
-    return -1;
-}
 
 #define GETCHAR(c) (c) = getchar(); if ((c) == -1 && !feof(stdin)) { perror("getchar failed"); return errno; }
 #define PUTCHAR(c) if (putchar(c) < 0) { perror("putchar failed"); return errno; }
@@ -56,9 +45,9 @@ static int orter_z88_impexport_read(void)
                 /* byte escape */
                 case 'B':
                     GETCHAR(h);
-                    c = hex(h) << 4;
+                    c = orter_hex_digit(h) << 4;
                     GETCHAR(h);
-                    c += hex(h);
+                    c += orter_hex_digit(h);
                     if (state == STATE_FILEDATA) {
                         PUTCHAR(c);
                     } else if (state == STATE_FILENAME) {
