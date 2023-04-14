@@ -201,3 +201,23 @@ int orter_ql_serial_xtcc(int argc, char **argv)
 
   return 0;
 }
+
+int orter_ql(int argc, char **argv)
+{
+  if (argc == 4 && !strcmp(argv[2], "serial-bytes")) {
+    return orter_ql_serial_bytes(argc, argv);
+  }
+
+  if (argc == 7 && !strcmp(argv[2], "serial-header")) {
+    return orter_ql_serial_header(argc, argv);
+  }
+
+  if (argc == 4 && !strcmp(argv[2], "serial-xtcc")) {
+    return orter_ql_serial_xtcc(argc, argv);
+  }
+
+  fprintf(stderr, "Usage: orter ql serial-header <len> <typ> <dsp> <ext>\n");
+  fprintf(stderr, "                serial-bytes <filename>\n");
+  fprintf(stderr, "                serial-xtcc <filename>\n");
+  return 1;
+}

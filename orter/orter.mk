@@ -1,6 +1,7 @@
 # orter - retrocomputing multitool
 $(ORTER) : \
 	$(SYSTEM)/orter_bbc.o \
+	$(SYSTEM)/orter_hex.o \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
@@ -12,6 +13,11 @@ $(ORTER) : \
 
 # orter libs - BBC Micro
 $(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# orter libs - hex utilities
+$(SYSTEM)/orter_hex.o : orter/hex.c orter/hex.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

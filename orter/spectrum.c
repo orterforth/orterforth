@@ -1,6 +1,8 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "spectrum.h"
 
@@ -82,22 +84,22 @@ int orter_spectrum_header(const char *filename, unsigned char type_, unsigned sh
   FILE *ptr = fopen(filename, "rb");
   if (!ptr) {
     perror("file not found");
-    return 1;
+    return errno;
   }
 
   /* get file size */
   if (fseek(ptr, 0, SEEK_END)) {
     perror("fseek failed");
-    return 1;
+    return errno;
   }
   size = ftell(ptr);
   if (size == -1) {
     perror("file size failed");
-    return 1;
+    return errno;
   }
   if (fseek(ptr, 0L, SEEK_SET)) {
     perror("fseek failed");
-    return 1;
+    return errno;
   }
 
   /* write header */
@@ -112,21 +114,63 @@ int orter_spectrum_header(const char *filename, unsigned char type_, unsigned sh
   while ((c = fgetc(ptr)) != -1) {
     if (putchar(c) == -1) {
       perror("write failed");
-      return 1;
+      return errno;
     }
   };
 
   /* close file */
   if (fclose(ptr)) {
     perror("fclose failed");
-    return 1;
+    return errno;
   }
 
   /* flush output */
   if (fflush(stdout)) {
-    perror("fclose failed");
-    return 1;
+    perror("fflush failed");
+    return errno;
   }
 
   return 0;
+}
+
+int orter_spectrum(int argc, char *argv[])
+{
+  /* use unbuffered stdin/stdout */
+  setvbuf(stdin, NULL, _IONBF, 0);
+  setvbuf(stdout, NULL, _IONBF, 0);
+
+  /* Fuse Emulator serial escape handling */
+  if (argc == 5 && !strcmp("fuse", argv[2]) && !strcmp("serial", argv[3])) {
+
+    int c;
+
+    /* read from Fuse serial named pipe and write to stdout */
+    if (!strcmp("read", argv[4])) {
+      while ((c = orter_spectrum_fuse_serial_getc(stdin)) != -1) {
+        fputc(c, stdout);
+      }
+    }
+
+    /* read from stdin and write to Fuse serial named pipe */
+    if (!strcmp("write", argv[4])) {
+      while ((c = fgetc(stdin)) != -1) {
+        orter_spectrum_fuse_serial_putc(c, stdout);
+      }
+    }
+
+    /* in case of any buffering */
+    fflush(stdout);
+    return 0;
+  }
+
+  /* prepend a file with a header suitable for LOAD *"b" or LOAD *"n" */
+  if (argc == 7 && !strcmp("header", argv[2])) {
+    return orter_spectrum_header(argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
+  }
+
+  /* usage */
+  fprintf(stderr, "Usage: orter spectrum header <filename> <type> <p1> <p2>\n");
+  fprintf(stderr, "                      fuse serial read\n");
+  fprintf(stderr, "                                  write\n");
+  return 1;
 }

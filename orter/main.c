@@ -2,23 +2,11 @@
 
 /* retrocomputing utility command line */
 
-/* platform specific compilation */
-#ifdef __unix__
-#define ORTER_PLATFORM_POSIX
-#endif
-#ifdef __MACH__
-#define ORTER_PLATFORM_POSIX
-#endif
-
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#ifdef ORTER_PLATFORM_POSIX
-#include <getopt.h>
-#include <unistd.h>
-#endif
 
 #include "bbc.h"
+#include "hex.h"
 #include "ql.h"
 #include "serial.h"
 #include "spectrum.h"
@@ -34,171 +22,8 @@ static int usage(void)
   fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
   fprintf(stderr, "             spectrum ...\n");
+  fprintf(stderr, "             z88 ...\n");
 
-  return 1;
-}
-
-static int ql(int argc, char **argv)
-{
-  if (argc == 4 && !strcmp(argv[2], "serial-bytes")) {
-    return orter_ql_serial_bytes(argc, argv);
-  }
-
-  if (argc == 7 && !strcmp(argv[2], "serial-header")) {
-    return orter_ql_serial_header(argc, argv);
-  }
-
-  if (argc == 4 && !strcmp(argv[2], "serial-xtcc")) {
-    return orter_ql_serial_xtcc(argc, argv);
-  }
-
-  fprintf(stderr, "Usage: orter ql serial-header <len> <typ> <dsp> <ext>\n");
-  fprintf(stderr, "                serial-bytes <filename>\n");
-  fprintf(stderr, "                serial-xtcc <filename>\n");
-  return 1;
-}
-
-static int spectrum(int argc, char *argv[])
-{
-  /* use unbuffered stdin/stdout */
-  setvbuf(stdin, NULL, _IONBF, 0);
-  setvbuf(stdout, NULL, _IONBF, 0);
-
-  /* Fuse Emulator serial escape handling */
-  if (argc == 5 && !strcmp("fuse", argv[2]) && !strcmp("serial", argv[3])) {
-
-    int c;
-
-    /* read from Fuse serial named pipe and write to stdout */
-    if (!strcmp("read", argv[4])) {
-      while ((c = orter_spectrum_fuse_serial_getc(stdin)) != -1) {
-        fputc(c, stdout);
-      }
-    }
-
-    /* read from stdin and write to Fuse serial named pipe */
-    if (!strcmp("write", argv[4])) {
-      while ((c = fgetc(stdin)) != -1) {
-        orter_spectrum_fuse_serial_putc(c, stdout);
-      }
-    }
-
-    /* in case of any buffering */
-    fflush(stdout);
-    return 0;
-  }
-
-  /* prepend a file with a header suitable for LOAD *"b" or LOAD *"n" */
-  if (argc == 7 && !strcmp("header", argv[2])) {
-    return orter_spectrum_header(argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
-  }
-
-  /* usage */
-  fprintf(stderr, "Usage: orter spectrum header <filename> <type> <p1> <p2>\n");
-  fprintf(stderr, "                      fuse serial read\n");
-  fprintf(stderr, "                                  write\n");
-  return 1;
-}
-
-static int hex_getdigit(void)
-{
-  int c;
-
-  for (;;) {
-    c = getchar();
-
-    /* EOF */
-    if (c == -1) {
-      return c;
-    }
-
-    /* convert */
-    if (c >= '0' && c <= '9') {
-      return c - 48;
-    }
-    if (c >= 'A' && c <= 'F') {
-      return c - 55;
-    }
-    if (c >= 'a' && c <= 'f') {
-      return c - 87;
-    }
-
-    /* ignore non-digits */
-  }
-
-  return c;
-}
-
-static int hex_include(char *name)
-{
-  unsigned int i;
-  int c;
-
-  printf("unsigned char %s[] = {", name);
-
-  /* loop until EOF */
-  for (i = 0;;i++) {
-    c = getchar();
-    if (c == -1) {
-      break;
-    }
-    if (i) {
-      putchar(',');
-    }
-    if (i % 12 == 0) {
-      printf("\n  ");
-    } else {
-      putchar(' ');
-    }
-    printf("0x%02x", c);
-  }
-
-  printf("\n};\nunsigned int %s_len = %u;\n", name, i);
-
-  return 0;
-}
-
-/* read hex, write binary */
-static int hex_read(void)
-{
-  int b, c;
-
-  /* loop until EOF */
-  for (b = 0;;) {
-    /* high digit */
-    c = hex_getdigit();
-    if (c == -1) {
-      break;
-    }
-    b = c << 4;
-
-    /* low digit */
-    c = hex_getdigit();
-    if (c == -1) {
-      fprintf(stderr, "odd number of digits\n");
-      return 1;
-    }
-    b |= c;
-
-    /* write byte */
-    if (putchar(b) == -1) {
-      perror("putchar failed");
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
-static int bbc(int argc, char *argv[])
-{
-  /* create a UEF file from a binary */
-  if (argc == 7 && !strcmp("uef", argv[2]) && !strcmp("write", argv[3])) {
-    return orter_bbc_uef_write(argv[4], strtol(argv[5], 0, 0), strtol(argv[6], 0, 0));
-  }
-
-  /* usage */
-  fprintf(stderr, "Usage: orter bbc uef write <filename> <load> <exec>\n");
   return 1;
 }
 
@@ -207,23 +32,22 @@ int main(int argc, char *argv[])
   if (argc > 1) {
     char *arg = argv[1];
     if (!strcmp("bbc", arg)) {
-      return bbc(argc, argv);
+      return orter_bbc(argc, argv);
     }
-    /* TODO separate hex lib */
     if (argc > 2 && !strcmp("hex", arg) && !strcmp("read", argv[2])) {
-      return hex_read();
+      return orter_hex_read();
     }
     if (argc > 3 && !strcmp("hex", arg) && !strcmp("include", argv[2])) {
-      return hex_include(argv[3]);
+      return orter_hex_include(argv[3]);
     }
     if (!strcmp("ql", arg)) {
-      return ql(argc, argv);
+      return orter_ql(argc, argv);
     }
     if (!strcmp("serial", arg)) {
       return orter_serial(argc, argv);
     }
     if (!strcmp("spectrum", arg)) {
-      return spectrum(argc, argv);
+      return orter_spectrum(argc, argv);
     }
     if (!strcmp("z88", arg)) {
       return orter_z88(argc, argv);

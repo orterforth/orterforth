@@ -137,3 +137,15 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
   fflush(stdout);
   return 0;
 }
+
+int orter_bbc(int argc, char *argv[])
+{
+  /* create a UEF file from a binary */
+  if (argc == 7 && !strcmp("uef", argv[2]) && !strcmp("write", argv[3])) {
+    return orter_bbc_uef_write(argv[4], strtol(argv[5], 0, 0), strtol(argv[6], 0, 0));
+  }
+
+  /* usage */
+  fprintf(stderr, "Usage: orter bbc uef write <filename> <load> <exec>\n");
+  return 1;
+}
