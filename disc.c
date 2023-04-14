@@ -32,8 +32,10 @@ static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
     return errno;
   }
 
-  /* fail if too long */
+  /* count lines */
   (*lineno)++;
+
+  /* fail if too long */
   len = strlen(line);
   if (len > 65) {
     fprintf(stderr, "line %u too long\n", *lineno);
