@@ -14,7 +14,7 @@
 
 
 
-81 LOAD ;S
+
 
 
 
@@ -1279,22 +1279,54 @@ HERE 15 cs      +ORIGIN  !   ( COLD START DP )
 LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 3 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
 ( orterforth inst                                             )
+( proto-interpreter source to bootstrap the outer interpreter )
+:BLANKS LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S
+
+:WORD BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +!
+OVER - >R R HERE C! + HERE LIT 1 + R> CMOVE ;S
+
+:-FIND LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S
+
+:, HERE ! cl DP +! ;S
+
+:COMPILE R> DUP cl + >R @ , ;S
+
+:(NUMBER) LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 SWAP
+BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S
+
+:NUMBER LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (NUMBER) R> 0BRANCH 
+^2 MINUS ;S
+
+:INTERPRET -FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , 
+BRANCH ^4 cl - EXECUTE BRANCH ^-18 HERE NUMBER STATE @ 0BRANCH 
+^-24 COMPILE LIT , BRANCH ^-29
+
+:CREATE -FIND 0BRANCH ^3 DROP DROP HERE DUP C@ LIT 1 + DP +! DP
+C@ LIT 253 - 0= DP +! HERE ln DP ! DUP LIT 160 TOGGLE HERE LIT
+1 - LIT 128 TOGGLE CURRENT @ @ , CURRENT @ ! HERE cl + , ;S
+
+:LOAD BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET 
+R> IN ! R> BLK ! ;S
+
+::[ LIT 0 STATE ! ;S
+
+:load CURRENT @ @ LIT 1 + LIT 88 TOGGLE LIT 83 LOAD xt
+
+::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R>
+DROP ;S
+
+
+
+
+
+
+
 
 ( Code to load the fig-Forth Model source follows. Some words )
 ( are forward defined as they are used in the fig source.     )
 ( Some contain forward references which are resolved once the )
 ( fig source has created the required definitions. Finally    )
 ( we modify a few settings.                                   )
-
-
-
-
-
-
-
-
-
-
 CREATE : docol DP @ cl MINUS + ! 192 STATE !
 CREATE 192 STATE ! docol DP @ cl MINUS + !
 ;S [ CURRENT @ @ 96 TOGGLE

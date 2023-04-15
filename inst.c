@@ -68,7 +68,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
   uint8_t *there = here;
 
   /* name */
-  while (*name && *name != ' ') {
+  while (*name > ' ') {
     *(++here) = *(name++);
   }
 
@@ -236,8 +236,10 @@ static void __FASTCALL__ rf_inst_compile(char *name)
 
     /* look for more */
     /* TODO will need to deal with trailing spaces */
+    while (*p == ' ') p++;
+
     if (!*p) break;
-    name = ++p;
+    name = p;
   }
 }
 
@@ -499,6 +501,43 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 /* flag to indicate completion of install */
 extern char rf_installed;
 
+/* static location for IP to run inst */
+static rf_code_t *rf_inst_load_cfa = 0;
+
+/* replaces memset */
+static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
+{
+  while (num--) {
+    *(ptr++) = value;
+  }
+}
+
+/* EMPTY-BUFFERS */
+static void rf_inst_emptybuffers(void)
+{
+  rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
+}
+
+static void rf_inst_execute(char *name, uint8_t len)
+{
+  /* set RP, IP */
+  RF_RP_SET((uintptr_t *) RF_USER_R0);
+  rf_inst_load_cfa = rf_inst_cfa(rf_inst_find(name, len));
+  RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
+  /* start at NEXT */
+  RF_JUMP(rf_next);
+  rf_trampoline();
+}
+
+static void rf_inst_proto(int blk)
+{
+  RF_SP_SET((uintptr_t *) RF_S0);
+  RF_SP_PUSH((uintptr_t) blk);
+
+  rf_inst_execute("proto", 5);
+  rf_inst_compile(RF_FIRST + RF_WORD_SIZE);
+}
+
 /* bootstrap the installing Forth vocabulary */
 static void rf_inst_forward(void)
 {
@@ -566,42 +605,60 @@ static void rf_inst_forward(void)
   /* HERE */
   rf_inst_compile(":HERE DP @ ;S");
 
+  /* proto interpreter block load */
+  rf_inst_compile(
+    ":proto BLOCK DROP xt");
+
+  /* read disc blocks and interpret */
+  rf_inst_emptybuffers();
+  for (i = 641; i <= 657; ++i) {
+    rf_inst_proto(i);
+  }
   /* BLANKS */
+/*
   rf_inst_compile(
     ":BLANKS LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S");
-
+*/
   /* WORD */
   /* wider align may need more blanks in edge case of long words */
   /* maybe not here but in final model source version of WORD */
+/*
   rf_inst_compile(
     ":WORD BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +! "
     "OVER - >R R HERE C! + HERE LIT 1 + R> CMOVE ;S");
- 
+*/ 
   /* -FIND */
+/*
   rf_inst_compile(":-FIND LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S");
-
+*/
   /* , */
+/*
   rf_inst_compile(":, HERE ! cl DP +! ;S");
-
+*/
   /* COMPILE */
+/*
   rf_inst_compile(":COMPILE R> DUP cl + >R @ , ;S");
-
+*/
   /* (NUMBER) */
+/*
   rf_inst_compile(":(NUMBER) LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 "
     "SWAP BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S");
-
+*/
   /* NUMBER */
+/*
   rf_inst_compile(":NUMBER LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (NUMBER) "
     "R> 0BRANCH ^2 MINUS ;S");
-
+*/
   /* INTERPRET */
   /* LIT must be resolved later to final value of LIT CFA */
+/*
   rf_inst_compile(
     ":INTERPRET -FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
     "EXECUTE BRANCH ^-18 HERE NUMBER STATE @ 0BRANCH ^-24 COMPILE LIT , "
     "BRANCH ^-29");
-
+*/
   /* CREATE */
+/*
   rf_inst_compile(
     ":CREATE -FIND 0BRANCH ^3 DROP DROP HERE DUP C@ LIT 1 + DP +! DP C@ "
     "LIT 253 - 0= DP +!");
@@ -611,56 +668,36 @@ static void rf_inst_forward(void)
   rf_inst_compile(
     "DUP LIT 160 TOGGLE HERE LIT 1 - LIT 128 TOGGLE CURRENT @ @ "
     ", CURRENT @ ! HERE cl + , ;S");
-
+*/
   /* LOAD */
+/*
   rf_inst_compile(
     ":LOAD BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET R> IN ! R> BLK "
     "! ;S");
-
+*/
   /* [ */
+/*
   rf_inst_compile("::[ LIT 0 STATE ! ;S");
-
+*/
   /* inst load sequence */
   /* now renaming of 'X' to '\0' takes place here */
+/*
   rf_inst_compile(":load CURRENT @ @ LIT 1 + LIT 88 TOGGLE LIT 1 LOAD xt");
+*/
 
   /* X */
   /* to make renaming simple this is the last word defined and */
   /* can be located easily via CURRENT */
+/*
   rf_inst_compile(
     "::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
+*/
 }
-
-/* replaces memset */
-static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
-{
-  while (num--) {
-    *(ptr++) = value;
-  }
-}
-
-/* EMPTY-BUFFERS */
-static void rf_inst_emptybuffers(void)
-{
-  rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
-}
-
-/* static location for IP to run inst */
-static rf_code_t *rf_inst_load_cfa = 0;
 
 static void rf_inst_load(void)
 {
-  /* initialise buffers */
   rf_inst_emptybuffers();
-
-  /* initialise RP */
-  RF_RP_SET((uintptr_t *) RF_USER_R0);
-
-  /* jump to "load" */
-  rf_inst_load_cfa = rf_inst_cfa(rf_inst_find("load", 4));
-  RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
-  RF_JUMP(rf_next);
-  rf_trampoline();
+  rf_inst_execute("load", 4);
 }
 
 #ifdef RF_INST_SAVE
@@ -779,13 +816,13 @@ void rf_inst(void)
   /* cold start */
   rf_inst_cold();
 
-  /* define required words */
-  rf_inst_forward();
-
 #ifdef RF_INST_LOCAL_DISC
   /* "insert" the inst disc */
   rf_persci_insert_bytes(0, model_disc);
 #endif
+
+  /* define required words */
+  rf_inst_forward();
 
   /* LOAD all Forth model source from disc */
   rf_inst_load();
