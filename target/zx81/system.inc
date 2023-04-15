@@ -2,6 +2,9 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
+/* space is tight so we move the inst code back for now */
+#define RF_INST_DICTIONARY (RF_ORIGIN + (1000*RF_WORD_SIZE))
+
 /* For now, don't save result to disc 1 after inst */
 #undef RF_INST_SAVE
 

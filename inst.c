@@ -288,7 +288,9 @@ static void rf_inst_def_user(char *name, unsigned int idx)
 
 /* put inst time definitions in spare memory and unlink them when finished */
 /* NB 3000 may be tight with more extensions */
+#ifndef RF_INST_DICTIONARY
 #define RF_INST_DICTIONARY (RF_ORIGIN + (3000*RF_WORD_SIZE))
+#endif
 
 #define RF_FIGRELFIGREV 0x0101 /* 1.1 */
 

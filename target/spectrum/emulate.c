@@ -410,6 +410,8 @@ static void run(void)
       z->sp,
       (uint16_t) (z->i) << 8 | (uint16_t) (z->r)
     );
+*/
+/*
     if (bus_rd(0, z->pc) == 0x78) {
       exit(0);
     }

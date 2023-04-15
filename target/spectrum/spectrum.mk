@@ -92,7 +92,7 @@ ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORIGIN
-SPECTRUMORIGIN := 0x87A0
+SPECTRUMORIGIN := 0x87C0
 # assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
 # superzazu emulator is minimal and launches no GUI

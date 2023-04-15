@@ -5,6 +5,8 @@ BBCDEPS := bbc/inst.o bbc/main.o bbc/rf.o
 
 # default loading method
 BBCLOADINGMETHOD := disk
+# BBCLOADINGMETHOD := serial
+# BBCLOADINGMETHOD := tape
 
 # default is to run MAME
 BBCMACHINE := mame

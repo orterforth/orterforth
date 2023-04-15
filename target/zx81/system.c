@@ -4,9 +4,8 @@
 
 void rf_init()
 {
-/*
+  /* observe a successful start */
   fputc_cons('A');
-*/
 }
 
 void rf_code_emit()
@@ -16,9 +15,7 @@ void rf_code_emit()
     unsigned char c;
     
     c = RF_SP_POP & 0x7F;
-/*
     fputc_cons(c);
-*/
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
@@ -67,9 +64,7 @@ void rf_code_qterm(void)
 void rf_code_cr()
 {
   RF_START;
-/*
   fputc_cons(10);
-*/
   RF_JUMP_NEXT;
 }
 
@@ -85,6 +80,7 @@ void rf_disc_read(char *c, unsigned char len)
 void rf_disc_write(char *p, unsigned char len)
 {
   for (; len; len--) {
+    /* log the disc write data for now */
     fputc_cons(*(p++));
   }
 }
