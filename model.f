@@ -1378,7 +1378,9 @@ IMMEDIATE
 0 +ORIGIN DP !
 ( load boot-up parameters and machine code definitions        )
 12 LOAD
-( now resolve forward references in control words             )
+( now resolve forward references in control words & LITERAL   )
+( NB we could wait until now to define these but that would   )
+( be inauthentic - they would be pre-existing in Forth        )
 01 cs BYTE.IN LITERAL REPLACED.BY LIT
 01 cs BYTE.IN DO REPLACED.BY (DO)
 02 cs BYTE.IN LOOP REPLACED.BY (LOOP)
@@ -1388,11 +1390,9 @@ IMMEDIATE
 02 cs BYTE.IN ELSE REPLACED.BY BRANCH
 26 cs BYTE.IN INTERPRET REPLACED.BY LIT
 -->
-
-
 ( load high level utility definitions                         )
 33 LOAD
-( some forward references to HERE                             )
+( some forward references to HERE needed by our novel defns   )
 10 cs BYTE.IN :        REPLACED.BY HERE
 05 cs BYTE.IN CONSTANT REPLACED.BY HERE
 03 cs BYTE.IN VARIABLE REPLACED.BY HERE
