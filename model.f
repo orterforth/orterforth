@@ -1334,7 +1334,7 @@ CREATE 192 STATE ! 51 cd DP @ cl MINUS + !
 ;S [ CURRENT @ @ 96 TOGGLE
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
 : ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
-: - MINUS + ;
+
 ( need --> in order to progress to next screen                )
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
 -->
@@ -1348,10 +1348,10 @@ CREATE 192 STATE ! 51 cd DP @ cl MINUS + !
 : ?CSP ; : SMUDGE CURRENT @ @ 32 TOGGLE ; : ERROR ; : ABORT ;
 : MESSAGE ; : QUIT ; : MIN ; : DR0 ; : R/W ; : . DROP ;
 ( these words are called by the model source                  )
-: HEX 16 BASE ! ; : HERE DP @ ; : CODE CREATE SMUDGE ;
+: HEX 16 BASE ! ; : CODE CREATE SMUDGE ;
 : DECIMAL 10 BASE ! ;
-: , HERE ! cl DP +! ; : LITERAL COMPILE noop , ; IMMEDIATE
-: +ORIGIN origin + ; : -FIND 32 WORD HERE CONTEXT @ @ (FIND) ;
+: LITERAL COMPILE noop , ; IMMEDIATE
+: +ORIGIN origin + ;
 : [COMPILE] -FIND DROP DROP cl - , ; IMMEDIATE
 : BYTE.IN -FIND DROP DROP + ;
 : REPLACED.BY -FIND DROP DROP cl - SWAP ! ;
