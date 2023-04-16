@@ -208,7 +208,7 @@ tib    ,        ( TERMINAL INPUT BUFFER )
 0000   ,        ( COLD START VALUE FOR VOC-LINK ) add -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
-lit HERE cl - !
+5 cd HERE cl - !
 
 
 
@@ -233,19 +233,19 @@ lit HERE cl - !
 
 CODE EXECUTE              ( EXECUTE A WORD BY ITS CODE FIELD *)
                                       ( ADDRESS ON THE STACK *)
-exec HERE cl - !
+6 cd HERE cl - !
 
 
 
 -->    
 (  BRANCH, 0BRANCH     W/16-BIT OFFSET            WFR-79APR01 )
 CODE BRANCH            ( ADJUST IP BY IN-LINE 16 BIT LITERAL *)
-bran HERE cl - !
+7 cd HERE cl - !
 
 
 
 CODE 0BRANCH           ( IF BOT IS ZERO, BRANCH FROM LITERAL *)
-zbran HERE cl - !
+8 cd HERE cl - !
 
 
 
@@ -256,14 +256,14 @@ zbran HERE cl - !
 
 (  LOOP CONTROL                                   WFR-79MAR20 )
 CODE (LOOP)      ( INCREMENT LOOP INDEX, LOOP UNTIL => LIMIT *)
-xloop HERE cl - !
+9 cd HERE cl - !
 
 
 
 
 
 CODE (+LOOP)          ( INCREMENT INDEX BY STACK VALUE +/-   *)
-xploo HERE cl - !
+0A cd HERE cl - !
 
 
 
@@ -273,14 +273,14 @@ xploo HERE cl - !
 (  (DO-                                           WFR-79MAR30 )
 
 CODE (DO)             ( MOVE TWO STACK ITEMS TO RETURN STACK *)
-xdo HERE cl - !
+0B cd HERE cl - !
 
 
 
 
 
 CODE I                    ( COPY CURRENT LOOP INDEX TO STACK *)
-rr HERE cl - !          ( THIS WILL LATER BE POINTED TO 'R' )
+22 cd HERE cl - !          ( THIS WILL LATER BE POINTED TO 'R' )
 
 -->    
 
@@ -290,7 +290,7 @@ rr HERE cl - !          ( THIS WILL LATER BE POINTED TO 'R' )
 CODE DIGIT     ( CONVERT ASCII CHAR-SECOND, WITH BASE-BOTTOM *)
                    ( IF OK RETURN DIGIT-SECOND, TRUE-BOTTOM; *)
                                    ( OTHERWISE FALSE-BOTTOM. *)
-digit HERE cl - !
+0C cd HERE cl - !
 
 
 
@@ -304,7 +304,7 @@ digit HERE cl - !
 -->    
 (  FIND FOR VARIABLE LENGTH NAMES                  WFR-790225 )
 CODE (FIND)  ( HERE, NFA ... PFA, LEN BYTE, TRUE; ELSE FALSE *)
-pfind HERE cl - !
+0D cd HERE cl - !
 
 
 
@@ -321,7 +321,7 @@ pfind HERE cl - !
 (  ENCLOSE                                         WFR-780926 )
 CODE ENCLOSE   ( ENTER WITH ADDRESS-2, DELIM-1.  RETURN WITH *)
     ( ADDR-4, AND OFFST TO FIRST CH-3, END WORD-2, NEXT CH-1 *)
-encl HERE cl - !
+0E cd HERE cl - !
 
 
 
@@ -352,7 +352,7 @@ CODE CR         ( EXECUTE CAR. RETURN, LINE FEED ON TERMINAL *)
 
 (  CMOVE,                                         WFR-79MAR20 )
 CODE CMOVE   ( WITHIN MEMORY; ENTER W/  FROM-3, TO-2, QUAN-1 *)
-cmove HERE cl - !
+15 cd HERE cl - !
 
 
 
@@ -369,7 +369,7 @@ cmove HERE cl - !
 (  U*,  UNSIGNED MULTIPLY FOR 16 BITS             WFR-79APR08 )
 CODE U*        ( 16 BIT MULTIPLICAND-2,  16 BIT MULTIPLIER-1 *)
              ( 32 BIT UNSIGNED PRODUCT: LO WORD-2, HI WORD-1 *)
-ustar HERE cl - !
+16 cd HERE cl - !
 
 
 
@@ -385,7 +385,7 @@ ustar HERE cl - !
 (  U/,  UNSIGNED DIVIDE FOR 31 BITS               WFR-79APR29 )
 CODE U/          ( 31 BIT DIVIDEND-2, -3,  16 BIT DIVISOR-1  *)
                  ( 16 BIT REMAINDER-2,  16 BIT QUOTIENT-1    *)
-uslas HERE cl - !
+17 cd HERE cl - !
 
 
 
@@ -401,59 +401,59 @@ uslas HERE cl - !
 (  LOGICALS                                       WFR-79APR20 )
 
 CODE AND           ( LOGICAL BITWISE AND OF BOTTOM TWO ITEMS *)
-andd HERE cl - !
+18 cd HERE cl - !
 
 
 CODE OR           ( LOGICAL BITWISE 'OR' OF BOTTOM TWO ITEMS *)
-orr HERE cl - !
+19 cd HERE cl - !
 
 
 CODE XOR        ( LOGICAL 'EXCLUSIVE OR' OF BOTTOM TWO ITEMS *)
-xorr HERE cl - !
+1A cd HERE cl - !
 
 
 -->    
 
 (  STACK INITIALIZATION                           WFR-79MAR30 )
 CODE SP@                      ( FETCH STACK POINTER TO STACK *)
-spat HERE cl - !
+1B cd HERE cl - !
 
 
 CODE SP!                                 ( LOAD SP FROM 'S0' *)
-spsto HERE cl - !
+1C cd HERE cl - !
 
 CODE RP!                                   ( LOAD RP FROM R0 *)
-rpsto HERE cl - !
+1D cd HERE cl - !
 
 
 CODE ;S              ( RESTORE IP REGISTER FROM RETURN STACK *)
-semis HERE cl - !
+1E cd HERE cl - !
 
 -->    
 (  RETURN STACK WORDS                             WFR-79MAR29 )
 CODE LEAVE          ( FORCE EXIT OF DO-LOOP BY SETTING LIMIT *)
                                                   ( TO INDEX *)
-leave HERE cl - !
+1F cd HERE cl - !
 
 CODE >R              ( MOVE FROM COMP. STACK TO RETURN STACK *)
-tor HERE cl - !
+20 cd HERE cl - !
 
 CODE R>              ( MOVE FROM RETURN STACK TO COMP. STACK *)
-fromr HERE cl - !
+21 cd HERE cl - !
 
 CODE R  ( COPY THE BOTTOM OF THE RETURN STACK TO COMP. STACK *)
-rr HERE cl - !
+22 cd HERE cl - !
 
 ( '   R    -2  BYTE.IN  I  ! )
 -->    
 (  TESTS AND LOGICALS                             WFR-79MAR19 )
 
 CODE 0=           ( REVERSE LOGICAL STATE OF BOTTOM OF STACK *)
-zequ HERE cl - !
+23 cd HERE cl - !
 
 
 CODE 0<            ( LEAVE TRUE IF NEGATIVE; OTHERWISE FALSE *)
-zless HERE cl - !
+24 cd HERE cl - !
 
 
 -->    
@@ -464,45 +464,45 @@ zless HERE cl - !
 
 (  MATH                                           WFR-79MAR19 )
 CODE +         ( LEAVE THE SUM OF THE BOTTOM TWO STACK ITEMS *)
-plus HERE cl - !
+25 cd HERE cl - !
 
 CODE D+            ( ADD TWO DOUBLE INTEGERS, LEAVING DOUBLE *)
-dplus HERE cl - !
+26 cd HERE cl - !
 
 
 
 CODE MINUS         ( TWOS COMPLEMENT OF BOTTOM SINGLE NUMBER *)
-minus HERE cl - !
+27 cd HERE cl - !
 
 CODE DMINUS        ( TWOS COMPLEMENT OF BOTTOM DOUBLE NUMBER *)
-dminu HERE cl - !
+28 cd HERE cl - !
 
                                            -->    
 (  STACK MANIPULATION                             WFR-79MAR29 )
 CODE OVER              ( DUPLICATE SECOND ITEM AS NEW BOTTOM *)
-over HERE cl - !
+29 cd HERE cl - !
 
 CODE DROP                           ( DROP BOTTOM STACK ITEM *)
-drop HERE cl - !           ( C.F. VECTORS DIRECTLY TO 'POP' )
+2A cd HERE cl - !           ( C.F. VECTORS DIRECTLY TO 'POP' )
 
 CODE SWAP        ( EXCHANGE BOTTOM AND SECOND ITEMS ON STACK *)
-swap HERE cl - !
+2B cd HERE cl - !
 
 
 CODE DUP                    ( DUPLICATE BOTTOM ITEM ON STACK *)
-dup HERE cl - !
+2C cd HERE cl - !
 
 -->    
 
 (  MEMORY INCREMENT,                              WFR-79MAR30 )
 
 CODE +!   ( ADD SECOND TO MEMORY 16 BITS ADDRESSED BY BOTTOM *)
-pstor HERE cl - !
+2D cd HERE cl - !
 
 
 
 CODE TOGGLE           ( BYTE AT ADDRESS-2, BIT PATTERN-1 ... *)
-toggl HERE cl - !
+2E cd HERE cl - !
 
 -->    
 
@@ -512,18 +512,18 @@ toggl HERE cl - !
 
 (  MEMORY FETCH AND STORE                          WFR-781202 )
 CODE @                   ( REPLACE STACK ADDRESS WITH 16 BIT *)
-at HERE cl - !                  ( CONTENTS OF THAT ADDRESS *)
+2F cd HERE cl - !                  ( CONTENTS OF THAT ADDRESS *)
 
 
 CODE C@      ( REPLACE STACK ADDRESS WITH POINTED 8 BIT BYTE *)
-cat HERE cl - !
+30 cd HERE cl - !
 
 CODE !         ( STORE SECOND AT 16 BITS ADDRESSED BY BOTTOM *)
-store HERE cl - SMUDGE ! SMUDGE
+31 cd HERE cl - SMUDGE ! SMUDGE
 
 
 CODE C!           ( STORE SECOND AT BYTE ADDRESSED BY BOTTOM *)
-cstor HERE cl - !
+32 cd HERE cl - !
 
 DECIMAL     ;S    
 (  :,  ;,                                         WFR-79MAR30 )
@@ -531,7 +531,7 @@ DECIMAL     ;S
 : :                  ( CREATE NEW COLON-DEFINITION UNTIL ';' *)
                     ?EXEC !CSP CURRENT   @         CONTEXT    !
                 CREATE  ]
-docol HERE cl MINUS + ! ; IMMEDIATE
+[ 51 cd ] LITERAL HERE cl MINUS + ! ; IMMEDIATE
 
 
 
@@ -545,15 +545,15 @@ docol HERE cl MINUS + ! ; IMMEDIATE
 (  CONSTANT,  VARIABLE, USER                      WFR-79MAR30 )
 : CONSTANT              ( WORD WHICH LATER CREATES CONSTANTS *)
                       CREATE  SMUDGE  ,
-docon HERE cl DUP + MINUS + ! ;
+[ 52 cd ] LITERAL HERE cl DUP + MINUS + ! ;
 
 : VARIABLE              ( WORD WHICH LATER CREATES VARIABLES *)
      CONSTANT
-dovar HERE cl DUP + MINUS + ! ;
+[ 53 cd ] LITERAL HERE cl DUP + MINUS + ! ;
 
 : USER                                ( CREATE USER VARIABLE *)
      CONSTANT
-douse HERE cl DUP + MINUS + ! ;
+[ 54 cd ] LITERAL HERE cl DUP + MINUS + ! ;
 
 
 
@@ -565,8 +565,8 @@ HEX
 20  CONSTANT BL                                ( ASCII BLANK *)
 40  CONSTANT C/L                  ( TEXT CHARACTERS PER LINE *)
 
-first   CONSTANT   FIRST   ( FIRST BYTE RESERVED FOR BUFFERS *)
-limit   CONSTANT   LIMIT            ( JUST BEYOND TOP OF RAM *)
+FIRST   CONSTANT   FIRST   ( FIRST BYTE RESERVED FOR BUFFERS *)
+LIMIT   CONSTANT   LIMIT            ( JUST BEYOND TOP OF RAM *)
   80    CONSTANT   B/BUF            ( BYTES PER DISC BUFFER  *)
    8     CONSTANT  B/SCR  ( BLOCKS PER SCREEN = 1024 B/BUF / *)
 
@@ -698,7 +698,7 @@ HEX              ( 0 THRU 5 RESERVED,    REFERENCED TO $00A0 *)
       ( INY,  W (Y LDA,  IP 1+ STA, )    ( AS NEXT INTERP. PTR )
       ( CLC,  W LDA,  4 # ADC,  PHA,) ( PUSH ADDRESS OF PARAMS )
       ( W 1+ LDA,  00 # ADC,  PUSH JMP, )
-dodoe LATEST PFA CFA ! ;
+[ 37 cd ] LITERAL LATEST PFA CFA ! ;
 -->
 
 
@@ -828,7 +828,7 @@ HERE 1+
 
 (  FOLLOWING DEFINITION IS INSTALLATION DEPENDENT )
 : ?STACK    ( QUESTION UPON OVER OR UNDERFLOW OF STACK *)
-      s0   SP@  <  1  ?ERROR   SP@  s1   <  7  ?ERROR  ;
+  [ s0 ] LITERAL SP@ < 1 ?ERROR SP@ [ s1 ] LITERAL < 7 ?ERROR ;
 -->    
 (  INTERPRET,                                     WFR-79APR18 )
 
@@ -880,7 +880,7 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
-cold HERE cl - !
+38 cd HERE cl - !
 2 cs BYTE.IN FORTH 11 cs +ORIGIN !
 0 BYTE.IN ABORT 12 cs +ORIGIN !
 
@@ -896,7 +896,7 @@ cold HERE cl - !
                                                     -->    
 (  MATH UTILITY                               DJK-WFR-79APR29 )
 CODE S->D                  ( EXTEND SINGLE INTEGER TO DOUBLE *)
-stod HERE cl - !
+39 cd HERE cl - !
 
 : +-    0< IF MINUS ENDIF ;   ( APPLY SIGN TO NUMBER BENEATH *)
 
@@ -1008,13 +1008,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR26 )
 ( EMIT )
-  emit cl MINUS BYTE.IN EMIT !
+  10 cd cl MINUS BYTE.IN EMIT !
 
 
 
 
 ( KEY )
-      key cl MINUS BYTE.IN KEY !
+      11 cd cl MINUS BYTE.IN KEY !
 
 
 
@@ -1025,13 +1025,13 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 (  INSTALLATION DEPENDENT TERMINAL I-O,  TIM      WFR-79APR02 )
 
 ( ?TERMINAL )
-     qterm cl MINUS BYTE.IN ?TERMINAL !
+     12 cd cl MINUS BYTE.IN ?TERMINAL !
 
 
 
 
 ( CR )
-    cr cl MINUS BYTE.IN CR !
+    14 cd cl MINUS BYTE.IN CR !
 
 
 -->    
@@ -1056,7 +1056,7 @@ FIRST  VARIABLE  PREV      ( MOST RECENTLY REFERENCED BUFFER *)
 
 (  D/CHAR,  ?DISC,                                WFR-79MAR23 )
 CODE D/CHAR      ( TEST CHAR-1. EXIT TEST BOOL-2, NEW CHAR-1 *)
-dchar HERE cl - !
+3A cd HERE cl - !
 
 
 
@@ -1072,7 +1072,7 @@ dchar HERE cl - !
      ENDIF  R>  DROP  ;   -->    
 (  BLOCK-WRITE                                     WFR-790103 )
 CODE BLOCK-WRITE     ( SEND TO DISC FROM ADDRESS-2,  COUNT-1 *)
-bwrit HERE cl - !                        ( WITH EOT AT END *)
+3B cd HERE cl - !                        ( WITH EOT AT END *)
 
 
 
@@ -1089,7 +1089,7 @@ bwrit HERE cl - !                        ( WITH EOT AT END *)
 (  BLOCK-READ,                                     WFR-790103 )
 
 CODE BLOCK-READ   ( BUF.ADDR-1. EXIT AT 128 CHAR OR CONTROL *)
-bread HERE cl - !
+3C cd HERE cl - !
 
 
 
@@ -1327,8 +1327,8 @@ DROP ;S
 ( Some contain forward references which are resolved once the )
 ( fig source has created the required definitions. Finally    )
 ( we modify a few settings.                                   )
-CREATE : docol DP @ cl MINUS + ! 192 STATE !
-CREATE 192 STATE ! docol DP @ cl MINUS + !
+CREATE : 51 cd DP @ cl MINUS + ! 192 STATE !
+CREATE 192 STATE ! 51 cd DP @ cl MINUS + !
 ;S [ CURRENT @ @ 96 TOGGLE
 : ; COMPILE ;S CURRENT @ @ 32 TOGGLE 0 STATE !
 ;S [ CURRENT @ @ 96 TOGGLE
@@ -1400,7 +1400,7 @@ IMMEDIATE
 ( load high level definitions                                 )
 72 LOAD
 ( set EMIT and CR CFAs after silent install                   )
-emit2 ' EMIT CFA ! cr2 ' CR CFA !
+15 cd ' EMIT CFA ! 19 cd ' CR CFA !
 ( installed flag = 1                                          )
 1 installed C!
 ( break dictionary link with inst time code                   )

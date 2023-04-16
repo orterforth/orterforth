@@ -22,7 +22,7 @@ zx81-clean :
 	rm -f zx81/*
 
 ZX81ORG := 0x4082
-ZX81ORIGIN := 0x6200
+ZX81ORIGIN := 0x6000
 
 ZX81ZCCOPTS := +zx81 \
 	-DRF_ORG=$(ZX81ORG) \

@@ -234,49 +234,20 @@ static void __FASTCALL__ rf_inst_compile(char *name)
       }
     }
 
-    /* look for more */
-    /* TODO will need to deal with trailing spaces */
+    /* trailing spaces */
     while (*p == ' ') p++;
 
+    /* look for more */
     if (!*p) break;
     name = p;
   }
 }
 
-/* compile a LIT value */
-static void __FASTCALL__ rf_inst_compile_lit(uintptr_t literal)
+/* compile a constant */
+static void rf_inst_def_constant(char *name, uintptr_t value)
 {
-  /* compile LIT */
-  rf_inst_comma((uintptr_t) rf_inst_cfa(rf_inst_find("LIT", 3)));
-  /* compile value */
-	rf_inst_comma(literal);
-}
-
-/* inst time literal code */
-static void rf_inst_code_doliteral(void)
-{
-  RF_START;
-  {
-    uintptr_t number = *((uintptr_t *) rf_w + 1);
-
-    if (RF_USER_STATE) {
-      rf_inst_compile_lit(number);
-    } else {
-      RF_SP_PUSH(number); 
-    }
-  }
-  RF_JUMP_NEXT;
-}
-
-/* compile an inst time literal - these install-time values 
-   are compiled as literals or executed and so aren't
-   referenced by the resulting install.
-*/
-static void rf_inst_def_literal(char *name, uintptr_t value)
-{
-  rf_inst_def_code(name, rf_inst_code_doliteral);
+  rf_inst_def_code(name, rf_code_docon);
   rf_inst_comma(value);
-  rf_inst_immediate();
 }
 
 /* compile a user variable */
@@ -415,7 +386,6 @@ static void rf_inst_code_noop(void)
 /* Table of inst time code addresses */
 
 typedef struct rf_inst_code_t {
-  char *name;
   char *word;
   rf_code_t value;
 } rf_inst_code_t;
@@ -423,77 +393,77 @@ typedef struct rf_inst_code_t {
 #define RF_INST_CODE_LIT_LIST_SIZE 63
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
-  { 0, "cl", rf_code_cl },
-  { 0, "cs", rf_code_cs },
-  { 0, "ln", rf_code_ln },
-  { 0, 0, rf_code_tg },
-  { 0, "xt", rf_code_xt },
-  { "lit", "LIT", rf_code_lit },
-  { "exec", "EXECUTE", rf_code_exec },
-  { "bran", "BRANCH", rf_code_bran },
-  { "zbran", "0BRANCH", rf_code_zbran },
-  { "xloop", 0, rf_code_xloop },
-  { "xploo", 0, rf_code_xploo },
-  { "xdo", 0, rf_code_xdo },
-  { "digit", "DIGIT", rf_code_digit },
-  { "pfind", "(FIND)", rf_code_pfind },
-  { "encl", "ENCLOSE", rf_code_encl },
-  { "emit2", 0, rf_code_emit },
+  { "cl", rf_code_cl },
+  { "cs", rf_code_cs },
+  { "ln", rf_code_ln },
+  { 0, rf_code_tg },
+  { "xt", rf_code_xt },
+  { "LIT", rf_code_lit },
+  { "EXECUTE", rf_code_exec },
+  { "BRANCH", rf_code_bran },
+  { "0BRANCH", rf_code_zbran },
+  { 0, rf_code_xloop },
+  { 0, rf_code_xploo },
+  { 0, rf_code_xdo },
+  { "DIGIT", rf_code_digit },
+  { "(FIND)", rf_code_pfind },
+  { "ENCLOSE", rf_code_encl },
+  { 0, rf_code_emit },
 #ifdef RF_INST_SILENT
-  { "emit", 0, rf_code_drop },
+  { 0, rf_code_drop },
 #else
-  { "emit", 0, rf_code_emit },
+  { 0, rf_code_emit },
 #endif
-  { "key", 0, rf_code_key },
-  { "qterm", 0, rf_code_qterm },
-  { "cr2", 0, rf_code_cr },
+  { 0, rf_code_key },
+  { 0, rf_code_qterm },
+  { 0, rf_code_cr },
 #ifdef RF_INST_SILENT
-  { "cr", 0, rf_inst_code_noop },
+  { 0, rf_inst_code_noop },
 #else
-  { "cr", 0, rf_code_cr },
+  { 0, rf_code_cr },
 #endif
-  { "cmove", "CMOVE", rf_code_cmove },
-  { "ustar", "U*", rf_code_ustar },
-  { "uslas", 0, rf_code_uslas },
-  { "andd", "AND", rf_code_andd },
-  { "orr", 0, rf_code_orr },
-  { "xorr", 0, rf_code_xorr },
-  { "spat", "SP@", rf_code_spat },
-  { "spsto", 0, rf_code_spsto },
-  { "rpsto", 0, rf_code_rpsto },
-  { "semis", ";S", rf_code_semis },
-  { "leave", 0, rf_code_leave },
-  { "tor", ">R", rf_code_tor },
-  { "fromr", "R>", rf_code_fromr },
-  { "rr", "R", rf_code_rr },
-  { "zequ", "0=", rf_code_zequ },
-  { "zless", "0<", rf_code_zless },
-  { "plus", "+", rf_code_plus },
-  { "dplus", 0, rf_code_dplus },
-  { "minus", "MINUS", rf_code_minus },
-  { "dminu", 0, rf_code_dminu },
-  { "over", "OVER", rf_code_over },
-  { "drop", "DROP", rf_code_drop },
-  { "swap", "SWAP", rf_code_swap },
-  { "dup", "DUP", rf_code_dup },
-  { "pstor", "+!", rf_code_pstor },
-  { "toggl", "TOGGLE", rf_code_toggl },
-  { "at", "@", rf_code_at },
-  { "cat", "C@", rf_code_cat },
-  { "store", "!", rf_code_store },
-  { "cstor", "C!", rf_code_cstor },
-  { "docol", 0, rf_code_docol },
-  { "docon", 0, rf_code_docon },
-  { "dovar", 0, rf_code_dovar },
-  { "douse", 0, rf_code_douse },
-  { "dodoe", 0, rf_code_dodoe },
-  { "cold", 0, rf_code_cold },
-  { "stod", 0, rf_code_stod },
-  { "dchar", "D/CHAR", rf_code_dchar },
-  { "bwrit", "BLOCK-WRITE", rf_code_bwrit },
-  { "bread", "BLOCK-READ", rf_code_bread },
-  { 0, "add", rf_inst_code_add },
-  { 0, "block-cmd", rf_inst_code_block_cmd }
+  { "CMOVE", rf_code_cmove },
+  { "U*", rf_code_ustar },
+  { 0, rf_code_uslas },
+  { "AND", rf_code_andd },
+  { 0, rf_code_orr },
+  { 0, rf_code_xorr },
+  { "SP@", rf_code_spat },
+  { 0, rf_code_spsto },
+  { 0, rf_code_rpsto },
+  { ";S", rf_code_semis },
+  { 0, rf_code_leave },
+  { ">R", rf_code_tor },
+  { "R>", rf_code_fromr },
+  { "R", rf_code_rr },
+  { "0=", rf_code_zequ },
+  { "0<", rf_code_zless },
+  { "+", rf_code_plus },
+  { 0, rf_code_dplus },
+  { "MINUS", rf_code_minus },
+  { 0, rf_code_dminu },
+  { "OVER", rf_code_over },
+  { "DROP", rf_code_drop },
+  { "SWAP", rf_code_swap },
+  { "DUP", rf_code_dup },
+  { "+!", rf_code_pstor },
+  { "TOGGLE", rf_code_toggl },
+  { "@", rf_code_at },
+  { "C@", rf_code_cat },
+  { "!", rf_code_store },
+  { "C!", rf_code_cstor },
+  { 0, rf_code_docol },
+  { 0, rf_code_docon },
+  { 0, rf_code_dovar },
+  { 0, rf_code_douse },
+  { 0, rf_code_dodoe },
+  { 0, rf_code_cold },
+  { 0, rf_code_stod },
+  { "D/CHAR", rf_code_dchar },
+  { "BLOCK-WRITE", rf_code_bwrit },
+  { "BLOCK-READ", rf_code_bread },
+  { "add", rf_inst_code_add },
+  { "block-cmd", rf_inst_code_block_cmd }
 };
 
 #ifndef RF_BS
@@ -520,6 +490,7 @@ static void rf_inst_emptybuffers(void)
   rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
 }
 
+/* look up a Forth word and run the Forth machine */
 static void rf_inst_execute(char *name, uint8_t len)
 {
   /* set RP, IP */
@@ -531,6 +502,7 @@ static void rf_inst_execute(char *name, uint8_t len)
   rf_trampoline();
 }
 
+/* load a disc block and run proto interpreter */
 static void rf_inst_proto(int blk)
 {
   RF_SP_SET((uintptr_t *) RF_S0);
@@ -538,6 +510,17 @@ static void rf_inst_proto(int blk)
 
   rf_inst_execute("proto", 5);
   rf_inst_compile(RF_FIRST + RF_WORD_SIZE);
+}
+
+/* look up a code address in the table */
+static void rf_inst_code_cd(void)
+{
+  RF_START;
+  {
+    uintptr_t idx = RF_SP_POP;
+    RF_SP_PUSH((uintptr_t) rf_inst_code_lit_list[idx].value);
+  }
+  RF_JUMP_NEXT;
 }
 
 /* bootstrap the installing Forth vocabulary */
@@ -556,41 +539,37 @@ static void rf_inst_forward(void)
   rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
   /* boot time literals */
-  rf_inst_def_literal("relrev", (uintptr_t) RF_FIGRELFIGREV);
-  rf_inst_def_literal("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
-  rf_inst_def_literal("bs", (uintptr_t) RF_BS);
-  rf_inst_def_literal("user", (uintptr_t) RF_USER);
-  rf_inst_def_literal("s0", (uintptr_t) RF_S0);
-  rf_inst_def_literal("r0", (uintptr_t) RF_R0);
-  rf_inst_def_literal("tib", (uintptr_t) RF_TIB);
+  rf_inst_def_constant("relrev", (uintptr_t) RF_FIGRELFIGREV);
+  rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
+  rf_inst_def_constant("bs", (uintptr_t) RF_BS);
+  rf_inst_def_constant("user", (uintptr_t) RF_USER);
+  rf_inst_def_constant("s0", (uintptr_t) RF_S0);
+  rf_inst_def_constant("r0", (uintptr_t) RF_R0);
+  rf_inst_def_constant("tib", (uintptr_t) RF_TIB);
 
-  /* code address literals */
+  /* forward defined code words */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    /* model source builds code word with the code address */
-    if (code->name) {
-      rf_inst_def_literal(code->name, (uintptr_t) code->value);
-    }
-    /* model source requires these to be defined already */
     if (code->word) {
       rf_inst_def_code(code->word, code->value);
     }
   }
 
+  /* code address lookup */
+  rf_inst_def_code("cd", rf_inst_code_cd);
+
   /* for +ORIGIN */
-  rf_inst_def_literal("origin", (uintptr_t) RF_ORIGIN);
+  rf_inst_def_constant("origin", (uintptr_t) RF_ORIGIN);
 
-  /* disc buffer constant and literals */
-  rf_inst_def_code("FIRST", rf_code_docon);
-  rf_inst_comma((uintptr_t) RF_FIRST);
-  rf_inst_def_literal("first", (uintptr_t) RF_FIRST);
-  rf_inst_def_literal("limit", (uintptr_t) RF_LIMIT);
+  /* disc buffer constants */
+  rf_inst_def_constant("FIRST", (uintptr_t) RF_FIRST);
+  rf_inst_def_constant("LIMIT", (uintptr_t) RF_LIMIT);
 
-  /* stack limit */
-  rf_inst_def_literal("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
+  /* stack limit for ?STACK */
+  rf_inst_def_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
 
   /* installed flag now set from Forth */
-  rf_inst_def_literal("installed", (uintptr_t) &rf_installed);
+  rf_inst_def_constant("installed", (uintptr_t) &rf_installed);
 
   /* - */
   rf_inst_compile(":- MINUS + ;S");
