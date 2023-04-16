@@ -1381,13 +1381,13 @@ IMMEDIATE
 ( now resolve forward references in control words & LITERAL   )
 ( NB we could wait until now to define these but that would   )
 ( be inauthentic - they would be pre-existing in Forth        )
-01 cs BYTE.IN LITERAL REPLACED.BY LIT
-01 cs BYTE.IN DO REPLACED.BY (DO)
-02 cs BYTE.IN LOOP REPLACED.BY (LOOP)
-02 cs BYTE.IN UNTIL REPLACED.BY 0BRANCH
-02 cs BYTE.IN AGAIN REPLACED.BY BRANCH
-01 cs BYTE.IN IF REPLACED.BY 0BRANCH
-02 cs BYTE.IN ELSE REPLACED.BY BRANCH
+01 cs BYTE.IN LITERAL   REPLACED.BY LIT
+01 cs BYTE.IN DO        REPLACED.BY (DO)
+02 cs BYTE.IN LOOP      REPLACED.BY (LOOP)
+02 cs BYTE.IN UNTIL     REPLACED.BY 0BRANCH
+02 cs BYTE.IN AGAIN     REPLACED.BY BRANCH
+01 cs BYTE.IN IF        REPLACED.BY 0BRANCH
+02 cs BYTE.IN ELSE      REPLACED.BY BRANCH
 26 cs BYTE.IN INTERPRET REPLACED.BY LIT
 -->
 ( load high level utility definitions                         )
