@@ -551,16 +551,13 @@ static void rf_inst_forward(void)
   /* installed flag now set from Forth */
   rf_inst_def_constant("installed", (uintptr_t) &rf_installed);
 
-  /* - */
-  rf_inst_compile(":- MINUS + ;S");
-
   /* ?DISC */
   rf_inst_compile(
     ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
 
   /* BLOCK */
   rf_inst_compile(
-    ":BLOCK DUP FIRST @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
+    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
   /* proto interpreter block load */
@@ -572,6 +569,11 @@ static void rf_inst_forward(void)
   for (i = 641; i <= 658; ++i) {
     rf_inst_proto(i);
   }
+
+  /* - */
+/*
+  rf_inst_compile(":- MINUS + ;S");
+*/
   /* HERE */
 /*
   rf_inst_compile(":HERE DP @ ;S");
