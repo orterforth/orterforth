@@ -1280,6 +1280,8 @@ LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 3 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
 ( orterforth inst                                             )
 ( proto-interpreter source to bootstrap the outer interpreter )
+:HERE DP @ ;S
+
 :BLANKS LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S
 
 :WORD BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +!
@@ -1314,8 +1316,6 @@ R> IN ! R> BLK ! ;S
 
 ::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R>
 DROP ;S
-
-
 
 
 

@@ -583,18 +583,19 @@ static void rf_inst_forward(void)
     ":BLOCK DUP FIRST @ - 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
-  /* HERE */
-  rf_inst_compile(":HERE DP @ ;S");
-
   /* proto interpreter block load */
   rf_inst_compile(
     ":proto BLOCK DROP xt");
 
   /* read disc blocks and interpret */
   rf_inst_emptybuffers();
-  for (i = 641; i <= 657; ++i) {
+  for (i = 641; i <= 658; ++i) {
     rf_inst_proto(i);
   }
+  /* HERE */
+/*
+  rf_inst_compile(":HERE DP @ ;S");
+*/
   /* BLANKS */
 /*
   rf_inst_compile(
