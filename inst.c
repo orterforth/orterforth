@@ -31,8 +31,6 @@ static void __FASTCALL__ rf_inst_disc_cmd_set(uintptr_t blk)
   rf_inst_puti(5, (blk % 26) + 1);
 }
 
-/* INST TIME CODE */
-
 /* block-cmd - write I nn nn /n and return buffer address */
 static void rf_inst_code_block_cmd(void)
 {
@@ -49,7 +47,7 @@ static void rf_inst_code_block_cmd(void)
   RF_JUMP_NEXT;
 }
 
-/* TODO block load for proto compile rf_inst_block */
+/* INST TIME DICTIONARY OPERATIONS */
 
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
@@ -98,40 +96,6 @@ static void __FASTCALL__ rf_inst_def(char *name)
   /* link field */
   rf_inst_comma((uintptr_t) rf_inst_vocabulary);
   rf_inst_vocabulary = there;
-}
-
-/* NUMBER */
-static intptr_t __FASTCALL__ rf_inst_number(char *t)
-{
-  intptr_t factor = 1;
-  intptr_t l = 0;
-  uint8_t d;
-
-  /* ^ to * by cell size */
-  if (*t == '^') {
-    t++;
-    factor = RF_WORD_SIZE;
-  }
-
-  /* - to negate */
-  if (*t == '-') {
-    t++;
-    factor = -factor;
-  }
-
-  /* ASCII 0-9 */
-  for (;;) {
-    d = *(t++) - 0x30;
-    if (d > 0x09) {
-      break;
-    }
-
-    l *= 10;
-    l += d;
-  }
-
-  /* result */
-  return l * factor;
 }
 
 /* LFA */
@@ -186,6 +150,20 @@ static void __FASTCALL__ rf_inst_colon(char *name)
   rf_inst_def_code(name, rf_code_docol);
 }
 
+/* compile a constant */
+static void rf_inst_def_constant(char *name, uintptr_t value)
+{
+  rf_inst_def_code(name, rf_code_docon);
+  rf_inst_comma(value);
+}
+
+/* compile a user variable */
+static void rf_inst_def_user(char *name, unsigned int idx)
+{
+  rf_inst_def_code(name, rf_code_douse);
+  rf_inst_comma(idx * RF_WORD_SIZE);
+}
+
 /* IMMEDIATE */
 static void rf_inst_immediate(void)
 {
@@ -197,6 +175,40 @@ static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
 {
   uint8_t **lfa = rf_inst_lfa(nfa);
   return (rf_code_t *) ++lfa;
+}
+
+/* NUMBER */
+static intptr_t __FASTCALL__ rf_inst_number(char *t)
+{
+  intptr_t factor = 1;
+  intptr_t l = 0;
+  uint8_t d;
+
+  /* ^ to * by cell size */
+  if (*t == '^') {
+    t++;
+    factor = RF_WORD_SIZE;
+  }
+
+  /* - to negate */
+  if (*t == '-') {
+    t++;
+    factor = -factor;
+  }
+
+  /* ASCII 0-9 */
+  for (;;) {
+    d = *(t++) - 0x30;
+    if (d > 0x09) {
+      break;
+    }
+
+    l *= 10;
+    l += d;
+  }
+
+  /* result */
+  return l * factor;
 }
 
 /* proto outer interpreter */
@@ -241,20 +253,6 @@ static void __FASTCALL__ rf_inst_compile(char *name)
     if (!*p) break;
     name = p;
   }
-}
-
-/* compile a constant */
-static void rf_inst_def_constant(char *name, uintptr_t value)
-{
-  rf_inst_def_code(name, rf_code_docon);
-  rf_inst_comma(value);
-}
-
-/* compile a user variable */
-static void rf_inst_def_user(char *name, unsigned int idx)
-{
-  rf_inst_def_code(name, rf_code_douse);
-  rf_inst_comma(idx * RF_WORD_SIZE);
 }
 
 /* put inst time definitions in spare memory and unlink them when finished */
@@ -355,25 +353,6 @@ static void rf_inst_cold(void)
   /* STATE @ 0= IF ."  OK" ENDIF AGAIN */
 }
 
-/* compile additional words after boot time literals */
-static void rf_inst_code_add(void)
-{
-  RF_START;
-  /* extra boot-up literals for COLD */
-  rf_inst_comma(0);
-  rf_inst_comma(0);
-  /* extra boot-up literals for tg */
-  rf_inst_comma(RF_TARGET_HI);
-  rf_inst_comma(RF_TARGET_LO);
-  /* orterforth additional words */
-  rf_inst_def_code("cl", rf_code_cl);
-  rf_inst_def_code("cs", rf_code_cs);
-  rf_inst_def_code("ln", rf_code_ln);
-  rf_inst_def_code("tg", rf_code_tg);
-  rf_inst_def_code("xt", rf_code_xt);
-  RF_JUMP_NEXT;
-}
-
 /* do nothing - only used to create a no op CR */
 #ifdef RF_INST_SILENT
 static void rf_inst_code_noop(void)
@@ -390,7 +369,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 63
+#define RF_INST_CODE_LIT_LIST_SIZE 62
 
 static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cl", rf_code_cl },
@@ -462,7 +441,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
   { "D/CHAR", rf_code_dchar },
   { "BLOCK-WRITE", rf_code_bwrit },
   { "BLOCK-READ", rf_code_bread },
-  { "add", rf_inst_code_add },
   { "block-cmd", rf_inst_code_block_cmd }
 };
 
@@ -503,11 +481,9 @@ static void rf_inst_execute(char *name, uint8_t len)
 }
 
 /* load a disc block and run proto interpreter */
-static void rf_inst_proto(int blk)
+static void __FASTCALL__ rf_inst_proto(int blk)
 {
-  RF_SP_SET((uintptr_t *) RF_S0);
   RF_SP_PUSH((uintptr_t) blk);
-
   rf_inst_execute("proto", 5);
   rf_inst_compile(RF_FIRST + RF_WORD_SIZE);
 }
@@ -557,6 +533,10 @@ static void rf_inst_forward(void)
 
   /* code address lookup */
   rf_inst_def_code("cd", rf_inst_code_cd);
+
+  /* for boot-up literals used by tg */
+  rf_inst_def_constant("tghi", RF_TARGET_HI);
+  rf_inst_def_constant("tglo", RF_TARGET_LO);
 
   /* for +ORIGIN */
   rf_inst_def_constant("origin", (uintptr_t) RF_ORIGIN);

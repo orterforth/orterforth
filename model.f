@@ -205,7 +205,7 @@ tib    ,        ( TERMINAL INPUT BUFFER )
 0000   ,        ( INITIAL WARNING = 1 )
 0000   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
-0000   ,        ( COLD START VALUE FOR VOC-LINK ) add -->
+0000   ,        ( COLD START VALUE FOR VOC-LINK ) 59 LOAD -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
 5 cd HERE cl - !
@@ -1409,4 +1409,28 @@ IMMEDIATE
 ( WARNING = 1                                                 )
 1 13 cs +ORIGIN !
 ( install complete                                            )
+;S
+
+
+
+
+
+
+
+
+
+
+
+
+( to compile after boot-up literals:                          )
+( extra boot-up literals for COLD                             )
+0 , 0 ,
+( extra boot-up literals for tg                               )
+tghi , tglo ,
+( orterforth additional words                                 )
+CODE cl 0 cd HERE SMUDGE cl SMUDGE - !
+CODE cs 1 cd HERE cl - !
+CODE ln 2 cd HERE cl - !
+CODE tg 3 cd HERE cl - !
+CODE xt 4 cd HERE cl - !
 ;S
