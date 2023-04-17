@@ -87,7 +87,7 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
   /* read whole file */
   s = fread(data, 1, 65536, stdin);
 
-  while (block_nr * 256 < s) {
+  while (block_nr * 256 < (int) s) {
     uint16_t i = block_nr * 256;
     uint16_t j = MIN(i + 256, s);
     uint8_t *block = &data[i];
