@@ -164,12 +164,6 @@ static void rf_inst_def_user(char *name, unsigned int idx)
   rf_inst_comma(idx * RF_WORD_SIZE);
 }
 
-/* IMMEDIATE */
-static void rf_inst_immediate(void)
-{
-  *rf_inst_vocabulary ^= 0x40;
-}
-
 /* CFA */
 static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
 {
@@ -220,7 +214,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
   for (;;) {
 
     /* read until space or null */
-    for (p = name; *p && *p != ' '; p++) { }
+    for (p = name; *p > ' '; ++p) { }
 
     /* interpret what we have */
     if (*name == ':') {
@@ -228,22 +222,15 @@ static void __FASTCALL__ rf_inst_compile(char *name)
       /* two colons means immediate */
       if (*(++name) == ':') {
         rf_inst_colon(++name);
-        rf_inst_immediate();
+        *rf_inst_vocabulary ^= 0x40;
       } else {
         rf_inst_colon(name);
       }
     } else {
       /* find in dictionary */
       nfa = rf_inst_find(name, p - name);
-
-      if (nfa) {
-        /* compile word */
-        rf_inst_comma((uintptr_t) rf_inst_cfa(nfa));
-      } else {
-        /* compile number */
-        /* to prefix with LIT, BRANCH or 0BRANCH */
-        rf_inst_comma((uintptr_t) rf_inst_number(name));
-      }
+      /* compile word if found, or number (to prefix with LIT, BRANCH or 0BRANCH) */
+      rf_inst_comma(nfa ? (uintptr_t) rf_inst_cfa(nfa) : (uintptr_t) rf_inst_number(name));
     }
 
     /* trailing spaces */
@@ -299,6 +286,8 @@ static void rf_inst_cold(void)
   rf_inst_vocabulary = 0;
 
   /* set UP */
+  /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
+  /* 11 +ORIGIN LDA, UP 1+ STA, */
   rf_up = (uintptr_t *) RF_USER;
 
   /* set USER vars */
@@ -371,7 +360,7 @@ typedef struct rf_inst_code_t {
 
 #define RF_INST_CODE_LIT_LIST_SIZE 62
 
-static rf_inst_code_t rf_inst_code_lit_list[] = {
+static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cl", rf_code_cl },
   { "cs", rf_code_cs },
   { "ln", rf_code_ln },
@@ -448,12 +437,6 @@ static rf_inst_code_t rf_inst_code_lit_list[] = {
 #define RF_BS 0x007F
 #endif
 
-/* flag to indicate completion of install */
-extern char rf_installed;
-
-/* static location for IP to run inst */
-static rf_code_t *rf_inst_load_cfa = 0;
-
 /* replaces memset */
 static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
 {
@@ -468,6 +451,9 @@ static void rf_inst_emptybuffers(void)
   rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
 }
 
+/* static location for IP to run a Forth word */
+static rf_code_t *rf_inst_load_cfa = 0;
+
 /* look up a Forth word and run the Forth machine */
 static void rf_inst_execute(char *name, uint8_t len)
 {
@@ -476,16 +462,8 @@ static void rf_inst_execute(char *name, uint8_t len)
   rf_inst_load_cfa = rf_inst_cfa(rf_inst_find(name, len));
   RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
   /* start at NEXT */
-  RF_JUMP(rf_next);
+  RF_JUMP_NEXT;
   rf_trampoline();
-}
-
-/* load a disc block and run proto interpreter */
-static void __FASTCALL__ rf_inst_proto(int blk)
-{
-  RF_SP_PUSH((uintptr_t) blk);
-  rf_inst_execute("proto", 5);
-  rf_inst_compile(RF_FIRST + RF_WORD_SIZE);
 }
 
 /* look up a code address in the table */
@@ -498,6 +476,20 @@ static void rf_inst_code_cd(void)
   }
   RF_JUMP_NEXT;
 }
+
+/* run proto interpreter */
+static void rf_inst_code_compile(void)
+{
+  RF_START;
+  {
+    char *addr = (char *) RF_SP_POP;
+    rf_inst_compile(addr);
+  }
+  RF_JUMP_NEXT;
+}
+
+/* flag to indicate completion of install */
+extern char rf_installed;
 
 /* bootstrap the installing Forth vocabulary */
 static void rf_inst_forward(void)
@@ -514,7 +506,7 @@ static void rf_inst_forward(void)
   rf_inst_def_user("BASE", RF_USER_BASE_IDX);
   rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
-  /* boot time literals */
+  /* boot time literals and s0 for ?STACK */
   rf_inst_def_constant("relrev", (uintptr_t) RF_FIGRELFIGREV);
   rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
   rf_inst_def_constant("bs", (uintptr_t) RF_BS);
@@ -525,7 +517,7 @@ static void rf_inst_forward(void)
 
   /* forward defined code words */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
-    rf_inst_code_t *code = &rf_inst_code_lit_list[i];
+    const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
     if (code->word) {
       rf_inst_def_code(code->word, code->value);
     }
@@ -560,15 +552,12 @@ static void rf_inst_forward(void)
     ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
-  /* proto interpreter block load */
+  /* read from disc and run proto interpreter */
+  rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
-    ":proto BLOCK DROP xt");
-
-  /* read disc blocks and interpret */
+    ":proto LIT 641 DUP LIT -659 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
   rf_inst_emptybuffers();
-  for (i = 641; i <= 658; ++i) {
-    rf_inst_proto(i);
-  }
+  rf_inst_execute("proto", 5);
 
   /* - */
 /*
