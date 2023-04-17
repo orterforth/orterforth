@@ -283,6 +283,12 @@ script :
 
 include target/spectrum/spectrum.mk
 
+# basic test
+.PHONY : test
+test : $(ORTERFORTH) $(DR0)
+
+	echo 'VLIST 3 LIST MON' | $(ORTERFORTH) $(DR0)
+
 tools :
 
 	mkdir $@
