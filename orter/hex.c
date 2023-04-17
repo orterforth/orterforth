@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include "hex.h"
+
 int orter_hex_digit(unsigned char c)
 {
   if (c >= '0' && c <= '9') {
