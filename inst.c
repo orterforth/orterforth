@@ -211,7 +211,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
   char *p;
   uint8_t *nfa;
 
-  for (;;) {
+  while (*name) {
 
     /* read until space or null */
     for (p = name; *p > ' '; ++p) { }
@@ -234,10 +234,9 @@ static void __FASTCALL__ rf_inst_compile(char *name)
     }
 
     /* trailing spaces */
-    while (*p == ' ') p++;
+    while (*p == ' ') ++p;
 
     /* look for more */
-    if (!*p) break;
     name = p;
   }
 }
