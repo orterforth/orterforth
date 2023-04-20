@@ -191,12 +191,7 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
   }
 
   /* ASCII 0-9 */
-  for (;;) {
-    d = *(t++) - 0x30;
-    if (d > 0x09) {
-      break;
-    }
-
+  while ((d = *(t++) - 0x30) < 0x0A) {
     l *= 10;
     l += d;
   }
@@ -297,14 +292,14 @@ static void rf_inst_cold(void)
   /* warm start */
   RF_USER_S0 = (uintptr_t) RF_S0;
   RF_USER_R0 = (uintptr_t) RF_R0;
-  RF_USER_TIB = (uintptr_t) RF_TIB;
+  /*RF_USER_TIB = (uintptr_t) RF_TIB;*/
   RF_USER_WIDTH = 31;
   RF_USER_WARNING = 0;
 
   /* cold start */
-  RF_USER_FENCE = (uintptr_t) RF_INST_DICTIONARY;
+  /*RF_USER_FENCE = (uintptr_t) RF_INST_DICTIONARY;*/
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
-  RF_USER_VOCLINK = 0;
+  /*RF_USER_VOCLINK = 0;*/
 
   /* set IP to ABORT */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
@@ -328,12 +323,12 @@ static void rf_inst_cold(void)
   /* [COMPILE] FORTH */
   RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;
   /* DEFINITIONS */
-  RF_USER_CURRENT = RF_USER_CONTEXT;
+  RF_USER_CURRENT = (uintptr_t) &rf_inst_vocabulary;
   /* QUIT */
 
   /* : QUIT */
   /* 0 BLK ! */
-  RF_USER_BLK = 0;
+  /*RF_USER_BLK = 0;*/
   /* [COMPILE] [ */
   RF_USER_STATE = 0;
   /* then the outer interpreter loop */
