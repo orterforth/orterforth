@@ -72,6 +72,7 @@ $(DISC) : \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
+	$(SYSTEM)/orter_tcp.o \
 	$(SYSTEM)/persci.o \
 	disc.c
 
