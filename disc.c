@@ -35,6 +35,7 @@ static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
   /* count lines */
   (*lineno)++;
 
+  /* TODO deal with no final newline */
   /* fail if too long */
   len = strlen(line);
   if (len > 65) {
@@ -345,6 +346,7 @@ static int disc_fuse(int argc, char **argv)
   exit = serve(argv[2], argv[3]);
 
   /* close and exit */
+  /* TODO shouldn't this be orter_io_std_close */
   orter_serial_close();
   return exit;
 }
@@ -362,6 +364,7 @@ static int disc_serial(int argc, char **argv)
     return exit;
   }
 
+  /* TODO reuse next three lines */
   /* create pipelines */
   orter_io_pipe_init(&in, orter_serial_fd, 0, disc_wr, -1);
   orter_io_pipe_init(&out, -1, disc_rd, 0, orter_serial_fd);
@@ -439,6 +442,7 @@ static int disc_standard(int argc, char **argv)
   return exit;
 }
 
+/* TODO move into orter/tcp.c */
 static int orter_tcp_open(int *result, int port)
 {
   int exit = 0;
