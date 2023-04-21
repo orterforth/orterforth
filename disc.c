@@ -50,6 +50,8 @@ static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
   return 0;
 }
 
+#define CHECK(exit, function) exit = (function); if (exit) return exit;
+
 static int disc_create(void)
 {
 	char line[66];
@@ -64,12 +66,8 @@ static int disc_create(void)
     memset(&block, ' ', RF_BBLK);
 
     /* read two lines */
-    if ((status = disclinetoblock(line, &lineno, stdin, block))) {
-      return status;
-    }
-    if ((status = disclinetoblock(line, &lineno, stdin, block + 64))) {
-      return status;
-    }
+    CHECK(status, disclinetoblock(line, &lineno, stdin, block));
+    CHECK(status, disclinetoblock(line, &lineno, stdin, block + 64));
 
     /* write block to stdout */
     if (fwrite(block, 1, RF_BBLK, stdout) != RF_BBLK) {
@@ -327,14 +325,8 @@ static int disc_fuse(int argc, char **argv)
 {
   int exit = 0;
 
-  exit = setconsoleunbuffered();
-  if (exit) {
-    return exit;
-  }
-  exit = orter_io_std_open();
-  if (exit) {
-    return exit;
-  }
+  CHECK(exit, setconsoleunbuffered());
+  CHECK(exit, orter_io_std_open());
 
   /* create pipelines */
   orter_io_pipe_init(&in, 0, fuse_rd, disc_wr, -1);
@@ -348,6 +340,16 @@ static int disc_fuse(int argc, char **argv)
   return exit;
 }
 
+static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
+{
+  /* create pipelines */
+  orter_io_pipe_init(&in, in_fd, 0, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, 0, out_fd);
+
+  /* run server */
+  return serve(dr0, dr1);
+}
+
 static int disc_serial(int argc, char **argv)
 {
   int exit = 0;
@@ -356,18 +358,10 @@ static int disc_serial(int argc, char **argv)
   orter_io_signal_init();
 
   /* serial port */
-  exit = orter_serial_open(argv[2], atoi(argv[3]));
-  if (exit) {
-    return exit;
-  }
-
-  /* TODO reuse next three lines */
-  /* create pipelines */
-  orter_io_pipe_init(&in, orter_serial_fd, 0, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, 0, orter_serial_fd);
+  CHECK(exit, orter_serial_open(argv[2], atoi(argv[3])));
 
   /* run */
-  exit = serve(argv[4], argv[5]);
+  exit = serve_with_fds(orter_serial_fd, orter_serial_fd, argv[4], argv[5]);
 
   /* close and exit */
   orter_serial_close();
@@ -379,10 +373,7 @@ static int disc_mux(int argc, char **argv)
   int exit = 0;
 
   /* stdin/stdout */
-  exit = orter_io_std_open();
-  if (exit) {
-    return exit;
-  }
+  CHECK(exit, orter_io_std_open());
 
   /* finish if interrupted by signal */
   orter_io_signal_init();
@@ -422,17 +413,16 @@ static int disc_standard(int argc, char **argv)
   int exit = 0;
 
   /* stdin/stdout */
+/*
   exit = orter_io_std_open();
   if (exit) {
     return exit;
   }
-
-  /* create pipelines */
-  orter_io_pipe_init(&in, 0, 0, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, 0, 1);
+*/
+  CHECK(exit, orter_io_std_open());
 
   /* run */
-  exit = serve(argv[2], argv[3]);
+  exit = serve_with_fds(0, 1, argv[2], argv[3]);
 
   /* close and exit */
   orter_io_std_close();
@@ -442,6 +432,27 @@ static int disc_standard(int argc, char **argv)
 /* TODO move into orter/tcp.c */
 static int orter_tcp_sock_fd = -1;
 static int orter_tcp_fd = -1;
+
+static int orter_tcp_close(void)
+{
+  int ret = 0;
+
+  if (orter_tcp_fd != -1) {
+    ret = close(orter_tcp_fd);
+    if (ret) {
+      perror("tcp fd close failed");
+    }
+    orter_tcp_fd = -1;
+  }
+  if (orter_tcp_sock_fd != -1) {
+    ret = close(orter_tcp_sock_fd);
+    if (ret) {
+      perror("tcp sock close failed");
+    }
+    orter_tcp_sock_fd = -1;
+  }
+  return ret;
+}
 
 static int orter_tcp_open(int port)
 {
@@ -468,8 +479,7 @@ static int orter_tcp_open(int port)
   if (setsockopt(orter_tcp_sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) {
     exit = errno;
     perror("setsockopt failed");
-    close(orter_tcp_sock_fd);
-    orter_tcp_sock_fd = -1;
+    orter_tcp_close();
     return exit;
   }
 
@@ -480,23 +490,20 @@ static int orter_tcp_open(int port)
   if (bind(orter_tcp_sock_fd, (struct sockaddr *) &svr_addr, sizeof(svr_addr)) == -1) {
     exit = errno;
     perror("bind failed");
-    close(orter_tcp_sock_fd);
-    orter_tcp_sock_fd = -1;
+    orter_tcp_close();
     return exit;
   }
   if (listen(orter_tcp_sock_fd, 2)) {
     exit = errno;
     perror("listen failed");
-    close(orter_tcp_sock_fd);
-    orter_tcp_sock_fd = -1;
+    orter_tcp_close();
     return exit;
   }
   orter_tcp_fd = accept(orter_tcp_sock_fd, (struct sockaddr *) &cli_addr, &sin_len);
   if (orter_tcp_fd == -1) {
     exit = errno;
     perror("accept failed");
-    close(orter_tcp_sock_fd);
-    orter_tcp_sock_fd = -1;
+    orter_tcp_close();
     return exit;
   }
 
@@ -504,29 +511,11 @@ static int orter_tcp_open(int port)
   if (fcntl(orter_tcp_fd, F_SETFL, fcntl(orter_tcp_fd, F_GETFL, 0) | O_NONBLOCK) == -1) {
     exit = errno;
     perror("fcntl failed");
-    close(orter_tcp_fd);
-    orter_tcp_fd = -1;
-    close(orter_tcp_sock_fd);
-    orter_tcp_sock_fd = -1;
+    orter_tcp_close();
     return exit;
   }
 
   return 0;
-}
-
-static int orter_tcp_close(void)
-{
-  int ret = close(orter_tcp_fd);
-  if (ret) {
-    perror("fd close failed");
-  }
-  orter_tcp_fd = -1;
-  ret = close(orter_tcp_sock_fd);
-  if (ret) {
-    perror("sock close failed");
-  }
-  orter_tcp_sock_fd = -1;
-  return ret;
 }
 
 /* TODO tcp into own lib */
@@ -534,16 +523,11 @@ static int disc_tcp(int argc, char **argv)
 {
   int exit = 0;
 
-  exit = orter_tcp_open(atoi(argv[2]));
-  if (exit) {
-    return exit;
-  }
+  /* open */
+  CHECK(exit, orter_tcp_open(atoi(argv[2])));
 
-  /* create pipelines */
-  orter_io_pipe_init(&in, orter_tcp_fd, 0, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, 0, orter_tcp_fd);
-
-  exit = serve(argv[3], argv[4]);
+  /* run */
+  exit = serve_with_fds(orter_tcp_fd, orter_tcp_fd, argv[3], argv[4]);
 
   /* close and exit */
   orter_tcp_close();
