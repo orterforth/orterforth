@@ -96,7 +96,7 @@ static size_t disc_wr(char *off, size_t len)
   char c;
   size_t i;
 
-  /* start log line */
+  /* start/continue log line */
   if (log) {
     fputs("\033[0;33m", stderr);
     fwrite(off, 1, len, stderr);
@@ -107,21 +107,23 @@ static size_t disc_wr(char *off, size_t len)
     c = *(off++);
     rf_persci_putc(c);
 
-    /* allow read once EOT written */
     if (c == RF_ASCII_EOT) {
-      /* need to return correct length */
-      i++;
+      /* allow read once EOT written */
       fetch = 1;
 
-      /* log line */
+      /* finish log line */
       if (log) {
         fputs("\033[0m\n", stderr);
         fflush(stderr);
       }
+
+      /* for correct length */
+      i++;
       break;
     }
   }
 
+  /* return length */
   return i;
 }
 
@@ -138,6 +140,8 @@ static size_t disc_rd(char *off, size_t len)
 
   for (i = 0; i < len; i++) {
     /* read byte */
+    /* TODO handle -1 */
+    /* TODO rely on -1 and remove fetch */
     c = rf_persci_getc();
     *(off++) = c;
 
@@ -150,7 +154,7 @@ static size_t disc_rd(char *off, size_t len)
     }
   }
 
-  /* log line */
+  /* log line TODO move this to EOT handle above */
   if (log) {
     fwrite(off - i, 1, i, stderr);
     fputc('\n', stderr);
@@ -407,12 +411,6 @@ static int disc_standard(int argc, char **argv)
   int exit = 0;
 
   /* stdin/stdout */
-/*
-  exit = orter_io_std_open();
-  if (exit) {
-    return exit;
-  }
-*/
   CHECK(exit, orter_io_std_open());
 
   /* run */
