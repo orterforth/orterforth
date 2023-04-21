@@ -205,8 +205,6 @@ static size_t fuse_wr(char *off, size_t len)
   return len;
 }
 
-static int tcp_fd;
-
 static char mux_out_buf[256];
 static char *mux_out_off = mux_out_buf;
 static size_t mux_out_len;
@@ -346,8 +344,7 @@ static int disc_fuse(int argc, char **argv)
   exit = serve(argv[2], argv[3]);
 
   /* close and exit */
-  /* TODO shouldn't this be orter_io_std_close */
-  orter_serial_close();
+  orter_io_std_close();
   return exit;
 }
 
@@ -443,24 +440,36 @@ static int disc_standard(int argc, char **argv)
 }
 
 /* TODO move into orter/tcp.c */
-static int orter_tcp_open(int *result, int port)
+static int orter_tcp_sock_fd = -1;
+static int orter_tcp_fd = -1;
+
+static int orter_tcp_open(int port)
 {
   int exit = 0;
   int optval = 1;
-  int sock;
   struct sockaddr_in svr_addr, cli_addr;
   socklen_t sin_len = sizeof(cli_addr);
 
+  /* validate */
+  if (orter_tcp_fd >= 0) {
+    fputs("tcp already open", stderr);
+    return 1;
+  }
+  if (orter_tcp_sock_fd >= 0) {
+    fputs("tcp socket already open", stderr);
+    return 1;
+  }
   /* socket */
-  sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (sock < 0) {
+  orter_tcp_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (orter_tcp_sock_fd < 0) {
     perror("socket failed");
     return errno;
   }
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) {
+  if (setsockopt(orter_tcp_sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) {
     exit = errno;
     perror("setsockopt failed");
-    close(sock);
+    close(orter_tcp_sock_fd);
+    orter_tcp_sock_fd = -1;
     return exit;
   }
 
@@ -468,57 +477,76 @@ static int orter_tcp_open(int *result, int port)
   svr_addr.sin_family = AF_INET;
   svr_addr.sin_addr.s_addr = INADDR_ANY;
   svr_addr.sin_port = htons(port);
-  if (bind(sock, (struct sockaddr *) &svr_addr, sizeof(svr_addr)) == -1) {
+  if (bind(orter_tcp_sock_fd, (struct sockaddr *) &svr_addr, sizeof(svr_addr)) == -1) {
     exit = errno;
     perror("bind failed");
-    close(sock);
+    close(orter_tcp_sock_fd);
+    orter_tcp_sock_fd = -1;
     return exit;
   }
-  if (listen(sock, 2)) {
+  if (listen(orter_tcp_sock_fd, 2)) {
     exit = errno;
     perror("listen failed");
-    close(sock);
+    close(orter_tcp_sock_fd);
+    orter_tcp_sock_fd = -1;
     return exit;
   }
-  tcp_fd = accept(sock, (struct sockaddr *) &cli_addr, &sin_len);
-  if (tcp_fd == -1) {
+  orter_tcp_fd = accept(orter_tcp_sock_fd, (struct sockaddr *) &cli_addr, &sin_len);
+  if (orter_tcp_fd == -1) {
     exit = errno;
     perror("accept failed");
-    close(sock);
+    close(orter_tcp_sock_fd);
+    orter_tcp_sock_fd = -1;
     return exit;
   }
 
   /* nonblocking */
-  if (fcntl(tcp_fd, F_SETFL, fcntl(tcp_fd, F_GETFL, 0) | O_NONBLOCK) == -1) {
+  if (fcntl(orter_tcp_fd, F_SETFL, fcntl(orter_tcp_fd, F_GETFL, 0) | O_NONBLOCK) == -1) {
     exit = errno;
     perror("fcntl failed");
-    close(sock);
+    close(orter_tcp_fd);
+    orter_tcp_fd = -1;
+    close(orter_tcp_sock_fd);
+    orter_tcp_sock_fd = -1;
     return exit;
   }
 
-  *result = sock;
   return 0;
+}
+
+static int orter_tcp_close(void)
+{
+  int ret = close(orter_tcp_fd);
+  if (ret) {
+    perror("fd close failed");
+  }
+  orter_tcp_fd = -1;
+  ret = close(orter_tcp_sock_fd);
+  if (ret) {
+    perror("sock close failed");
+  }
+  orter_tcp_sock_fd = -1;
+  return ret;
 }
 
 /* TODO tcp into own lib */
 static int disc_tcp(int argc, char **argv)
 {
   int exit = 0;
-  int sock;
 
-  exit = orter_tcp_open(&sock, atoi(argv[2]));
+  exit = orter_tcp_open(atoi(argv[2]));
   if (exit) {
     return exit;
   }
 
   /* create pipelines */
-  orter_io_pipe_init(&in, tcp_fd, 0, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, 0, tcp_fd);
+  orter_io_pipe_init(&in, orter_tcp_fd, 0, disc_wr, -1);
+  orter_io_pipe_init(&out, -1, disc_rd, 0, orter_tcp_fd);
 
   exit = serve(argv[3], argv[4]);
 
   /* close and exit */
-  close(sock);
+  orter_tcp_close();
   return exit;
 }
 
