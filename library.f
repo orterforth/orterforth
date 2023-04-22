@@ -46,22 +46,22 @@
 
 
 
-**********************  fig-FORTH  MODEL  **********************
-
-                     Through the courtesy of
-
-                      FORTH INTEREST GROUP
-                         P. O. BOX 1105
-                     SAN CARLOS, CA. 94070
+( orterforth library                                          )
 
 
-                           RELEASE 1
-                     WITH COMPILER SECURITY
-                             AND
-                     VARIABLE LENGTH NAMES
 
 
-       Further distribution must include the above notice.
+
+
+
+
+
+
+
+
+
+
+
 (  ERROR MESSAGES  )
 EMPTY STACK
 DICTIONARY FULL
@@ -94,8 +94,8 @@ DECLARE VOCABULARY
 
 
 
-( library                                                     )
-7 LOAD ;S
+( Hello World                                                 )
+." Hello World" CR
 
 
 
@@ -109,7 +109,23 @@ DECLARE VOCABULARY
 
 
 
+;S
+( Fibonacci sequence                                          )
+FORTH VOCABULARY fib IMMEDIATE fib DEFINITIONS DECIMAL
+: step SWAP OVER + DUP 0 D. ;   ( Fibonacci sequence step     )
+: length                        ( Overflows after this point  )
+  cl 2 = IF 23 ENDIF
+  cl 4 = IF 46 ENDIF
+  cl 8 = IF 92 ENDIF ;
+: list                          ( Print the whole sequence    )
+  0 1
+  length 0 DO
+    step
+  LOOP ;
 
+CR fib list CR
+
+;S
 ( str: Forth/Pascal string handling                           )
 FORTH VOCABULARY str IMMEDIATE str DEFINITIONS DECIMAL
 : (") R> DUP COUNT + >R ;      ( return string and advance IP )
