@@ -60,9 +60,6 @@ void rf_persci_insert(int drive, char *filename)
     fprintf(stderr, "fread failed: drive %d\n", drive);
     exit(1);
   }
-
-  /* reset controller state */
-  rf_persci_state = RF_PERSCI_STATE_IDLE;
 }
 
 void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
@@ -71,9 +68,6 @@ void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
 
   /* point at byte array */
   discs[drive] = (uint8_t *) bytes;
-
-  /* reset controller state */
-  rf_persci_state = RF_PERSCI_STATE_IDLE;
 }
 
 void rf_persci_eject(int drive)
@@ -92,9 +86,6 @@ void rf_persci_eject(int drive)
   }
 
   discs[drive] = 0;
-
-  /* reset controller state */
-  rf_persci_state = RF_PERSCI_STATE_IDLE;
 }
 
 /* BUFFER */
@@ -113,6 +104,12 @@ static void rf_persci_reset(void)
 /* write a char to buffer */
 static void rf_persci_w(char c)
 {
+  /* validate not full */
+  if (rf_persci_len >= 131) {
+    fprintf(stderr, "rf_persci_w buffer full\n");
+    exit(1);
+  }
+
   rf_persci_buf[rf_persci_len++] = c;
 }
 
@@ -163,6 +160,12 @@ static char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
     return 1;
   }
 
+  /* check disc is present */
+  if (!discs[drive]) {
+    rf_persci_error_on_drive("READY", drive);
+    return 1;
+  }
+
   /* validate track and sector numbers */
   if (track > 76 || sector < 1 || sector > 26) {
     rf_persci_error_on_drive("COMMAND", drive);
@@ -198,16 +201,11 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
   uint8_t *p;
 
   /* reset buffer */
+  /* TODO move? needed? must reset on error */
   rf_persci_reset();
 
   /* validate args */
   if (rf_persci_validate(track, sector, drive)) {
-    return;
-  }
-
-  /* check disc is present */
-  if (!discs[drive]) {
-    rf_persci_error_on_drive("READY", drive);
     return;
   }
 
@@ -237,6 +235,7 @@ static uint8_t rf_persci_sector = 0;
 static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
 {
   /* reset buffer */
+  /* TODO move? needed? */
   rf_persci_reset();
 
   /* validate args */
@@ -269,34 +268,32 @@ static void rf_persci_write(void)
   size_t len;
 
   /* get size of data */
+  /* TODO odd 128 overflow logic */
   for (; rf_persci_buf[rf_persci_idx] != RF_ASCII_EOT; rf_persci_idx++) {
   }
   len = rf_persci_idx > 128 ? 128 : rf_persci_idx;
 
-  /* open file */
+  /* get file (if there is one) */
   ptr = files[rf_persci_drive];
-  if (!ptr) {
-    rf_persci_reset();
-    rf_persci_error_on_drive("READY", rf_persci_drive);
-    return;
-  }
+  if (ptr) {
 
-  /* move to track and sector */
-  off = offset(rf_persci_track, rf_persci_sector);
-  if (seek(ptr, off, rf_persci_drive)) {
-    return;
-  }
+    /* move to track and sector */
+    off = offset(rf_persci_track, rf_persci_sector);
+    if (seek(ptr, off, rf_persci_drive)) {
+      return;
+    }
 
-  /* write data to file */
-  s = fwrite(rf_persci_buf, 1, len, ptr);
-  fflush(ptr);
+    /* write data to file */
+    s = fwrite(rf_persci_buf, 1, len, ptr);
+    fflush(ptr);
 
-  /* handle write failure */
-  if (s != rf_persci_idx) {
-    perror("fwrite failed");
-    rf_persci_reset();
-    rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
-    return;
+    /* handle write failure */
+    if (s != len) {
+      perror("fwrite failed");
+      rf_persci_reset();
+      rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
+      return;
+    }
   }
 
   /* write data to memory */
@@ -317,6 +314,7 @@ static void rf_persci_write(void)
 /* READ */
 
 /* read char from buffer */
+/* TODO reuse, see rf_persci_getc */
 static char rf_persci_r(void)
 {
   char c;
@@ -342,6 +340,7 @@ static char rf_persci_r(void)
 /* COMMAND PARSING */
 
 /* skip whitespace in buffer */
+/* TODO reuse rf_persci_r? peek? back? */
 static void rf_persci_read_ws(void)
 {
   /* validate buffer */
@@ -381,6 +380,7 @@ static char rf_persci_read_int(void)
 }
 
 /* read char and check it is as expected */
+/* TODO reuse rf_persci_r? */
 static char rf_persci_expect(char c)
 {
   rf_persci_read_ws();
@@ -468,7 +468,7 @@ int rf_persci_getc(void)
     return -1;
   }
 
-  /* validate not empty */
+  /* test not empty */
   if (rf_persci_idx >= rf_persci_len) {
     return -1;
   }
@@ -487,6 +487,7 @@ int rf_persci_getc(void)
 }
 
 /* write next char to buffer and handle if EOT */
+/* TODO nonblocking - return -1 */
 void rf_persci_putc(char c)
 {
   /* validate state */
@@ -495,13 +496,10 @@ void rf_persci_putc(char c)
     exit(1);
   }
 
-  /* validate not full */
-  if (rf_persci_len >= 131) {
-    fprintf(stderr, "rf_persci_putc buffer full\n");
-    exit(1);
-  }
+  /* write to buffer */
+  rf_persci_w(c);
 
-  rf_persci_buf[rf_persci_len++] = c;
+  /* on EOT, operate */
   if (c == RF_ASCII_EOT) {
     rf_persci_serve();
   }
