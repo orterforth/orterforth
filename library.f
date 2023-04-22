@@ -126,6 +126,22 @@ FORTH VOCABULARY fib IMMEDIATE fib DEFINITIONS DECIMAL
 CR fib list CR
 
 ;S
+( Reverse a string                                            )
+9 LOAD                         ( load str vocabulary          )
+FORTH
+: s1 str " Hello World, this is a string." ;
+HERE s1 C@ 1+ ln ALLOT CONSTANT s2
+: reverse                      ( s1 s2 --                     )
+  OVER C@ >R                   ( save length                  )
+  R OVER C!                    ( write length                 )
+  R + SWAP                     ( get pointer to end of str 2  )
+  1+ DUP R + SWAP DO           ( iterate over string 1        )
+    I C@ OVER C! 1 -           ( copy byte, decrement ptr     )
+  LOOP R> DROP DROP ;          ( done, discard len and ptr    )
+s1 s2 reverse CR               ( reverse s1 into s2           )
+." s1: " s1 COUNT TYPE CR      ( print them both              )
+." s2: " s2 COUNT TYPE CR
+;S
 ( str: Forth/Pascal string handling                           )
 FORTH VOCABULARY str IMMEDIATE str DEFINITIONS DECIMAL
 : (") R> DUP COUNT + >R ;      ( return string and advance IP )
