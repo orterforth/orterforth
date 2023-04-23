@@ -46,22 +46,22 @@
 
 
 
-**********************  fig-FORTH  MODEL  **********************
-
-                     Through the courtesy of
-
-                      FORTH INTEREST GROUP
-                         P. O. BOX 1105
-                     SAN CARLOS, CA. 94070
 
 
-                           RELEASE 1
-                     WITH COMPILER SECURITY
-                             AND
-                     VARIABLE LENGTH NAMES
 
 
-       Further distribution must include the above notice.
+
+
+
+
+
+
+
+
+
+
+
+
 (  ERROR MESSAGES  )
 EMPTY STACK
 DICTIONARY FULL

@@ -143,7 +143,7 @@ $(SYSTEM)-example : $(ORTERFORTH) example/$(EXAMPLE).img
 	echo "EMPTY-BUFFERS 1 LOAD" | $< example/$(EXAMPLE).img
 
 # runtime disc images
-DR0=messages.img
+DR0=library.img
 DR1=data.img
 
 # run local build
