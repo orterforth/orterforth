@@ -144,9 +144,9 @@ CR fac list CR
 ;S
 ( Reverse a string                                            )
 10 LOAD                        ( load str vocabulary          )
-FORTH
+FORTH DEFINITIONS
 : s1 str " Hello World, this is a string." ;
-HERE s1 C@ 1+ ln ALLOT CONSTANT s2
+s1 C@ str new CONSTANT s2
 : reverse                      ( s1 s2 --                     )
   OVER C@ >R                   ( save length                  )
   R OVER C!                    ( write length                 )
@@ -159,57 +159,57 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
 ." s2: " s2 COUNT TYPE CR
 ;S
 ( str: Forth/Pascal string handling                           )
-FORTH VOCABULARY str IMMEDIATE str DEFINITIONS DECIMAL
-: (") R> DUP COUNT + >R ;      ( return string and advance IP )
-: "                            ( -- )
-  ?COMP                        ( compilation only             )
-  COMPILE (")                  ( execution time routine       )
-  34 WORD                      ( read until "                 )
-  HERE C@ 1+ ALLOT             ( compile the string           )
+FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
+: (") R> DUP COUNT + >R ;       ( return string and advance IP)
+: "                             ( --                          )
+  ?COMP                         ( compilation only            )
+  COMPILE (")                   ( execution time routine      )
+  34 WORD                       ( read until "                )
+  HERE C@ 1+ ALLOT              ( compile the string          )
 ; IMMEDIATE
 
-: copy                         ( a b -- )
-  OVER C@                      ( get length                   )
-  1+ CMOVE ;                   ( copy length+1 bytes          )
+: copy                          ( a b --                      )
+  OVER C@                       ( get length                  )
+  1+ CMOVE ;                    ( copy length+1 bytes         )
 
 -->
 
-( str: append                                                 )
-: append                       ( a b -- )
-  OVER C@ OVER C@              ( get the two lengths          )
-  255 SWAP - MIN >R            ( limit append to max length   )
-  OVER OVER                    ( dup both string addrs        )
-  COUNT +                      ( move to the end of b         )
-  SWAP 1+ R                    ( count a                      )
-  ROT SWAP CMOVE               ( copy into b                  )
-  SWAP C@ OVER C@ +            ( get the total count          )
-  SWAP C!                      ( write it to b                )
+( str: Forth/Pascal string handling                           )
+: append                        ( a b --                      )
+  OVER C@ OVER C@               ( get the two lengths         )
+  255 SWAP - MIN >R             ( limit append to max length  )
+  OVER OVER                     ( dup both string addrs       )
+  COUNT +                       ( move to the end of b        )
+  SWAP 1+ R                     ( count a                     )
+  ROT SWAP CMOVE                ( copy into b                 )
+  SWAP C@ OVER C@ +             ( get the total count         )
+  SWAP C!                       ( write it to b               )
   R> DROP
 ; ( TODO optimise now R is used to hold length )
 
 
 
 -->
-( str: take, drop                                             )
-: take                         ( a n -- )
-  OVER C@ MIN                  ( limit to the string length )
-  SWAP C!                      ( write new length )
+( str: Forth/Pascal string handling                           )
+: take                          ( a n --                      )
+  OVER C@ MIN                   ( limit to the string length  )
+  SWAP C!                       ( write new length )
 ;
 
-: drop                         ( a n -- )
-  OVER C@ MIN                  ( limit to the string length )
-  >R DUP                       ( save a and modified n )
-  DUP 1+ R +                   ( from )
-  OVER 1+                      ( to )
-  ROT C@ R -                   ( count )
-  CMOVE                        ( copy the rest )         
-  DUP C@ R> - SWAP C!          ( update the length )
+: drop                          ( a n --                      )
+  OVER C@ MIN                   ( limit to the string length  )
+  >R DUP                        ( save a and modified n       )
+  DUP 1+ R +                    ( from                        )
+  OVER 1+                       ( to                          )
+  ROT C@ R -                    ( count                       )
+  CMOVE                         ( copy the rest               )
+  DUP C@ R> - SWAP C!           ( update the length           )
 ;
 -->
-( str: new                                                    )
+( str: Forth/Pascal string handling                           )
 
-: alloc HERE SWAP ALLOT ;       ( size -- addr )
-: new 1+ alloc ;                ( length -- addr )
+: alloc HERE SWAP ALLOT ;       ( size -- addr                )
+: new 1+ ln alloc ;             ( length -- addr              )
 
 
 
