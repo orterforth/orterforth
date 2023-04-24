@@ -268,6 +268,7 @@ static void rf_persci_write(void)
   size_t len;
 
   /* get size of data */
+  off = offset(rf_persci_track, rf_persci_sector);
   /* TODO odd 128 overflow logic */
   for (; rf_persci_buf[rf_persci_idx] != RF_ASCII_EOT; rf_persci_idx++) {
   }
@@ -278,7 +279,6 @@ static void rf_persci_write(void)
   if (ptr) {
 
     /* move to track and sector */
-    off = offset(rf_persci_track, rf_persci_sector);
     if (seek(ptr, off, rf_persci_drive)) {
       return;
     }
