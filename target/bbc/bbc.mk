@@ -8,11 +8,11 @@ BBCLOADINGMETHOD := disk
 # BBCLOADINGMETHOD := serial
 # BBCLOADINGMETHOD := tape
 
-# default is to run MAME
+# default emulator or real BBC Micro
 BBCMACHINE := mame
 #BBCMACHINE := real
 
-# build config option
+# default build config option
 # BBCOPTION := assembly
 BBCOPTION := default
 # BBCOPTION := tape
@@ -43,14 +43,17 @@ ifeq ($(BBCOPTION),default)
 	BBCDEPS += bbc/mos.o bbc/system_c.o
 endif
 
-# assembly code, tape only config starting at 0x0E00
-# BBCORG can be moved back to 0x0F20 if 0x0B00 onwards not used
-# and BBCORIGIN by the same amount, then MODE 0, 1, 2 are available
+# assembly code, tape only
 ifeq ($(BBCOPTION),tape)
 	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
 	BBCLOADINGMETHOD := tape
+# starts FIRST at 0x0E00, ORG at 0x1220
 	BBCORG := 1220
 	BBCORIGIN := 1D00
+# starts FIRST at 0x0B00, ORG at 0x0F20
+# if 0x0B00 onwards not used then MODE 0, 1, 2 are available
+	BBCORG := 0F20
+	BBCORIGIN := 1A00
 endif
 
 # apparently bbc.lib must be the last dep
@@ -65,20 +68,27 @@ endif
 # loading media
 ifeq ($(BBCLOADINGMETHOD),disk)
 	BBCINSTMEDIA = bbc/inst.ssd
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1 $(BBCINSTMEDIA)
 	BBCMEDIA = bbc/orterforth.ssd
-	BBCMAMERUN := -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\r' -flop1  $(BBCMEDIA)
+	BBCMAMEINSTMEDIA := -flop1 $(BBCINSTMEDIA)
+	BBCMAMEMEDIA := -flop1 $(BBCMEDIA)
+	BBCMAMECMD := '*DISK\r*EXEC !BOOT\r'
 endif
 ifeq ($(BBCLOADINGMETHOD),serial)
 	BBCINSTMEDIA = bbc/inst.ser
 	BBCMEDIA = bbc/orterforth.ser
+	BBCMAMEINSTMEDIA :=
+	BBCMAMEMEDIA :=
+	BBCMAMECMD := '*FX2,1\r'
 endif
 ifeq ($(BBCLOADINGMETHOD),tape)
 	BBCINSTMEDIA = bbc/inst.uef
-	BBCMAMEINST := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette $(BBCINSTMEDIA)
 	BBCMEDIA = bbc/orterforth.uef
-	BBCMAMERUN := -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette $(BBCMEDIA)
+	BBCMAMEINSTMEDIA := -cassette $(BBCINSTMEDIA)
+	BBCMAMEMEDIA := -cassette $(BBCMEDIA)
+	BBCMAMECMD := '*TAPE\r*RUN\r'
 endif
+BBCMAMEINST := -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
+BBCMAMERUN := -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
 
 bbc :
 
@@ -111,20 +121,12 @@ BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033
 .PHONY : bbc-example
 bbc-example : $(BBCMEDIA) $(BBCROMS) | $(DISC) example/$(EXAMPLE).img $(DR1)
 
-ifeq ($(BBCMACHINE),mame)
 	@touch $(DR1)
+
+ifeq ($(BBCMACHINE),mame)
 	@$(STARTDISCTCP) example/$(EXAMPLE).img $(DR1)
 
-	# run mame
-ifeq ($(BBCLOADINGMETHOD),disk)
-	mame $(BBCMAME) -autoboot_delay 2 -autoboot_command '*DISK\r*EXEC !BOOT\rEMPTY-BUFFERS 1 LOAD\r' -flop1 bbc/orterforth.ssd
-endif
-ifeq ($(BBCLOADINGMETHOD),serial)
-	echo "serial load currently fails on MAME" && exit 1
-endif
-ifeq ($(BBCLOADINGMETHOD),tape)
-	mame $(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\rEMPTY-BUFFERS 1 LOAD\r' -cassette bbc/orterforth.uef
-endif
+	@mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD)'EMPTY-BUFFERS 1 LOAD\r' $(BBCMAMEMEDIA)
 
 	@$(STOPDISC)
 endif
@@ -149,16 +151,22 @@ bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 ifeq ($(BBCMACHINE),mame)
 	@$(STARTDISCTCP) $(DR0) $(DR1)
 
-	# run mame
-	mame $(BBCMAME) $(BBCMAMERUN)
+	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
+	@mame $(BBCMAME) $(BBCMAMERUN)
 
 	@$(STOPDISC)
 endif
 ifeq ($(BBCMACHINE),real)
+ifeq ($(BBCLOADINGMETHOD),serial)
 	@$(BBCLOADSERIAL) bbc/orterforth.ser
+endif
+ifeq ($(BBCLOADINGMETHOD),tape)
+	@printf '* \033[1;35mTODO tape loading script\033[0;0m\n'
+	@exit 1
+endif
 
-	# run disc
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+	@printf '* \033[1;33mRunning disc\033[0;0m\n'
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 endif
 
 BBCCC65OPTS := -O -t none \
@@ -275,9 +283,9 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 	@touch $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	@$(STARTDISCTCP) model.img $@.io
-
 	@$(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
+
+	@$(STARTDISCTCP) model.img $@.io
 endif
 ifeq ($(BBCMACHINE),real)
 	@$(BBCLOADSERIAL) $(BBCINSTMEDIA)
