@@ -288,7 +288,7 @@ include target/spectrum/spectrum.mk
 .PHONY : test
 test : $(ORTERFORTH) $(DR0)
 
-	echo 'VLIST 3 LIST MON' | $(ORTERFORTH) $(DR0)
+	echo 'VLIST 3 20 INDEX MON' | $(ORTERFORTH) $(DR0)
 
 tools :
 
