@@ -215,7 +215,7 @@ dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
 
 dragon/rf_6809.o : rf_6809.s | dragon
 
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+	lwasm --6809 --obj -DRF_ORIGIN=$(DRAGONORIGIN) -o $@ $<
 
 dragon/rx : | dragon
 

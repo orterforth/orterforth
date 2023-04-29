@@ -804,6 +804,29 @@ _rf_code_douse EQU *
 funcend_rf_code_douse EQU *
 funcsize_rf_code_douse EQU funcend_rf_code_douse-_rf_code_douse
 
+_rf_code_cold EXPORT
+_rf_code_cold EQU *
+	LDX    #RF_ORIGIN
+	LDD    _rf_code_cold+0,PCR  COLD vector init
+	LDY    2,X
+	STD    ,Y
+	LDD    12,X                 FORTH vocabulary init
+	LDY    34,X
+	STD    ,Y
+	LDY    16,X                 UP init
+	STY    _rf_up+0,PCR
+    LDB    #24                  USER variables init
+	LEAX   12,X
+COLD2 EQU *
+	LDA    ,X+
+	STA    ,Y+
+	DECB
+	BNE    COLD2
+	LDY    ,X                   IP init to ABORT
+	LBRA   _rf_code_rpsto       jump to RP!
+funcend_rf_code_cold EQU *
+funcsize_rf_code_cold EQU funcend_rf_code_cold-_rf_code_cold
+
 _rf_code_xt EXPORT
 _rf_code_xt EQU *
 	LDD    #0
@@ -827,6 +850,16 @@ _rf_code_cs EQU *
 	LBRA   NEXT
 funcend_rf_code_cs EQU *
 funcsize_rf_code_cs EQU funcend_rf_code_cs-_rf_code_cs
+
+_rf_code_tg EXPORT
+_rf_code_tg EQU *
+	LDX    #RF_ORIGIN
+	LDD    38,X
+	LDX    40,X
+	PSHU   D,X
+	LBRA   NEXT
+funcend_rf_code_tg EQU *
+funcsize_rf_code_tg EQU funcend_rf_code_tg-_rf_code_tg
 
 	ENDSECTION
 
