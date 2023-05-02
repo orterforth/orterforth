@@ -29,16 +29,18 @@ static int disclinetoblock(char *line, int *lineno, FILE *stream, char *block)
   /* count lines */
   (*lineno)++;
 
-  /* TODO deal with no final newline */
   /* fail if too long */
   len = strlen(line);
-  if (len > 65) {
+  if (line[len - 1] == '\n') {
+    --len;
+  }
+  if (len > 64) {
     fprintf(stderr, "line %u too long\n", *lineno);
     return 1;
   }
 
   /* write to the block */
-  memcpy(block, line, len - 1);
+  memcpy(block, line, len);
 
   /* ok */
   return 0;
