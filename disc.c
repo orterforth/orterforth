@@ -155,15 +155,14 @@ static size_t disc_rd(char *off, size_t len)
       /* return correct length */
       i++;
       fetch = 0;
+      /* log line */
+      if (log) {
+        fwrite(off - i, 1, i, stderr);
+        fputc('\n', stderr);
+        fflush(stderr);
+      }
       break;
     }
-  }
-
-  /* log line TODO move this to EOT handle above */
-  if (log) {
-    fwrite(off - i, 1, i, stderr);
-    fputc('\n', stderr);
-    fflush(stderr);
   }
 
   return i;
