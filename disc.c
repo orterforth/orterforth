@@ -132,7 +132,7 @@ static size_t disc_wr(char *off, size_t len)
 /* read data from disc */
 static size_t disc_rd(char *off, size_t len)
 {
-  char c;
+  int c;
   size_t i;
 
   /* only attempt to read after EOT sent */
@@ -142,9 +142,12 @@ static size_t disc_rd(char *off, size_t len)
 
   for (i = 0; i < len; i++) {
     /* read byte */
-    /* TODO handle -1 */
     /* TODO rely on -1 and remove fetch */
     c = rf_persci_getc();
+    if (c == -1) {
+      fetch = 0;
+      break;
+    }
     *(off++) = c;
 
     /* stop read once EOT read */
