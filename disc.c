@@ -353,6 +353,7 @@ static int disc_serial(int argc, char **argv)
   int exit = 0;
 
   /* finish if interrupted by signal */
+  /* TODO move */
   orter_io_signal_init();
 
   /* serial port */
@@ -374,6 +375,7 @@ static int disc_mux(int argc, char **argv)
   CHECK(exit, orter_io_std_open());
 
   /* finish if interrupted by signal */
+  /* TODO move */
   orter_io_signal_init();
 
   /* serial port */
@@ -421,7 +423,6 @@ static int disc_standard(int argc, char **argv)
   return exit;
 }
 
-/* TODO tcp into own lib */
 static int disc_tcp(int argc, char **argv)
 {
   int exit = 0;
