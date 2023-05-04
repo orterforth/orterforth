@@ -501,8 +501,6 @@ static void rf_inst_forward(void)
   rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
   /* boot time literals and s0 for ?STACK */
-  /* TODO no need for relrev */
-  rf_inst_def_constant("relrev", (uintptr_t) RF_FIGRELFIGREV);
   rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
   rf_inst_def_constant("bs", (uintptr_t) RF_BS);
   rf_inst_def_constant("user", (uintptr_t) RF_USER);
