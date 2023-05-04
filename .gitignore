@@ -2,6 +2,7 @@
 *.img
 *.io
 *.pid
+*.rom
 /bbc/
 /c64/
 /cfg/

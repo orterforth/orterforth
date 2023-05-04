@@ -157,13 +157,14 @@ STARTDISCFUSE := \
 	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse
 
 FUSEOPTS := \
-	--machine 48 \
+	--auto-load \
 	--graphics-filter 2x \
 	--interface1 \
-	--rom-48 roms/spectrum/spectrum.rom \
-	--rom-interface-1 roms/spectrum/if1-2.rom \
-	--auto-load \
+	--machine 48 \
+	--no-confirm-actions \
 	--phantom-typist-mode keyword \
+	--rom-48 48.rom \
+	--rom-interface-1 if1-2.rom \
 	--rs232-rx spectrum/fuse-rs232-rx \
 	--rs232-tx spectrum/fuse-rs232-tx
 
@@ -189,10 +190,11 @@ ifeq ($(SPECTRUMMACHINE),real)
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
-	# @$(STARTDISCFUSE) $(DR0) $(DR1)
-	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard $(DR0) $(DR1)
-	$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
-	$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
+	@#$(STARTDISCFUSE) $(DR0) $(DR1)
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
+	@sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard $(DR0) $(DR1)
+	@$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
+	@$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@$(STARTDISCTCP) $(DR0) $(DR1)
@@ -204,8 +206,7 @@ endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
 	@printf '* \033[1;33mRunning Fuse\033[0;0m\n'
-	@printf '  \033[1;35mNB please type LOAD "" (phantom typist not working currently)\033[0;0m\n'
-	$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
+	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@echo '1. Press Enter to skip the warning'
@@ -389,13 +390,13 @@ ifeq ($(SPECTRUMINSTMACHINE),real)
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 endif
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
-	# @$(STARTDISCFUSE) model.img $@.io
-	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard model.img $@.io
-	$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
-	$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
+	@#$(STARTDISCFUSE) model.img $@.io
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
+	@sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard model.img $@.io
+	@$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
+	@$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
 
 	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
-	@printf '  \033[1;35mNB please type LOAD "" (phantom typist not working currently)\033[0;0m\n'
 	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
 endif
 
