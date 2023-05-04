@@ -86,7 +86,8 @@ void rf_inst(void)
   /* LATEST */
   uint8_t *p = *((uint8_t **) ((uintptr_t *) (RF_ORIGIN) + 6));
   /* HERE */
-  uintptr_t *here = *((uintptr_t **) ((uintptr_t *) (RF_ORIGIN) + 15));
+  /* TODO cast to rf_code_t * ? */
+  rf_code_t *here = *((rf_code_t **) ((uintptr_t *) (RF_ORIGIN) + 15));
   int i;
 
   while (p) {
@@ -104,7 +105,7 @@ void rf_inst(void)
 
     /* find CFA code address in table */
     for (i = 0; i < SIZE; i++) {
-      if (*cfa == (rf_code_t) here[i]) {
+      if (*cfa == here[i]) {
         /* update with code from this job */
         *cfa = codes[i];
       }
