@@ -52,8 +52,8 @@ ifeq ($(BBCOPTION),tape)
 	BBCORIGIN := 1D00
 # starts FIRST at 0x0B00, ORG at 0x0F20
 # if 0x0B00 onwards not used then MODE 0, 1, 2 are available
-	BBCORG := 0F20
-	BBCORIGIN := 1A00
+	# BBCORG := 0F20
+	# BBCORIGIN := 1A00
 endif
 
 # apparently bbc.lib must be the last dep
@@ -140,12 +140,8 @@ ifeq ($(BBCMACHINE),real)
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) example/$(EXAMPLE).img $(DR1)
 endif
 
-# Hello World - NB this doesn't work because bbc.lib is incomplete
-bbc-hw : bbc/hw.uef $(BBCROMS)
-
-	mame $(BBCMAME) -autoboot_delay 2 -autoboot_command '*TAPE\r*RUN\r' -cassette bbc/hw.uef
-
 # load and run
+.PHONY : bbc-run
 bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
