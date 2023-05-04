@@ -501,6 +501,7 @@ static void rf_inst_forward(void)
   rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
   /* boot time literals and s0 for ?STACK */
+  /* TODO no need for relrev */
   rf_inst_def_constant("relrev", (uintptr_t) RF_FIGRELFIGREV);
   rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
   rf_inst_def_constant("bs", (uintptr_t) RF_BS);
@@ -552,97 +553,11 @@ static void rf_inst_forward(void)
     ":proto LIT 641 DUP LIT -659 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
   rf_inst_emptybuffers();
   rf_inst_execute("proto", 5);
-
-  /* - */
-/*
-  rf_inst_compile(":- MINUS + ;S");
-*/
-  /* HERE */
-/*
-  rf_inst_compile(":HERE DP @ ;S");
-*/
-  /* BLANKS */
-/*
-  rf_inst_compile(
-    ":BLANKS LIT 32 SWAP >R OVER C! DUP LIT 1 + R> LIT 1 - CMOVE ;S");
-*/
-  /* WORD */
-  /* wider align may need more blanks in edge case of long words */
-  /* maybe not here but in final model source version of WORD */
-/*
-  rf_inst_compile(
-    ":WORD BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +! "
-    "OVER - >R R HERE C! + HERE LIT 1 + R> CMOVE ;S");
-*/ 
-  /* -FIND */
-/*
-  rf_inst_compile(":-FIND LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S");
-*/
-  /* , */
-/*
-  rf_inst_compile(":, HERE ! cl DP +! ;S");
-*/
-  /* COMPILE */
-/*
-  rf_inst_compile(":COMPILE R> DUP cl + >R @ , ;S");
-*/
-  /* (NUMBER) */
-/*
-  rf_inst_compile(":(NUMBER) LIT 0 SWAP DUP >R C@ BASE @ DIGIT 0BRANCH ^13 "
-    "SWAP BASE @ U* DROP + R> LIT 1 + BRANCH ^-19 R> DROP ;S");
-*/
-  /* NUMBER */
-/*
-  rf_inst_compile(":NUMBER LIT 1 + DUP C@ LIT 45 - 0= DUP >R + (NUMBER) "
-    "R> 0BRANCH ^2 MINUS ;S");
-*/
-  /* INTERPRET */
-  /* LIT must be resolved later to final value of LIT CFA */
-/*
-  rf_inst_compile(
-    ":INTERPRET -FIND 0BRANCH ^17 STATE @ - 0< 0BRANCH ^6 cl - , BRANCH ^4 cl - "
-    "EXECUTE BRANCH ^-18 HERE NUMBER STATE @ 0BRANCH ^-24 COMPILE LIT , "
-    "BRANCH ^-29");
-*/
-  /* CREATE */
-/*
-  rf_inst_compile(
-    ":CREATE -FIND 0BRANCH ^3 DROP DROP HERE DUP C@ LIT 1 + DP +! DP C@ "
-    "LIT 253 - 0= DP +!");
-#ifdef RF_ALIGN
-  rf_inst_compile("HERE ln DP !");
-#endif
-  rf_inst_compile(
-    "DUP LIT 160 TOGGLE HERE LIT 1 - LIT 128 TOGGLE CURRENT @ @ "
-    ", CURRENT @ ! HERE cl + , ;S");
-*/
-  /* LOAD */
-/*
-  rf_inst_compile(
-    ":LOAD BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET R> IN ! R> BLK "
-    "! ;S");
-*/
-  /* [ */
-/*
-  rf_inst_compile("::[ LIT 0 STATE ! ;S");
-*/
-  /* inst load sequence */
-  /* now renaming of 'X' to '\0' takes place here */
-/*
-  rf_inst_compile(":load CURRENT @ @ LIT 1 + LIT 88 TOGGLE LIT 1 LOAD xt");
-*/
-
-  /* X */
-  /* to make renaming simple this is the last word defined and */
-  /* can be located easily via CURRENT */
-/*
-  rf_inst_compile(
-    "::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S");
-*/
 }
 
 static void rf_inst_load(void)
 {
+  /* TODO don't need emptybuffers again */
   rf_inst_emptybuffers();
   rf_inst_execute("load", 4);
 }
