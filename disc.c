@@ -269,12 +269,17 @@ static size_t mux_disc_wr(char *off, size_t len)
 }
 
 /* Server loop */
+/* TODO generalise in orter io */
 static int serve(char *dr0, char *dr1)
 {
   /* insert the disc image files */
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
 
+  /* finish if interrupted by signal */
+  orter_io_signal_init();
+
+  /* main loop */
   while (!orter_io_finished) {
 
     /* init fd sets */
@@ -356,10 +361,6 @@ static int disc_serial(int argc, char **argv)
 {
   int exit = 0;
 
-  /* finish if interrupted by signal */
-  /* TODO move */
-  orter_io_signal_init();
-
   /* serial port */
   CHECK(exit, orter_serial_open(argv[2], atoi(argv[3])));
 
@@ -377,10 +378,6 @@ static int disc_mux(int argc, char **argv)
 
   /* stdin/stdout */
   CHECK(exit, orter_io_std_open());
-
-  /* finish if interrupted by signal */
-  /* TODO move */
-  orter_io_signal_init();
 
   /* serial port */
   exit = orter_serial_open(argv[2], atoi(argv[3]));
