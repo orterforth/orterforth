@@ -203,7 +203,7 @@ STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh m
 WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
 
 # common options for MAME
-MAMEOPTS := -rompath roms -video opengl -skip_gameinfo -nomax -window
+MAMEOPTS := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
 
 # build
 .PHONY : build

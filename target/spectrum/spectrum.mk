@@ -222,8 +222,10 @@ ifeq ($(SPECTRUMMACHINE),fuse)
 	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
-	@echo '1. Press Enter to skip the warning'
-	@echo '2. Start the tape via F2 or the Tape Control menu'
+	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
+	@printf '  \033[1;35m1. Press Enter to skip the warning\033[0;0m\n'
+	@printf '  \033[1;35m2. Scroll Lock or Delete to enable UI controls\033[0;0m\n'
+	@printf '  \033[1;35m3. Start the tape via F2 or the Tape Control menu\033[0;0m\n'
 	@mame spectrum $(MAMEOPTS) \
 		-exp intf1 \
 		-exp:intf1:rs232 null_modem \
