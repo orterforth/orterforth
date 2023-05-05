@@ -123,6 +123,11 @@ SPECTRUMMACHINE := fuse
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
+# default names/locations are required so Fuse does not treat as custom 
+# ROMs and disable autoload
+SPECTRUMROMS := \
+	48.rom \
+	if1-2.rom
 SPECTRUMRUNDEPS := \
 	spectrum/orterforth.tap \
 	$(DR0) \
@@ -131,8 +136,8 @@ SPECTRUMRUNDEPS := \
 	$(SPECTRUMROMS) \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx \
-	spectrum/rx \
-	spectrum/tx
+	rx \
+	tx
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 SPECTRUMRUNDEPS := \
@@ -152,9 +157,28 @@ SPECTRUMRUNDEPS := \
 	$(ORTER)
 endif
 
+STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
+
+# TODO remove once we decide to remove "disc fuse"
 STARTDISCFUSE := \
-	printf '* \033[1;33mStarting disc\033[0;0m\n' ; \
+	$(STARTDISCMSG) ; \
 	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse
+
+# start disc
+ifeq ($(SPECTRUMMACHINE),fuse)
+SPECTRUMSTARTDISC := \
+	$(STARTDISCMSG) ; \
+	sh scripts/start.sh tx rx disc.pid $(DISC) standard
+endif
+ifeq ($(SPECTRUMMACHINE),mame)
+SPECTRUMSTARTDISC := $(STARTDISCTCP)
+endif
+ifeq ($(SPECTRUMMACHINE),real)
+# run and wait rather than start
+SPECTRUMSTARTDISC := \
+	$(STARTDISCMSG) ; \
+	$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
+endif
 
 FUSEOPTS := \
 	--auto-load \
@@ -189,23 +213,12 @@ ifeq ($(SPECTRUMMACHINE),real)
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 endif
 
-ifeq ($(SPECTRUMMACHINE),fuse)
-	@#$(STARTDISCFUSE) $(DR0) $(DR1)
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard $(DR0) $(DR1)
-	@$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
-	@$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
-endif
-ifeq ($(SPECTRUMMACHINE),mame)
-	@$(STARTDISCTCP) $(DR0) $(DR1)
-endif
-ifeq ($(SPECTRUMMACHINE),real)
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
-endif
+	@$(SPECTRUMSTARTDISC) $(DR0) $(DR1)
 
 ifeq ($(SPECTRUMMACHINE),fuse)
 	@printf '* \033[1;33mRunning Fuse\033[0;0m\n'
+	@$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx &
+	@$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx &
 	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
@@ -339,8 +352,8 @@ SPECTRUMINSTDEPS := \
 	$(SPECTRUMROMS) \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx \
-	spectrum/rx \
-	spectrum/tx
+	rx \
+	tx
 endif
 ifeq ($(SPECTRUMINSTMACHINE),real)
 SPECTRUMINSTDEPS := \
@@ -354,14 +367,6 @@ SPECTRUMINSTDEPS := \
 	$(SYSTEM)/emulate_spectrum \
 	$(SPECTRUMROMS)
 endif
-
-spectrum/rx : | spectrum
-
-	mkfifo $@
-
-spectrum/tx : | spectrum
-
-	mkfifo $@
 
 spectrum/orterforth.bin.hex : model.img $(SPECTRUMINSTDEPS)
 
@@ -385,21 +390,19 @@ ifeq ($(SPECTRUMINSTMACHINE),real)
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 endif
 
+ifneq ($(SPECTRUMINSTMACHINE),superzazu)
+	@$(SPECTRUMSTARTDISC) model.img $@.io
+endif
+
 ifeq ($(SPECTRUMINSTMACHINE),real)
-	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
 endif
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
-	@#$(STARTDISCFUSE) model.img $@.io
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
-	@sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC) standard model.img $@.io
-	@$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
-	@$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
-
 	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
+	@$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx &
+	@$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx &
 	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
 endif
-
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
 	@printf '* \033[1;33mRunning headless emulator\033[0;0m\n'
 	@./$(SYSTEM)/emulate_spectrum
@@ -407,12 +410,14 @@ endif
 
 ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(WAITUNTILSAVED) $@.io
+endif
 
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
 	@printf '* \033[1;33mStopping Fuse\033[0;0m\n'
 	@sh scripts/stop.sh fuse.pid
 endif
 
+ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(STOPDISC)
 endif
 

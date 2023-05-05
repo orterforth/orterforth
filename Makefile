@@ -1,7 +1,6 @@
 # C compiler options
 CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic
-# -Wall -Wextra -std=c89 -pedantic -Wmissing-prototypes -Wstrict-prototypes \
-#     -Wold-style-definition
+# CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 
 # local system OS
 UNAME_S := $(shell uname -s)
@@ -275,6 +274,10 @@ roms :
 .PHONY : run
 run : $(TARGET)-run
 
+rx :
+
+	mkfifo $@
+
 # run working script
 .PHONY : script
 script :
@@ -293,6 +296,10 @@ test : $(ORTERFORTH) $(DR0)
 tools :
 
 	mkdir $@
+
+tx :
+
+	mkfifo $@
 
 # uninstall from local
 .PHONY : uninstall
