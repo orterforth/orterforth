@@ -70,6 +70,9 @@ void orter_io_select_zero(void);
 /* carry out select on fd sets */
 int orter_io_select(void);
 
+/* operate pipes until end or interrupted */
+int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num);
+
 /* write 16 bit BE int */
 void orter_io_put_16be(uint16_t u);
 

@@ -256,50 +256,21 @@ static size_t mux_disc_wr(char *off, size_t len)
   return orter_io_fd_wr(orter_serial_fd, buf, len);
 }
 
+static orter_io_pipe_t *pipes[4] = {
+    &in,
+    &out,
+    &mux_in,
+    &mux_out
+};
+
 /* Server loop */
-/* TODO generalise in orter io */
 static int serve(char *dr0, char *dr1)
 {
   /* insert the disc image files */
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
 
-  /* finish if interrupted by signal */
-  orter_io_signal_init();
-
-  /* main loop */
-  while (!orter_io_finished) {
-
-    /* init fd sets */
-    orter_io_select_zero();
-
-    /* add to fd sets */
-    orter_io_pipe_fdset(&in);
-    orter_io_pipe_fdset(&out);
-    if (mux) {
-      orter_io_pipe_fdset(&mux_in);
-      orter_io_pipe_fdset(&mux_out);
-    }
-
-    /* select */
-    if (orter_io_select() < 0) {
-      break;
-    }
-
-    /* disc in to disc controller */
-    orter_io_pipe_move(&in);
-    /* disc controller to disc out */
-    orter_io_pipe_move(&out);
-    if (mux) {
-      /* stdin to console in */
-      orter_io_pipe_move(&mux_in);
-      /* console out to stdout  */
-      orter_io_pipe_move(&mux_out);
-    }
-  }
-
-  /* finished */
-  return orter_io_exit;
+  return orter_io_pipe_loop(pipes, mux ? 4 : 2);
 }
 
 /* TODO migrate fuse to fds, then can remove */

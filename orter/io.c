@@ -334,6 +334,41 @@ int orter_io_select(void)
   return result;
 }
 
+/* loop to operate pipes */
+int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num)
+{
+  int i;
+
+  /* finish if interrupted by signal */
+  orter_io_signal_init();
+
+  /* main loop */
+  orter_io_finished = 0;
+  while (!orter_io_finished) {
+
+    /* init fd sets */
+    orter_io_select_zero();
+
+    /* add to fd sets */
+    for (i = 0; i < num; i++) {
+      orter_io_pipe_fdset(pipes[i]);
+    }
+
+    /* select */
+    if (orter_io_select() < 0) {
+      break;
+    }
+
+    /* move data along pipes */
+    for (i = 0; i < num; i++) {
+      orter_io_pipe_move(pipes[i]);
+    }
+  }
+
+  /* finished */
+  return orter_io_exit;
+}
+
 void orter_io_put_16be(uint16_t u)
 {
   fputc((uint8_t) (u >> 8), stdout);
