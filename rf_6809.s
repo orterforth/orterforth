@@ -815,7 +815,7 @@ _rf_code_cold EQU *
 	STD    ,Y
 	LDY    16,X                 UP init
 	STY    _rf_up+0,PCR
-    LDB    #24                  USER variables init
+	LDB    #24                  USER variables init
 	LEAX   12,X
 COLD2 EQU *
 	LDA    ,X+
