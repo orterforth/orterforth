@@ -86,9 +86,6 @@ static char mux = 0;
 static orter_io_pipe_t mux_in;
 static orter_io_pipe_t mux_out;
 
-/* determines whether to read data from disc */
-static char fetch = 0;
-
 /* determines whether to log disc I/O to stderr */
 static char log = 1;
 
@@ -112,9 +109,6 @@ static size_t disc_wr(char *off, size_t len)
     }
 
     if (c == RF_ASCII_EOT) {
-      /* allow read once EOT written */
-      fetch = 1;
-
       /* finish log line */
       if (log) {
         fputs("\033[0m\n", stderr);
@@ -137,17 +131,10 @@ static size_t disc_rd(char *off, size_t len)
   int c;
   size_t i;
 
-  /* only attempt to read after EOT sent */
-  if (!fetch) {
-    return 0;
-  }
-
   for (i = 0; i < len; i++) {
     /* read byte */
-    /* TODO rely on -1 and remove fetch */
     c = rf_persci_getc();
     if (c == -1) {
-      fetch = 0;
       break;
     }
     *(off++) = c;
@@ -156,7 +143,6 @@ static size_t disc_rd(char *off, size_t len)
     if (c == RF_ASCII_EOT) {
       /* return correct length */
       i++;
-      fetch = 0;
       /* log line */
       if (log) {
         fwrite(off - i, 1, i, stderr);
