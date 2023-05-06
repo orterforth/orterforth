@@ -328,7 +328,7 @@ static int setconsoleunbuffered(void)
   return 0;
 }
 
-static int disc_fuse(int argc, char **argv)
+static int disc_fuse(char **argv)
 {
   int exit = 0;
 
@@ -357,7 +357,7 @@ static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
   return serve(dr0, dr1);
 }
 
-static int disc_serial(int argc, char **argv)
+static int disc_serial(char **argv)
 {
   int exit = 0;
 
@@ -372,7 +372,7 @@ static int disc_serial(int argc, char **argv)
   return exit;
 }
 
-static int disc_mux(int argc, char **argv)
+static int disc_mux(char **argv)
 {
   int exit = 0;
 
@@ -409,7 +409,7 @@ static int disc_mux(int argc, char **argv)
   return exit;
 }
 
-static int disc_standard(int argc, char **argv)
+static int disc_standard(char **argv)
 {
   int exit = 0;
 
@@ -424,7 +424,7 @@ static int disc_standard(int argc, char **argv)
   return exit;
 }
 
-static int disc_tcp(int argc, char **argv)
+static int disc_tcp(char **argv)
 {
   int exit = 0;
 
@@ -448,27 +448,27 @@ int main(int argc, char *argv[])
 
   /* Console with Fuse Emulator RS232 fifo escape */
   if (argc == 4 && !strcmp("fuse", argv[1])) {
-    return disc_fuse(argc, argv);
+    return disc_fuse(argv);
   }
 
   /* Physical serial port but multiplex serial and disc */
   if (argc == 6 && !strcmp("mux", argv[1])) {
-    return disc_mux(argc, argv);
+    return disc_mux(argv);
   }
 
   /* Physical serial port */
   if (argc == 6 && !strcmp("serial", argv[1])) {
-    return disc_serial(argc, argv);
+    return disc_serial(argv);
   }
 
   /* Console */
   if (argc == 4 && !strcmp("standard", argv[1])) {
-    return disc_standard(argc, argv);
+    return disc_standard(argv);
   }
 
   /* TCP */
   if (argc == 5 && !strcmp("tcp", argv[1])) {
-    return disc_tcp(argc, argv);
+    return disc_tcp(argv);
   }
 
   /* Usage */
