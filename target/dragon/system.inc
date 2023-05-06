@@ -75,4 +75,8 @@
 #define RF_TARGET_CODE_LN
 #define RF_TARGET_CODE_TG
 #define RF_TARGET_CODE_XT
+#define RF_TARGET_CODE_EMIT
+#define RF_TARGET_CODE_KEY
+#define RF_TARGET_CODE_CR
+#define RF_TARGET_CODE_QTERM
 #endif

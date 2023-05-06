@@ -31,12 +31,12 @@ DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
 ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
-DRAGONDEPS += dragon/rf_6809.o
-DRAGONLINKDEPS += dragon/rf_6809.o
+DRAGONDEPS += dragon/rf_6809.o dragon/system_asm.o
+DRAGONLINKDEPS += dragon/rf_6809.o dragon/system_asm.o
 ifeq ($(DRAGONLINK),true)
-DRAGONORIGIN := 0x11C0
+DRAGONORIGIN := 0x1100
 else
-DRAGONORIGIN := 0x2640
+DRAGONORIGIN := 0x1D00
 endif
 endif
 
@@ -226,6 +226,10 @@ dragon/spacer : dragon/link
 	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $(shell $(STAT) dragon/link) )) > $@
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+
+dragon/system_asm.o : target/dragon/system.s | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 

@@ -17,6 +17,7 @@ void rf_init(void)
   }
 }
 
+#ifndef RF_TARGET_CODE_EMIT
 void rf_code_emit(void)
 {
   RF_START;
@@ -30,7 +31,9 @@ void rf_code_emit(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifndef RF_TARGET_CODE_KEY
 void rf_code_key(void)
 {
   RF_START;
@@ -44,7 +47,9 @@ void rf_code_key(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifndef RF_TARGET_CODE_QTERM
 void rf_code_qterm(void)
 {
   RF_START;
@@ -58,7 +63,9 @@ void rf_code_qterm(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifndef RF_TARGET_CODE_CR
 void rf_code_cr(void)
 {
   RF_START;
@@ -68,6 +75,7 @@ void rf_code_cr(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
 void rf_disc_read(char *p, unsigned char len)
 {
