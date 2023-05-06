@@ -21,6 +21,6 @@ void rf_persci_eject(int drive);
 
 int rf_persci_getc(void);
 
-void rf_persci_putc(char c);
+int rf_persci_putc(char c);
 
 #endif /* RF_PERSCI_H_ */

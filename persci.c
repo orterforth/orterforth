@@ -191,11 +191,6 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
   uint8_t i;
   uint8_t *p;
 
-  /* validate args */
-  if (rf_persci_validate(track, sector, drive)) {
-    return;
-  }
-
   /* start response */
   rf_persci_reset();
   rf_persci_w(RF_ASCII_SOH);
@@ -222,14 +217,6 @@ static uint8_t rf_persci_sector = 0;
 /* O (Output) */
 static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
 {
-  /* validate args */
-  if (rf_persci_validate(track, sector, drive)) {
-    return;
-  }
-
-  /* set state */
-  rf_persci_state = RF_PERSCI_STATE_WRITING;
-
   /* set desired track/sector/drive */
   rf_persci_track = track;
   rf_persci_sector = sector;
@@ -244,6 +231,36 @@ static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
   rf_persci_state = RF_PERSCI_STATE_OUTPUT;
 }
 
+/* READ */
+
+/* read next char from buffer */
+static char rf_persci_peek(void)
+{
+  /* validate buffer */
+  if (rf_persci_idx >= rf_persci_len) {
+    fprintf(stderr, "buffer empty\n");
+    exit(1);
+  }
+
+  /* read char from buffer */
+  return rf_persci_buf[rf_persci_idx];
+}
+
+/* read next char from buffer and advance */
+static char rf_persci_r(void)
+{
+  char c = rf_persci_peek();
+
+  /* advance and reset if empty */
+  rf_persci_idx++;
+  if (rf_persci_idx >= rf_persci_len) {
+    rf_persci_idx = 0;
+    rf_persci_len = 0;
+  }
+
+  return c;
+}
+
 /* write data after O */
 static void rf_persci_write(void)
 {
@@ -253,10 +270,11 @@ static void rf_persci_write(void)
   size_t len;
 
   /* get size of data */
-  off = offset(rf_persci_track, rf_persci_sector);
-  for (; rf_persci_idx < 128 && rf_persci_buf[rf_persci_idx] != RF_ASCII_EOT; rf_persci_idx++) {
+  for (len = 0; rf_persci_r() != RF_ASCII_EOT; ++len) {
   }
-  len = rf_persci_idx;
+
+  /* get location */
+  off = offset(rf_persci_track, rf_persci_sector);
 
   /* write data to file (if present) */
   ptr = files[rf_persci_drive];
@@ -295,36 +313,6 @@ static void rf_persci_write(void)
 
   /* reset controller state */
   rf_persci_state = RF_PERSCI_STATE_WRITTEN;
-}
-
-/* READ */
-
-/* read next char from buffer */
-static char rf_persci_peek(void)
-{
-  /* validate buffer */
-  if (rf_persci_idx >= rf_persci_len) {
-    fprintf(stderr, "buffer empty\n");
-    exit(1);
-  }
-
-  /* read char from buffer */
-  return rf_persci_buf[rf_persci_idx];
-}
-
-/* read next char from buffer and advance */
-static char rf_persci_r(void)
-{
-  char c = rf_persci_peek();
-
-  /* advance and reset if empty */
-  rf_persci_idx++;
-  if (rf_persci_idx >= rf_persci_len) {
-    rf_persci_idx = 0;
-    rf_persci_len = 0;
-  }
-
-  return c;
 }
 
 /* COMMAND PARSING */
@@ -400,6 +388,11 @@ static void rf_persci_command(void)
         break;
       }
 
+      /* validate args */
+      if (rf_persci_validate(track, sector, drive)) {
+        return;
+      }
+
       /* handle command */
       switch (ch) {
         case 'I':
@@ -440,7 +433,7 @@ static void rf_persci_serve(void)
 /* read next char from buffer */
 int rf_persci_getc(void)
 {
-  char c;
+  int c;
 
   /* validate state */
   if (rf_persci_state != RF_PERSCI_STATE_INPUT && 
@@ -455,14 +448,10 @@ int rf_persci_getc(void)
     return -1;
   }
 
-  /* get char and reset empty buffer */
-  /* TODO use rf_persci_r()? */
-  c = rf_persci_buf[rf_persci_idx++];
-  if (rf_persci_idx >= rf_persci_len) {
-    rf_persci_idx = 0;
-    rf_persci_len = 0;
-
-    /* set state */
+  /* get char */
+  c = rf_persci_r();
+  /* when empty set state */
+  if (rf_persci_idx == 0) {
     rf_persci_state = (rf_persci_state == RF_PERSCI_STATE_OUTPUT) ? RF_PERSCI_STATE_WRITING : RF_PERSCI_STATE_IDLE;
   }
 
@@ -470,13 +459,11 @@ int rf_persci_getc(void)
 }
 
 /* write next char to buffer and handle if EOT */
-/* TODO nonblocking - return -1 */
-void rf_persci_putc(char c)
+int rf_persci_putc(char c)
 {
   /* validate state */
   if (rf_persci_state != RF_PERSCI_STATE_IDLE && rf_persci_state != RF_PERSCI_STATE_WRITING) {
-    fprintf(stderr, "rf_persci_putc invalid state\n");
-    exit(1);
+    return -1;
   }
 
   /* write to buffer */
@@ -486,4 +473,6 @@ void rf_persci_putc(char c)
   if (c == RF_ASCII_EOT) {
     rf_persci_serve();
   }
+
+  return c;
 }

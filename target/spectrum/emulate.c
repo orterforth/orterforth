@@ -304,7 +304,10 @@ static void hook_error_1(void)
       if (cpu_a_get() == 'Z') {
         finished = 1;
       }
-      rf_persci_putc(cpu_a_get());
+      if (rf_persci_putc(cpu_a_get()) == -1) {
+        fprintf(stderr, "rf_persci_putc invalid state\n");
+        exit(1);
+      }
       break;
 
     default:

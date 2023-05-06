@@ -107,7 +107,9 @@ static size_t disc_wr(char *off, size_t len)
   for (i = 0; i < len; i++) {
     /* write byte */
     c = *(off++);
-    rf_persci_putc(c);
+    if (rf_persci_putc(c) == -1) {
+      return i;
+    }
 
     if (c == RF_ASCII_EOT) {
       /* allow read once EOT written */

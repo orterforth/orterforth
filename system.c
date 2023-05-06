@@ -18,6 +18,9 @@
 /* use heap memory */
 char *rf_memory = 0;
 
+/* auto command for boot purposes */
+char *rf_system_auto_cmd = 0;
+
 void rf_init(void)
 {
 #ifdef PICO
@@ -58,47 +61,52 @@ void rf_code_key(void)
   {
     int c;
 
-#ifdef RF_SYSTEM_POSIX
-    struct termios tp, save;
-
-    if (isatty(0)) {
-      /* save terminal settings */
-      if (tcgetattr(0, &tp) == -1) {
-        perror("tcgetattr failed");
-        exit(1);
-      }
-      save = tp;
-
-      /* turn echo and canonical mode off */
-      tp.c_lflag &= ~(ECHO | ICANON);
-      if (tcsetattr(0, TCSANOW, &tp) == -1) {
-        perror("tcsetattr failed");
-        exit(1);
-      }
-    }
-#endif
-
-    /* get key */
-    c = fgetc(stdin);
+    if (rf_system_auto_cmd && *rf_system_auto_cmd) {
+      c = *(rf_system_auto_cmd++);
+    } else {
 
 #ifdef RF_SYSTEM_POSIX
-    if (isatty(0)) {
-      /* restore terminal settings */
-      if (tcsetattr(0, TCSANOW, &save) == -1) {
-        perror("tcsetattr failed");
-        exit(1);
+      struct termios tp, save;
+
+      if (isatty(0)) {
+        /* save terminal settings */
+        if (tcgetattr(0, &tp) == -1) {
+          perror("tcgetattr failed");
+          exit(1);
+        }
+        save = tp;
+
+        /* turn echo and canonical mode off */
+        tp.c_lflag &= ~(ECHO | ICANON);
+        if (tcsetattr(0, TCSANOW, &tp) == -1) {
+          perror("tcsetattr failed");
+          exit(1);
+        }
       }
-    }
 #endif
 
-    /* exit if eof */
-    if (c == -1) {
-      exit(0);
-    }
+      /* get key */
+      c = fgetc(stdin);
 
-    /* LF to CR */
-    if (c == 10) {
-      c = 13;
+#ifdef RF_SYSTEM_POSIX
+      if (isatty(0)) {
+        /* restore terminal settings */
+        if (tcsetattr(0, TCSANOW, &save) == -1) {
+          perror("tcsetattr failed");
+          exit(1);
+        }
+      }
+#endif
+
+      /* exit if eof */
+      if (c == -1) {
+        exit(0);
+      }
+
+      /* LF to CR */
+      if (c == 10) {
+        c = 13;
+      }
     }
 
     /* return key */
@@ -148,7 +156,10 @@ void rf_disc_write(char *p, uint8_t len)
   if (rf_system_local_disc) {
 #endif
     for (; len; --len) {
-      rf_persci_putc(*(p++));
+      if (rf_persci_putc(*(p++)) == -1) {
+        fprintf(stderr, "rf_persci_putc invalid state\n");
+        exit(1);
+      }
     }
 #ifdef PICO
   } else {
