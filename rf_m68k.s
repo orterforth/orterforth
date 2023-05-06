@@ -545,3 +545,7 @@ _rf_code_cs:
   move.l (a4)+, a5
   move.l (a5)+, a0
   jmp    (a0)
+
+; TODO _rf_code_ln
+; TODO _rf_code_tg
+; TODO _rf_code_cold
