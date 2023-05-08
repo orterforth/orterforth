@@ -242,8 +242,6 @@ static void __FASTCALL__ rf_inst_compile(char *name)
 #define RF_INST_DICTIONARY (RF_ORIGIN + (3000*RF_WORD_SIZE))
 #endif
 
-#define RF_FIGRELFIGREV 0x0101 /* 1.1 */
-
 /* IMPLEMENTATION ATTRIBUTES */
 /* B +ORIGIN   ...W:IEBA */
 /* W: 0=above sufficient 1=other differences exist */
