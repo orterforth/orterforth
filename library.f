@@ -160,6 +160,8 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
 ;S
 ( Roman numerals                                              )
 : roman-step
+  DUP 499 > IF ." D" 500 - ;S ENDIF
+  DUP 399 > IF ." CD" 400 - ;S ENDIF
   DUP 99 > IF ." C" 100 - ;S ENDIF
   DUP 89 > IF ." XC" 90 - ;S ENDIF
   DUP 49 > IF ." L" 50 - ;S ENDIF
@@ -171,9 +173,7 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
   DUP IF ." I" 1 - ;S ENDIF ;
 : roman BEGIN -DUP WHILE roman-step REPEAT SPACE ;
 : roman-list CR 1+ 1 DO I roman LOOP CR ;
-100 roman-list
-
-;S
+500 roman-list ;S
 ( str: Forth/Pascal string handling                           )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + >R ;       ( return string and advance IP)
