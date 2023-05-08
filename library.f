@@ -158,6 +158,22 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
 ." s1: " s1 COUNT TYPE CR      ( print them both              )
 ." s2: " s2 COUNT TYPE CR
 ;S
+( Roman numerals                                              )
+: roman-step
+  DUP 99 > IF ." C" 100 - ;S ENDIF
+  DUP 89 > IF ." XC" 90 - ;S ENDIF
+  DUP 49 > IF ." L" 50 - ;S ENDIF
+  DUP 39 > IF ." XL" 40 - ;S ENDIF
+  DUP 9 > IF ." X" 10 - ;S ENDIF
+  DUP 8 > IF ." IX" 9 - ;S ENDIF
+  DUP 4 > IF ." V" 5 - ;S ENDIF
+  DUP 3 > IF ." IV" 4 - ;S ENDIF
+  DUP IF ." I" 1 - ;S ENDIF ;
+: roman BEGIN -DUP WHILE roman-step REPEAT SPACE ;
+: roman-list CR 1+ 1 DO I roman LOOP CR ;
+100 roman-list
+
+;S
 ( str: Forth/Pascal string handling                           )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + >R ;       ( return string and advance IP)
