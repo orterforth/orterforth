@@ -159,21 +159,21 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
 ." s2: " s2 COUNT TYPE CR
 ;S
 ( Roman numerals                                              )
-: roman-step
-  DUP 499 > IF ." D" 500 - ;S ENDIF
-  DUP 399 > IF ." CD" 400 - ;S ENDIF
-  DUP 99 > IF ." C" 100 - ;S ENDIF
-  DUP 89 > IF ." XC" 90 - ;S ENDIF
-  DUP 49 > IF ." L" 50 - ;S ENDIF
-  DUP 39 > IF ." XL" 40 - ;S ENDIF
-  DUP 9 > IF ." X" 10 - ;S ENDIF
-  DUP 8 > IF ." IX" 9 - ;S ENDIF
-  DUP 4 > IF ." V" 5 - ;S ENDIF
-  DUP 3 > IF ." IV" 4 - ;S ENDIF
-  DUP IF ." I" 1 - ;S ENDIF ;
+: place <BUILDS , DOES>        ( n --                         )
+  OVER OVER @ < IF             ( compare with place value     )
+    DROP                       ( no, drop place value         )
+  ELSE
+    DUP CFA NFA                ( yes, get name field          )
+    COUNT 31 AND TYPE @ -      ( print name, no spaces        )
+    R> DROP ;S ENDIF ;         ( return and break             )
+1000 place M 900 place CM 500 place D 400 place CD
+ 100 place C  90 place XC  50 place L  40 place XL
+  10 place X   9 place IX   5 place V   4 place IV
+: roman-step M CM D CD C XC L XL X IX V IV
+  DUP IF ." I" 1 - ;S ENDIF ;  ( unfortunate name clash w. I  )
 : roman BEGIN -DUP WHILE roman-step REPEAT SPACE ;
-: roman-list CR 1+ 1 DO I roman LOOP CR ;
-500 roman-list ;S
+: roman-list CR 1+ 1 DO I roman ?TERMINAL IF LEAVE ENDIF
+LOOP CR ; 2023 roman-list ;S
 ( str: Forth/Pascal string handling                           )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + >R ;       ( return string and advance IP)
