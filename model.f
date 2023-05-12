@@ -1403,16 +1403,16 @@ IMMEDIATE
 15 cd ' EMIT CFA ! 19 cd ' CR CFA !
 ( installed flag = 1                                          )
 1 installed C!
+( push now to save after inst dictionary unlinked             )
+' save CFA
+-->
 ( break dictionary link with inst time code                   )
 0 ' cl LFA !
--->
 ( WARNING = 1                                                 )
 1 13 cs +ORIGIN !
-( install complete                                            )
+( install complete, now save                                  )
+EXECUTE
 ;S
-
-
-
 
 
 

@@ -483,79 +483,6 @@ static void rf_inst_code_compile(void)
 /* flag to indicate completion of install */
 extern char rf_installed;
 
-/* bootstrap the installing Forth vocabulary */
-static void rf_inst_forward(void)
-{
-  int i;
-
-  /* user variables */
-  rf_inst_def_user("DP", RF_USER_DP_IDX);
-  rf_inst_def_user("BLK", RF_USER_BLK_IDX);
-  rf_inst_def_user("IN", RF_USER_IN_IDX);
-  rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
-  rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
-  rf_inst_def_user("STATE", RF_USER_STATE_IDX);
-  rf_inst_def_user("BASE", RF_USER_BASE_IDX);
-  rf_inst_def_user("CSP", RF_USER_CSP_IDX);
-
-  /* boot time literals and s0 for ?STACK */
-  rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
-  rf_inst_def_constant("bs", (uintptr_t) RF_BS);
-  rf_inst_def_constant("user", (uintptr_t) RF_USER);
-  rf_inst_def_constant("s0", (uintptr_t) RF_S0);
-  rf_inst_def_constant("r0", (uintptr_t) RF_R0);
-  rf_inst_def_constant("tib", (uintptr_t) RF_TIB);
-
-  /* forward defined code words */
-  for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
-    const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    if (code->word) {
-      rf_inst_def_code(code->word, code->value);
-    }
-  }
-
-  /* code address lookup */
-  rf_inst_def_code("cd", rf_inst_code_cd);
-
-  /* for boot-up literals used by tg */
-  rf_inst_def_constant("tghi", RF_TARGET_HI);
-  rf_inst_def_constant("tglo", RF_TARGET_LO);
-
-  /* for +ORIGIN */
-  rf_inst_def_constant("origin", (uintptr_t) RF_ORIGIN);
-
-  /* disc buffer constants */
-  rf_inst_def_constant("FIRST", (uintptr_t) RF_FIRST);
-  rf_inst_def_constant("LIMIT", (uintptr_t) RF_LIMIT);
-
-  /* stack limit for ?STACK */
-  rf_inst_def_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
-
-  /* installed flag now set from Forth */
-  rf_inst_def_constant("installed", (uintptr_t) &rf_installed);
-
-  /* ?DISC */
-  rf_inst_compile(
-    ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
-
-  /* BLOCK */
-  rf_inst_compile(
-    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
-    "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
-
-  /* read from disc and run proto interpreter */
-  rf_inst_def_code("compile", rf_inst_code_compile);
-  rf_inst_compile(
-    ":proto LIT 641 DUP LIT -659 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
-  rf_inst_emptybuffers();
-  rf_inst_execute("proto", 5);
-}
-
-static void rf_inst_load(void)
-{
-  rf_inst_execute("load", 4);
-}
-
 #ifdef RF_INST_SAVE
 static char rf_inst_disc_eot = 4;
 
@@ -640,6 +567,92 @@ void rf_inst_save(void)
 }
 #endif
 
+/* save the completed install */
+static void rf_inst_code_save(void)
+{
+  RF_START;
+#ifdef RF_INST_SAVE
+  rf_inst_save();
+#endif
+  RF_JUMP_NEXT;
+}
+
+/* bootstrap the installing Forth vocabulary */
+static void rf_inst_forward(void)
+{
+  int i;
+
+  /* user variables */
+  rf_inst_def_user("DP", RF_USER_DP_IDX);
+  rf_inst_def_user("BLK", RF_USER_BLK_IDX);
+  rf_inst_def_user("IN", RF_USER_IN_IDX);
+  rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
+  rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
+  rf_inst_def_user("STATE", RF_USER_STATE_IDX);
+  rf_inst_def_user("BASE", RF_USER_BASE_IDX);
+  rf_inst_def_user("CSP", RF_USER_CSP_IDX);
+
+  /* boot time literals and s0 for ?STACK */
+  rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
+  rf_inst_def_constant("bs", (uintptr_t) RF_BS);
+  rf_inst_def_constant("user", (uintptr_t) RF_USER);
+  rf_inst_def_constant("s0", (uintptr_t) RF_S0);
+  rf_inst_def_constant("r0", (uintptr_t) RF_R0);
+  rf_inst_def_constant("tib", (uintptr_t) RF_TIB);
+
+  /* forward defined code words */
+  for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
+    const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
+    if (code->word) {
+      rf_inst_def_code(code->word, code->value);
+    }
+  }
+
+  /* code address lookup */
+  rf_inst_def_code("cd", rf_inst_code_cd);
+
+  /* to save */
+  rf_inst_def_code("save", rf_inst_code_save);
+
+  /* for boot-up literals used by tg */
+  rf_inst_def_constant("tghi", RF_TARGET_HI);
+  rf_inst_def_constant("tglo", RF_TARGET_LO);
+
+  /* for +ORIGIN */
+  rf_inst_def_constant("origin", (uintptr_t) RF_ORIGIN);
+
+  /* disc buffer constants */
+  rf_inst_def_constant("FIRST", (uintptr_t) RF_FIRST);
+  rf_inst_def_constant("LIMIT", (uintptr_t) RF_LIMIT);
+
+  /* stack limit for ?STACK */
+  rf_inst_def_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
+
+  /* installed flag now set from Forth */
+  rf_inst_def_constant("installed", (uintptr_t) &rf_installed);
+
+  /* ?DISC */
+  rf_inst_compile(
+    ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
+
+  /* BLOCK */
+  rf_inst_compile(
+    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
+    "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
+
+  /* read from disc and run proto interpreter */
+  rf_inst_def_code("compile", rf_inst_code_compile);
+  rf_inst_compile(
+    ":proto LIT 641 DUP LIT -659 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
+  rf_inst_emptybuffers();
+  rf_inst_execute("proto", 5);
+}
+
+static void rf_inst_load(void)
+{
+  rf_inst_execute("load", 4);
+}
+
 #ifdef PICO
 extern char rf_system_local_disc;
 #endif
@@ -689,10 +702,5 @@ void rf_inst(void)
 #ifdef PICO
   rf_system_local_disc = 0;
 #endif
-#endif
-
-#ifdef RF_INST_SAVE
-  /* save the result to disc */
-  rf_inst_save();
 #endif
 }
