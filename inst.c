@@ -553,8 +553,6 @@ static void rf_inst_forward(void)
 
 static void rf_inst_load(void)
 {
-  /* TODO don't need emptybuffers again */
-  rf_inst_emptybuffers();
   rf_inst_execute("load", 4);
 }
 
