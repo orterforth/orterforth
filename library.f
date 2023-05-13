@@ -162,7 +162,7 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
 FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
 : place <BUILDS , DOES>         ( n --                        )
   OVER OVER @ < IF              ( less than place value?      )
-    DROP                        ( yes, drop place value       )
+    DROP                        ( yes, drop place value addr  )
   ELSE
     DUP CFA NFA                 ( no, get name field          )
     COUNT 31 AND TYPE           ( print name, no spaces       )
@@ -183,7 +183,7 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
     ?TERMINAL IF LEAVE ENDIF    ( stop if break pressed       )
   LOOP CR ;
 
-100 roman list
+2023 roman list
 
 
 
