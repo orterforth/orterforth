@@ -673,6 +673,17 @@ rf_code_cs:
 	lsl r0, #2
 	b apush
 
+ 	.p2align 2
+ 	.global rf_code_tg
+rf_code_tg:
+
+ 	ldr r3, =rf_memory
+ 	ldr r3, [r3]
+ 	add r3, r3, #76
+ 	ldr r0, [r3]
+  ldr r3, [r3, #4]
+ 	b dpush
+
 	.p2align 2
 	.global rf_code_xt
 rf_code_xt:

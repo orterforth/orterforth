@@ -800,8 +800,18 @@ _rf_code_xt:
 	popq %rbp
 	ret
 
-# TODO rf_code_tg
-# TODO rf_code_code
+	.globl rf_code_tg
+	.globl _rf_code_tg
+	.p2align 4, 0x90
+rf_code_tg:
+_rf_code_tg:
+
+	movq _rf_memory(%rip), %rdx
+	movq 0x98(%rdx), %rax
+	movq 0xA0(%rdx), %rdx
+	jmp dpush
+
+# TODO rf_code_cold
 
 	.section __DATA.__data,""
 

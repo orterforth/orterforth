@@ -138,5 +138,5 @@ the assembly code definitions are linked instead.
 #define RF_TARGET_CODE_XT
 /*#define RF_TARGET_CODE_COLD*/
 /*#define RF_TARGET_CODE_LN*/
-/*#define RF_TARGET_CODE_TG*/
+#define RF_TARGET_CODE_TG
 #endif
