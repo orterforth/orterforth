@@ -23,10 +23,12 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
+# build option
 RC2014OPTION := assembly
 #RC2014OPTION := default
 
 RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
+# TODO use RF_ASSEMBLY
 RC2014INC := target/rc2014/$(RC2014OPTION).inc
 RC2014INSTOFFSET := 0x5000
 RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
@@ -70,6 +72,7 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 	@$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 # hexload
+# TODO remove this intermediate copy
 rc2014/hexload.bas : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
 
 	cp $< $@
@@ -206,4 +209,5 @@ rc2014/z80.lib : rf_z80.asm | rc2014
 
 tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas :
 
-	git submodule init tools/github.com/RC2014Z80/RC2014 && git submodule update --init tools/github.com/RC2014Z80/RC2014
+	git submodule init tools/github.com/RC2014Z80/RC2014
+	git submodule update --init tools/github.com/RC2014Z80/RC2014
