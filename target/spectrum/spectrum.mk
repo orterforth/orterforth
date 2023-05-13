@@ -159,11 +159,6 @@ endif
 
 STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
 
-# TODO remove once we decide to remove "disc fuse"
-STARTDISCFUSE := \
-	$(STARTDISCMSG) ; \
-	sh scripts/start.sh spectrum/fuse-rs232-tx spectrum/fuse-rs232-rx disc.pid $(DISC) fuse
-
 # start disc
 ifeq ($(SPECTRUMMACHINE),fuse)
 SPECTRUMSTARTDISC := \

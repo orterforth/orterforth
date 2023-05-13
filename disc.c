@@ -7,7 +7,6 @@
 
 #include "orter/io.h"
 #include "orter/serial.h"
-#include "orter/spectrum.h"
 #include "orter/tcp.h"
 #include "persci.h"
 
@@ -156,43 +155,6 @@ static size_t disc_rd(char *off, size_t len)
   return i;
 }
 
-/* read data from Fuse Emulator RS232 */
-static size_t fuse_rd(char *off, size_t len)
-{
-  size_t i;
-  int c;
-
-  /* TODO read/escape from fd 0 into read buffer */
-  for (i = 0; i < len; i++) {
-    c = orter_spectrum_fuse_serial_getc(stdin);
-    /* EOF */
-    if (c == -1) {
-      break;
-    }
-    off[i] = c;
-    /* blocking, but EOT as a terminator */
-    if (c == RF_ASCII_EOT) {
-      i++;
-      break;
-    }
-  }
-
-  return i;
-}
-
-/* write data to Fuse Emulator RS232 */
-static size_t fuse_wr(char *off, size_t len)
-{
-  size_t i;
-
-  /* TODO read/escape into a buffer and then write to fd 1 */
-  for (i = 0; i < len; i++) {
-    orter_spectrum_fuse_serial_putc(off[i], stdout);
-  }  
-
-  return len;
-}
-
 static char mux_out_buf[256];
 static char *mux_out_off = mux_out_buf;
 static size_t mux_out_len;
@@ -271,39 +233,6 @@ static int serve(char *dr0, char *dr1)
   rf_persci_insert(1, dr1);
 
   return orter_io_pipe_loop(pipes, mux ? 4 : 2);
-}
-
-/* TODO migrate fuse to fds, then can remove */
-static int setconsoleunbuffered(void)
-{
-  if (setvbuf(stdin, NULL, _IONBF, 0)) {
-    perror("setvbuf stdin failed");
-    return errno;
-  }
-  if (setvbuf(stdout, NULL, _IONBF, 0)) {
-    perror("setvbuf stdout failed");
-    return errno;
-  }
-  return 0;
-}
-
-static int disc_fuse(char **argv)
-{
-  int exit = 0;
-
-  CHECK(exit, setconsoleunbuffered());
-  CHECK(exit, orter_io_std_open());
-
-  /* create pipelines */
-  orter_io_pipe_init(&in, 0, fuse_rd, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, fuse_wr, 1);
-
-  /* run */
-  exit = serve(argv[2], argv[3]);
-
-  /* close and exit */
-  orter_io_std_close();
-  return exit;
 }
 
 static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
@@ -405,11 +334,6 @@ int main(int argc, char *argv[])
     return disc_create();
   }
 
-  /* Console with Fuse Emulator RS232 fifo escape */
-  if (argc == 4 && !strcmp("fuse", argv[1])) {
-    return disc_fuse(argv);
-  }
-
   /* Physical serial port but multiplex serial and disc */
   if (argc == 6 && !strcmp("mux", argv[1])) {
     return disc_mux(argv);
@@ -432,7 +356,6 @@ int main(int argc, char *argv[])
 
   /* Usage */
   fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n"
-        "       disc fuse <dr0> <dr1>                 Run disc controller over stdin/stdout with Fuse Emulator escape\n"
         "       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
   fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n"
         "       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n"
