@@ -143,7 +143,7 @@ CR fac list CR
 
 ;S
 ( Reverse a string                                            )
-10 LOAD                        ( load str vocabulary          )
+12 LOAD                        ( load str vocabulary          )
 FORTH DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
@@ -159,21 +159,37 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
 ." s2: " s2 COUNT TYPE CR
 ;S
 ( Roman numerals                                              )
-: place <BUILDS , DOES>        ( n --                         )
-  OVER OVER @ < IF             ( compare with place value     )
-    DROP                       ( no, drop place value         )
+FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
+: place <BUILDS , DOES>         ( n --                        )
+  OVER OVER @ < IF              ( less than place value?      )
+    DROP                        ( yes, drop place value       )
   ELSE
-    DUP CFA NFA                ( yes, get name field          )
-    COUNT 31 AND TYPE @ -      ( print name, no spaces        )
-    R> DROP ;S ENDIF ;         ( return and break             )
+    DUP CFA NFA                 ( no, get name field          )
+    COUNT 31 AND TYPE           ( print name, no spaces       )
+    @ -                         ( subtract place value        )
+    R> DROP ;S                  ( return and break            )
+  ENDIF ;
 1000 place M 900 place CM 500 place D 400 place CD
  100 place C  90 place XC  50 place L  40 place XL
   10 place X   9 place IX   5 place V   4 place IV
-: roman-step M CM D CD C XC L XL X IX V IV
-  DUP IF ." I" 1 - ;S ENDIF ;  ( unfortunate name clash w. I  )
-: roman BEGIN -DUP WHILE roman-step REPEAT SPACE ;
-: roman-list CR 1+ 1 DO I roman ?TERMINAL IF LEAVE ENDIF
-LOOP CR ; 2023 roman-list ;S
+   1 place I
+-->
+( Roman numerals                                              )
+: step M CM D CD C XC L XL X IX V IV I ; ( handle places      )
+: number BEGIN -DUP WHILE step REPEAT SPACE ; ( until zero    )
+: list
+  CR 1+ 1 DO
+    FORTH I number              ( use I from FORTH, output no )
+    ?TERMINAL IF LEAVE ENDIF    ( stop if break pressed       )
+  LOOP CR ;
+
+100 roman list
+
+
+
+
+
+;S
 ( str: Forth/Pascal string handling                           )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + >R ;       ( return string and advance IP)
