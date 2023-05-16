@@ -1442,7 +1442,7 @@ save                            ( now save                    )
 ( extra boot-up literals for COLD                             )
 0 , 0 ,
 ( extra boot-up literals for tg                               )
-tghi , tglo ,
+th , tl ,
 ( additional words                                            )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - !
 CODE cs 1 cd HERE cl - !

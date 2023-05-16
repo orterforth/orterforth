@@ -570,8 +570,8 @@ static void rf_inst_forward(void)
   rf_inst_def_code("sb", rf_inst_code_sb);
 
   /* for boot-up literals used by tg */
-  rf_inst_def_constant("tghi", RF_TARGET_HI);
-  rf_inst_def_constant("tglo", RF_TARGET_LO);
+  rf_inst_def_constant("th", RF_TARGET_HI);
+  rf_inst_def_constant("tl", RF_TARGET_LO);
 
   /* for +ORIGIN */
   rf_inst_def_constant("origin", (uintptr_t) RF_ORIGIN);
