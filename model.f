@@ -202,7 +202,7 @@ s0     ,        ( INITIAL TOP OF STACK )
 r0     ,        ( INITIAL TOP OF RETURN STACK )
 tib    ,        ( TERMINAL INPUT BUFFER )
 001F   ,        ( INITIAL NAME FIELD WIDTH )
-0000   ,        ( INITIAL WARNING = 1 )
+0001   ,        ( INITIAL WARNING = 1 )
 0000   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
 0000   ,        ( COLD START VALUE FOR VOC-LINK ) 5A LOAD -->
@@ -1406,8 +1406,8 @@ IMMEDIATE
 
 
 -->
-( WARNING = 1                                                 )
-1 13 cs +ORIGIN !
+
+
 ( SAVE TO DR1                                                 )
 HERE 62 cs ALLOT                ( make room for link table    )
 FIRST cl + CONSTANT buf         ( use first disc buffer       )
