@@ -22,6 +22,10 @@ static struct termios in_attr;
 static struct termios in_attr_save;
 static int            in_attr_saved = 0;
 
+/* stdout */
+static int            out_fl;
+static int            out_fl_saved = 0;
+
 /* flag to indicate EOF */
 int orter_io_eof = 0;
 
@@ -37,20 +41,6 @@ fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
 /* signal handler */
 static void handler(int signum)
 {
-/*
-#ifdef __CYGWIN__
-  const char *name = strsignal(signum);
-#endif
-#ifdef __linux__
-  char *name = strsignal(signum);
-#endif
-#ifdef __MACH__
-  const char *name = sys_signame[signum];
-#endif
-*/
-/*
-  fprintf(stderr, "handler signal %s\n", name ? name : "unknown");
-*/
   orter_io_exit = signum;
   orter_io_finished = 1;
 }
@@ -151,6 +141,8 @@ int orter_io_std_open(void)
   }
 
   /* make stdout nonblocking */
+  out_fl = fcntl(1, F_GETFL, 0);
+  out_fl_saved = 1;
   if (fcntl(1, F_SETFL, O_NONBLOCK)) {
     perror("stdout fcntl failed");
     return errno;
@@ -176,7 +168,12 @@ int orter_io_std_close(void)
   }
 
   /* stdout */
-  /* TODO fl */
+  if (out_fl_saved) {
+    if (fcntl(1, F_SETFL, out_fl)) {
+      perror("stdout fcntl failed");
+    }
+    out_fl_saved = 0;
+  }
 
   return 0;
 }
@@ -344,7 +341,7 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num)
 
   /* main loop */
   orter_io_finished = 0;
-  while (!orter_io_finished) {
+  while (!orter_io_finished && !orter_io_eof) {
 
     /* init fd sets */
     orter_io_select_zero();
