@@ -205,7 +205,7 @@ tib    ,        ( TERMINAL INPUT BUFFER )
 0000   ,        ( INITIAL WARNING = 1 )
 0000   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
-0000   ,        ( COLD START VALUE FOR VOC-LINK ) 59 LOAD -->
+0000   ,        ( COLD START VALUE FOR VOC-LINK ) 5A LOAD -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
 5 cd HERE cl - !
@@ -1278,7 +1278,7 @@ HERE 14 cs      +ORIGIN  !   ( COLD START FENCE )
 HERE 15 cs      +ORIGIN  !   ( COLD START DP )
 LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 3 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
-( orterforth inst                                             )
+( ORTERFORTH INST - PROTO INTERPRETER                         )
 ( proto-interpreter source to bootstrap the outer interpreter )
 :- MINUS + ;S :HERE DP @ ;S :1+ LIT 1 + ;S
 
@@ -1321,17 +1321,17 @@ DROP ;S
 
 
 
-
+( ORTERFORTH INST - FORTH                                     )
 ( Code to load the fig-Forth Model source follows. Some words )
 ( are forward defined as they are used in the fig source.     )
 ( Some contain forward references which are resolved once the )
 ( fig source has created the required definitions. Finally    )
 ( we modify a few settings.                                   )
-CREATE : 51 cd DP @ cl MINUS + ! 192 STATE !
-CREATE 192 STATE ! 51 cd DP @ cl MINUS + !
-;S [ CURRENT @ @ 96 TOGGLE
+CREATE : 51 cd HERE cl - ! 192 STATE !
+  CREATE 192 STATE ! 51 cd HERE cl - !
+  ;S [ CURRENT @ @ 96 TOGGLE
 : ; COMPILE ;S CURRENT @ @ 32 TOGGLE 0 STATE !
-;S [ CURRENT @ @ 96 TOGGLE
+  ;S [ CURRENT @ @ 96 TOGGLE
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
 : ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
 
@@ -1403,34 +1403,54 @@ IMMEDIATE
 15 cd ' EMIT CFA ! 19 cd ' CR CFA !
 ( installed flag = 1                                          )
 1 installed C!
-( push now to save after inst dictionary unlinked             )
-' save CFA
+
+
 -->
-( break dictionary link with inst time code                   )
-0 ' cl LFA !
 ( WARNING = 1                                                 )
 1 13 cs +ORIGIN !
-( install complete, now save                                  )
-EXECUTE
+( SAVE TO DR1                                                 )
+HERE 62 cs ALLOT                ( make room for link table    )
+FIRST cl + CONSTANT buf         ( use first disc buffer       )
+2000 VARIABLE blk               ( first block of DR1          )
+: link                          ( --                          )
+  link? IF 
+    62 0 DO I cd , LOOP         ( table of code addresses     )
+    -62 cs ALLOT                ( move DP back before table   )
+  ENDIF ;
+: start                         ( -- a-addr                   )
+  link? IF origin ELSE org ENDIF ;
+: end                           ( -- a-addr                   )
+  HERE link? IF 62 cs + ENDIF ;
+-->
+: save                          ( --                          )
+  save? IF
+    link                        ( write link table            )
+    end start DO                ( write blocks of hex         )
+      I buf sb buf blk @ 0 R/W
+      1 blk +!
+    64 +LOOP
+    buf 128 90 FILL             ( write a block of 'Z's       )
+    buf blk @ 0 R/W
+  ENDIF ;
+
+DP !                            ( move DP back                )
+0 ' cl LFA !                    ( break inst dictionary link  )
+save                            ( now save                    )
+
 ;S
-
-
-
-
-
-
-
-
-
-( to compile after boot-up literals:                          )
+( COMPILED AFTER BOOT-UP LITERALS                             )
 ( extra boot-up literals for COLD                             )
 0 , 0 ,
 ( extra boot-up literals for tg                               )
 tghi , tglo ,
-( orterforth additional words                                 )
+( additional words                                            )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - !
 CODE cs 1 cd HERE cl - !
 CODE ln 2 cd HERE cl - !
 CODE tg 3 cd HERE cl - !
 CODE xt 4 cd HERE cl - !
+
+
+
+
 ;S

@@ -484,40 +484,14 @@ static void rf_inst_code_compile(void)
 extern char rf_installed;
 
 #ifdef RF_INST_SAVE
-static char rf_inst_disc_eot = 4;
-
-/* write block */
-static void rf_inst_disc_w(char *b, uintptr_t blk)
-{
-  /* static char here fails for some reason on BBC build */
-  char d[2];
-
-  /* send command */
-  rf_inst_disc_cmd_set(blk);
-  rf_disc_write((char *) cmd, 11);
-
-  /* expect ENQ EOT */
-  rf_disc_read(d, 2);
-
-  /* send data */
-  rf_disc_write(b, RF_BBLK);
-  rf_disc_write(&rf_inst_disc_eot, 1);
-
-  /* expect ACK EOT */
-  rf_disc_read(d, 2);
-}
-
 /* return an ASCII hex digit */
 static char __FASTCALL__ rf_inst_hex(uint8_t b)
 {
   return b + (b < 10 ? 48 : 55);
 }
 
-/* disc buffer start */
-static uint8_t * buf;
-
 /* inner hex loop */
-char *rf_inst_save_hex(char *i)
+static char *rf_inst_save_hex(uint8_t *buf, char *i)
 {
   uint8_t j;
 
@@ -529,50 +503,16 @@ char *rf_inst_save_hex(char *i)
 
   return i;
 }
-
-/* save the installation as hex on DR1 */
-void rf_inst_save(void)
-{
-  /* write to DR1 - offset to DR1 is now assumed */
-  unsigned int blk = 0;
-#ifdef RF_INST_LINK
-  /* start from ORIGIN, if code is separate and to be relinked */
-  char *i = (char *) RF_ORIGIN;
-#else
-  /* start from ORG */
-  char *i = (char *) RF_ORG;
-#endif
-  char *e = (char *) RF_USER_DP;
-  uint8_t j;
-
-#ifdef RF_INST_LINK
-  /* write table of code addresses after HERE */
-  for (j = 0; j < RF_INST_CODE_LIT_LIST_SIZE; j++) {
-    *((rf_code_t *) e) = rf_inst_code_lit_list[j].value;
-    e += RF_WORD_SIZE;
-  }
 #endif
 
-  /* now write hex blocks to DR1 */
-  cmd[0] = 'O';
-  cmd[9] = '1';
-  buf = (uint8_t *) RF_FIRST + RF_WORD_SIZE;
-  while (i < e) {
-    i = rf_inst_save_hex(i);
-    rf_inst_disc_w(buf, blk++);
-  }
-  /* write a block of 'Z's as a signal to terminate */
-  rf_inst_memset(buf, 'Z', 128);
-  rf_inst_disc_w(buf, blk);
-}
-#endif
-
-/* save the completed install */
-static void rf_inst_code_save(void)
+static void rf_inst_code_sb(void)
 {
   RF_START;
 #ifdef RF_INST_SAVE
-  rf_inst_save();
+  {
+    uint8_t *buf = (uint8_t *) RF_SP_POP;
+    rf_inst_save_hex(buf, RF_SP_POP);
+  }
 #endif
   RF_JUMP_NEXT;
 }
@@ -612,7 +552,22 @@ static void rf_inst_forward(void)
   rf_inst_def_code("cd", rf_inst_code_cd);
 
   /* to save */
-  rf_inst_def_code("save", rf_inst_code_save);
+#ifdef RF_ORG
+  rf_inst_def_constant("org", RF_ORG);
+#else
+  rf_inst_def_constant("org", 0);
+#endif
+#ifdef RF_INST_LINK
+  rf_inst_def_constant("link?", 1);
+#else
+  rf_inst_def_constant("link?", 0);
+#endif
+#ifdef RF_INST_SAVE
+  rf_inst_def_constant("save?", 1);
+#else
+  rf_inst_def_constant("save?", 0);
+#endif
+  rf_inst_def_code("sb", rf_inst_code_sb);
 
   /* for boot-up literals used by tg */
   rf_inst_def_constant("tghi", RF_TARGET_HI);
@@ -626,7 +581,7 @@ static void rf_inst_forward(void)
   rf_inst_def_constant("LIMIT", (uintptr_t) RF_LIMIT);
 
   /* stack limit for ?STACK */
-  rf_inst_def_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
+  rf_inst_def_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE)));
 
   /* installed flag now set from Forth */
   rf_inst_def_constant("installed", (uintptr_t) &rf_installed);
