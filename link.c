@@ -86,7 +86,6 @@ void rf_inst(void)
   /* LATEST */
   uint8_t *p = *((uint8_t **) ((uintptr_t *) (RF_ORIGIN) + 6));
   /* HERE */
-  /* TODO cast to rf_code_t * ? */
   rf_code_t *here = *((rf_code_t **) ((uintptr_t *) (RF_ORIGIN) + 15));
   int i;
 
