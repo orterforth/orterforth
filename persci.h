@@ -9,8 +9,6 @@
 #define RF_ASCII_EOT 4
 #define RF_ASCII_ENQ 5
 #define RF_ASCII_ACK 6
-#define RF_ASCII_LF 10
-#define RF_ASCII_CR 13
 #define RF_ASCII_NAK 21
 
 void rf_persci_insert(int drive, char *filename);
