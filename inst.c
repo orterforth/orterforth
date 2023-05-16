@@ -429,20 +429,6 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
 #define RF_BS 0x007F
 #endif
 
-/* replaces memset */
-static void rf_inst_memset(uint8_t *ptr, uint8_t value, unsigned int num)
-{
-  while (num--) {
-    *(ptr++) = value;
-  }
-}
-
-/* EMPTY-BUFFERS */
-static void rf_inst_emptybuffers(void)
-{
-  rf_inst_memset((uint8_t *) RF_FIRST, '\0', RF_DISC_BUFFERS_SIZE);
-}
-
 /* static location for IP to run a Forth word */
 static rf_code_t *rf_inst_load_cfa = 0;
 
@@ -485,13 +471,13 @@ extern char rf_installed;
 
 #ifdef RF_INST_SAVE
 /* return an ASCII hex digit */
-static char __FASTCALL__ rf_inst_hex(uint8_t b)
+static uint8_t __FASTCALL__ rf_inst_hex(uint8_t b)
 {
   return b + (b < 10 ? 48 : 55);
 }
 
 /* inner hex loop */
-static void rf_inst_save_hex(uint8_t *buf, char *i)
+static void rf_inst_save_hex(uint8_t *buf, uint8_t *i)
 {
   uint8_t j;
 
@@ -596,8 +582,7 @@ static void rf_inst_forward(void)
   /* read from disc and run proto interpreter */
   rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
-    ":proto LIT 641 DUP LIT -659 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
-  rf_inst_emptybuffers();
+    ":proto LIT 641 DUP LIT -660 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
   rf_inst_execute("proto", 5);
 }
 
