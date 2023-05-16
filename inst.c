@@ -491,7 +491,7 @@ static char __FASTCALL__ rf_inst_hex(uint8_t b)
 }
 
 /* inner hex loop */
-static char *rf_inst_save_hex(uint8_t *buf, char *i)
+static void rf_inst_save_hex(uint8_t *buf, char *i)
 {
   uint8_t j;
 
@@ -500,8 +500,6 @@ static char *rf_inst_save_hex(uint8_t *buf, char *i)
     buf[j++] = rf_inst_hex(b >> 4);
     buf[j++] = rf_inst_hex(b & 15);
   }
-
-  return i;
 }
 #endif
 
@@ -573,7 +571,7 @@ static void rf_inst_forward(void)
   rf_inst_def_constant("th", RF_TARGET_HI);
   rf_inst_def_constant("tl", RF_TARGET_LO);
 
-  /* for +ORIGIN */
+  /* for +ORIGIN and also for save */
   rf_inst_def_constant("origin", (uintptr_t) RF_ORIGIN);
 
   /* disc buffer constants */
