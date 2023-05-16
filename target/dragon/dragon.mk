@@ -50,7 +50,7 @@ ifeq ($(DRAGONMACHINE),mame)
 	DRAGONSTARTDISC := $(STARTDISCTCP)
 endif
 ifeq ($(DRAGONMACHINE),xroar)
-	DRAGONSTARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC) standard
+	DRAGONSTARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC)
 endif
 
 .PHONY : dragon-hw

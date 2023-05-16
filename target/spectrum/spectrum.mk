@@ -163,7 +163,7 @@ STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
 ifeq ($(SPECTRUMMACHINE),fuse)
 SPECTRUMSTARTDISC := \
 	$(STARTDISCMSG) ; \
-	sh scripts/start.sh tx rx disc.pid $(DISC) standard
+	sh scripts/start.sh tx rx disc.pid $(DISC)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 SPECTRUMSTARTDISC := $(STARTDISCTCP)

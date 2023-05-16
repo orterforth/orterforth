@@ -20,7 +20,7 @@ c64-example : ../c64-up2400-cc65/example/example.d64
 .PHONY : c64-hw
 c64-hw : c64/hw.prg
 
-	x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.img data.img" -rsdev4baud 2400 -autostartprgmode 1 -autostart $<
+	x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) model.img data.img" -rsdev4baud 2400 -autostartprgmode 1 -autostart $<
 
 .PHONY : c64-run
 c64-run : c64/inst.prg
@@ -28,7 +28,7 @@ c64-run : c64/inst.prg
 	# start disc
 	sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC) tcp 25232 model.img data.img
 
-	# x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) standard model.img data.img" -rsdev4baud 2400 -autostartprgmode 1 -autostart $<
+	# x64 -userportdevice 2 -rsuserdev 3 -rsuserbaud 2400 -rsdev4 "|$(DISC) model.img data.img" -rsdev4baud 2400 -autostartprgmode 1 -autostart $<
 	x64 -userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 -autostartprgmode 1 -autostart $<
 
 	@$(STOPDISC)

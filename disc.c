@@ -308,7 +308,7 @@ static int disc_standard(char **argv)
   CHECK(exit, orter_io_std_open());
 
   /* run */
-  exit = serve_with_fds(0, 1, argv[2], argv[3]);
+  exit = serve_with_fds(0, 1, argv[1], argv[2]);
 
   /* close and exit */
   orter_io_std_close();
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
   }
 
   /* Console */
-  if (argc == 4 && !strcmp("standard", argv[1])) {
+  if (argc == 3) {
     return disc_standard(argv);
   }
 
