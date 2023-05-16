@@ -1409,18 +1409,18 @@ IMMEDIATE
 
 
 ( SAVE TO DR1                                                 )
-HERE 62 cs ALLOT                ( make room for link table    )
+HERE 61 cs ALLOT                ( make room for link table    )
 FIRST cl + CONSTANT buf         ( use first disc buffer       )
 2000 VARIABLE blk               ( first block of DR1          )
 : link                          ( --                          )
   link? IF 
-    62 0 DO I cd , LOOP         ( table of code addresses     )
-    -62 cs ALLOT                ( move DP back before table   )
+    61 0 DO I cd , LOOP         ( table of code addresses     )
+    -61 cs ALLOT                ( move DP back before table   )
   ENDIF ;
 : start                         ( -- a-addr                   )
   link? IF origin ELSE org ENDIF ;
 : end                           ( -- a-addr                   )
-  HERE link? IF 62 cs + ENDIF ;
+  HERE link? IF 61 cs + ENDIF ;
 -->
 : save                          ( --                          )
   save? IF
