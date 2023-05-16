@@ -157,13 +157,6 @@ static void rf_inst_def_constant(char *name, uintptr_t value)
   rf_inst_comma(value);
 }
 
-/* compile a user variable */
-static void rf_inst_def_user(char *name, unsigned int idx)
-{
-  rf_inst_def_code(name, rf_code_douse);
-  rf_inst_comma(idx * RF_WORD_SIZE);
-}
-
 /* CFA */
 static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
 {
@@ -505,16 +498,6 @@ static void rf_inst_code_sb(void)
 static void rf_inst_forward(void)
 {
   int i;
-
-  /* user variables */
-  rf_inst_def_user("DP", RF_USER_DP_IDX);
-  rf_inst_def_user("BLK", RF_USER_BLK_IDX);
-  rf_inst_def_user("IN", RF_USER_IN_IDX);
-  rf_inst_def_user("CONTEXT", RF_USER_CONTEXT_IDX);
-  rf_inst_def_user("CURRENT", RF_USER_CURRENT_IDX);
-  rf_inst_def_user("STATE", RF_USER_STATE_IDX);
-  rf_inst_def_user("BASE", RF_USER_BASE_IDX);
-  rf_inst_def_user("CSP", RF_USER_CSP_IDX);
 
   /* boot time literals and s0 for ?STACK */
   rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);

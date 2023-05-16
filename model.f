@@ -1280,15 +1280,15 @@ LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 3 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
 ( ORTERFORTH INST - PROTO INTERPRETER                         )
 ( proto-interpreter source to bootstrap the outer interpreter )
+:us cs user + R> DROP ;S :DP LIT 9 us :BLK LIT 11 us
+:IN LIT 12 us :CONTEXT LIT 16 us
+:CURRENT LIT 17 us :STATE LIT 18 us
+:BASE LIT 19 us :CSP LIT 22 us
 :- MINUS + ;S :HERE DP @ ;S :1+ LIT 1 + ;S
-
 :BLANKS LIT 32 SWAP >R OVER C! DUP 1+ R> LIT 1 - CMOVE ;S
-
 :WORD BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 BLANKS IN +!
 OVER - >R R HERE C! + HERE 1+ R> CMOVE ;S
-
 :-FIND LIT 32 WORD HERE CONTEXT @ @ (FIND) ;S
-
 :, HERE ! cl DP +! ;S
 
 :COMPILE R> DUP cl + >R @ , ;S
