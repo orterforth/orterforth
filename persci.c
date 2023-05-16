@@ -34,6 +34,7 @@ void rf_persci_insert(int drive, char *filename)
 {
   FILE *ptr;
 
+  /* 0-3 only */
   validate_drive_no(drive);
 
   /* disc must be not already inserted */
@@ -64,6 +65,7 @@ void rf_persci_insert(int drive, char *filename)
 
 void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
 {
+  /* 0-3 only */
   validate_drive_no(drive);
 
   /* point at byte array */
@@ -72,6 +74,7 @@ void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
 
 void rf_persci_eject(int drive)
 {
+  /* 0-3 only */
   validate_drive_no(drive);
 
   /* close the file */
