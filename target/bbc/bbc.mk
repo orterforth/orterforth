@@ -35,7 +35,7 @@ BBCINC := target/bbc/$(BBCOPTION).inc
 # assembly code
 ifeq ($(BBCOPTION),assembly)
 	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
-	BBCORIGIN := 2200
+	BBCORIGIN := 2100
 endif
 
 # default C code
@@ -49,7 +49,7 @@ ifeq ($(BBCOPTION),tape)
 	BBCLOADINGMETHOD := tape
 # starts FIRST at 0x0E00, ORG at 0x1220
 	BBCORG := 1220
-	BBCORIGIN := 1D00
+	BBCORIGIN := 1C00
 # starts FIRST at 0x0B00, ORG at 0x0F20
 # if 0x0B00 onwards not used then MODE 0, 1, 2 are available
 	# BBCORG := 0F20
@@ -171,6 +171,7 @@ BBCCC65OPTS := -O -t none \
 	-DRF_ORIGIN='0x$(BBCORIGIN)' \
 	-DRF_TARGET_INC='"$(BBCINC)"'
 
+# TODO remove general o and s rules?
 # general assemble rule
 bbc/%.o : bbc/%.s
 
@@ -216,17 +217,6 @@ bbc/boot.inf : | bbc
 bbc/crt0.o : target/bbc/crt0.s
 
 	ca65 -o $@ $<
-
-# Hello World
-bbc/hw : hw.o bbc/bbc.lib
-
-	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ $^
-
-# Hello World
-bbc/hw.uef : bbc/hw | $(ORTER)
-
-	$(ORTER) bbc uef write hw 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
-	mv $@.io $@
 
 # inst binary
 bbc/inst : $(BBCDEPS)
@@ -350,4 +340,5 @@ roms/bbcb/% : | roms/bbcb
 
 tools/github.com/haerfest/uef/uef2wave.py :
 
-	git submodule init tools/github.com/haerfest/uef && git submodule update --init tools/github.com/haerfest/uef
+	git submodule init tools/github.com/haerfest/uef
+	git submodule update --init tools/github.com/haerfest/uef

@@ -1,13 +1,3 @@
-.import decsp3
-.import incax1
-.import incsp3
-.import incsp6
-.import ldaxysp
-.import pusha
-.importzp regsave
-.importzp	sp
-.import staxysp
-
 .importzp _rf_6502_n
 .importzp _rf_6502_up
 .importzp _rf_6502_w
@@ -26,7 +16,7 @@ osbyte := $FFF4
 
 _rf_init:
 
-	lda #$6C                      ; jsr (W) ; TODO this lives in COLD?
+	lda #$6C                      ; jsr (W) during inst, before COLD
 	sta _rf_6502_w-1
 	lda #$07                      ; *FX 7,7 (9600 baud receive)
 	tax
@@ -107,45 +97,6 @@ _rf_fin:
 	ldx #$04
 	jmp osbyte
 
-.export _rf_disc_read
-
-_rf_disc_read:
-
-	jsr pusha
-	jsr decsp3
-	lda #$02                      ; *FX 2,1 (read from RS423)
-	ldx #$01
-	jsr osbyte
-	ldy #$03
-read1:
-	lda (sp),y
-	beq read2
-	jsr	osrdch
-	ldy #$02
-	sta (sp),y
-	ldy #$05
-	jsr ldaxysp
-	sta regsave
-	stx regsave+1
-	jsr incax1
-	ldy #$04
-	jsr staxysp
-	ldy #$02
-	lda (sp),y
-	ldy #$00
-	sta (regsave),y
-	ldy #$03
-	lda (sp),y
-	sec
-	sbc #$01
-	sta (sp),y
-	jmp read1
-read2:
-	lda #$02
-	tax                           ; *FX 2,2 (read from keyboard)
-	jsr osbyte
-	jmp incsp6
-
 .export _rf_code_dchar
 
 _rf_code_dchar:
@@ -196,45 +147,6 @@ bread2:
 	jsr osbyte
 	ldx xsave
 	jmp _rf_next
-
-.export _rf_disc_write
-
-_rf_disc_write:
-
-	jsr pusha
-	lda #$03                      ; *FX 3,7 (write to RS423)
-	ldx #$07
-	jsr osbyte
-	ldy #$00
-write1:
-	lda (sp),y
-	beq write2
-	ldy #$02
-	jsr ldaxysp
-	sta regsave
-	stx regsave+1
-	jsr incax1
-	ldy #$01
-	jsr staxysp
-	ldy #$00
-	lda (regsave),y
-	jsr oswrch
-	ldy #$00
-	lda (sp),y
-	sec
-	sbc #$01
-	sta (sp),y
-	jmp write1
-write2:
-	lda #$03                      ; *FX 3,4 (write to screen)
-	ldx #$04
-	jsr osbyte2
-	jsr incsp3
-	rts
-
-osbyte2:
-	jmp osbyte                    ; workaround for unknown issue
-	rts
 
 .export _rf_code_bwrit
 
