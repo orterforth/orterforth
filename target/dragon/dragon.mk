@@ -34,7 +34,7 @@ DRAGONCMOCOPTS += -DRF_ASSEMBLY
 DRAGONDEPS += dragon/rf_6809.o dragon/system_asm.o
 DRAGONLINKDEPS += dragon/rf_6809.o dragon/system_asm.o
 ifeq ($(DRAGONLINK),true)
-DRAGONORIGIN := 0x1100
+DRAGONORIGIN := 0x1000
 else
 DRAGONORIGIN := 0x1D00
 endif

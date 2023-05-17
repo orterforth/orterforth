@@ -68,19 +68,6 @@ static rf_code_t codes[] = {
 
 extern char rf_installed;
 
-static int rf_inst_name(uint8_t *nfa, uint8_t len, char *name)
-{
-  if ((*nfa & 0x3F) == len) {
-    while (*name) {
-      if ((*(++nfa) & 0x7F) != *(name++)) {
-        return 0;
-      }
-    }
-    return 1;
-  }
-  return 0;
-}
-
 void rf_inst(void)
 {
   /* LATEST */
@@ -92,7 +79,6 @@ void rf_inst(void)
   while (p) {
     uint8_t *nfa = p;
     rf_code_t *cfa;
-    uintptr_t *pfa;
 
     /* NFA */
     p++;
@@ -110,30 +96,16 @@ void rf_inst(void)
       }
     }
 
-    /* PFA */
-    pfa = (uintptr_t *) cfa + 1;
-
-    /* defining words that need links with the body */
-    if (rf_inst_name(nfa, 1, ":")) {
-      /* : */
-      *(pfa + 9) = (uintptr_t) rf_code_docol;
-    } else if (rf_inst_name(nfa, 8, "CONS")) {
-      /* CONSTANT */
-      *(pfa + 4) = (uintptr_t) rf_code_docon;
-    } else if (rf_inst_name(nfa, 8, "VARI")) {
-      /* VARIABLE */
-      *(pfa + 2) = (uintptr_t) rf_code_dovar;
-    } else if (rf_inst_name(nfa, 4, "USER")) {
-      /* USER */
-      *(pfa + 2) = (uintptr_t) rf_code_douse;
-    } else if (rf_inst_name(nfa, 5, "DOES")) {
-      /* DOES> */
-      *(pfa + 5) = (uintptr_t) rf_code_dodoe;
-    }
-
     /* LFA */
     p = *((uint8_t **) p);
   }
+
+  /* code addresses in body */
+  *((rf_code_t *) (here[61])) = rf_code_docol;
+  *((rf_code_t *) (here[62])) = rf_code_docon;
+  *((rf_code_t *) (here[63])) = rf_code_dovar;
+  *((rf_code_t *) (here[64])) = rf_code_douse;
+  *((rf_code_t *) (here[65])) = rf_code_dodoe;
 
   /* now flag as installed */
   rf_installed = 1;

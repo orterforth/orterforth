@@ -1406,22 +1406,24 @@ IMMEDIATE
 
 
 -->
-
-
 ( SAVE TO DR1                                                 )
-HERE 61 cs ALLOT                ( make room for link table    )
+HERE 66 cs ALLOT                ( make room for link table    )
 FIRST cl + CONSTANT buf         ( use first disc buffer       )
 2000 VARIABLE blk               ( first block of DR1          )
 : link                          ( --                          )
   link? IF 
     61 0 DO I cd , LOOP         ( table of code addresses     )
-    -61 cs ALLOT                ( move DP back before table   )
+    ' : 9 cs + ,                ( end of table has 5 refs in  )
+    ' CONSTANT 4 cs + ,         ( word bodies                 )
+    ' VARIABLE 2 cs + ,
+    ' USER 2 cs + ,
+    ' DOES> 5 cs + ,
+    -66 cs ALLOT                ( move DP back before table   )
   ENDIF ;
-: start                         ( -- a-addr                   )
-  link? IF origin ELSE org ENDIF ;
-: end                           ( -- a-addr                   )
-  HERE link? IF 61 cs + ENDIF ;
+
 -->
+: start link? IF origin ELSE org ENDIF ;
+: end HERE link? IF 66 cs + ENDIF ;
 : save                          ( --                          )
   save? IF
     link                        ( write link table            )
@@ -1432,11 +1434,9 @@ FIRST cl + CONSTANT buf         ( use first disc buffer       )
     buf 128 90 FILL             ( write a block of 'Z's       )
     buf blk @ 0 R/W
   ENDIF ;
-
 DP !                            ( move DP back                )
 0 ' cl LFA !                    ( break inst dictionary link  )
 save                            ( now save                    )
-
 ;S
 ( COMPILED AFTER BOOT-UP LITERALS                             )
 ( extra boot-up literals for COLD                             )
