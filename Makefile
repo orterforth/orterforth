@@ -133,15 +133,6 @@ $(SYSTEM)-clean :
 	rm -f model.img
 	rm -f model.inc
 
-# default example
-EXAMPLE=test
-
-# run local build with example disc
-.PHONY : $(SYSTEM)-example
-$(SYSTEM)-example : $(ORTERFORTH) example/$(EXAMPLE).img
-
-	echo "EMPTY-BUFFERS 1 LOAD" | $< example/$(EXAMPLE).img
-
 # runtime disc images
 DR0=library.img
 DR1=data.img
@@ -230,10 +221,6 @@ disc : $(DISC) $(DR0) $(DR1)
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 
 include target/dragon/dragon.mk
-
-# run an example program
-.PHONY : example
-example : $(TARGET)-example
 
 # help
 .PHONY : help

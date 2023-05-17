@@ -117,29 +117,6 @@ BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033
 	printf '* \033[1;33mLoading via serial\033[0;0m\n' ; \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
 
-# load and run example disc
-.PHONY : bbc-example
-bbc-example : $(BBCMEDIA) $(BBCROMS) | $(DISC) example/$(EXAMPLE).img $(DR1)
-
-	@touch $(DR1)
-
-ifeq ($(BBCMACHINE),mame)
-	@$(STARTDISCTCP) example/$(EXAMPLE).img $(DR1)
-
-	@mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD)'EMPTY-BUFFERS 1 LOAD\r' $(BBCMAMEMEDIA)
-
-	@$(STOPDISC)
-endif
-ifeq ($(BBCMACHINE),real)
-	@$(BBCLOADSERIAL) bbc/orterforth.ser
-
-	@# prompt user
-	@echo "* now type EMPTY-BUFFERS 1 LOAD"
-
-	# run disc
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) example/$(EXAMPLE).img $(DR1)
-endif
-
 # load and run
 .PHONY : bbc-run
 bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
