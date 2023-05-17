@@ -143,7 +143,7 @@ CR fac list CR
 
 ;S
 ( Reverse a string                                            )
-16 LOAD                        ( load str vocabulary          )
+14 LOAD                        ( load str vocabulary          )
 FORTH DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
@@ -191,38 +191,8 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios              )
-HEX
-
-( compare double numbers                                      )
-: D=                            ( d1 d2 -- f )
-  ROT = >R = R> AND ;           ( compare high and low words  )
-
-( system specific screen width                                )
-: columns                       ( -- u )
-  tg     3948. D= IF 28 ;S ENDIF ( BBC 40 columns             )
-  tg 3195C1F7. D= IF 20 ;S ENDIF ( Dragon 32 columns          )
-  tg 6774E16F. D= IF 20 ;S ENDIF ( Spectrum 32 columns        )
-  50                            ( default 80 columns          )
-;
-
--->
-( Mandelbrot - derived from fract.fs in openbios              )
-
-( system specific screen height                               )
-: rows                           ( -- u )
-  tg     3948. D= IF 19 ;S ENDIF ( BBC 25 rows                )
-  tg 3195C1F7. D= IF 10 ;S ENDIF ( Dragon 16 rows             )
-  tg 6774E16F. D= IF 18 ;S ENDIF ( Spectrum 24 rows           )
-  18                            ( default 24 rows             )
-;
-
-
-
-
-
-
--->
-( Mandelbrot - derived from fract.fs in openbios              )
+18 LOAD ( sys vocabulary ) HEX
+FORTH DEFINITIONS
 : mandelbrot
     CR
     466 DUP MINUS DO            ( y axis                      )
@@ -235,10 +205,10 @@ HEX
                 ROT ROT -       ( -ROT - )
                 R> R> R SWAP >R SWAP >R ( J                   )
                 +
-                DUP DUP 400 */ ROT
-                DUP DUP 400 */ ROT
 -->
 ( Mandelbrot - derived from fract.fs in openbios              )
+                DUP DUP 400 */ ROT
+                DUP DUP 400 */ ROT
                 SWAP OVER OVER + 1000 > IF ( if diverging     )
                     DROP DROP DROP DROP DROP
                     BL 0 DUP OVER OVER LEAVE ( space          )
@@ -246,14 +216,12 @@ HEX
             LOOP
             DROP DROP DROP DROP
             EMIT                ( * or space                  )
-        [ 400 3 * columns 2 - / ] ( compute step from cols    )
+        [ 400 3 * sys columns 2 - / ] ( compute step from cols)
         LITERAL +LOOP
         CR DROP                 ( end of line                 )
-    [ 466 2+ 2 * rows / ] LITERAL +LOOP ;
+    [ 466 2+ 2 * sys rows / ] LITERAL +LOOP ;
 
 mandelbrot DECIMAL ;S
-
-
 ( str: Forth/Pascal string handling                           )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
@@ -318,3 +286,55 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 
 
 -->
+( sys: system dependent operations - BBC                      )
+FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
+: D= SWAP >R = SWAP R> = AND ;  ( compare double numbers      )
+: only tg D= 0= IF [COMPILE] --> ENDIF ;
+36 BASE ! BBC. DECIMAL only
+40 CONSTANT columns 25 CONSTANT rows
+;S
+
+
+
+
+
+
+
+
+;S
+( sys: Dragon                                                 )
+36 BASE ! DRAGON. DECIMAL only
+32 CONSTANT columns 16 CONSTANT rows
+;S
+
+
+
+
+
+
+
+
+
+
+
+;S
+( sys: Spectrum                                               )
+36 BASE ! SPECTR. DECIMAL only
+32 CONSTANT columns 24 CONSTANT rows
+;S
+
+
+
+
+
+
+
+
+
+
+
+;S
+( sys: defaults                                               )
+DECIMAL
+80 CONSTANT columns 24 CONSTANT rows
+;S
