@@ -256,20 +256,20 @@ mandelbrot DECIMAL ;S
 
 ( str: Forth/Pascal string handling                           )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
-: (") R> DUP COUNT + >R ;       ( return string and advance IP)
+: (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
 : "                             ( --                          )
   ?COMP                         ( compilation only            )
   COMPILE (")                   ( execution time routine      )
   34 WORD                       ( read until "                )
-  HERE C@ 1+ ALLOT              ( compile the string          )
+  HERE C@ 1+ ln ALLOT           ( compile the string          )
 ; IMMEDIATE
 
 : copy                          ( a b --                      )
   OVER C@                       ( get length                  )
   1+ CMOVE ;                    ( copy length+1 bytes         )
 
--->
 
+-->
 ( str: Forth/Pascal string handling                           )
 : append                        ( a b --                      )
   OVER C@ OVER C@               ( get the two lengths         )
