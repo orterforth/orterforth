@@ -31,8 +31,8 @@ static void __FASTCALL__ rf_inst_disc_cmd_set(uintptr_t blk)
   rf_inst_puti(5, (blk % 26) + 1);
 }
 
-/* block-cmd - write I nn nn /n and return buffer address */
-static void rf_inst_code_block_cmd(void)
+/* hld - write I nn nn /n and return buffer address */
+static void rf_inst_code_hld(void)
 {
   RF_START;
   {
@@ -403,7 +403,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "D/CHAR", rf_code_dchar },
   { "BLOCK-WRITE", rf_code_bwrit },
   { "BLOCK-READ", rf_code_bread },
-  { "block-cmd", rf_inst_code_block_cmd }
+  { "hld", rf_inst_code_hld }
 };
 
 #ifndef RF_BS
@@ -547,7 +547,7 @@ static void rf_inst_forward(void)
 
   /* BLOCK */
   rf_inst_compile(
-    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP block-cmd LIT 10 BLOCK-WRITE ?DISC FIRST "
+    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP hld LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
   /* read from disc and run proto interpreter */
