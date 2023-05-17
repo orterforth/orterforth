@@ -28,8 +28,7 @@ RC2014OPTION := assembly
 #RC2014OPTION := default
 
 RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
-# TODO use RF_ASSEMBLY
-RC2014INC := target/rc2014/$(RC2014OPTION).inc
+RC2014INC := target/rc2014/default.inc
 RC2014INSTOFFSET := 0x5000
 RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
 RC2014ORG := 0x9000
@@ -59,6 +58,10 @@ RC2014ZCCOPTS := \
 	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
 	-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
 	-Ca-DRF_ORG=$(RC2014ORG)
+
+ifeq ($(RC2014OPTION),assembly)
+RC2014ZCCOPTS += -DRF_ASSEMBLY
+endif
 
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
