@@ -1,3 +1,7 @@
+#ifdef __RC2014
+#include <z80.h>
+#endif
+
 #include "inst.h"
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
@@ -567,29 +571,11 @@ static void rf_inst_load(void)
 extern char rf_system_local_disc;
 #endif
 
-#ifndef RF_INST_LOCAL_DISC
-/* TODO remove if not necessary */
-#ifdef __RC2014
-#include <z80.h>
-#endif
-
-static void rf_inst_sleep(void)
-{
-#ifdef __RC2014
-  z80_delay_ms(5000);
-#else
-/*
-  sleep(5);
-*/
-#endif
-}
-#endif
-
 void rf_inst(void)
 {
-#ifndef RF_INST_LOCAL_DISC
+#ifdef __RC2014
   /* wait for disc server to init */
-  rf_inst_sleep();
+  z80_delay_ms(5000);
 #endif
 
   /* cold start */
