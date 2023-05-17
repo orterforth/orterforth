@@ -76,6 +76,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
 #ifdef __CC65__
   /* 6502 bug workaround */
   *here = 0x20;
+  /* TODO try casting to uint8_t */
   if (((uintptr_t) here & 0xFF) == 0xFD) {
     ++here;
   }
@@ -327,15 +328,6 @@ static void rf_inst_cold(void)
   /* STATE @ 0= IF ."  OK" ENDIF AGAIN */
 }
 
-/* do nothing - only used to create a no op CR */
-#ifdef RF_INST_SILENT
-static void rf_inst_code_noop(void)
-{
-  RF_START;
-  RF_JUMP_NEXT;
-}
-#endif
-
 /* Table of inst time code addresses */
 
 typedef struct rf_inst_code_t {
@@ -370,11 +362,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, rf_code_key },
   { 0, rf_code_qterm },
   { 0, rf_code_cr },
-#ifdef RF_INST_SILENT
-  { 0, rf_inst_code_noop },
-#else
   { 0, rf_code_cr },
-#endif
   { "CMOVE", rf_code_cmove },
   { "U*", rf_code_ustar },
   { 0, rf_code_uslas },
@@ -571,6 +559,7 @@ static void rf_inst_forward(void)
 
 static void rf_inst_load(void)
 {
+  /* TODO run via COLD */
   rf_inst_execute("load", 4);
 }
 
