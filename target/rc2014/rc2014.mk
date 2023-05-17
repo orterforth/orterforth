@@ -36,7 +36,7 @@ RC2014ORG := 0x9000
 ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/z80.lib
 RC2014LIBS += -lrc2014/z80
-RC2014ORIGIN := 0x9F80
+RC2014ORIGIN := 0x9F00
 endif
 ifeq ($(RC2014OPTION),default)
 RC2014ORIGIN := 0xAB00
@@ -73,12 +73,6 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 
 	@printf '* \033[1;33mStarting disc with console mux\033[0;0m\n'
 	@$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
-
-# hexload
-# TODO remove this intermediate copy
-rc2014/hexload.bas : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
-
-	cp $< $@
 
 # inst executable
 rc2014/inst_CODE.bin : \
@@ -145,9 +139,9 @@ rc2014/inst.lib : inst.c rf.h $(RC2014INC) inst.h | rc2014
 		--constseg=INST
 
 # inst serial load file - seems an unreliable approach
-rc2014/inst.ser : rc2014/hexload.bas rc2014/inst.ihx
+rc2014/inst.ser : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas rc2014/inst.ihx
 
-	cp rc2014/hexload.bas $@.io
+	cp tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas $@.io
 	cat rc2014/inst.ihx >> $@.io
 	mv $@.io $@
 
@@ -158,7 +152,7 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 	mv $@.io $@
 
 # saved hex result
-rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.img | $(DISC) $(ORTER)
+rc2014/orterforth.hex : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas rc2014/inst.ihx model.img | $(DISC) $(ORTER)
 
 	@# NB this does not allow for BSS
 	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
@@ -166,7 +160,7 @@ rc2014/orterforth.hex : rc2014/hexload.bas rc2014/inst.ihx model.img | $(DISC) $
 	@$(RC2014RESET)
 
 	@printf '* \033[1;33mLoading hexload\033[0;0m\n'
-	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/hexload.bas
+	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas
 	@printf '* \033[1;33mLoading inst\033[0;0m\n'
 	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
@@ -189,9 +183,9 @@ rc2014/orterforth.ihx : rc2014/orterforth
 	z88dk-appmake +hex --org $(RC2014ORG) --binfile $< --output $@
 
 # serial load file
-rc2014/orterforth.ser : rc2014/hexload.bas rc2014/orterforth.ihx
+rc2014/orterforth.ser : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas rc2014/orterforth.ihx
 
-	cp rc2014/hexload.bas $@.io
+	cp tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas $@.io
 	cat rc2014/orterforth.ihx >> $@.io
 	mv $@.io $@
 
