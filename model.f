@@ -1399,8 +1399,8 @@ IMMEDIATE
 03 cs BYTE.IN USER     REPLACED.BY HERE
 ( load high level definitions                                 )
 72 LOAD
-( set EMIT and CR CFAs after silent install                   )
-15 cd ' EMIT CFA ! 19 cd ' CR CFA !
+( set EMIT CFA after silent install                           )
+15 cd ' EMIT CFA !
 ( installed flag = 1                                          )
 1 installed C!
 
