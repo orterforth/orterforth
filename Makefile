@@ -179,8 +179,8 @@ $(TARGET)-help :
 
 	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then more help.txt ; else more target/$(TARGET)/help.txt ; fi
 
-# disc images from %.f files including model.f
-%.img : %.f | $(DISC)
+# disc images from %.fs files including model.fs
+%.img : %.fs | $(DISC)
 
 	$(DISC) create < $< > $@.io
 	mv $@.io $@
