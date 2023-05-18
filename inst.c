@@ -80,8 +80,7 @@ static void __FASTCALL__ rf_inst_def(const char *name)
 #ifdef __CC65__
   /* 6502 bug workaround */
   *here = 0x20;
-  /* TODO try casting to uint8_t */
-  if (((uintptr_t) here & 0xFF) == 0xFD) {
+  if (((uint8_t) here & 0xFF) == 0xFD) {
     ++here;
   }
 #endif
