@@ -13,6 +13,8 @@ PIDFILE="$3"
 
 # stop existing processes in pidfile
 if [ -f "$PIDFILE" ]; then
+  kill $(cat "$PIDFILE") 2> /dev/null || true
+  sleep 2
   kill -9 $(cat "$PIDFILE") 2> /dev/null || true
 fi
 
