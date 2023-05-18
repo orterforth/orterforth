@@ -31,8 +31,8 @@ static void rf_inst_puti(uint8_t idx, uint8_t i)
 static void __FASTCALL__ rf_inst_disc_cmd_set(uintptr_t blk)
 {
   /* convert block number into track and sector */
-  rf_inst_puti(2, blk / 26);
-  rf_inst_puti(5, (blk % 26) + 1);
+  rf_inst_puti(2, (uint8_t) (blk / 26));
+  rf_inst_puti(5, (uint8_t) (blk % 26) + 1);
 }
 
 /* hld - write I nn nn /n and return buffer address */
@@ -64,7 +64,7 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 static uint8_t *rf_inst_vocabulary = 0;
 
 /* CREATE + SMUDGE */
-static void __FASTCALL__ rf_inst_def(char *name)
+static void __FASTCALL__ rf_inst_def(const char *name)
 {
   uint8_t *here = (uint8_t *) RF_USER_DP;
   uint8_t *there = here;
@@ -75,7 +75,7 @@ static void __FASTCALL__ rf_inst_def(char *name)
   }
 
   /* length byte, unsmudged */
-  *there = (here++ - there) | 0x80;
+  *there = (uint8_t) (here++ - there) | 0x80;
 
 #ifdef __CC65__
   /* 6502 bug workaround */
@@ -112,7 +112,7 @@ static uint8_t __FASTCALL__ **rf_inst_lfa(uint8_t *nfa)
 }
 
 /* (FIND) */
-static uint8_t *rf_inst_find(char *t, uint8_t length)
+static uint8_t *rf_inst_find(const char *t, uint8_t length)
 {
   uint8_t i;
   uint8_t *n;
@@ -143,7 +143,7 @@ static uint8_t *rf_inst_find(char *t, uint8_t length)
 }
 
 /* compile a definition and set CFA */
-static void rf_inst_def_code(char *name, rf_code_t code)
+static void rf_inst_def_code(const char *name, rf_code_t code)
 {
   rf_inst_def(name);
   rf_inst_comma((uintptr_t) code);
@@ -156,7 +156,7 @@ static void __FASTCALL__ rf_inst_colon(char *name)
 }
 
 /* compile a constant */
-static void rf_inst_def_constant(char *name, uintptr_t value)
+static void rf_inst_def_constant(const char *name, uintptr_t value)
 {
   rf_inst_def_code(name, rf_code_docon);
   rf_inst_comma(value);
@@ -199,8 +199,9 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
 }
 
 /* proto outer interpreter */
-static void __FASTCALL__ rf_inst_compile(char *name)
+static void __FASTCALL__ rf_inst_compile(const char *source)
 {
+  char *name = (char *) source;
   char *p;
   uint8_t *nfa;
 
@@ -221,7 +222,7 @@ static void __FASTCALL__ rf_inst_compile(char *name)
       }
     } else {
       /* find in dictionary */
-      nfa = rf_inst_find(name, p - name);
+      nfa = rf_inst_find(name, (uint8_t) (p - name));
       /* compile word if found, or number (to prefix with LIT, BRANCH or 0BRANCH) */
       rf_inst_comma(nfa ? (uintptr_t) rf_inst_cfa(nfa) : (uintptr_t) rf_inst_number(name));
     }
@@ -335,7 +336,7 @@ static void rf_inst_cold(void)
 /* Table of inst time code addresses */
 
 typedef struct rf_inst_code_t {
-  char *word;
+  const char *word;
   rf_code_t value;
 } rf_inst_code_t;
 
@@ -418,7 +419,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
 static rf_code_t *rf_inst_load_cfa = 0;
 
 /* look up a Forth word and run the Forth machine */
-static void rf_inst_execute(char *name, uint8_t len)
+static void rf_inst_execute(const char *name, uint8_t len)
 {
   /* set RP, IP */
   RF_RP_SET((uintptr_t *) RF_USER_R0);
@@ -480,7 +481,7 @@ static void rf_inst_code_sb(void)
 #ifdef RF_INST_SAVE
   {
     uint8_t *buf = (uint8_t *) RF_SP_POP;
-    rf_inst_save_hex(buf, RF_SP_POP);
+    rf_inst_save_hex(buf, (uint8_t *) RF_SP_POP);
   }
 #endif
   RF_JUMP_NEXT;
