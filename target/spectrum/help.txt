@@ -4,10 +4,11 @@ Building for the ZX Spectrum 48K
 You will need:
 
 * z88dk https://z88dk.org/
-* 48K ROM file at ./48k.rom and roms/spectrum/spectrum.rom
-* Interface 1 ROM file at ./if1-2.rom and
+* Fuse emulator http://fuse-emulator.sourceforge.net including
+  Spectrum ROMs
+* MAME emulator including 48K ROM file at
+  roms/spectrum/spectrum.rom and Interface 1 ROM file at
   roms/spectrum/if1-2.rom
-* Fuse emulator http://fuse-emulator.sourceforge.net
 * Z80 emulator https://github.com/superzazu/z80
 
 To build, call:
@@ -27,11 +28,6 @@ directory, e.g.:
 To run in Fuse, call:
 
  make run TARGET=spectrum
-
-Note that Fuse requires the ROM files supplied with the exact
-names "48k.rom" and "if1-2.rom" in the root directory,
-otherwise it regards them as custom ROMs and auto start is
-disabled.
 
 To load and run on a physical machine, connect the Interface 1
 to your host system via RS-232 and call:

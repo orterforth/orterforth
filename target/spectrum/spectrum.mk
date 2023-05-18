@@ -123,17 +123,13 @@ SPECTRUMMACHINE := fuse
 endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
-# default names/locations are required so Fuse does not treat as custom 
-# ROMs and disable autoload
-SPECTRUMROMS := \
-	48.rom \
-	if1-2.rom
+# assume ROMS are available to Fuse
+SPECTRUMROMS :=
 SPECTRUMRUNDEPS := \
 	spectrum/orterforth.tap \
 	$(DR0) \
 	$(DR1) | \
 	$(DISC) \
-	$(SPECTRUMROMS) \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx \
 	rx \
@@ -182,8 +178,6 @@ FUSEOPTS := \
 	--machine 48 \
 	--no-confirm-actions \
 	--phantom-typist-mode keyword \
-	--rom-48 48.rom \
-	--rom-interface-1 if1-2.rom \
 	--rs232-rx spectrum/fuse-rs232-rx \
 	--rs232-tx spectrum/fuse-rs232-tx
 
@@ -346,7 +340,6 @@ SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
 	$(DISC) \
 	$(ORTER) \
-	$(SPECTRUMROMS) \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx \
 	rx \
