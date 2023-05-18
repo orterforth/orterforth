@@ -15,7 +15,7 @@ dragon-clean :
 DRAGONOPTION := assembly
 # DRAGONOPTION := default
 
-DRAGONCMOCOPTS := --dragon
+DRAGONCMOCOPTS := --dragon -Werror
 DRAGONDEPS := dragon/rf.o dragon/inst.o dragon/system.o
 DRAGONLINK := true
 DRAGONLINKDEPS := dragon/link.o dragon/rf.o dragon/system.o
