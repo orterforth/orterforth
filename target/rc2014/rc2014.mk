@@ -63,6 +63,14 @@ ifeq ($(RC2014OPTION),assembly)
 RC2014ZCCOPTS += -DRF_ASSEMBLY
 endif
 
+RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' ; \
+	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
+
+.PHONY : rc2014-connect
+rc2014-connect : | $(DISC)
+
+	@$(RC2014CONNECT)
+
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 
@@ -71,8 +79,7 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
 	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
 
-	@printf '* \033[1;33mStarting disc with console mux\033[0;0m\n'
-	@$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
+	@$(RC2014CONNECT)
 
 # inst executable
 rc2014/inst_CODE.bin : \
@@ -138,13 +145,6 @@ rc2014/inst.lib : inst.c rf.h $(RC2014INC) inst.h | rc2014
 		--bssseg=INST \
 		--constseg=INST
 
-# inst serial load file - seems an unreliable approach
-rc2014/inst.ser : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas rc2014/inst.ihx
-
-	cp tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas $@.io
-	cat rc2014/inst.ihx >> $@.io
-	mv $@.io $@
-
 # final binary from hex
 rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 
@@ -185,6 +185,7 @@ rc2014/orterforth.ihx : rc2014/orterforth
 # serial load file
 rc2014/orterforth.ser : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas rc2014/orterforth.ihx
 
+	# TODO cat $^
 	cp tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas $@.io
 	cat rc2014/orterforth.ihx >> $@.io
 	mv $@.io $@
