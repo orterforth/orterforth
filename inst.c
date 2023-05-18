@@ -178,13 +178,13 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
 
   /* ^ to * by cell size */
   if (*t == '^') {
-    t++;
+    ++t;
     factor = RF_WORD_SIZE;
   }
 
   /* - to negate */
   if (*t == '-') {
-    t++;
+    ++t;
     factor = -factor;
   }
 
