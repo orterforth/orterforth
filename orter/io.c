@@ -15,16 +15,12 @@
 
 #include "io.h"
 
-/* stdin */
+/* stdin (also stdout/stderr) */
 static int            in_fl;
 static int            in_fl_saved = 0;
 static struct termios in_attr;
 static struct termios in_attr_save;
 static int            in_attr_saved = 0;
-
-/* stdout */
-static int            out_fl;
-static int            out_fl_saved = 0;
 
 /* flag to indicate EOF */
 int orter_io_eof = 0;
@@ -108,16 +104,18 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
 
 int orter_io_std_open(void)
 {
-  /* make stdin nonblocking */
-  in_fl = fcntl(0, F_GETFL, 0);
-  in_fl_saved = 1;
-  if (fcntl(0, F_SETFL, O_NONBLOCK)) {
-    perror("stdin fcntl failed");
-    return errno;
+  /* make stdin nonblocking (also applies to stdout/stderr) */
+  if (!in_fl_saved) {
+    in_fl = fcntl(0, F_GETFL, 0);
+    in_fl_saved = 1;
+    if (fcntl(0, F_SETFL, O_NONBLOCK)) {
+      perror("stdin fcntl failed");
+      return errno;
+    }
   }
 
   /* modify stdin attr */
-  if (isatty(0)) {
+  if (!in_attr_saved && isatty(0)) {
     /* save current stdin attr */
     if (tcgetattr(0, &in_attr_save)) {
       perror("stdin tcgetattr failed");
@@ -140,20 +138,12 @@ int orter_io_std_open(void)
     }
   }
 
-  /* make stdout nonblocking */
-  out_fl = fcntl(1, F_GETFL, 0);
-  out_fl_saved = 1;
-  if (fcntl(1, F_SETFL, O_NONBLOCK)) {
-    perror("stdout fcntl failed");
-    return errno;
-  }
-
   return 0;
 }
 
 int orter_io_std_close(void)
 {
-  /* stdin */
+  /* stdin (also stdout/stderr) */
   if (in_fl_saved) {
     if (fcntl(0, F_SETFL, in_fl)) {
       perror("stdin fcntl failed");
@@ -165,14 +155,6 @@ int orter_io_std_close(void)
       perror("stdin tcsetattr failed");
     }
     in_attr_saved = 0;
-  }
-
-  /* stdout */
-  if (out_fl_saved) {
-    if (fcntl(1, F_SETFL, out_fl)) {
-      perror("stdout fcntl failed");
-    }
-    out_fl_saved = 0;
   }
 
   return 0;
