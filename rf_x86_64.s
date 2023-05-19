@@ -786,6 +786,20 @@ _rf_code_cs:
 	shlq $3, %rax
 	jmp apush
 
+	.globl rf_code_ln
+	.globl _rf_code_ln
+	.p2align 4, 0x90
+rf_code_ln:
+_rf_code_ln:
+
+	popq %rax
+	testq $7, %rax
+	jz ln1
+	andq $-8, %rax
+	addq $8, %rax
+ln1:
+	jmp apush
+
 	.globl rf_code_xt
 	.globl _rf_code_xt
 	.p2align 4, 0x90

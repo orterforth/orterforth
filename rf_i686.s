@@ -796,6 +796,19 @@ _rf_code_cs:
 	shll $2, %eax
 	jmp apush
 
+	.globl rf_code_ln
+	.globl _rf_code_ln
+rf_code_ln:
+_rf_code_ln:
+
+	popl %eax
+	testl $3, %eax
+	jz ln1
+	andl $-4, %eax
+	addl $4, %eax
+ln1:
+	jmp apush
+
 	.globl rf_code_tg
 	.globl _rf_code_tg
 rf_code_tg:

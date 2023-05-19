@@ -699,6 +699,18 @@ rf_code_cs:
 	b apush
 
  	.p2align 2
+ 	.global rf_code_ln
+rf_code_ln:
+
+	ldr r0, [r8], #4
+	tst r0, #3
+	beq ln1
+	and r0, r0, #-4
+	add r0, r0, #4
+ln1:
+	b apush
+
+ 	.p2align 2
  	.global rf_code_tg
 rf_code_tg:
 
