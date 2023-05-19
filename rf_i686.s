@@ -757,6 +757,28 @@ _rf_code_stod:
 stod1:
 	jmp dpush
 
+	.globl rf_code_cold
+	.globl _rf_code_cold
+rf_code_cold:
+_rf_code_cold:
+
+	call __x86.get_pc_thunk.cx
+	addl $_GLOBAL_OFFSET_TABLE_, %ecx
+	movl _rf_memory@GOTOFF(%ecx), %edx
+	movl _rf_code_cold@GOTOFF(%ecx), %eax # COLD vector init
+	movl %eax, 0x04(%edx)
+	movl 0x18(%edx), %eax         # FORTH vocabulary init
+	movl 0x44(%edx), %ebx
+	movl %eax, (%ebx)
+	movl 0x20(%edx), %edi         # UP init
+	movl %edi, _rf_up@GOTOFF(%ecx)
+	cld                           # USER variables init
+	movl $11, %ecx
+	leal 0x18(%edx), %esi
+	rep movsl
+	movl 0x48(%edx), %esi         # IP init to ABORT
+	jmp rf_code_rpsto             # jump to RP!
+
 	.globl	rf_code_cl
 	.globl	_rf_code_cl
 rf_code_cl:

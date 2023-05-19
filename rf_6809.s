@@ -815,14 +815,14 @@ _rf_code_cold EQU *
 	STD    ,Y
 	LDY    16,X                 UP init
 	STY    _rf_up+0,PCR
-	LDB    #24                  USER variables init
+	LDB    #22                  USER variables init
 	LEAX   12,X
 COLD2 EQU *
 	LDA    ,X+
 	STA    ,Y+
 	DECB
 	BNE    COLD2
-	LDY    ,X                   IP init to ABORT
+	LDY    2,X                  IP init to ABORT
 	LBRA   _rf_code_rpsto       jump to RP!
 funcend_rf_code_cold EQU *
 funcsize_rf_code_cold EQU funcend_rf_code_cold-_rf_code_cold

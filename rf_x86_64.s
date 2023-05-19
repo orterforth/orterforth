@@ -811,7 +811,26 @@ _rf_code_tg:
 	movq 0xA0(%rdx), %rdx
 	jmp dpush
 
-# TODO rf_code_cold
+	.globl rf_code_cold
+	.globl _rf_code_cold
+	.p2align 4, 0x90
+rf_code_cold:
+_rf_code_cold:
+
+	movq _rf_memory(%rip), %rdx
+	movq _rf_code_cold(%rip), %rax # COLD vector init
+	movq %rax, 0x08(%rdx)
+	movq 0x30(%rdx), %rax         # FORTH vocabulary init
+	movq 0x88(%rdx), %rbx
+	movq %rax, (%rbx)
+	movq 0x40(%rdx), %rdi         # UP init
+	movq %rdi, _rf_up(%rip)
+	cld                           # USER variables init
+	movq $11, %rcx
+	leaq 0x30(%rdx), %rsi
+	rep movsq
+	movq 0x90(%rdx), %rsi         # IP init to ABORT
+	jmp rf_code_rpsto             # jump to RP!
 
 	.section __DATA.__data,""
 

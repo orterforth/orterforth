@@ -659,6 +659,31 @@ stod1:
 	b dpush
 
 	.p2align 2
+	.global rf_code_cold
+rf_code_cold:
+
+ 	ldr r3, =rf_memory
+ 	ldr r3, [r3]
+	ldr r0, =rf_code_cold       @ COLD vector init
+	str r0, [r3, #4]
+	ldr r0, [r3, #24]           @ FORTH vocabulary init
+	ldr r1, [r3, #68]
+	str r0, [r1]
+	ldr r1, [r3, #32]           @ UP init
+	ldr r0, =rf_up
+	str r1, [r0]
+	mov r2, #11                 @ USER variables init
+	mov r10, r3
+	add r10, r10, #24           @ TODO use r3 and change below offset
+cold1:
+	ldr r0, [r10], #4
+	str r0, [r1], #4
+	subs r2, r2, #1
+	bne cold1
+	ldr r10, [r3, #72]          @ IP init to ABORT
+	b rf_code_rpsto             @ jump to RP!
+
+	.p2align 2
 	.global rf_code_cl
 rf_code_cl:
 
