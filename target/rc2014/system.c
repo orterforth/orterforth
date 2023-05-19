@@ -31,7 +31,9 @@ void rf_code_key(void)
   {
     int c;
 
-    c = getchar();
+    /* skip disc input */
+    while (((c = getchar()) & 0x80)) {
+    }
 
     /* LF to CR */
     if (c == 10) {
@@ -60,7 +62,10 @@ void rf_code_cr(void)
 void rf_disc_read(char *c, unsigned char len)
 {
   for (; len; len--) {
-    *(c++) = getchar() & 0x7F;
+    /* skip keyboard input */
+    while (!((*c = getchar()) & 0x80)) {
+    }
+    *(c++) &= 0x7F;
   }
 }
 

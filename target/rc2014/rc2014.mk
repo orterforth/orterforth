@@ -23,20 +23,20 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
-# build option
-RC2014OPTION := assembly
-#RC2014OPTION := default
-
 RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
 RC2014INC := target/rc2014/default.inc
 RC2014INSTOFFSET := 0x5000
 RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
 RC2014ORG := 0x9000
 
+# build option
+RC2014OPTION := assembly
+#RC2014OPTION := default
+
 ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/z80.lib
 RC2014LIBS += -lrc2014/z80
-RC2014ORIGIN := 0x9F00
+RC2014ORIGIN := 0x9F80
 endif
 ifeq ($(RC2014OPTION),default)
 RC2014ORIGIN := 0xAB00
