@@ -1187,7 +1187,7 @@ static void rf_cold(void)
   /* 15 # LDY, ( INDEX TO VOC-LINK ) 0= IF, ( FORCED ) */
   /* HERE 06 +ORIGIN ! ( POINT RE-ENTRY TO HERE ) */
   /* 0F # LDY,  ( INDEX TO WARNING )   THEN, ( FROM IF, ) */
-  i = 11;
+  i = 10;
   /*if (0) {
     origin[3] = rf_code_warm;
     i = 8;
