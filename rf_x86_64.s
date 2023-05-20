@@ -820,7 +820,7 @@ _rf_code_xt:
 rf_code_tg:
 _rf_code_tg:
 
-	movq _rf_memory(%rip), %rdx
+	movq _rf_origin(%rip), %rdx
 	movq 0x98(%rdx), %rax
 	movq 0xA0(%rdx), %rdx
 	jmp dpush
@@ -831,7 +831,7 @@ _rf_code_tg:
 rf_code_cold:
 _rf_code_cold:
 
-	movq _rf_memory(%rip), %rdx
+	movq _rf_origin(%rip), %rdx
 	movq _rf_code_cold(%rip), %rax # COLD vector init
 	movq %rax, 0x08(%rdx)
 	movq 0x30(%rdx), %rax         # FORTH vocabulary init

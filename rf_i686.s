@@ -764,7 +764,7 @@ _rf_code_cold:
 
 	call __x86.get_pc_thunk.cx
 	addl $_GLOBAL_OFFSET_TABLE_, %ecx
-	movl _rf_memory@GOTOFF(%ecx), %edx
+	movl _rf_origin@GOTOFF(%ecx), %edx
 	movl _rf_code_cold@GOTOFF(%ecx), %eax # COLD vector init
 	movl %eax, 0x04(%edx)
 	movl 0x18(%edx), %eax         # FORTH vocabulary init
@@ -816,7 +816,7 @@ _rf_code_tg:
 
 	call __x86.get_pc_thunk.ax
 	addl $_GLOBAL_OFFSET_TABLE_, %eax
-	movl _rf_memory@GOTOFF(%eax), %edx
+	movl _rf_origin@GOTOFF(%eax), %edx
 	movl 0x4C(%edx), %eax
 	movl 0x50(%edx), %edx
 	jmp dpush

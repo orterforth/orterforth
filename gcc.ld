@@ -1,7 +1,7 @@
 /* gcc does not prepend leading underscores, and assembly code expects them */
 _rf_fp = rf_fp;
 _rf_ip = rf_ip;
-_rf_memory = rf_memory;
+_rf_origin = rf_origin;
 _rf_rp = rf_rp;
 _rf_sp = rf_sp;
 _rf_up = rf_up;

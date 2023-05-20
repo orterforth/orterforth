@@ -662,7 +662,7 @@ stod1:
   .global rf_code_cold
 rf_code_cold:
 
-  ldr  r3, =rf_memory
+  ldr  r3, =rf_origin
   ldr  r3, [r3]
   ldr  r0, =rf_code_cold        @ COLD vector init
   str  r0, [r3, #4]
@@ -714,7 +714,7 @@ ln1:
    .global rf_code_tg
 rf_code_tg:
 
-  ldr  r3, =rf_memory
+  ldr  r3, =rf_origin
   ldr  r3, [r3]
   add  r3, r3, #76
   ldr  r0, [r3]

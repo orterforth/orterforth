@@ -16,7 +16,7 @@
 #include "persci.h"
 
 /* use heap memory */
-char *rf_memory = 0;
+char *rf_origin = 0;
 
 /* auto command for boot purposes */
 char *rf_system_auto_cmd = 0;
@@ -29,8 +29,8 @@ void rf_init(void)
 #endif
 
   /* allocate memory */
-  rf_memory = malloc(RF_MEMORY_SIZE);
-  if (!rf_memory) {
+  rf_origin = malloc(RF_MEMORY_SIZE);
+  if (!rf_origin) {
     perror("memory init failed");
     exit(1);
   }
@@ -173,7 +173,7 @@ void rf_disc_write(char *p, uint8_t len)
 void rf_fin(void)
 {
   /* free memory */
-  if (rf_memory) {
-    free(rf_memory);
+  if (rf_origin) {
+    free(rf_origin);
   }
 }

@@ -66,18 +66,18 @@ cell size.
 /*
 Pointer to the start of memory, whether heap or static.
 */
-extern char *rf_memory;
+extern char *rf_origin;
 
 /*
 ORIGIN at start of memory, used for +ORIGIN and to initialise DP.
 */
-#define RF_ORIGIN (rf_memory)
+#define RF_ORIGIN (rf_origin)
 
 /*
 LIMIT at the end of memory, by default much of the memory map
 (FIRST, UP, R0, TIB, S0) is defined by working back from this.
 */
-#define RF_LIMIT ((char *) rf_memory + RF_MEMORY_SIZE)
+#define RF_LIMIT ((char *) rf_origin + RF_MEMORY_SIZE)
 
 /*
 Define this to flag that assembly code definitions are provided.
@@ -133,10 +133,10 @@ the assembly code definitions are linked instead.
 #define RF_TARGET_CODE_DOUSE
 #define RF_TARGET_CODE_DODOE
 #define RF_TARGET_CODE_STOD
+#define RF_TARGET_CODE_COLD
 #define RF_TARGET_CODE_CL
 #define RF_TARGET_CODE_CS
-#define RF_TARGET_CODE_XT
-#define RF_TARGET_CODE_COLD
 #define RF_TARGET_CODE_LN
 #define RF_TARGET_CODE_TG
+#define RF_TARGET_CODE_XT
 #endif
