@@ -654,7 +654,7 @@ rf_code_stod:
   sub  r0, r0, r0               @ AX = 0
   orrs r3, r3                   @ SET FLAGS
   bpl  stod1                    @ POSITIVE NUMBER
-  sub  r1, r1, #1               @ NEGITIVE NUMBER
+  sub  r0, r0, #1               @ NEGITIVE NUMBER
 stod1:
   b    dpush
 
