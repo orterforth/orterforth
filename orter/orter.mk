@@ -3,6 +3,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_bbc.o \
 	$(SYSTEM)/orter_hex.o \
 	$(SYSTEM)/orter_io.o \
+	$(SYSTEM)/orter_pty.o \
 	$(SYSTEM)/orter_ql.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
@@ -10,7 +11,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_z88.o \
 	orter/main.c
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lutil
 
 # BBC Micro
 $(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)
@@ -24,6 +25,11 @@ $(SYSTEM)/orter_hex.o : orter/hex.c orter/hex.h | $(SYSTEM)
 
 # nonblocking I/O utilities
 $(SYSTEM)/orter_io.o : orter/io.c orter/io.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# pty handling
+$(SYSTEM)/orter_pty.o : orter/pty.c orter/io.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

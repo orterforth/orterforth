@@ -7,6 +7,7 @@
 
 #include "bbc.h"
 #include "hex.h"
+#include "pty.h"
 #include "ql.h"
 #include "serial.h"
 #include "spectrum.h"
@@ -19,6 +20,7 @@ static int usage(void)
   /* an entry for each subcommand */
   fprintf(stderr, "             bbc ...\n");
   fprintf(stderr, "             hex ...\n");
+  fprintf(stderr, "             pty ...\n");
   fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
   fprintf(stderr, "             spectrum ...\n");
@@ -39,6 +41,9 @@ int main(int argc, char *argv[])
     }
     if (argc > 3 && !strcmp("hex", arg) && !strcmp("include", argv[2])) {
       return orter_hex_include(argv[3]);
+    }
+    if (argc > 2 && !strcmp("pty", arg)) {
+      return orter_pty(argv[2]);
     }
     if (!strcmp("ql", arg)) {
       return orter_ql(argc, argv);
