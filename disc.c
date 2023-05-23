@@ -189,24 +189,29 @@ static size_t mux_disc_rd(char *off, size_t len)
   return j;
 }
 
-/* read from mux console buffer */
-static size_t mux_console_rd(char *off, size_t len)
+size_t buf_rd(char *from_buf, char **from_off, size_t *from_len, char *off, size_t len)
 {
   /* number of bytes to read */
-  size_t s = (mux_out_len > len) ? len : mux_out_len;
+  size_t s = (*from_len > len) ? len : *from_len;
 
-  /* read bytes from mux buffer */
-  memcpy(off, mux_out_off, s);
-  mux_out_off += s;
-  mux_out_len -= s;
+  /* read bytes from buffer */
+  memcpy(off, *from_off, s);
+  *from_off += s;
+  *from_len -= s;
 
-  /* reset mux buffer */
-  if (!mux_out_len) {
-    mux_out_off = mux_out_buf;
-    mux_out_len = 0;
+  /* reset buffer */
+  if (!*from_len) {
+    *from_off = from_buf;
+    *from_len = 0;
   }
 
   return s;
+}
+
+/* read from mux console buffer */
+static size_t mux_out_rd(char *off, size_t len)
+{
+  return buf_rd(mux_out_buf, &mux_out_off, &mux_out_len, off, len);
 }
 
 /* write disc data to serial */
@@ -286,7 +291,7 @@ static int disc_mux(char **argv)
   /* disc read to serial out */
   orter_io_pipe_init(&out, -1, disc_rd, mux_disc_wr, orter_serial_fd);
   /* stdout buffer to stdout */
-  orter_io_pipe_init(&mux_out, -1, mux_console_rd, 0, 1);
+  orter_io_pipe_init(&mux_out, -1, mux_out_rd, 0, 1);
 
   /* don't log as we are using the console for output */
   log = 0;
