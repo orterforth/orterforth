@@ -7,6 +7,7 @@
 rf_trampoline:
 	stp  x29, x30, [sp, -16]!
 	mov  x29, sp
+	ldr  lr, =trampoline1
 trampoline1:
 	ldr  x0, =rf_fp
 	ldr  x0, [x0]
@@ -20,8 +21,9 @@ trampoline1:
 	ldr  x14, [x14]
 	ldr  x13, =rf_rp
 	ldr  x13, [x13]
-	blr  x0
-	b    trampoline1
+	br   x0
+	#blr  x0
+	#b    trampoline1
 trampoline2:
 	ldp  x29, x30, [sp], 16
 	ret
@@ -296,7 +298,7 @@ rf_code_uslas:
 	asr  x4, x3, #63
 	mov  x1, x4
 
-	b    umdiv3                  // return
+	b    umdiv3                 // return
 
 umdiv1:
 	adds x0, x0, x0             // double precision shift (modh, modl)
