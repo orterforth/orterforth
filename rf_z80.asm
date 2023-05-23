@@ -989,32 +989,20 @@ PUBLIC _rf_code_cold
 
 _rf_code_cold:
 
-  ld hl, RF_ORIGIN+$000C        ; set FORTH vocab addr to ORIGIN + 6
-  ld de, (RF_ORIGIN+$0022)      ; get the FORTH vocab addr
+  ld hl, _rf_code_cold          ; COLD vector init
+  ld (RF_ORIGIN+$0002), hl
+  ld hl, RF_ORIGIN+$000C        ; FORTH vocabulary init
+  ld de, (RF_ORIGIN+$0022)
   ldi
   ldi
-
-  ld hl, (RF_ORIGIN+$0010)      ; set UP to ORIGIN + 8
+  ld hl, (RF_ORIGIN+$0010)      ; UP init
   ld (_rf_up), hl
-
-  ld de, $0006                  ; to S0
-  add hl, de
-  ex de, hl
-  ld hl, RF_ORIGIN+$0012        ; from ORIGIN + 9
-  ld bc, $0016                  ; copy 11 words
+  ex de, hl                     ; USER variables init
+  ld hl, RF_ORIGIN+$000C
+  ld bc, $0016
   ldir
-
-  ld bc, (RF_ORIGIN+$0024)      ; get the ABORT PFA
-  ld hl, (_rf_up)               ; set RP to R0
-  ld de, $0008
-  add hl, de
-  ld a, (hl)
-  inc hl
-  ld h, (hl)
-  ld l, a
-  ld (_rf_rp), hl
-
-  jp (ix)
+  ld bc, (RF_ORIGIN+$0024)      ; IP init to ABORT
+  jp _rf_code_rpsto             ; jump to RP!
 
 PUBLIC _rf_code_cl
 
