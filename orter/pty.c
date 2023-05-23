@@ -1,8 +1,12 @@
+#ifdef __unix__
 #define _DEFAULT_SOURCE
 #define _XOPEN_SOURCE 500
+#endif
 #include <errno.h>
 #include <fcntl.h>
+#ifdef __unix__
 #include <pty.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
