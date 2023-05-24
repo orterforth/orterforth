@@ -286,11 +286,15 @@ static void rf_inst_cold(void)
   /* DEY, 0< END, */
 
   /* warm start */
+/*
   RF_USER_S0 = (uintptr_t) RF_S0;
+*/
+/*
   RF_USER_R0 = (uintptr_t) RF_R0;
+*/
   /*RF_USER_TIB = (uintptr_t) RF_TIB;*/
-  RF_USER_WIDTH = 31;
-  RF_USER_WARNING = 0;
+  /*RF_USER_WIDTH = 31;*/
+  /*RF_USER_WARNING = 0;*/
 
   /* cold start */
   /*RF_USER_FENCE = (uintptr_t) RF_INST_DICTIONARY;*/
@@ -306,15 +310,19 @@ static void rf_inst_cold(void)
 
   /* jump to RP! */
   /* 'T RP! JMP, ( RUN ) */
-  RF_RP_SET((uintptr_t *) RF_USER_R0);
+  /*RF_RP_SET((uintptr_t *) RF_USER_R0);*/
 
   /* : ABORT */
   /* SP! */
+/*
   RF_SP_SET((uintptr_t *) RF_USER_S0);
+*/
   /* DECIMAL */
+/*
   RF_USER_BASE = 10;
+*/
   /* DR0 */
-  RF_USER_OFFSET = 0;
+  /*RF_USER_OFFSET = 0;*/
   /* CR ." FORTH-65 V 4.0" */
   /* [COMPILE] FORTH */
   RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;
@@ -326,7 +334,7 @@ static void rf_inst_cold(void)
   /* 0 BLK ! */
   /*RF_USER_BLK = 0;*/
   /* [COMPILE] [ */
-  RF_USER_STATE = 0;
+  /*RF_USER_STATE = 0;*/
   /* then the outer interpreter loop */
   /* BEGIN RP! CR QUERY INTERPRET */
   /* STATE @ 0= IF ."  OK" ENDIF AGAIN */
@@ -374,7 +382,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, rf_code_orr },
   { 0, rf_code_xorr },
   { "SP@", rf_code_spat },
-  { 0, rf_code_spsto },
+  { "SP!", rf_code_spsto },
   { 0, rf_code_rpsto },
   { ";S", rf_code_semis },
   { 0, rf_code_leave },
@@ -402,7 +410,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, rf_code_dovar },
   { 0, rf_code_douse },
   { 0, rf_code_dodoe },
-  { 0, rf_code_cold },
+  { "COLD", rf_code_cold },
   { 0, rf_code_stod },
   { "D/CHAR", rf_code_dchar },
   { "BLOCK-WRITE", rf_code_bwrit },
@@ -413,21 +421,6 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
 #ifndef RF_BS
 #define RF_BS 0x007F
 #endif
-
-/* static location for IP to run a Forth word */
-static rf_code_t *rf_inst_load_cfa = 0;
-
-/* look up a Forth word and run the Forth machine */
-static void rf_inst_execute(const char *name, uint8_t len)
-{
-  /* set RP, IP */
-  RF_RP_SET((uintptr_t *) RF_USER_R0);
-  rf_inst_load_cfa = rf_inst_cfa(rf_inst_find(name, len));
-  RF_IP_SET((uintptr_t *) &rf_inst_load_cfa);
-  /* start at NEXT */
-  RF_JUMP_NEXT;
-  rf_trampoline();
-}
 
 /* look up a code address in the table */
 static void rf_inst_code_cd(void)
@@ -489,6 +482,8 @@ static void rf_inst_code_sb(void)
 /* bootstrap the installing Forth vocabulary */
 static void rf_inst_forward(void)
 {
+  uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
+
   int i;
 
   /* boot time literals and s0 for ?STACK */
@@ -557,14 +552,31 @@ static void rf_inst_forward(void)
   /* read from disc and run proto interpreter */
   rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
-    ":proto LIT 641 DUP LIT -660 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
-  rf_inst_execute("proto", 5);
+    ":proto SP! LIT 641 DUP LIT -660 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
+
+  /* set boot-up literals and run COLD */
+  origin[6] = (uintptr_t) rf_inst_vocabulary;
+  origin[8] = (uintptr_t) RF_USER;
+  origin[9] = (uintptr_t) RF_S0;
+  origin[10] = (uintptr_t) RF_R0;
+  origin[12] = 0x1F;
+  origin[15] = (uintptr_t) RF_USER_DP;
+  origin[17] = (uintptr_t) &rf_inst_vocabulary;
+  /* TODO find way to call load from proto */
+  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("proto", 5)) + 1);
+  rf_fp = rf_code_cold;
+  rf_trampoline();
 }
 
 static void rf_inst_load(void)
 {
-  /* TODO run via COLD */
-  rf_inst_execute("load", 4);
+  /* set boot-up literals and run COLD */
+  uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
+  origin[6] = (uintptr_t) rf_inst_vocabulary;
+  origin[15] = (uintptr_t) RF_USER_DP;
+  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("load", 4)) + 1);
+  rf_fp = rf_code_cold;
+  rf_trampoline();
 }
 
 #ifdef PICO
