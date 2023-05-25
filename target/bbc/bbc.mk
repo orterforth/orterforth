@@ -248,6 +248,8 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 
+	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$(shell echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
+
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
