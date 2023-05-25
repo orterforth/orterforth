@@ -30,7 +30,7 @@ BBCROMS := \
 	roms/bbcb/saa5050
 
 # include file maps to option
-BBCINC := target/bbc/$(BBCOPTION).inc
+BBCINC := target/bbc/default.inc
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
@@ -147,6 +147,13 @@ BBCCC65OPTS := -O -t none \
 	-DRF_ORG='0x$(BBCORG)' \
 	-DRF_ORIGIN='0x$(BBCORIGIN)' \
 	-DRF_TARGET_INC='"$(BBCINC)"'
+
+ifeq ($(BBCOPTION),assembly)
+BBCCC65OPTS += -DRF_ASSEMBLY
+endif
+ifeq ($(BBCOPTION),tape)
+BBCCC65OPTS += -DRF_ASSEMBLY
+endif
 
 # TODO remove general o and s rules?
 # general assemble rule
