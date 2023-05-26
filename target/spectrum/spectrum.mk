@@ -90,6 +90,7 @@ SPECTRUMSYSTEM := target/spectrum/system.c
 # minimal ROM-based
 ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
+# TODO pragma not in libs
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORIGIN
 SPECTRUMORIGIN := 0x87C0
@@ -242,6 +243,7 @@ SPECTRUMZCCOPTS := +zx \
 		-Ca-DRF_INST_OFFSET=$(SPECTRUMINSTOFFSET) \
 		-Ca-DRF_ORG=$(SPECTRUMORG) \
 		-Ca-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+		-Ca-DSPECTRUM \
 		-DRF_ORG=$(SPECTRUMORG) \
 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
 		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"'

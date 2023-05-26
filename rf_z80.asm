@@ -114,7 +114,9 @@ _rf_start:                      ; C code calls this to switch from registers to 
 
   pop hl                        ; save C return address
 IFDEF USEIY
+IFDEF SPECTRUM
   ld iy, $5C3A                  ; restore IY (ZX Spectrum)
+ENDIF
 ENDIF
   ld (_rf_sp), sp               ; switch SP
   ld sp, (_rf_z80_sp)
@@ -1002,6 +1004,10 @@ _rf_code_cold:
   ld bc, $0016
   ldir
   ld bc, (RF_ORIGIN+$0024)      ; IP init to ABORT
+  ld ix, next                   ; POINTER TO NEXT
+IFDEF USEIY
+  ld iy, hpush                  ; POINTER TO HPUSH
+ENDIF
   jp _rf_code_rpsto             ; jump to RP!
 
 PUBLIC _rf_code_cl
