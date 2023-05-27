@@ -598,7 +598,7 @@ rf_code_cold:
 	ldr  x1, [x3, #64]          // UP init
 	ldr  x0, =rf_up
  	str  x1, [x0]
-	mov  x2, #22                // USER variables init
+	mov  x2, #11                // USER variables init
 	mov  x15, x3
 	add  x15, x15, #48          // TODO use r3 and change below offset
 cold1:
