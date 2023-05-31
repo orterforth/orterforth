@@ -18,7 +18,7 @@
 rf_trampoline:
 _rf_trampoline:
 
-  push {fp, lr}
+  push {r7, r8, r10, fp, lr}
 trampoline1:
   ldr  r0, =rf_fp
   ldr  r0, [r0]
@@ -35,7 +35,7 @@ trampoline1:
   ldr  lr, =trampoline1         @ tail call
   bx   r0
 trampoline2:
-  pop  {fp, pc}
+  pop  {r7, r8, r10, fp, pc}
 
   .p2align 2
   .global rf_start
