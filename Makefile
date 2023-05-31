@@ -27,6 +27,9 @@ ifeq ($(shell getconf LONG_BIT),32)
 	PROC := i686
 endif
 endif
+ifeq (${PROC},armv7l)
+	PROC := armv6l
+endif
 endif
 
 # local system
@@ -247,11 +250,6 @@ include target/pico/pico.mk
 include target/ql/ql.mk
 
 include target/rc2014/rc2014.mk
-
-# Raspberry Pi 1 - armv6l assembly source is (currently) the same as armv7l
-rf_armv6l.s : rf_armv7l.s
-
-	cp -p $< $@
 
 # ROM file dir
 roms : 
