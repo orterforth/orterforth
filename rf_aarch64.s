@@ -5,9 +5,8 @@
 	.align 2
 	.global rf_trampoline
 rf_trampoline:
-	stp  x29, x30, [sp, -16]!
-	mov  x29, sp
-	ldr  lr, =trampoline1
+	stp  x13, x14, [sp, #-16]!
+	stp  x15, x30, [sp, #-16]!
 trampoline1:
 	ldr  x0, =rf_fp
 	ldr  x0, [x0]
@@ -21,11 +20,11 @@ trampoline1:
 	ldr  x14, [x14]
 	ldr  x13, =rf_rp
 	ldr  x13, [x13]
+	ldr  lr, =trampoline1
 	br   x0
-	#blr  x0
-	#b    trampoline1
 trampoline2:
-	ldp  x29, x30, [sp], 16
+	ldp  x15, x30, [sp], #16
+	ldp  x13, x14, [sp], #16
 	ret
 
 	.align 2
