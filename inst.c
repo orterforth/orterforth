@@ -1,7 +1,3 @@
-#ifdef __RC2014
-#include <z80.h>
-#endif
-
 #include "inst.h"
 #include "rf.h"
 #ifdef RF_INST_LOCAL_DISC
@@ -11,6 +7,12 @@
 /* const to compile to flash on e.g. Pico */
 const
 #include "model.inc"
+#endif
+
+#ifdef RF_INST_WAIT
+#ifdef __RC2014
+#include <z80.h>
+#endif
 #endif
 
 /* INST TIME DISC OPERATIONS */
@@ -289,9 +291,9 @@ static void rf_inst_cold(void)
 /*
   RF_USER_S0 = (uintptr_t) RF_S0;
 */
-/*
+
   RF_USER_R0 = (uintptr_t) RF_R0;
-*/
+
   /*RF_USER_TIB = (uintptr_t) RF_TIB;*/
   /*RF_USER_WIDTH = 31;*/
   /*RF_USER_WARNING = 0;*/
@@ -322,7 +324,7 @@ static void rf_inst_cold(void)
   RF_USER_BASE = 10;
 */
   /* DR0 */
-  /*RF_USER_OFFSET = 0;*/
+  RF_USER_OFFSET = 0;
   /* CR ." FORTH-65 V 4.0" */
   /* [COMPILE] FORTH */
   RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;
@@ -332,9 +334,9 @@ static void rf_inst_cold(void)
 
   /* : QUIT */
   /* 0 BLK ! */
-  /*RF_USER_BLK = 0;*/
+  RF_USER_BLK = 0;
   /* [COMPILE] [ */
-  /*RF_USER_STATE = 0;*/
+  RF_USER_STATE = 0;
   /* then the outer interpreter loop */
   /* BEGIN RP! CR QUERY INTERPRET */
   /* STATE @ 0= IF ."  OK" ENDIF AGAIN */
@@ -549,10 +551,12 @@ static void rf_inst_forward(void)
     ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP hld LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
+  rf_inst_compile(":EMPTY-BUFFERS LIT 0 FIRST C! FIRST DUP LIT 1 + LIMIT FIRST LIT 1 + MINUS + CMOVE ;S");
+
   /* read from disc and run proto interpreter */
   rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
-    ":proto SP! LIT 641 DUP LIT -660 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
+    ":proto SP! EMPTY-BUFFERS LIT 641 DUP LIT -660 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
 
   /* set boot-up literals and run COLD */
   origin[6] = (uintptr_t) rf_inst_vocabulary;
@@ -560,6 +564,7 @@ static void rf_inst_forward(void)
   origin[9] = (uintptr_t) RF_S0;
   origin[10] = (uintptr_t) RF_R0;
   origin[12] = 0x1F;
+  origin[13] = 0;
   origin[15] = (uintptr_t) RF_USER_DP;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
   /* TODO find way to call load from proto */
@@ -585,9 +590,11 @@ extern char rf_system_local_disc;
 
 void rf_inst(void)
 {
+#ifdef RF_INST_WAIT
 #ifdef __RC2014
   /* wait for disc server to init */
   z80_delay_ms(5000);
+#endif
 #endif
 
   /* cold start */

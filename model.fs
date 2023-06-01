@@ -1314,11 +1314,10 @@ R> IN ! R> BLK ! ;S
 
 :EMPTY-BUFFERS LIT 0 FIRST C! FIRST DUP 1+ LIMIT FIRST 1+ -
 CMOVE ;S
-:load CURRENT @ @ 1+ LIT 88 TOGGLE LIT 10 BASE ! EMPTY-BUFFERS
-LIT 83 LOAD xt
+:load SP! CURRENT @ @ 1+ LIT 88 TOGGLE LIT 10 BASE ! 
+EMPTY-BUFFERS LIT 83 LOAD xt
 ::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3 R>
 DROP ;S
-
 
 
 ( ORTERFORTH INST - FORTH                                     )
@@ -1338,6 +1337,7 @@ CREATE : 51 cd HERE cl - ! 192 STATE !
 ( need --> in order to progress to next screen                )
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
 -->
+
 
 
 
