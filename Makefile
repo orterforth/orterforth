@@ -229,6 +229,13 @@ include target/dragon/dragon.mk
 .PHONY : help
 help : $(TARGET)-help
 
+# symlink to local
+.PHONY : link
+link : $(ORTER) $(ORTERFORTH)
+
+	ln -fs "$(shell pwd)/$(ORTER)" /usr/local/bin/orter
+	ln -fs "$(shell pwd)/$(ORTERFORTH)" /usr/local/bin/orterforth
+
 # install to local
 .PHONY : install
 install : $(ORTER) $(ORTERFORTH)
