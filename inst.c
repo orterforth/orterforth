@@ -324,7 +324,7 @@ static void rf_inst_cold(void)
   RF_USER_BASE = 10;
 */
   /* DR0 */
-  RF_USER_OFFSET = 0;
+  /*RF_USER_OFFSET = 0;*/
   /* CR ." FORTH-65 V 4.0" */
   /* [COMPILE] FORTH */
   RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;
