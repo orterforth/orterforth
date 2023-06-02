@@ -288,12 +288,8 @@ static void rf_inst_cold(void)
   /* DEY, 0< END, */
 
   /* warm start */
-/*
-  RF_USER_S0 = (uintptr_t) RF_S0;
-*/
-
-  RF_USER_R0 = (uintptr_t) RF_R0;
-
+  /*RF_USER_S0 = (uintptr_t) RF_S0;*/
+  /*RF_USER_R0 = (uintptr_t) RF_R0;*/
   /*RF_USER_TIB = (uintptr_t) RF_TIB;*/
   /*RF_USER_WIDTH = 31;*/
   /*RF_USER_WARNING = 0;*/
@@ -567,7 +563,7 @@ static void rf_inst_forward(void)
   origin[13] = 0;
   origin[15] = (uintptr_t) RF_USER_DP;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
-  /* TODO find way to call load from proto */
+  /* TODO find way to call ABORT from proto */
   origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("proto", 5)) + 1);
   rf_fp = rf_code_cold;
   rf_trampoline();
@@ -579,7 +575,7 @@ static void rf_inst_load(void)
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
   origin[6] = (uintptr_t) rf_inst_vocabulary;
   origin[15] = (uintptr_t) RF_USER_DP;
-  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("load", 4)) + 1);
+  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("ABORT", 5)) + 1);
   rf_fp = rf_code_cold;
   rf_trampoline();
 }
