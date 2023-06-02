@@ -1344,13 +1344,13 @@ CREATE : 51 cd HERE cl - ! 192 STATE !
 
 ( forward reference words - these may be no-ops but may need  )
 ( stack effects e.g. . calls DROP. Others may never be called )
-: noop ; : ?EXEC ; : !CSP SP@ CSP ! ; : ] 192 STATE ! ;
+: ?EXEC ; : !CSP SP@ CSP ! ; : ] 192 STATE ! ;
 : ?CSP ; : SMUDGE CURRENT @ @ 32 TOGGLE ; : ERROR ; : ABORT ;
 : MESSAGE ; : QUIT ; : MIN ; : DR0 ; : R/W ; : . DROP ;
 ( these words are called by the model source                  )
 : HEX 16 BASE ! ; : CODE CREATE SMUDGE ;
 : DECIMAL 10 BASE ! ;
-: LITERAL COMPILE noop , ; IMMEDIATE
+: LITERAL 0 , , ; IMMEDIATE     ( forward reference to LIT    )
 : +ORIGIN origin + ;
 : [COMPILE] -FIND DROP DROP cl - , ; IMMEDIATE
 : BYTE.IN -FIND DROP DROP + ;
@@ -1358,19 +1358,19 @@ CREATE : 51 cd HERE cl - ! 192 STATE !
 -->
 
 
-( control words - some contain 'noop' forward references      )
+( control words - some containing forward references          )
 : BACK HERE - , ;
 : BEGIN HERE 1 ; IMMEDIATE
 : ENDIF DROP HERE OVER - SWAP ! ; IMMEDIATE
-: DO COMPILE noop HERE 3 ; IMMEDIATE
-: LOOP DROP COMPILE noop BACK ; IMMEDIATE
-: UNTIL DROP COMPILE noop BACK ; IMMEDIATE
-: AGAIN DROP COMPILE noop BACK ; IMMEDIATE
+: DO 0 , HERE 3 ; IMMEDIATE     ( forward reference to (DO    )
+: LOOP DROP 0 , BACK ; IMMEDIATE ( forward reference to (LOOP )
+: UNTIL DROP 0 , BACK ; IMMEDIATE ( forward ref to 0BRANCH    )
+: AGAIN DROP 0 , BACK ; IMMEDIATE ( forward ref to BRANCH     )
 : REPEAT >R >R [COMPILE] AGAIN R> R> 2 - [COMPILE] ENDIF ;
 IMMEDIATE
-: IF COMPILE noop HERE 0 , 2 ; IMMEDIATE
-: ELSE DROP COMPILE noop HERE 0 , SWAP 2 [COMPILE] ENDIF 2 ;
-IMMEDIATE
+: IF 0 , HERE 0 , 2 ; IMMEDIATE ( forward ref to 0BRANCH      )
+: ELSE DROP 0 , HERE 0 , SWAP 2 [COMPILE] ENDIF 2 ;
+IMMEDIATE                       ( forward ref to BRANCH       )
 : WHILE [COMPILE] IF 2 + ; IMMEDIATE
 -->
 
