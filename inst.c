@@ -336,7 +336,7 @@ static void rf_inst_cold(void)
   /* 0 BLK ! */
   RF_USER_BLK = 0;
   /* [COMPILE] [ */
-  RF_USER_STATE = 0;
+  /*RF_USER_STATE = 0;*/
   /* then the outer interpreter loop */
   /* BEGIN RP! CR QUERY INTERPRET */
   /* STATE @ 0= IF ."  OK" ENDIF AGAIN */
