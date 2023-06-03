@@ -103,6 +103,26 @@ void rf_next(void)
 {
   RF_START;
   rf_w = (rf_code_t *) *(RF_IP_GET);
+#ifdef RF_TRACE
+  {
+    char *i = (char *) rf_w - RF_WORD_SIZE;
+    int rr = (RF_R0) - (char *) rf_rp;
+
+    while (rr--) {
+      putchar(32);
+    }
+
+    putchar(*(--i) & 0x7F);
+    while (!(*(--i) & 0x80)) {
+      /*putchar(*i)*/;
+    }
+    while (!(*(++i) & 0x80)) {
+      putchar(*i);
+    }
+    putchar(10);
+  }
+#endif
+
   RF_IP_INC;
   RF_JUMP(*rf_w);
 }
@@ -1183,8 +1203,8 @@ static void rf_cold(void)
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
   *((uintptr_t *) origin[17]) = origin[6];
 
-  /* warm start vector */
   /* 15 # LDY, ( INDEX TO VOC-LINK ) 0= IF, ( FORCED ) */
+  /* warm start vector */
   /* HERE 06 +ORIGIN ! ( POINT RE-ENTRY TO HERE ) */
   /* 0F # LDY,  ( INDEX TO WARNING )   THEN, ( FROM IF, ) */
   i = 10;
