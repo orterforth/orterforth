@@ -1,6 +1,7 @@
 # orter - retrocomputing multitool
 $(ORTER) : \
 	$(SYSTEM)/orter_bbc.o \
+	$(SYSTEM)/orter_dragon.o \
 	$(SYSTEM)/orter_hex.o \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_pty.o \
@@ -15,6 +16,11 @@ $(ORTER) : \
 
 # BBC Micro
 $(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# Dragon 32/64
+$(SYSTEM)/orter_dragon.o : orter/dragon.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

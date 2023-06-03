@@ -19,6 +19,7 @@ static int usage(void)
 
   /* an entry for each subcommand */
   fprintf(stderr, "             bbc ...\n");
+  fprintf(stderr, "             dragon ...\n");
   fprintf(stderr, "             hex ...\n");
   fprintf(stderr, "             pty ...\n");
   fprintf(stderr, "             ql ...\n");
@@ -29,12 +30,17 @@ static int usage(void)
   return 1;
 }
 
+int orter_dragon(int argc, char *argv[]);
+
 int main(int argc, char *argv[])
 {
   if (argc > 1) {
     char *arg = argv[1];
     if (!strcmp("bbc", arg)) {
       return orter_bbc(argc, argv);
+    }
+    if (!strcmp("dragon", arg)) {
+      return orter_dragon(argc, argv);
     }
     if (argc > 2 && !strcmp("hex", arg) && !strcmp("read", argv[2])) {
       return orter_hex_read();

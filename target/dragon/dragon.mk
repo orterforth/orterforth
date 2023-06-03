@@ -200,7 +200,7 @@ endif
 
 dragon/orterforth.bin : dragon/orterforth
 
-	sh target/dragon/bin-header.sh $(shell $(STAT) $<) > $@
+	$(ORTER) dragon bin header 2 $(DRAGONORG) $(shell $(STAT) $<) $(DRAGONORG) > $@
 	cat $< >> $@
 
 dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
