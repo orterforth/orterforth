@@ -42,7 +42,7 @@ pico/orterforth.uf2 : \
 	persci.h \
 	rf.c \
 	rf.h \
-	system.c \
+	target/pico/system.c \
 	system.inc
 
 	rm -rf pico/orterforth.*
