@@ -78,15 +78,18 @@ static int disc_create(void)
   return 0;
 }
 
-/* DISPATCH SERIAL READ/WRITE TO FUNCTION POINTERS */
-
+/* NONBLOCKING I/O PIPES */
 static orter_io_pipe_t in;
 static orter_io_pipe_t out;
-
-/* mux of disc and serial console using bit 7 */
-static char mux = 0;
 static orter_io_pipe_t mux_in;
 static orter_io_pipe_t mux_out;
+static orter_io_pipe_t *pipes[4] = {
+    &in,
+    &out,
+    &mux_in,
+    &mux_out
+};
+static int pipe_count = 2;
 
 /* determines whether to log disc I/O to stderr */
 static char log = 1;
@@ -226,13 +229,6 @@ static size_t mux_disc_wr(char *off, size_t len)
   return orter_io_fd_wr(orter_serial_fd, buf, len);
 }
 
-static orter_io_pipe_t *pipes[4] = {
-    &in,
-    &out,
-    &mux_in,
-    &mux_out
-};
-
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
@@ -240,7 +236,7 @@ static int serve(char *dr0, char *dr1)
   rf_persci_insert(0, dr0);
   rf_persci_insert(1, dr1);
 
-  return orter_io_pipe_loop(pipes, mux ? 4 : 2);
+  return orter_io_pipe_loop(pipes, pipe_count);
 }
 
 static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
@@ -282,8 +278,8 @@ static int disc_mux(char **argv)
     return exit;
   }
 
-  /* enable mux, create pipelines */
-  mux = 1;
+  /* include mux pipes, create pipelines */
+  pipe_count = 4;
   /* serial in to disc (and stdout buffer) */
   orter_io_pipe_init(&in, orter_serial_fd, mux_disc_rd, disc_wr, -1);
   /* stdin to serial out */
