@@ -9,7 +9,9 @@ DR0=library.img
 DR1=data.img
 MAMEOPTS := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
 SERIALBAUD := 9600
-STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout mame.pid mame
+START := sh scripts/start.sh /dev/stdin /dev/stdout
+STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; $(START) mame.pid mame
+STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
 STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh disc.pid
 STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
 WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
@@ -64,7 +66,7 @@ ORTER := $(SYSTEM)/orter
 ORTERFORTH := $(SYSTEM)/orterforth
 
 # scripts for disc
-STARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh /dev/stdin /dev/stdout disc.pid $(DISC)
+STARTDISC := $(STARTDISCMSG) ; $(START) disc.pid $(DISC)
 STARTDISCTCP := $(STARTDISC) tcp 5705
 
 # local system object files

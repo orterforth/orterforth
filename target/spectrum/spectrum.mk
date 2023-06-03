@@ -30,7 +30,6 @@ SPECTRUMROMS := \
 	roms/spectrum/spectrum.rom
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
-STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
 
 # emulator to build fast
 $(SYSTEM)/emulate_spectrum : \
@@ -371,7 +370,7 @@ ifeq ($(SPECTRUMINSTMACHINE),fuse)
 	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
 	@$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx &
 	@$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx &
-	@sh scripts/start.sh /dev/stdin /dev/stdout fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
+	@$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
 endif
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
 	@printf '* \033[1;33mRunning headless emulator\033[0;0m\n'

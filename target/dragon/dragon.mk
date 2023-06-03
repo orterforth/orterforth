@@ -151,9 +151,7 @@ endif
 ifeq ($(DRAGONMACHINE),xroar)
 	@printf '* \033[1;33mStarting XRoar\033[0;0m\n'
 	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
-	@sh scripts/start.sh \
-		/dev/stdin \
-		/dev/stdout \
+	@$(START) \
 		xroar.pid \
 		xroar \
 		$(DRAGONXROAROPTS) \
