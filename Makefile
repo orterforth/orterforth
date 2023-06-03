@@ -129,7 +129,7 @@ $(SYSTEM)-build : \
 .PHONY : $(SYSTEM)-clean
 $(SYSTEM)-clean :
 
-	rm -rf $(SYSTEM)/*
+	rm -f $(SYSTEM)/*
 	rm -f model.img
 	rm -f model.inc
 
