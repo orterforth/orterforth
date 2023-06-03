@@ -1,5 +1,37 @@
 # === ZX Spectrum ===
 
+FUSEOPTS := \
+	--auto-load \
+	--graphics-filter 2x \
+	--interface1 \
+	--machine 48 \
+	--no-confirm-actions \
+	--phantom-typist-mode keyword \
+	--rs232-rx spectrum/fuse-rs232-rx \
+	--rs232-tx spectrum/fuse-rs232-tx
+# include file
+SPECTRUMINC := target/spectrum/spectrum.inc
+# default inst time emulator
+SPECTRUMINSTMACHINE := fuse
+# locates inst code at 0xC800
+SPECTRUMINSTOFFSET := 18432
+# command line linked libraries
+SPECTRUMLIBS := \
+	-lmzx_tiny \
+	-lndos \
+	-lspectrum/inst \
+	-lspectrum/rf \
+	-lspectrum/system
+# ORG starts at non-contended memory, 0x8000, for performance
+SPECTRUMORG := 0x8000
+# ROM files for emulator
+SPECTRUMROMS := \
+	roms/spectrum/if1-2.rom \
+	roms/spectrum/spectrum.rom
+# C impl of system dependent code uses z88dk libs
+SPECTRUMSYSTEM := target/spectrum/system.c
+STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
+
 # emulator to build fast
 $(SYSTEM)/emulate_spectrum : \
 	$(SYSTEM)/emulate_spectrum.o \
@@ -54,23 +86,6 @@ else
 FUSE := $(shell which fuse)
 endif
 
-# include file
-SPECTRUMINC := target/spectrum/spectrum.inc
-
-# default inst time emulator
-SPECTRUMINSTMACHINE := fuse
-
-# locates inst code at 0xC800
-SPECTRUMINSTOFFSET := 18432
-
-# command line linked libraries
-SPECTRUMLIBS := \
-	-lmzx_tiny \
-	-lndos \
-	-lspectrum/inst \
-	-lspectrum/rf \
-	-lspectrum/system
-
 # config option
 ifeq ($(TARGET),spectrum)
 SPECTRUMOPTION := $(OPTION)
@@ -79,17 +94,6 @@ SPECTRUMOPTION := assembly
 # SPECTRUMOPTION := assembly-z88dk
 # SPECTRUMOPTION := default
 endif
-
-# ORG starts at non-contended memory, 0x8000, for performance
-SPECTRUMORG := 0x8000
-
-# ROM files for emulator
-SPECTRUMROMS := \
-	roms/spectrum/if1-2.rom \
-	roms/spectrum/spectrum.rom
-
-# C impl of system dependent code uses z88dk libs
-SPECTRUMSYSTEM := target/spectrum/system.c
 
 # minimal ROM-based
 ifeq ($(SPECTRUMOPTION),assembly)
@@ -158,8 +162,6 @@ SPECTRUMRUNDEPS := \
 	$(ORTER)
 endif
 
-STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
-
 # start disc
 ifeq ($(SPECTRUMMACHINE),fuse)
 SPECTRUMSTARTDISC := \
@@ -175,16 +177,6 @@ SPECTRUMSTARTDISC := \
 	$(STARTDISCMSG) ; \
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
 endif
-
-FUSEOPTS := \
-	--auto-load \
-	--graphics-filter 2x \
-	--interface1 \
-	--machine 48 \
-	--no-confirm-actions \
-	--phantom-typist-mode keyword \
-	--rs232-rx spectrum/fuse-rs232-rx \
-	--rs232-tx spectrum/fuse-rs232-tx
 
 .PHONY : spectrum-hw
 spectrum-hw : spectrum/hw.tap
