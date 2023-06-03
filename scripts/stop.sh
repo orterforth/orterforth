@@ -12,7 +12,7 @@ PIDFILE="$1"
 if [ -f "$PIDFILE" ]; then
   # stop existing processes in pidfile
   kill $(cat "$PIDFILE") 2> /dev/null || true
-  sleep 2
+  sleep 1
   kill -9 $(cat "$PIDFILE") 2> /dev/null || true
 
   # remove pidfile
