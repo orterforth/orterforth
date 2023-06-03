@@ -1,20 +1,5 @@
 # === Dragon 32/64 ===
 
-dragon :
-
-	mkdir $@
-
-.PHONY : dragon-build
-dragon-build : dragon/inst.bin
-
-.PHONY : dragon-clean
-dragon-clean :
-
-	rm -f dragon/*
-
-DRAGONOPTION := assembly
-# DRAGONOPTION := default
-
 DRAGONCMOCOPTS := --dragon -Werror
 DRAGONDEPS := dragon/rf.o dragon/inst.o dragon/system.o
 DRAGONLINK := true
@@ -28,6 +13,25 @@ DRAGONORIGIN := 0x3180
 endif
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
+
+dragon :
+
+	mkdir $@
+
+.PHONY : dragon-build
+dragon-build : dragon/inst.bin
+
+.PHONY : dragon-clean
+dragon-clean :
+
+	rm -f dragon/*
+
+ifeq ($(TARGET),dragon)
+DRAGONOPTION := $(OPTION)
+else
+DRAGONOPTION := assembly
+# DRAGONOPTION := default
+endif
 
 ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
