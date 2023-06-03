@@ -1151,7 +1151,7 @@ CODE BLOCK-READ   ( BUF.ADDR-1. EXIT AT 128 CHAR OR CONTROL *)
 19 cs BYTE.IN BLOCK    REPLACED.BY  R/W      DECIMAL ;S    
 
 (  ',  FORGET,  \                                 WFR-79APR28 )
-HEX  ( 3   WIDTH  ! )
+HEX    1F  WIDTH  !
 : '          ( FIND NEXT WORDS PFA; COMPILE IT, IF COMPILING *)
     -FIND  0=  0  ?ERROR  DROP  [COMPILE]  LITERAL  ;
                                     IMMEDIATE

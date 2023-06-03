@@ -558,7 +558,6 @@ static void rf_inst_forward(void)
   origin[8] = (uintptr_t) RF_USER;
   origin[9] = (uintptr_t) RF_S0;
   origin[10] = (uintptr_t) RF_R0;
-  origin[12] = 0x1F; /* TODO whether WIDTH should be set to 31 in model source and not 3 */
   origin[13] = 0;
   origin[15] = (uintptr_t) RF_USER_DP;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
