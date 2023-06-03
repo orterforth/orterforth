@@ -188,15 +188,11 @@ dragon/link.o : link.c rf.h target/dragon/system.inc | dragon
 
 ifeq ($(DRAGONLINK),true)
 dragon/orterforth : dragon/link dragon/spacer dragon/installed
-
-	cat dragon/link > $@.io
-	cat dragon/spacer >> $@.io
 else
 dragon/orterforth : dragon/installed
-
 endif
-	cat dragon/installed >> $@.io
-	mv $@.io $@
+
+	cat $^ > $@
 
 dragon/orterforth.bin : dragon/orterforth
 
