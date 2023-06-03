@@ -117,17 +117,17 @@ int orter_serial_open(char *name, int baud)
     perror("serial open failed");
     return errno;
   }
-  /* check it's a tty */  
+  /* check it's a tty */
   if (!isatty(orter_serial_fd)) {
     perror("serial not a tty");
     return -1;
   }
-  /* get lock */  
+  /* get lock */
   if (flock(orter_serial_fd, LOCK_EX) < 0) {
     perror("serial flock failed");
     return errno;
   }
-  /* get attr */  
+  /* get attr */
   if (tcgetattr(orter_serial_fd, &serial_attr_save) < 0) {
     perror("serial tcgetattr failed");
     return errno;
@@ -455,6 +455,8 @@ int orter_serial(int argc, char **argv)
     orter_io_pipe_move(&swr);
     /* serial to stdout */
     orter_io_pipe_move(&out);
+
+    /* TODO handle eof timer in a general way */
 
     /* start EOF timer */
     if (!eof && orter_io_eof) {
