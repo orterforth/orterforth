@@ -312,25 +312,21 @@ static void rf_inst_cold(void)
 
   /* : ABORT */
   /* SP! */
-/*
-  RF_SP_SET((uintptr_t *) RF_USER_S0);
-*/
+  /*RF_SP_SET((uintptr_t *) RF_USER_S0);*/
   /* DECIMAL */
-/*
-  RF_USER_BASE = 10;
-*/
+  /*RF_USER_BASE = 10;*/
   /* DR0 */
   /*RF_USER_OFFSET = 0;*/
   /* CR ." FORTH-65 V 4.0" */
   /* [COMPILE] FORTH */
-  RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;
+  /*RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;*/
   /* DEFINITIONS */
-  RF_USER_CURRENT = (uintptr_t) &rf_inst_vocabulary;
+  /*RF_USER_CURRENT = (uintptr_t) &rf_inst_vocabulary;*/
   /* QUIT */
 
   /* : QUIT */
   /* 0 BLK ! */
-  RF_USER_BLK = 0;
+  /*RF_USER_BLK = 0;*/
   /* [COMPILE] [ */
   /*RF_USER_STATE = 0;*/
   /* then the outer interpreter loop */
