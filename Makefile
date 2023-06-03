@@ -169,7 +169,7 @@ $(SYSTEM)/rf.o : rf.c rf.h system.inc | $(SYSTEM)
 # assembly code lib
 $(SYSTEM)/rf_$(PROC).o : rf_$(PROC).s | $(SYSTEM)
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -DRF_OPER=$(OPER) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # system dependent code lib
 $(SYSTEM)/system.o : system.c rf.h system.inc persci.h | $(SYSTEM)
