@@ -97,9 +97,12 @@ ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
+QLMACHINE := sqlux
+
 # saved binary as hex
 ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 
+ifeq ($(QLMACHINE),real)
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE
 
@@ -120,6 +123,41 @@ ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
 	@mv $@.io $@
 	@echo "* Done"
 	@sleep 1
+endif
+ifeq ($(QLMACHINE),sqlux)
+# pty test for QL emulator
+# socat -d -d -v pty,rawer,link=pty EXEC:cat,pty,rawer &
+# socat -d -d -v - pty,rawer,link=pty
+# sleep 1
+	socat -d -d -v - pty,rawer,link=pty,wait-slave < rx > tx
+	sleep 1
+	ls -l /dev/pts
+	sleep 5
+	sqlux --ser2 pty --ramsize 128 --romdir ../sQLux/roms --win_size 2x &
+
+	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
+	@read -p "Then press enter to start: " LINE
+
+	@echo "* Loading loader..."
+	cat ql/loader-inst.ser > rx
+
+	@echo "* Loading installer..."
+	sleep 10
+	cat ql/inst.ser > rx
+
+	# TODO use disc start/stop script
+	@echo "* Starting disc and waiting for completion..."
+	@touch $@.io
+	sh scripts/start.sh tx rx disc.pid $(DISC)
+
+	$(WAITUNTILSAVED)
+
+	$(STOPDISC)
+
+	@mv $@.io $@
+	@echo "* Done"
+	@sleep 1
+endif
 
 # saved binary with serial header
 ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
