@@ -15,7 +15,7 @@ sleep 1
 printf '\n'
 sleep 1
 
-# we may be in Forth, so exit
+# we may be in Forth, so exit to Basic
 printf 'MON\n'
 sleep 1
 
