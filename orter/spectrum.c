@@ -69,6 +69,7 @@ int orter_spectrum_fuse_serial_putc(int c, FILE *ptr)
   return c;
 }
 
+/* TODO orter_io */
 static void write_u16le(uint16_t u16, int (*w)(int))
 {
   w(u16 & 255);
