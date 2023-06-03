@@ -547,19 +547,18 @@ static void rf_inst_forward(void)
     ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP hld LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
 
-  rf_inst_compile(":EMPTY-BUFFERS LIT 0 FIRST C! FIRST DUP LIT 1 + LIMIT FIRST LIT 1 + MINUS + CMOVE ;S");
-
   /* read from disc and run proto interpreter */
   rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
-    ":proto SP! EMPTY-BUFFERS LIT 641 DUP LIT -660 + 0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
+    ":proto SP! LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! LIT 641 DUP LIT -660 + "
+    "0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
 
   /* set boot-up literals and run COLD */
   origin[6] = (uintptr_t) rf_inst_vocabulary;
   origin[8] = (uintptr_t) RF_USER;
   origin[9] = (uintptr_t) RF_S0;
   origin[10] = (uintptr_t) RF_R0;
-  origin[12] = 0x1F;
+  origin[12] = 0x1F; /* TODO whether WIDTH should be set to 31 in model source and not 3 */
   origin[13] = 0;
   origin[15] = (uintptr_t) RF_USER_DP;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
@@ -573,8 +572,10 @@ static void rf_inst_load(void)
 {
   /* set boot-up literals and run COLD */
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
+  /* reset after updated by proto */
   origin[6] = (uintptr_t) rf_inst_vocabulary;
   origin[15] = (uintptr_t) RF_USER_DP;
+  /* call proto's ABORT */
   origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("ABORT", 5)) + 1);
   rf_fp = rf_code_cold;
   rf_trampoline();
