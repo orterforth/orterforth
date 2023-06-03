@@ -11,8 +11,8 @@ You will need:
 
 To build, call:
 
- make TARGET=dragon DRAGONOPTION=assembly (6809 assembler)
- make TARGET=dragon DRAGONOPTION=default (default C build)
+ make TARGET=dragon OPTION=assembly (6809 assembler)
+ make TARGET=dragon OPTION=default (default C build)
 
 Target files built at:
 
