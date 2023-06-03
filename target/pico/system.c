@@ -55,7 +55,7 @@ void rf_code_key(void)
     } else {
 
       /* get key */
-      c = fgetc(stdin);
+      c = getchar();
 
       /* exit if eof */
       if (c == -1) {
@@ -98,7 +98,7 @@ void rf_disc_read(char *p, uint8_t len)
     }
   } else {
     for (; len; --len) {
-      *(p++) = fgetc(stdin) & 0x7F;
+      *(p++) = getchar() & 0x7F;
     }
   }
 }
