@@ -353,3 +353,15 @@ void orter_io_put_16be(uint16_t u)
   fputc((uint8_t) (u >> 8), stdout);
   fputc((uint8_t) (u & 0x00FF), stdout);
 }
+
+void orter_io_put_16le(uint16_t u)
+{
+  fputc((uint8_t) (u & 0x00FF), stdout);
+  fputc((uint8_t) (u >> 8), stdout);
+}
+
+void orter_io_put_32le(uint32_t u)
+{
+  orter_io_put_16le((uint16_t) u & 0x0000FFFF);
+  orter_io_put_16le((uint16_t) (u >> 16));
+}

@@ -76,4 +76,10 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num);
 /* write 16 bit BE int */
 void orter_io_put_16be(uint16_t u);
 
+/* write 16 bit LE int */
+void orter_io_put_16le(uint16_t u);
+
+/* write 32 bit LE int */
+void orter_io_put_32le(uint32_t u);
+
 #endif /* ORTER_IO_H_ */

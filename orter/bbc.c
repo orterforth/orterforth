@@ -6,25 +6,11 @@
 #include "bbc.h"
 #include "io.h"
 
-/* TODO move to orter_io */
-static void put16le(uint16_t n)
-{
-  fputc((uint8_t) (n & 0x00FF), stdout);
-  fputc((uint8_t) (n >> 8), stdout);
-}
-
 /* TODO move to orter_io with a further TODO to move to somewhere else */
 static void set16le(uint16_t n, uint8_t *p)
 {
   *(p++) = (uint8_t) (n & 0x00FF);
   *p = (uint8_t) (n >> 8);
-}
-
-/* TODO move to orter_io */
-static void put32le(uint32_t n)
-{
-  put16le((uint16_t) n & 0x0000FFFF);
-  put16le((uint16_t) (n >> 16));
 }
 
 /* TODO move to orter_io with a further TODO to move to somewhere else */
@@ -60,14 +46,14 @@ static uint16_t crc(uint8_t *bytes, uint16_t len)
 
 static void chunk(uint16_t id, uint32_t length)
 {
-  put16le(id);
-  put32le(length);
+  orter_io_put_16le(id);
+  orter_io_put_32le(length);
 }
 
 static void carrier(uint16_t cycles)
 {
   chunk(0x0110, 2);
-  put16le(cycles);
+  orter_io_put_16le(cycles);
 }
 
 /* TODO static for now */
@@ -137,7 +123,7 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 
   /* integer gap */
   chunk(0x0112, 2);
-  put16le(600);
+  orter_io_put_16le(600);
 
   /* done */
   fflush(stdout);
