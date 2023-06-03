@@ -85,8 +85,12 @@ include orter/orter.mk
 
 # === LOCAL SYSTEM ===
 
+ifeq ($(TARGET),$(SYSTEM))
+SYSTEMOPTION := $(OPTION)
+else
 # SYSTEMOPTION := assembly
 SYSTEMOPTION := default
+endif
 
 SYSTEMDEPS := \
 	$(SYSTEM)/inst.o \

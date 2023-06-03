@@ -10,7 +10,7 @@ To build a version implemented in assembly, for performance,
 call:
 
  make clean
- make SYSTEMOPTION=assembly
+ make OPTION=assembly
 
 The target executable is built at the location:
 
@@ -47,6 +47,6 @@ where <target> is one of:
 
   bbc
   pico
-  rc2014
   ql
+  rc2014
   spectrum
