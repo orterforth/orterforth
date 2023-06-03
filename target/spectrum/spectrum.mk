@@ -72,9 +72,13 @@ SPECTRUMLIBS := \
 	-lspectrum/system
 
 # config option
+ifeq ($(TARGET),spectrum)
+SPECTRUMOPTION := $(OPTION)
+else
 SPECTRUMOPTION := assembly
 # SPECTRUMOPTION := assembly-z88dk
 # SPECTRUMOPTION := default
+endif
 
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 0x8000
