@@ -19,9 +19,10 @@ void rf_init(void)
   /* allocate memory */
   rf_origin = malloc(RF_MEMORY_SIZE);
   if (!rf_origin) {
-    /* TODO loop forever for visibility */
-    perror("memory init failed");
-    exit(1);
+    for (;;) {
+      perror("memory init failed");
+      sleep_ms(1000);
+    }
   }
 }
 
@@ -29,9 +30,12 @@ void rf_code_emit(void)
 {
   RF_START;
   {
-    uint8_t c = RF_SP_POP & 0x7F;
+    int c = RF_SP_POP & 0x7F;
 
-    putchar(c);
+    /* write char, wait if serial disconnected */
+    while (putchar(c) == -1) {
+      sleep_ms(1000);
+    }
 
     /* backspace erase */
     if (c == 0x08) {
@@ -54,12 +58,9 @@ void rf_code_key(void)
       c = *(rf_system_auto_cmd++);
     } else {
 
-      /* get key */
-      c = getchar();
-
-      /* exit if eof */
-      if (c == -1) {
-        exit(0);
+      /* read char, wait if serial disconnected */
+      while ((c = fgetc(stdin)) == -1) {
+        sleep_ms(1000);
       }
 
       /* LF to CR */
@@ -98,7 +99,7 @@ void rf_disc_read(char *p, uint8_t len)
     }
   } else {
     for (; len; --len) {
-      *(p++) = getchar() & 0x7F;
+      *(p++) = fgetc(stdin) & 0x7F;
     }
   }
 }
@@ -108,9 +109,10 @@ void rf_disc_write(char *p, uint8_t len)
   if (rf_system_local_disc) {
     for (; len; --len) {
       if (rf_persci_putc(*(p++)) == -1) {
-        /* TODO loop forever for visibility */
-        fprintf(stderr, "rf_persci_putc invalid state\n");
-        exit(1);
+        for (;;) {
+          fprintf(stderr, "rf_persci_putc invalid state\n");
+          sleep_ms(1000);
+        }
       }
     }
   } else {
