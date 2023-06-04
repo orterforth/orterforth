@@ -285,36 +285,10 @@ typedef unsigned long uintptr_t;
 #define RF_USER_S0 rf_up[RF_USER_S0_IDX]
 #define RF_USER_R0_IDX 4
 #define RF_USER_R0 rf_up[RF_USER_R0_IDX]
-#define RF_USER_TIB_IDX 5
-#define RF_USER_TIB rf_up[RF_USER_TIB_IDX]
-#define RF_USER_WIDTH_IDX 6
-#define RF_USER_WIDTH rf_up[RF_USER_WIDTH_IDX]
-#define RF_USER_WARNING_IDX 7
-#define RF_USER_WARNING rf_up[RF_USER_WARNING_IDX]
-#define RF_USER_FENCE_IDX 8
-#define RF_USER_FENCE rf_up[RF_USER_FENCE_IDX]
 #define RF_USER_DP_IDX 9
 #define RF_USER_DP rf_up[RF_USER_DP_IDX]
-#define RF_USER_VOCLINK_IDX 10
-#define RF_USER_VOCLINK rf_up[RF_USER_VOCLINK_IDX]
-#define RF_USER_BLK_IDX 11
-#define RF_USER_BLK rf_up[RF_USER_BLK_IDX]
-#define RF_USER_IN_IDX 12
-#define RF_USER_IN rf_up[RF_USER_IN_IDX]
 #define RF_USER_OUT_IDX 13
 #define RF_USER_OUT rf_up[RF_USER_OUT_IDX]
-#define RF_USER_OFFSET_IDX 15
-#define RF_USER_OFFSET rf_up[RF_USER_OFFSET_IDX]
-#define RF_USER_CONTEXT_IDX 16
-#define RF_USER_CONTEXT rf_up[RF_USER_CONTEXT_IDX]
-#define RF_USER_CURRENT_IDX 17
-#define RF_USER_CURRENT rf_up[RF_USER_CURRENT_IDX]
-#define RF_USER_STATE_IDX 18
-#define RF_USER_STATE rf_up[RF_USER_STATE_IDX]
-#define RF_USER_BASE_IDX 19
-#define RF_USER_BASE rf_up[RF_USER_BASE_IDX]
-#define RF_USER_CSP_IDX 22
-#define RF_USER_CSP rf_up[RF_USER_CSP_IDX]
 
 /* FORTH MACHINE */
 
