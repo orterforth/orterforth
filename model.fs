@@ -1314,12 +1314,12 @@ R> IN ! R> BLK ! ;S
 
 :EMPTY-BUFFERS LIT 0 FIRST C! FIRST DUP 1+ LIMIT FIRST 1+ -
 CMOVE ;S
+:QUIT [ CURRENT @ @ 1+ LIT 88 TOGGLE EMPTY-BUFFERS
+LIT 83 LOAD xt
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 17 cs origin + @
-DUP CONTEXT ! CURRENT ! [ CURRENT @ @ 1+ LIT 88 TOGGLE
-EMPTY-BUFFERS LIT 83 LOAD xt ::X LIT 1 BLK +! LIT 0 IN ! BLK @
-LIT 7 AND 0= 0BRANCH ^3 R> DROP ;S
-
-
+DUP CONTEXT ! CURRENT ! QUIT
+::X LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
+R> DROP ;S
 ( ORTERFORTH INST - FORTH                                     )
 ( Code to load the fig-Forth Model source follows. Some words )
 ( are forward defined as they are used in the fig source.     )

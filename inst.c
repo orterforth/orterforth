@@ -546,7 +546,7 @@ static void rf_inst_forward(void)
   /* read from disc and run proto interpreter */
   rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
-    ":proto SP! LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! LIT 641 DUP LIT -660 + "
+    ":proto SP! LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! LIT 641 DUP LIT -661 + "
     "0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
 
   /* set boot-up literals and run COLD */
