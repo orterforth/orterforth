@@ -98,7 +98,7 @@ SYSTEMOPTION := default
 ifeq ($(TARGET),$(SYSTEM))
 ifneq ($(OPTION),)
 SYSTEMOPTION := $(OPTION)
-else
+endif
 endif
 
 # local system assembly option config:
