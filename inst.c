@@ -269,69 +269,12 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
 /* USRVER = r for retro */
 #define RF_USRVER 0x0072
 
-/* inst time cold start, based on COLD, ABORT, QUIT */
+/* inst time cold start */
 static void rf_inst_cold(void)
 {
-  /* set vocabulary */
-  /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
-  /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
   rf_inst_vocabulary = 0;
-
-  /* set UP */
-  /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */
-  /* 11 +ORIGIN LDA, UP 1+ STA, */
   rf_up = (uintptr_t *) RF_USER;
-
-  /* set USER vars */
-  /* BEGIN, 0C +ORIGIN ,Y LDA, ( FROM LITERAL AREA ) */
-  /* UP )Y STA, ( TO USER AREA ) */
-  /* DEY, 0< END, */
-
-  /* warm start */
-  /*RF_USER_S0 = (uintptr_t) RF_S0;*/
-  /*RF_USER_R0 = (uintptr_t) RF_R0;*/
-  /*RF_USER_TIB = (uintptr_t) RF_TIB;*/
-  /*RF_USER_WIDTH = 31;*/
-  /*RF_USER_WARNING = 0;*/
-
-  /* cold start */
-  /*RF_USER_FENCE = (uintptr_t) RF_INST_DICTIONARY;*/
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
-  /*RF_USER_VOCLINK = 0;*/
-
-  /* set IP to ABORT */
-  /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
-  /* # LDA, IP STA, */
-
-  /* create 6502 JMP ind */
-  /* 6C # LDA, W 1 - STA, */
-
-  /* jump to RP! */
-  /* 'T RP! JMP, ( RUN ) */
-  /*RF_RP_SET((uintptr_t *) RF_USER_R0);*/
-
-  /* : ABORT */
-  /* SP! */
-  /*RF_SP_SET((uintptr_t *) RF_USER_S0);*/
-  /* DECIMAL */
-  /*RF_USER_BASE = 10;*/
-  /* DR0 */
-  /*RF_USER_OFFSET = 0;*/
-  /* CR ." FORTH-65 V 4.0" */
-  /* [COMPILE] FORTH */
-  /*RF_USER_CONTEXT = (uintptr_t) &rf_inst_vocabulary;*/
-  /* DEFINITIONS */
-  /*RF_USER_CURRENT = (uintptr_t) &rf_inst_vocabulary;*/
-  /* QUIT */
-
-  /* : QUIT */
-  /* 0 BLK ! */
-  /*RF_USER_BLK = 0;*/
-  /* [COMPILE] [ */
-  /*RF_USER_STATE = 0;*/
-  /* then the outer interpreter loop */
-  /* BEGIN RP! CR QUERY INTERPRET */
-  /* STATE @ 0= IF ."  OK" ENDIF AGAIN */
 }
 
 /* Table of inst time code addresses */
