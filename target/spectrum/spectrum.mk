@@ -86,12 +86,13 @@ FUSE := $(shell which fuse)
 endif
 
 # config option
-ifeq ($(TARGET),spectrum)
-SPECTRUMOPTION := $(OPTION)
-else
 SPECTRUMOPTION := assembly
 # SPECTRUMOPTION := assembly-z88dk
 # SPECTRUMOPTION := default
+ifeq ($(TARGET),spectrum)
+ifneq ($(OPTION),)
+SPECTRUMOPTION := $(OPTION)
+endif
 endif
 
 # minimal ROM-based

@@ -12,10 +12,15 @@ BBCLOADINGMETHOD := disk
 BBCMACHINE := mame
 #BBCMACHINE := real
 
-# default build config option
+# build config option
 # BBCOPTION := assembly
 BBCOPTION := default
 # BBCOPTION := tape
+ifeq ($(TARGET),bbc)
+ifneq ($(OPTION),)
+BBCOPTION := $(OPTION)
+endif
+endif
 
 # default ORG and ORIGIN
 BBCORG := 1720

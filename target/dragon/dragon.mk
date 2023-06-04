@@ -26,11 +26,12 @@ dragon-clean :
 
 	rm -f dragon/*
 
-ifeq ($(TARGET),dragon)
-DRAGONOPTION := $(OPTION)
-else
 DRAGONOPTION := assembly
 # DRAGONOPTION := default
+ifeq ($(TARGET),dragon)
+ifneq ($(OPTION),)
+DRAGONOPTION := $(OPTION)
+endif
 endif
 
 ifeq ($(DRAGONOPTION),assembly)
