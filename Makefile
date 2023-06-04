@@ -93,11 +93,12 @@ $(DISC) : \
 
 # === LOCAL SYSTEM ===
 
-ifeq ($(TARGET),$(SYSTEM))
-SYSTEMOPTION := $(OPTION)
-else
 # SYSTEMOPTION := assembly
 SYSTEMOPTION := default
+ifeq ($(TARGET),$(SYSTEM))
+ifneq ($(OPTION),)
+SYSTEMOPTION := $(OPTION)
+else
 endif
 
 # local system assembly option config:
