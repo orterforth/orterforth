@@ -185,9 +185,7 @@ rc2014/orterforth.ihx : rc2014/orterforth
 # serial load file
 rc2014/orterforth.ser : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas rc2014/orterforth.ihx
 
-	# TODO cat $^
-	cp tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas $@.io
-	cat rc2014/orterforth.ihx >> $@.io
+	cat $^ > $@.io
 	mv $@.io $@
 
 # base orterforth code
