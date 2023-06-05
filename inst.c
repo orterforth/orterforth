@@ -384,18 +384,6 @@ static uint8_t __FASTCALL__ rf_inst_hex(uint8_t b)
 {
   return b + (b < 10 ? 48 : 55);
 }
-
-/* inner hex loop */
-static void rf_inst_save_hex(uint8_t *buf, uint8_t *i)
-{
-  uint8_t j;
-
-  for (j = 0; j < 128;) {
-    uint8_t b = *i++;
-    buf[j++] = rf_inst_hex(b >> 4);
-    buf[j++] = rf_inst_hex(b & 15);
-  }
-}
 #endif
 
 static void rf_inst_code_sb(void)
@@ -404,7 +392,15 @@ static void rf_inst_code_sb(void)
 #ifdef RF_INST_SAVE
   {
     uint8_t *buf = (uint8_t *) RF_SP_POP;
-    rf_inst_save_hex(buf, (uint8_t *) RF_SP_POP);
+    uint8_t *i = (uint8_t *) RF_SP_POP;
+    uint8_t j;
+
+    /* inner hex loop */
+    for (j = 0; j < 128;) {
+      uint8_t b = *i++;
+      buf[j++] = rf_inst_hex(b >> 4);
+      buf[j++] = rf_inst_hex(b & 15);
+    }
   }
 #endif
   RF_JUMP_NEXT;
