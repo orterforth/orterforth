@@ -29,14 +29,6 @@ static void rf_inst_puti(uint8_t idx, uint8_t i)
   cmd[idx] = 48 + (i % 10);
 }
 
-/* PerSci disc command, I or O */
-static void __FASTCALL__ rf_inst_disc_cmd_set(uintptr_t blk)
-{
-  /* convert block number into track and sector */
-  rf_inst_puti(2, (uint8_t) (blk / 26));
-  rf_inst_puti(5, (uint8_t) (blk % 26) + 1);
-}
-
 /* hld - write I nn nn /n and return buffer address */
 static void rf_inst_code_hld(void)
 {
@@ -45,7 +37,9 @@ static void rf_inst_code_hld(void)
     uintptr_t block = RF_SP_POP;
 
     /* create command */
-    rf_inst_disc_cmd_set(block);
+    /* convert block number into track and sector */
+    rf_inst_puti(2, (uint8_t) (block / 26));
+    rf_inst_puti(5, (uint8_t) (block % 26) + 1);
 
     /* return command addr */
     RF_SP_PUSH((uintptr_t) cmd);
