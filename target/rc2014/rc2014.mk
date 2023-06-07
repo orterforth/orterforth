@@ -23,10 +23,9 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
-RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib
-RC2014INC := target/rc2014/default.inc
+RC2014DEPS := rc2014/rf.lib rc2014/inst.lib rc2014/system.lib rc2014/mux.lib
 RC2014INSTOFFSET := 0x5000
-RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system
+RC2014LIBS := -lrc2014/rf -lrc2014/inst -lrc2014/system -lrc2014/mux
 RC2014ORG := 0x9000
 
 # build option
@@ -53,7 +52,7 @@ RC2014ZCCOPTS := \
 	-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
 	-DRF_ORIGIN=$(RC2014ORIGIN) \
 	-DRF_ORG=$(RC2014ORG) \
-	-DRF_TARGET_INC='\"$(RC2014INC)\"' \
+	-DRF_TARGET_INC='\"target/rc2014/default.inc\"' \
 	-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
 	-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
@@ -144,6 +143,11 @@ rc2014/inst.lib : inst.c rf.h $(RC2014INC) inst.h | rc2014
 		--dataseg=INST \
 		--bssseg=INST \
 		--constseg=INST
+
+# system I/O code
+rc2014/mux.lib : mux.c rf.h $(RC2014INC) | rc2014
+
+	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
 # final binary from hex
 rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
