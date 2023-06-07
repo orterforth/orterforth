@@ -988,7 +988,7 @@ _rf_code_cl:
 
 	lda #$02
 	pha
-	lda #$00
+	tya
 	jmp push
 
 .export _rf_code_cs
