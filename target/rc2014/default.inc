@@ -4,6 +4,9 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
+/* pause before beginning inst, to allow disc server to start */
+#define RF_INST_WAIT
+
 /* stay quiet during inst (for now) */
 #define RF_INST_SILENT
 
