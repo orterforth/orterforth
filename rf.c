@@ -338,11 +338,11 @@ void rf_code_digit(void)
 #endif
 
 #ifndef RF_TARGET_CODE_PFIND
-static uintptr_t __FASTCALL__ *rf_lfa(uint8_t *nfa)
+static uint8_t __FASTCALL__ **rf_lfa(uint8_t *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
   }
-  return (uintptr_t *) ++nfa;
+  return (uint8_t **) ++nfa;
 }
 
 static uint8_t *rf_find(uint8_t *t, uint8_t length, uint8_t *nfa)
@@ -369,7 +369,7 @@ static uint8_t *rf_find(uint8_t *t, uint8_t length, uint8_t *nfa)
     }
 
     /* if no match, follow link */
-    nfa = (uint8_t *) *(rf_lfa(nfa));
+    nfa = *(rf_lfa(nfa));
   }
 
   /* not found */
@@ -378,8 +378,8 @@ static uint8_t *rf_find(uint8_t *t, uint8_t length, uint8_t *nfa)
 
 static uintptr_t __FASTCALL__ *rf_pfa(uint8_t *nfa)
 {
-  uintptr_t *lfa = rf_lfa(nfa);
-  uintptr_t *pfa = lfa + 2;
+  uint8_t **lfa = rf_lfa(nfa);
+  uintptr_t *pfa = (uintptr_t *) lfa + 2;
   return pfa;
 }
 
