@@ -338,18 +338,18 @@ void rf_code_digit(void)
 #endif
 
 #ifndef RF_TARGET_CODE_PFIND
-static uintptr_t __FASTCALL__ *rf_lfa(char *nfa)
+static uintptr_t __FASTCALL__ *rf_lfa(uint8_t *nfa)
 {
   while (!(*(++nfa) & 0x80)) {
   }
   return (uintptr_t *) ++nfa;
 }
 
-static char *rf_find(char *t, uint8_t length, char *nfa)
+static uint8_t *rf_find(uint8_t *t, uint8_t length, uint8_t *nfa)
 {
   uint8_t l;
   uint8_t i;
-  char *n;
+  uint8_t *n;
 
   while (nfa) {
     /* length from name field incl smudge bit */
@@ -369,27 +369,27 @@ static char *rf_find(char *t, uint8_t length, char *nfa)
     }
 
     /* if no match, follow link */
-    nfa = (char *) *(rf_lfa(nfa));
+    nfa = (uint8_t *) *(rf_lfa(nfa));
   }
 
   /* not found */
   return 0;
 }
 
-static uintptr_t __FASTCALL__ *rf_pfa(char *nfa)
+static uintptr_t __FASTCALL__ *rf_pfa(uint8_t *nfa)
 {
   uintptr_t *lfa = rf_lfa(nfa);
   uintptr_t *pfa = lfa + 2;
   return pfa;
 }
 
-static uintptr_t rf_pfind(char *addr1, char *addr2)
+static uintptr_t rf_pfind(uint8_t *addr1, uint8_t *addr2)
 {
-  char length;
-  char *f;
+  uint8_t length;
+  uint8_t *f;
 
   length = *addr1;
-  f = rf_find(addr1 + 1, length, (char *) addr2);
+  f = rf_find(addr1 + 1, length, addr2);
   if (f) {
     RF_SP_PUSH((uintptr_t) rf_pfa(f));
     RF_SP_PUSH(*((uint8_t *) f));
@@ -404,12 +404,12 @@ void rf_code_pfind(void)
   RF_START;
   RF_LOG("pfind");
   {
-    char *addr2;
-    char *addr1;
+    uint8_t *addr2;
+    uint8_t *addr1;
     uintptr_t f;
 
-    addr2 = (char *) RF_SP_POP; /* nfa */
-    addr1 = (char *) RF_SP_POP; /* text to find */
+    addr2 = (uint8_t *) RF_SP_POP; /* nfa */
+    addr1 = (uint8_t *) RF_SP_POP; /* text to find */
     f = rf_pfind(addr1, addr2);
     RF_SP_PUSH(f);
   }
