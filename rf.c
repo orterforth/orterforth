@@ -349,18 +349,17 @@ static char *rf_find(char *t, uint8_t length, char *nfa)
 {
   uint8_t l;
   uint8_t i;
-  uintptr_t *lfa;
   char *n;
 
   while (nfa) {
     /* length from name field incl smudge bit */
     l = *nfa & 0x3F;
-    /* start of name */
-    n = nfa + 1;
-    /* match name */
+    /* match name length */
     if (l == length) {
+      /* match name */
+      n = nfa;
       for (i = 0; i < l; i++) {
-        if (t[i] != (*(n++) & 0x7F)) {
+        if (t[i] != (*(++n) & 0x7F)) {
           break;
         }
       }
@@ -370,8 +369,7 @@ static char *rf_find(char *t, uint8_t length, char *nfa)
     }
 
     /* if no match, follow link */
-    lfa = rf_lfa(nfa);
-    nfa = (char *) *(lfa);
+    nfa = (char *) *(rf_lfa(nfa));
   }
 
   /* not found */
