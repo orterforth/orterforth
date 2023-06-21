@@ -407,7 +407,7 @@ static void rf_inst_code_sb(void)
 }
 
 /* bootstrap the installing Forth vocabulary */
-static void rf_inst_forward(void)
+static void rf_inst_load(void)
 {
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
@@ -479,8 +479,15 @@ static void rf_inst_forward(void)
   /* read from disc and run proto interpreter */
   rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
-    ":proto SP! LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! LIT 641 DUP LIT -661 + "
-    "0BRANCH ^9 DUP BLOCK compile LIT 1 + BRANCH ^-13 DROP xt");
+    ":inst SP! "
+    /* empty buffers */
+    "LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! "
+    /* loop over blocks */
+    "LIT 641 DUP LIT -661 + 0BRANCH ^9 "
+    "DUP BLOCK compile "
+    "LIT 1 + BRANCH ^-13 DROP "
+    /* call ABORT just defined */
+    "LIT ^17 origin + @ @ LIT ^-22 + EXECUTE");
 
   /* set boot-up literals and run COLD */
   origin[6] = (uintptr_t) rf_inst_vocabulary;
@@ -490,21 +497,7 @@ static void rf_inst_forward(void)
   origin[13] = 0;
   origin[15] = (uintptr_t) RF_USER_DP;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
-  /* TODO find way to call ABORT from proto */
-  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("proto", 5)) + 1);
-  rf_fp = rf_code_cold;
-  rf_trampoline();
-}
-
-static void rf_inst_load(void)
-{
-  /* set boot-up literals and run COLD */
-  uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
-  /* reset after updated by proto */
-  origin[6] = (uintptr_t) rf_inst_vocabulary;
-  origin[15] = (uintptr_t) RF_USER_DP;
-  /* call proto's ABORT */
-  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("ABORT", 5)) + 1);
+  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("inst", 4)) + 1);
   rf_fp = rf_code_cold;
   rf_trampoline();
 }
@@ -529,9 +522,6 @@ void rf_inst(void)
   /* "insert" the inst disc */
   rf_persci_insert_bytes(0, model_disc);
 #endif
-
-  /* define required words */
-  rf_inst_forward();
 
   /* LOAD all Forth model source from disc */
   rf_inst_load();
