@@ -36,7 +36,6 @@ static void rf_inst_code_hld(void)
   {
     uintptr_t block = RF_SP_POP;
 
-    /* create command */
     /* convert block number into track and sector */
     rf_inst_puti(2, (uint8_t) (block / 26));
     rf_inst_puti(5, (uint8_t) (block % 26) + 1);
@@ -73,15 +72,14 @@ static void __FASTCALL__ rf_inst_def(const char *name)
   /* length byte, unsmudged */
   *there = (uint8_t) (here++ - there) | 0x80;
 
+  /* 6502 JMP (ind) bug workaround */
 #ifdef __CC65__
-  /* 6502 bug workaround */
-  *here = 0x20;
   if (((uint8_t) here & 0xFF) == 0xFD) {
-    ++here;
+    *(here++) = 0x20;
   }
 #endif
+  /* address alignment */
 #ifdef RF_ALIGN
-  /* word alignment */
   while ((uintptr_t) here % RF_ALIGN) {
     *(here++) = 0x20;
   }
@@ -98,9 +96,10 @@ static void __FASTCALL__ rf_inst_def(const char *name)
   rf_inst_vocabulary = there;
 }
 
-/* LFA */
+/* NFA LFA */
 static uint8_t __FASTCALL__ **rf_inst_lfa(uint8_t *nfa)
 {
+  /* traverse name field */
   while (!(*(++nfa) & 0x80)) {
   }
   return (uint8_t **) ++nfa;
@@ -138,7 +137,7 @@ static uint8_t *rf_inst_find(const char *t, uint8_t length)
 }
 
 /* compile a definition and set CFA */
-static void rf_inst_def_code(const char *name, rf_code_t code)
+static void rf_inst_code(const char *name, rf_code_t code)
 {
   rf_inst_def(name);
   rf_inst_comma((uintptr_t) code);
@@ -147,17 +146,17 @@ static void rf_inst_def_code(const char *name, rf_code_t code)
 /* compile a colon definition */
 static void __FASTCALL__ rf_inst_colon(char *name)
 {
-  rf_inst_def_code(name, rf_code_docol);
+  rf_inst_code(name, rf_code_docol);
 }
 
 /* compile a constant */
-static void rf_inst_def_constant(const char *name, uintptr_t value)
+static void rf_inst_constant(const char *name, uintptr_t value)
 {
-  rf_inst_def_code(name, rf_code_docon);
+  rf_inst_code(name, rf_code_docon);
   rf_inst_comma(value);
 }
 
-/* CFA */
+/* NFA CFA */
 static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
 {
   uint8_t **lfa = rf_inst_lfa(nfa);
@@ -409,75 +408,67 @@ static void rf_inst_code_sb(void)
 /* bootstrap the installing Forth vocabulary */
 static void rf_inst_load(void)
 {
-  uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
-
   int i;
-
-  /* boot time literals and s0 for ?STACK */
-  rf_inst_def_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
-  rf_inst_def_constant("bs", (uintptr_t) RF_BS);
-  rf_inst_def_constant("user", (uintptr_t) RF_USER);
-  rf_inst_def_constant("s0", (uintptr_t) RF_S0);
-  rf_inst_def_constant("r0", (uintptr_t) RF_R0);
-  rf_inst_def_constant("tib", (uintptr_t) RF_TIB);
+  uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
   /* forward defined code words */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
     if (code->word) {
-      rf_inst_def_code(code->word, code->value);
+      rf_inst_code(code->word, code->value);
     }
   }
 
-  /* code address lookup */
-  rf_inst_def_code("cd", rf_inst_code_cd);
-
-  /* to save */
+  /* boot time literals */
+  rf_inst_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
+  rf_inst_constant("bs", (uintptr_t) RF_BS);
+  rf_inst_constant("user", (uintptr_t) RF_USER);
+  rf_inst_constant("s0", (uintptr_t) RF_S0);
+  rf_inst_constant("r0", (uintptr_t) RF_R0);
+  rf_inst_constant("tib", (uintptr_t) RF_TIB);
+  /* boot time literals used by tg */
+  rf_inst_constant("th", RF_TARGET_HI);
+  rf_inst_constant("tl", RF_TARGET_LO);
+  /* for +ORIGIN and also for save */
+  rf_inst_constant("origin", (uintptr_t) RF_ORIGIN);
+  /* disc buffer constants */
+  rf_inst_constant("FIRST", (uintptr_t) RF_FIRST);
+  rf_inst_constant("LIMIT", (uintptr_t) RF_LIMIT);
+  /* s0, s1 used in ?STACK */
+  rf_inst_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE)));
+  /* installed flag */
+  rf_inst_constant("installed", (uintptr_t) &rf_installed);
+  /* save install to DR1 in hex */
 #ifdef RF_ORG
-  rf_inst_def_constant("org", RF_ORG);
+  rf_inst_constant("org", RF_ORG);
 #else
-  rf_inst_def_constant("org", 0);
+  rf_inst_constant("org", 0);
 #endif
 #ifdef RF_INST_LINK
-  rf_inst_def_constant("link?", 1);
+  rf_inst_constant("link?", 1);
 #else
-  rf_inst_def_constant("link?", 0);
+  rf_inst_constant("link?", 0);
 #endif
 #ifdef RF_INST_SAVE
-  rf_inst_def_constant("save?", 1);
+  rf_inst_constant("save?", 1);
 #else
-  rf_inst_def_constant("save?", 0);
+  rf_inst_constant("save?", 0);
 #endif
-  rf_inst_def_code("sb", rf_inst_code_sb);
+  rf_inst_code("sb", rf_inst_code_sb);
 
-  /* for boot-up literals used by tg */
-  rf_inst_def_constant("th", RF_TARGET_HI);
-  rf_inst_def_constant("tl", RF_TARGET_LO);
-
-  /* for +ORIGIN and also for save */
-  rf_inst_def_constant("origin", (uintptr_t) RF_ORIGIN);
-
-  /* disc buffer constants */
-  rf_inst_def_constant("FIRST", (uintptr_t) RF_FIRST);
-  rf_inst_def_constant("LIMIT", (uintptr_t) RF_LIMIT);
-
-  /* stack limit for ?STACK */
-  rf_inst_def_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE)));
-
-  /* installed flag now set from Forth */
-  rf_inst_def_constant("installed", (uintptr_t) &rf_installed);
+  /* proto interpreter */
+  rf_inst_code("compile", rf_inst_code_compile);
+  /* code address lookup */
+  rf_inst_code("cd", rf_inst_code_cd);
 
   /* ?DISC */
   rf_inst_compile(
     ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
-
   /* BLOCK */
   rf_inst_compile(
     ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP hld LIT 10 BLOCK-WRITE ?DISC FIRST "
     "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
-
   /* read from disc and run proto interpreter */
-  rf_inst_def_code("compile", rf_inst_code_compile);
   rf_inst_compile(
     ":inst SP! "
     /* empty buffers */
