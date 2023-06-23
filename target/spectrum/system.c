@@ -28,7 +28,7 @@ void rf_code_emit()
   RF_JUMP_NEXT;
 }
 
-static char capslock = 0;
+static char capslock = 1;
 
 void rf_code_key(void)
 {

@@ -287,4 +287,4 @@ ENDIF
 SECTION data_user
 
 key_cursor:
-  defb $4C                      ; 'L'
+  defb $43                      ; 'C'
