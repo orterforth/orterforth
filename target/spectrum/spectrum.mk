@@ -1,5 +1,6 @@
 # === ZX Spectrum ===
 
+# configure Fuse Emulator
 FUSEOPTS := \
 	--auto-load \
 	--graphics-filter 2x \
@@ -9,8 +10,6 @@ FUSEOPTS := \
 	--phantom-typist-mode keyword \
 	--rs232-rx spectrum/fuse-rs232-rx \
 	--rs232-tx spectrum/fuse-rs232-tx
-# include file
-SPECTRUMINC := target/spectrum/spectrum.inc
 # default inst time emulator
 SPECTRUMINSTMACHINE := fuse
 # locates inst code at 0xC800
@@ -101,7 +100,7 @@ ifeq ($(SPECTRUMOPTION),assembly)
 # TODO pragma not in libs
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORIGIN
-SPECTRUMORIGIN := 0x87C0
+SPECTRUMORIGIN := 0x8720
 # assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
 # superzazu emulator is minimal and launches no GUI
@@ -242,7 +241,7 @@ SPECTRUMZCCOPTS := +zx \
 		-Ca-DSPECTRUM \
 		-DRF_ORG=$(SPECTRUMORG) \
 		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-DRF_TARGET_INC='\"$(SPECTRUMINC)\"'
+		-DRF_TARGET_INC='\"target/spectrum/spectrum.inc\"'
 
 ifeq ($(SPECTRUMOPTION),assembly)
 SPECTRUMZCCOPTS += -DRF_ASSEMBLY
