@@ -6,20 +6,6 @@
 #include "bbc.h"
 #include "io.h"
 
-/* TODO move to orter_io with a further TODO to move to somewhere else */
-static void set16le(uint16_t n, uint8_t *p)
-{
-  *(p++) = (uint8_t) (n & 0x00FF);
-  *p = (uint8_t) (n >> 8);
-}
-
-/* TODO move to orter_io with a further TODO to move to somewhere else */
-static void set32le(uint32_t n, uint8_t *p)
-{
-  set16le((uint16_t) n & 0x0000FFFF, p);
-  set16le((uint16_t) (n >> 16), p + 2);
-}
-
 /* TODO tidy */
 static uint16_t crc(uint8_t *bytes, uint16_t len)
 {
@@ -93,17 +79,17 @@ int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
     memcpy(header, name, lenname);
     header[lenname] = 0;
     /* load */
-    set32le(load, header + lenname + 1);
+    orter_io_set_32le(load, header + lenname + 1);
     /* exec */
-    set32le(exec, header + lenname + 5);
+    orter_io_set_32le(exec, header + lenname + 5);
     /* block no */
-    set16le(block_nr, header + lenname + 9);
+    orter_io_set_16le(block_nr, header + lenname + 9);
     /* block len */
-    set16le(j - i, header + lenname + 11);
+    orter_io_set_16le(j - i, header + lenname + 11);
     /* flag */
     header[lenname + 13] = ((j == s) ? 0x80 : 0);
     /* spare */
-    set32le(0, header + lenname + 14);
+    orter_io_set_32le(0, header + lenname + 14);
 
     /* write data */
     chunk(0x0100, 1 + lenhdr + 2 + (j - i) + 2);
