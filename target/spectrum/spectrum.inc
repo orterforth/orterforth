@@ -70,7 +70,9 @@
 #define RF_TARGET_CODE_COLD
 #define RF_TARGET_CODE_TG
 #define RF_TARGET_CODE_XT
+#ifndef RF_ASSEMBLY_Z88DK
 #define RF_TARGET_CODE_DCHAR
 #define RF_TARGET_CODE_BREAD
 #define RF_TARGET_CODE_BWRIT
+#endif
 #endif
