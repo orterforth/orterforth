@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "io.h"
 #include "spectrum.h"
 
 /* save CTS status received from Fuse */
@@ -69,13 +70,6 @@ int orter_spectrum_fuse_serial_putc(int c, FILE *ptr)
   return c;
 }
 
-/* TODO orter_io */
-static void write_u16le(uint16_t u16, int (*w)(int))
-{
-  w(u16 & 255);
-  w(u16 >> 8);
-}
-
 int orter_spectrum_header(const char *filename, unsigned char type_, unsigned short p1, unsigned short p2)
 {
   int c;
@@ -105,9 +99,9 @@ int orter_spectrum_header(const char *filename, unsigned char type_, unsigned sh
 
   /* write header */
   putchar(type_);
-  write_u16le(size, putchar);
-  write_u16le(p1, putchar);
-  write_u16le(p2, putchar);
+  orter_io_put_16le(size);
+  orter_io_put_16le(p1);
+  orter_io_put_16le(p2);
   putchar(255);
   putchar(255);
 
