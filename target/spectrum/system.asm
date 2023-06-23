@@ -196,59 +196,83 @@ ELSE
   jp _rf_z80_hpush
 ENDIF
 
-PUBLIC _rf_disc_read
+PUBLIC _rf_code_bwrit
 
-_rf_disc_read:
-  pop af
-  pop bc                        ; len
+_rf_code_bwrit:
+  pop de                        ; len
   pop hl                        ; addr
-  push hl
-  push bc
-  push af
+  push bc                       ; save IP
 IFDEF USEIY
   ld iy, $5C3A
 ENDIF
-  inc c
-read0:
-  dec c                         ; advance len
-  ret z                         ; finished, return to C
-  push bc                       ; save len
-  push hl                       ; save addr
-read1:
-  rst $0008                     ; read a byte
-  defb $1D                      ; BCHAN-IN
-  jr nc, read1                  ; loop back until available
-  pop hl                        ; restore addr
-  ld (hl), a                    ; write byte to addr
-  pop bc                        ; restore len
-  inc hl                        ; advance addr
-  jp read0                      ; loop back for more bytes
-
-PUBLIC _rf_disc_write
-
-_rf_disc_write:
-  pop af
-  pop bc                        ; len
-  pop hl                        ; addr
-  push hl
-  push bc
-  push af
-IFDEF USEIY
-  ld iy, $5C3A
-ENDIF
-  inc c
-writ0:
-  dec c                         ; advance len
-  ret z                         ; finished, return to C
-  push bc                       ; save len
+bwrit1:
+  push de                       ; save len
   push hl                       ; save addr
   ld a, (hl)                    ; read a byte from addr
   rst $0008                     ; write byte
   defb $1E                      ; BCHAN-OUT
   pop hl                        ; restore addr
-  pop bc                        ; restore len
+  pop de                        ; restore len
   inc hl                        ; advance addr
-  jp writ0                      ; loop back for more bytes
+  dec e                         ; advance len
+  jp nz, bwrit1                 ; loop back for more bytes
+  ld a, $04                     ; EOT
+  rst $0008                     ; write byte
+  defb $1E                      ; BCHAN-OUT
+IFDEF USEIY
+  ld iy, _rf_z80_hpush          ; restore HPUSH
+ENDIF
+  pop bc                        ; restore IP
+  jp (ix)
+
+discread:
+  push bc                       ; save IP
+IFDEF USEIY
+  ld iy, $5C3A                  ; restore Spectrum IY
+ENDIF
+discread1:
+  rst $0008                     ; BCHAN-IN
+  defb $1D
+  jr nc, discread1              ; loop back until byte available
+IFDEF USEIY
+  ld iy, _rf_z80_hpush          ; restore HPUSH
+ENDIF
+  pop bc                        ; restore IP
+  ret                           ; with byte in A
+
+PUBLIC _rf_code_dchar
+
+_rf_code_dchar:
+  call discread                 ; read byte
+  pop hl                        ; get expected byte
+  cp l                          ; set flag if expected
+  ld hl, $0001
+  jr z, dchar2
+  dec l
+dchar2:
+  push hl                       ; push flag
+  ld l, a                       ; now push byte
+IFDEF USEIY
+  jp (iy)
+ELSE
+  jp _rf_z80_hpush
+ENDIF
+
+PUBLIC _rf_code_bread
+
+_rf_code_bread:
+  pop hl
+  push bc
+  ld b, $80
+bread1:
+  push hl
+  call discread
+  pop hl
+  ld (hl), a
+  inc hl
+  djnz bread1
+  pop bc
+  jp (ix)
 
 PUBLIC _rf_fin
 
