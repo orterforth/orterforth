@@ -18,18 +18,6 @@ static uint32_t getu32be(uint8_t *p)
   return n;
 }
 
-static void setu16be(uint16_t n, uint8_t *p)
-{
-  *(p++) = (uint8_t) (n >> 8);
-  *p = (uint8_t) (n & 0x00FF);
-}
-
-static void setu32be(uint32_t n, uint8_t *p)
-{
-  setu16be((uint16_t) (n >> 16), p);
-  setu16be((uint16_t) n & 0x0000FFFF, p + 2);
-}
-
 static int getfilesize(FILE *ptr, long *size)
 {
   /* get file size */
@@ -81,13 +69,13 @@ static int writefile(FILE *ptr)
 static void serial_header(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext, uint8_t *header)
 {
   *(header++) = 0xFF;
-  setu32be(len, header);
+  orter_io_set_32be(len, header);
   header += 4;
   *(header++) = 0x00;
   *(header++) = typ;
-  setu32be(dsp, header);
+  orter_io_set_32be(dsp, header);
   header += 4;
-  setu32be(ext, header);
+  orter_io_set_32be(ext, header);
   header += 4;
 }
 
