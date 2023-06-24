@@ -61,8 +61,8 @@ trampoline1:
   movq  _rf_w(%rip), %rdx       # W to rdx
   leaq  trampoline1(%rip), %rax # push the return address
   pushq %rax
-  movq  %rbp, _rf_x86_64_rbp_save(%rip) # save rbp
-  movq  %rsp, _rf_x86_64_rsp_save(%rip) # save rsp
+  movq  %rbp, rbpsave(%rip)     # save rbp
+  movq  %rsp, rspsave(%rip)     # save rsp
   movq  _rf_rp(%rip), %rbp      # RP to rbp
   movq  _rf_sp(%rip), %rsp      # SP to rsp
   jmp   *_rf_fp(%rip)           # jump to FP
@@ -86,8 +86,8 @@ _rf_start:
   popq  %rbp                    # get the pushed rbp (this is RP)
   movq  %rbp, _rf_rp(%rip)      # rbp to RP
   movq  %rsp, _rf_sp(%rip)      # rsp to SP
-  movq  _rf_x86_64_rbp_save(%rip), %rbp # restore rbp
-  movq  _rf_x86_64_rsp_save(%rip), %rsp # restore rsp
+  movq  rbpsave(%rip), %rbp # restore rbp
+  movq  rspsave(%rip), %rsp # restore rsp
   pushq %rbp                    # push rbp as it would have been
   movq  %rsp, %rbp              # and mov rsp into rbp
   subq  %rcx, %rsp              # sub the difference from rsp
@@ -987,17 +987,11 @@ _rf_code_cold:
   .section __DATA.__data,""
 
   .data
-  .globl rf_x86_64_rbp_save
-  .globl _rf_x86_64_rbp_save
+
   .p2align 3
-rf_x86_64_rbp_save:
-_rf_x86_64_rbp_save:
+rbpsave:
   .quad 0
 
-  .data
-  .globl rf_x86_64_rsp_save
-  .globl _rf_x86_64_rsp_save
   .p2align 3
-rf_x86_64_rsp_save:
-_rf_x86_64_rsp_save:
+rspsave:
   .quad 0
