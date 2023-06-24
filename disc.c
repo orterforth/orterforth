@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "orter/io.h"
+#include "orter/pty.h"
 #include "orter/serial.h"
 #include "orter/tcp.h"
 #include "persci.h"
@@ -247,6 +248,21 @@ static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
   return serve(dr0, dr1);
 }
 
+static int disc_pty(char **argv)
+{
+  int exit = 0;
+
+  /* serial port */
+  CHECK(exit, orter_pty_open(argv[2]));
+
+  /* run */
+  exit = serve_with_fds(orter_pty_master_fd, orter_pty_master_fd, argv[3], argv[4]);
+
+  /* close and exit */
+  orter_pty_close();
+  return exit;
+}
+
 static int disc_serial(char **argv)
 {
   int exit = 0;
@@ -339,6 +355,11 @@ int main(int argc, char *argv[])
   /* Physical serial port but multiplex serial and disc */
   if (argc == 6 && !strcmp("mux", argv[1])) {
     return disc_mux(argv);
+  }
+
+  /* Pty */
+  if (argc == 5 && !strcmp("pty", argv[1])) {
+    return disc_pty(argv);
   }
 
   /* Physical serial port */

@@ -20,7 +20,7 @@
 #include "io.h"
 #include "pty.h"
 
-static int orter_pty_master_fd = -1;
+int orter_pty_master_fd = -1;
 static int orter_pty_slave_fd = -1;
 static char *orter_pty_link = 0;
 
