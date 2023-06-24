@@ -112,10 +112,9 @@ rf_code_xploo:
 	.align 2
 	.global rf_code_xdo
 rf_code_xdo:
-	ldr  x3, [x14], #8          // INITIAL INDEX VALUE
-	ldr  x0, [x14], #8          // LIMIT VALUE
-	str  x0, [x13, #-8]!
-	str  x3, [x13, #-8]!
+	ldp  x3, x0, [x14], #16      // INITIAL INDEX VALUE
+	                             // LIMIT VALUE
+	stp  x3, x0, [x13, #-16]!
 	b    next
 
 	.align 2
@@ -153,8 +152,8 @@ digi2:
 	.align 2
 	.global rf_code_pfind
 rf_code_pfind:
-	ldr  x1, [x14], #8          // NFA
-	ldr  x2, [x14], #8          // STRING ADDR
+	ldp  x1, x2, [x14], #16     // NFA
+	                            // STRING ADDR
 #
 # SEARCH LOOP
 pfin1:
@@ -209,8 +208,8 @@ pfin6:
 	.align 2
 	.global rf_code_encl
 rf_code_encl:
-	ldr  x0, [x14], #8          // S1 - TERMINATOR CHAR.
-	ldr  x1, [x14]              // S2 - TEXT ADDR
+	ldp  x0, x1, [x14], #8      // S1 - TERMINATOR CHAR.
+	                            // S2 - TEXT ADDR
 	and  x0, x0, #255           // ZERO
 	mov  x3, #-1                // CHAR OFFSET COUNTER
 	sub  x1, x1, #1             // ADDR -1
@@ -258,8 +257,8 @@ encl4:
 	.align 2
 	.global rf_code_cmove
 rf_code_cmove:
-	ldr  x2, [x14], #8          // COUNT
-	ldr  x1, [x14], #8          // DEST.
+	ldp  x2, x1, [x14], #16     // COUNT
+	                            // DEST.
 	ldr  x3, [x14], #8          // SOURCE
 	cmp  x2, #0
 	beq  cmov2
@@ -274,8 +273,7 @@ cmov2:
 	.align 2
 	.global rf_code_ustar
 rf_code_ustar:
-	ldr  x2, [x14], #8
-	ldr  x1, [x14], #8
+	ldp  x2, x1, [x14], #16
 	mul     x3, x1, x2
     umulh   x0, x1, x2
 	b    dpush
@@ -283,8 +281,8 @@ rf_code_ustar:
 	.align 2
 	.global rf_code_uslas
 rf_code_uslas:
-	ldr  x2, [x14], #8          // DIVISOR
-	ldr  x1, [x14], #8          // MSW OF DIVIDEND
+	ldp  x2, x1, [x14], #16     // DIVISOR
+	                            // MSW OF DIVIDEND
 	ldr  x0, [x14], #8          // LSW OF DIVIDEND
 #  bl   umdiv
 #umdiv:
@@ -313,16 +311,15 @@ umdiv2:
 	ands x3, x3, x3
 	bne  umdiv1
 umdiv3:
-	str  x1, [x14, #-8]!        // remainder
-	str  x4, [x14, #-8]!        // quotient
+	stp  x4, x1, [x14, #-16]!   // remainder
+	                            // quotient
 
 	b    next
 
 	.align 2
 	.global rf_code_andd
 rf_code_andd:
-	ldr  x0, [x14], #8
-	ldr  x1, [x14]
+	ldp  x0, x1, [x14], #8
 	and  x0, x0, x1
 	str  x0, [x14]
 	b    next
@@ -330,8 +327,7 @@ rf_code_andd:
 	.align 2
 	.global rf_code_orr
 rf_code_orr:
-	ldr  x0, [x14], #8
-	ldr  x1, [x14]
+	ldp  x0, x1, [x14], #8
 	orr  x0, x0, x1
 	str  x0, [x14]
 	b    next
@@ -339,8 +335,7 @@ rf_code_orr:
 	.align 2
 	.global rf_code_xorr
 rf_code_xorr:
-	ldr  x0, [x14], #8
-	ldr  x1, [x14]
+	ldp  x0, x1, [x14], #8
 	eor  x0, x0, x1
 	str  x0, [x14]
 	b    next
@@ -421,18 +416,17 @@ zless1:
 	.align 2
 	.global rf_code_plus
 rf_code_plus:
-	ldr  x0, [x14], #8
-	ldr  x1, [x14], #8
+	ldp  x0, x1, [x14], #16
 	add  x0, x0, x1
 	b    apush
 
 	.align 2
 	.global rf_code_dplus
 rf_code_dplus:
-	ldr  x0, [x14], #8          // YHW
-	ldr  x3, [x14], #8          // YLW
-	ldr  x1, [x14], #8          // XHW
-	ldr  x2, [x14], #8          // XLW
+	ldp  x0, x3, [x14], #16     // YHW
+	                            // YLW
+	ldp  x1, x2, [x14], #16     // XHW
+	                            // XLW
 	adds x3, x3, x2             // SLW
 	adc  x0, x0, x1             // SHW
 	b    dpush
@@ -447,8 +441,7 @@ rf_code_minus:
 	.align 2
 	.global rf_code_dminu
 rf_code_dminu:
-	ldr  x1, [x14], #8
-	ldr  x2, [x14], #8
+	ldp  x1, x2, [x14], #16
 	sub  x0, x0, x0             // ZERO
 	mov  x3, x0
 	subs x3, x3, x2             // MAKE 2'S COMPLEMENT
@@ -470,10 +463,8 @@ rf_code_drop:
 	.align 2
 	.global rf_code_swap
 rf_code_swap:
-	ldr  x3, [x14]
-	ldr  x0, [x14, #8]
-	str  x3, [x14, #8]
-	str  x0, [x14]
+	ldp  x3, x0, [x14]
+	stp  x0, x3, [x14]
 	b    next
 
 	.align 2
@@ -485,8 +476,8 @@ rf_code_dup:
 	.align 2
 	.global rf_code_pstor
 rf_code_pstor:
-	ldr  x1, [x14], #8          // ADDRESS
-	ldr  x0, [x14], #8          // INCREMENT
+	ldp  x1, x0, [x14], #16     // ADDRESS
+	                            // INCREMENT
 	ldr  x2, [x1]
 	add  x2, x2, x0
 	str  x2, [x1]
@@ -497,9 +488,9 @@ rf_code_pstor:
 rf_code_toggl:
 	ldrb w0, [x14], #8          // BIT PATTERN
 	ldr  x1, [x14], #8          // ADDR
-	ldr  x2, [x1]
-	eor  x2, x2, x0
-	str  x2, [x1]
+	ldrb w2, [x1]
+	eor  w2, w2, w0
+	strb w2, [x1]
 	b    next
 
 	.align 2
@@ -521,8 +512,8 @@ rf_code_cat:
 	.align 2
 	.global rf_code_store
 rf_code_store:
-	ldr  x1, [x14], #8          // ADDR
-	ldr  x0, [x14], #8          // DATA
+	ldp  x1, x0, [x14], #16     // ADDR
+	                            // DATA
 	str  x0, [x1]
 	b    next
 
