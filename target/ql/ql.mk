@@ -1,5 +1,8 @@
 # === Sinclair QL ===
 
+# xtc86 may not be on PATH
+export PATH := $(HOME)/xtc68/bin:$(PATH)
+
 # QLOPTION := assembly
 QLOPTION := default
 
@@ -52,6 +55,12 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 	@echo "* Starting disc..."
 	@touch data.img
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.img data.img
+
+ql/hw.ser : target/ql/hw.bas
+
+	cat $< > $@.io
+	printf '\032' >> $@.io
+	mv $@.io $@
 
 # inst executable
 ql/inst : ql/inst.o $(QLDEPS)
@@ -129,17 +138,23 @@ ifeq ($(QLMACHINE),sqlux)
 # socat -d -d -v pty,rawer,link=pty EXEC:cat,pty,rawer &
 # socat -d -d -v - pty,rawer,link=pty
 # sleep 1
-	socat -d -d -v - pty,rawer,link=pty,wait-slave < rx > tx
+	# sleep 1
+	# ls -l /dev/pts
+	# sleep 5
+	# TODO link will be read by IDE file watching
+	socat - pty,rawer,link=pty < rx &
+	(sleep 15 && cat ql/hw.ser && sleep 1000) > rx &
 	sleep 1
-	ls -l /dev/pts
-	sleep 5
+	ps
 	sqlux --ser2 pty --ramsize 128 --romdir ../sQLux/roms --win_size 2x &
+	sleep 60
+	exit 1
 
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 	@read -p "Then press enter to start: " LINE
 
 	@echo "* Loading loader..."
-	cat ql/loader-inst.ser > rx
+	(cat ql/loader-inst.ser && sleep 1000) > rx
 
 	@echo "* Loading installer..."
 	sleep 10
