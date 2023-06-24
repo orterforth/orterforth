@@ -83,13 +83,14 @@ default : build
 # local system disc server executable
 $(DISC) : \
 	$(SYSTEM)/orter_io.o \
+	$(SYSTEM)/orter_pty.o \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/orter_tcp.o \
 	$(SYSTEM)/persci.o \
 	disc.c
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lutil
 
 # === LOCAL SYSTEM ===
 
