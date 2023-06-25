@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 /*#include "pico/stdlib.h"*/
+#include "../../mux.h"
 #include "../../rf.h"
 #include "../../persci.h"
 
@@ -98,9 +99,6 @@ void rf_code_cr(void)
 
 char rf_system_local_disc = 1;
 
-/* TODO mux.h */
-void rf_mux_disc_read(char *c, unsigned char len);
-
 void rf_disc_read(char *p, uint8_t len)
 {
   if (rf_system_local_disc) {
@@ -116,8 +114,6 @@ void rf_disc_read(char *p, uint8_t len)
     rf_mux_disc_read(p, len);
   }
 }
-
-void rf_mux_disc_write(char *c, unsigned char len);
 
 void rf_disc_write(char *p, uint8_t len)
 {

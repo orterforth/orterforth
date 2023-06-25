@@ -1,8 +1,6 @@
 /* SYSTEM BINDINGS */
 
-void rf_mux_disc_read(char *c, unsigned char len);
-
-void rf_mux_disc_write(char *c, unsigned char len);
+#include "mux.h"
 
 void rf_init(void)
 {

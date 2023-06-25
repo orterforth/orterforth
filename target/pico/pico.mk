@@ -38,6 +38,8 @@ pico/orterforth.uf2 : \
 	inst.h \
 	main.c \
 	model.inc \
+	mux.c \
+	mux.h \
 	persci.c \
 	persci.h \
 	rf.c \

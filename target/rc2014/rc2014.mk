@@ -35,7 +35,7 @@ RC2014OPTION := assembly
 ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/z80.lib
 RC2014LIBS += -lrc2014/z80
-RC2014ORIGIN := 0x9F80
+RC2014ORIGIN := 0xA000
 endif
 ifeq ($(RC2014OPTION),default)
 RC2014ORIGIN := 0xAB00
@@ -70,6 +70,17 @@ rc2014-connect : | $(DISC)
 
 	@$(RC2014CONNECT)
 
+.PHONY : rc2014-hw
+rc2014-hw : rc2014/hw.ser | $(ORTER)
+
+	@$(RC2014RESET)
+
+	@printf '* \033[1;33mLoading via serial\033[0;0m\n'
+	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas
+	@$(ORTER) serial -o onlcrx -e 10 $(RC2014SERIALPORT) 115200 < rc2014/hw.ihx
+
+	@$(ORTER) serial -o onlcrx $(RC2014SERIALPORT) 115200
+
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 
@@ -79,6 +90,17 @@ rc2014-run : rc2014/orterforth.ser | $(ORTER) $(DISC)
 	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/orterforth.ser
 
 	@$(RC2014CONNECT)
+
+# hw IHEX
+rc2014/hw.ihx : hw.c
+
+	zcc +rc2014 -subtype=basic -m hw.c -o rc2014/hw -create-app
+
+# hw serial loader
+rc2014/hw.ser : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas rc2014/hw.ihx
+
+	cat $^ > $@.io
+	mv $@.io $@
 
 # inst executable
 rc2014/inst_CODE.bin : \
@@ -164,9 +186,9 @@ rc2014/orterforth.hex : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload
 	@$(RC2014RESET)
 
 	@printf '* \033[1;33mLoading hexload\033[0;0m\n'
-	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas
+	@$(ORTER) serial -o onlcrx -e 5 $(RC2014SERIALPORT) 115200 < tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas
 	@printf '* \033[1;33mLoading inst\033[0;0m\n'
-	@$(ORTER) serial -o onlcrx -e 3 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
+	@$(ORTER) serial -o onlcrx -e 4 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
@@ -198,7 +220,7 @@ rc2014/rf.lib : rf.c rf.h $(RC2014INC) | rc2014
 	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
 # system code
-rc2014/system.lib : target/rc2014/system.c rf.h $(RC2014INC) | rc2014
+rc2014/system.lib : target/rc2014/system.c mux.h rf.h $(RC2014INC) | rc2014
 
 	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
