@@ -14,6 +14,7 @@ pico_sdk_init()
 
 add_compile_definitions(PICO)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=orterforth.map")
+add_library(mux OBJECT ../../mux.c $<TARGET_OBJECTS:rf>)
 add_library(rf OBJECT ../../rf.c)
 add_library(persci OBJECT ../../persci.c)
 add_library(system OBJECT system.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:persci>)
@@ -22,6 +23,7 @@ add_library(inst OBJECT ../../inst.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:persc
 # Tell CMake where to find the executable source file
 add_executable(${PROJECT_NAME} 
     ../../main.c
+    $<TARGET_OBJECTS:mux>
     $<TARGET_OBJECTS:rf>
     $<TARGET_OBJECTS:persci>
     $<TARGET_OBJECTS:system>

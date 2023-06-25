@@ -80,6 +80,7 @@ void rf_mux_disc_read(char *c, unsigned char len)
   for (; len; len--) {
     /* skip keyboard input */
     /* TODO getchar to work with Pico */
+    /* TODO handle -1 */
     while (!((*c = fgetc(stdin)) & 0x80)) {
     }
     *(c++) &= 0x7F;

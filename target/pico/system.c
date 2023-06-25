@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 /*#include "pico/stdlib.h"*/
 #include "../../rf.h"
@@ -26,6 +25,7 @@ void rf_init(void)
   }
 }
 
+#ifdef xxxx
 void rf_code_emit(void)
 {
   RF_START;
@@ -47,7 +47,9 @@ void rf_code_emit(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifdef xxxx
 void rf_code_key(void)
 {
   RF_START;
@@ -74,22 +76,30 @@ void rf_code_key(void)
   }
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifdef xxxx
 void rf_code_qterm(void)
 {
   RF_START;
   RF_SP_PUSH(0);
   RF_JUMP_NEXT;
 }
+#endif
 
+#ifdef xxxx
 void rf_code_cr(void)
 {
   RF_START;
   putchar('\n');
   RF_JUMP_NEXT;
 }
+#endif
 
 char rf_system_local_disc = 1;
+
+/* TODO mux.h */
+void rf_mux_disc_read(char *c, unsigned char len);
 
 void rf_disc_read(char *p, uint8_t len)
 {
@@ -98,11 +108,16 @@ void rf_disc_read(char *p, uint8_t len)
       *(p++) = rf_persci_getc();
     }
   } else {
+/*
     for (; len; --len) {
       *(p++) = fgetc(stdin) & 0x7F;
     }
+*/
+    rf_mux_disc_read(p, len);
   }
 }
+
+void rf_mux_disc_write(char *c, unsigned char len);
 
 void rf_disc_write(char *p, uint8_t len)
 {
@@ -116,9 +131,12 @@ void rf_disc_write(char *p, uint8_t len)
       }
     }
   } else {
+/*
     for (; len; --len) {
       putchar(*(p++) | 0x80);
     }
+*/
+    rf_mux_disc_write(p, len);
   }
 }
 
