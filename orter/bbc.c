@@ -38,8 +38,7 @@ static void carrier(uint16_t cycles)
   orter_io_put_16le(cycles);
 }
 
-/* TODO static for now */
-int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
+static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 {
   uint8_t data[65536];
   size_t s;
