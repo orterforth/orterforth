@@ -6,26 +6,22 @@
 #include "bbc.h"
 #include "io.h"
 
-/* TODO tidy */
 static uint16_t crc(uint8_t *bytes, uint16_t len)
 {
-  int i, j;
-  uint16_t crc = 0;
-  for (i = 0; i < len; i++) {
-    uint8_t c = bytes[i];
-    crc = (((uint16_t) c ^ (crc >> 8)) << 8) | (crc & 0x00FF);
-    for (j = 0; j < 8; j++) {
-      uint16_t t;
-      if (crc & 0x8000) {
-          crc = crc ^ 0x0810;
-          t = 1;
-      } else {
-          t = 0;
-      }
-      crc = (crc * 2 + t) & 0xFFFF;
+  uint16_t hl = 0;
+  int i, x;
+
+  for (i = 0; i < len; ++i) {
+    hl ^= (uint16_t) bytes[i] << 8;
+    for (x = 0; x < 8; ++x) {
+      uint16_t c = hl & 0x8000;
+      if (c) hl ^= 0x0810;
+      hl <<= 1;
+      if (c) ++hl;
     }
   }
-  return crc;
+
+  return hl;
 }
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
