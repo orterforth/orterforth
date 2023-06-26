@@ -42,9 +42,8 @@ void rf_code_key(void)
 
     /* read char, wait if serial disconnected */
     /* skip disc input */
-    /* TODO getchar to work with Pico */
     do {
-      if ((c = fgetc(stdin)) == -1) {
+      if ((c = getchar()) == -1) {
         RF_SLEEP(1000);
       }
     } while (c == -1 || c & 0x80);
@@ -75,15 +74,18 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
-void rf_mux_disc_read(char *c, unsigned char len)
+void rf_mux_disc_read(char *p, unsigned char len)
 {
+  int c;
+
   for (; len; len--) {
     /* skip keyboard input */
-    /* TODO getchar to work with Pico */
-    /* TODO handle -1 */
-    while (!((*c = fgetc(stdin)) & 0x80)) {
-    }
-    *(c++) &= 0x7F;
+    do {
+      if ((c = getchar()) == -1) {
+        RF_SLEEP(1000);
+      }
+    } while (c == -1 || !(c & 0x80));
+    *(p++) = c & 0x7F;
   }
 }
 

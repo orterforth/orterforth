@@ -12,7 +12,11 @@ void rf_init(void)
 {
   /* init UART */
   stdio_init_all();
-
+/*
+  while (!tud_cdc_connected()) {
+    sleep_ms(500);
+  }
+*/
   /* allocate memory */
   rf_origin = malloc(RF_MEMORY_SIZE);
   /* on failure, repeat message */
