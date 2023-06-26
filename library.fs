@@ -244,12 +244,12 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
   255 SWAP - MIN >R             ( limit append to max length  )
   OVER OVER                     ( dup both string addrs       )
   COUNT +                       ( move to the end of b        )
-  SWAP 1+ R                     ( count a                     )
-  ROT SWAP CMOVE                ( copy into b                 )
+  SWAP 1+                       ( then from a                 )
+  SWAP R> CMOVE                 ( copy into b                 )
   SWAP C@ OVER C@ +             ( get the total count         )
   SWAP C!                       ( write it to b               )
-  R> DROP
-; ( TODO optimise now R is used to hold length )
+;
+
 
 
 
