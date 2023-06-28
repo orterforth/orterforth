@@ -865,6 +865,30 @@ funcsize_rf_code_tg EQU funcend_rf_code_tg-_rf_code_tg
 
 	SECTION	rwdata
 
+_rf_fp EXPORT
+_rf_fp EQU *
+	FDB	$0000
+
+_rf_ip EXPORT
+_rf_ip EQU *
+	FDB	$0000
+
+_rf_rp EXPORT
+_rf_rp EQU *
+	FDB	$0000
+
+_rf_sp EXPORT
+_rf_sp EQU *
+	FDB	$0000
+
+_rf_up EXPORT
+_rf_up EQU *
+	FDB	$0000
+
+_rf_w EXPORT
+_rf_w EQU *
+	FDB	$0000
+
 ssave EQU *
 	FDB	$0000
 

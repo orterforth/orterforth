@@ -1,9 +1,9 @@
 # === Dragon 32/64 ===
 
 DRAGONCMOCOPTS := --dragon -Werror
-DRAGONDEPS := dragon/rf.o dragon/inst.o
+DRAGONDEPS := dragon/inst.o
 DRAGONLINK := true
-DRAGONLINKDEPS := dragon/link.o dragon/rf.o
+DRAGONLINKDEPS := dragon/link.o
 DRAGONMACHINE := xroar
 DRAGONORG := 0x0600
 ifeq ($(DRAGONLINK),true)
@@ -39,13 +39,13 @@ DRAGONCMOCOPTS += -DRF_ASSEMBLY
 DRAGONDEPS += dragon/rf_6809.o dragon/system_asm.o
 DRAGONLINKDEPS += dragon/rf_6809.o dragon/system_asm.o
 ifeq ($(DRAGONLINK),true)
-DRAGONORIGIN := 0x1000
+DRAGONORIGIN := 0x0F00
 else
-DRAGONORIGIN := 0x1D00
+DRAGONORIGIN := 0x1A00
 endif
 else
-DRAGONDEPS += dragon/system.o
-DRAGONLINKDEPS += dragon/system.o
+DRAGONDEPS += dragon/rf.o dragon/system.o
+DRAGONLINKDEPS += dragon/rf.o dragon/system.o
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)

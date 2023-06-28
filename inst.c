@@ -15,6 +15,11 @@ const
 #endif
 #endif
 
+/* INST TIME STACK OPERATIONS */
+
+#define RF_INST_SP_POP (*(rf_sp++))
+#define RF_INST_SP_PUSH(a) { *(--rf_sp) = (a); }
+
 /* INST TIME DISC OPERATIONS */
 
 /* inst time disc command buffer */
@@ -34,14 +39,14 @@ static void rf_inst_code_hld(void)
 {
   RF_START;
   {
-    uintptr_t block = RF_SP_POP;
+    uintptr_t block = RF_INST_SP_POP;
 
     /* convert block number into track and sector */
     rf_inst_puti(2, (uint8_t) (block / 26));
     rf_inst_puti(5, (uint8_t) (block % 26) + 1);
 
     /* return command addr */
-    RF_SP_PUSH((uintptr_t) cmd);
+    RF_INST_SP_PUSH((uintptr_t) cmd);
   }
   RF_JUMP_NEXT;
 }
@@ -357,8 +362,8 @@ static void rf_inst_code_cd(void)
 {
   RF_START;
   {
-    uintptr_t idx = RF_SP_POP;
-    RF_SP_PUSH((uintptr_t) rf_inst_code_lit_list[idx].value);
+    uintptr_t idx = RF_INST_SP_POP;
+    RF_INST_SP_PUSH((uintptr_t) rf_inst_code_lit_list[idx].value);
   }
   RF_JUMP_NEXT;
 }
@@ -368,7 +373,7 @@ static void rf_inst_code_compile(void)
 {
   RF_START;
   {
-    char *addr = (char *) RF_SP_POP;
+    char *addr = (char *) RF_INST_SP_POP;
     rf_inst_compile(addr);
   }
   RF_JUMP_NEXT;
@@ -390,8 +395,8 @@ static void rf_inst_code_sb(void)
   RF_START;
 #ifdef RF_INST_SAVE
   {
-    uint8_t *buf = (uint8_t *) RF_SP_POP;
-    uint8_t *i = (uint8_t *) RF_SP_POP;
+    uint8_t *buf = (uint8_t *) RF_INST_SP_POP;
+    uint8_t *i = (uint8_t *) RF_INST_SP_POP;
     uint8_t j;
 
     /* inner hex loop */
@@ -502,7 +507,7 @@ void rf_inst(void)
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
   /* wait for disc server to init */
-  z80_delay_ms(5000);
+  z80_delay_ms(10000);
 #endif
 #endif
 

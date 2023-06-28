@@ -21,6 +21,12 @@
 
 /* assembly code definitions */
 #ifdef RF_ASSEMBLY
+#define RF_TARGET_FP
+#define RF_TARGET_IP
+#define RF_TARGET_RP
+#define RF_TARGET_SP
+#define RF_TARGET_UP
+#define RF_TARGET_W
 #define RF_TARGET_TRAMPOLINE
 #define RF_TARGET_CODE_DOCOL
 #define RF_TARGET_NEXT
