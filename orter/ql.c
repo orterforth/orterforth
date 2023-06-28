@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "io.h"
 #include "ql.h"
 
+/* TODO move to orter_io */
 static uint32_t getu32be(uint8_t *p)
 {
   uint32_t n;
