@@ -127,22 +127,26 @@ BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033
 bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 
 ifeq ($(BBCMACHINE),mame)
+# start disc over tcp
 	@$(STARTDISCTCP) $(DR0) $(DR1)
-
+	@sleep 1 # avoid MAME serial race condition
+# run emulator and load media
 	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
 	@mame $(BBCMAME) $(BBCMAMERUN)
-
+# stop disc
 	@$(STOPDISC)
 endif
 ifeq ($(BBCMACHINE),real)
 ifeq ($(BBCLOADINGMETHOD),serial)
+# load over serial
 	@$(BBCLOADSERIAL) bbc/orterforth.ser
 endif
 ifeq ($(BBCLOADINGMETHOD),tape)
+# load over tape TODO
 	@printf '* \033[1;35mTODO tape loading script\033[0;0m\n'
 	@exit 1
 endif
-
+# run disc
 	@printf '* \033[1;33mRunning disc\033[0;0m\n'
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 endif
@@ -253,31 +257,41 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 
+# check for overlap with origin
 	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$(shell echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
 
+# empty DR1 to take hex save
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
 
 ifeq ($(BBCMACHINE),mame)
-	@$(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
-
+# start disc over tcp
 	@$(STARTDISCTCP) model.img $@.io
+	@sleep 1 # avoid MAME serial race condition
+# start emulator and load media
+	@$(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
 endif
 ifeq ($(BBCMACHINE),real)
+# load over serial
 	@$(BBCLOADSERIAL) $(BBCINSTMEDIA)
 
+# start disc over serial
 	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 endif
 
+# wait for save complete
 	@$(WAITUNTILSAVED) $@.io
 
 ifeq ($(BBCMACHINE),mame)
+# stop emulator
 	@$(STOPMAME)
 endif
 
+# stop disc
 	@$(STOPDISC)
 
+# complete file
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
