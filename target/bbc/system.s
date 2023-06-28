@@ -16,8 +16,6 @@ osbyte := $FFF4
 
 _rf_init:
 
-	lda #$6C                      ; jsr (W) during inst, before COLD
-	sta _rf_6502_w-1
 	lda #$07                      ; *FX 7,7 (9600 baud receive)
 	tax
 	jsr osbyte
