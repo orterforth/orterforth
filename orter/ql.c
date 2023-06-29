@@ -7,19 +7,6 @@
 #include "io.h"
 #include "ql.h"
 
-/* TODO move to orter_io */
-static uint32_t getu32be(uint8_t *p)
-{
-  uint32_t n;
-
-  n = *p << 24;
-  n |= (uint32_t) *(++p) << 16;
-  n |= (uint32_t) *(++p) << 8;
-  n |= (uint32_t) *(++p);
-
-  return n;
-}
-
 static int getfilesize(FILE *ptr, long *size)
 {
   /* get file size */
@@ -171,7 +158,7 @@ int orter_ql_serial_xtcc(int argc, char **argv)
     fprintf(stderr, "XTcc field not found\n");
     return 1;
   }
-  dsp = getu32be(buf + 4);
+  dsp = orter_io_get_32be(buf + 4);
 
   /* size */
   if (getfilesize(ptr, &size)) {

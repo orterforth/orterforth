@@ -82,6 +82,9 @@ void orter_io_put_16le(uint16_t u);
 /* write 32 bit LE int */
 void orter_io_put_32le(uint32_t u);
 
+/* get 32 bit BE int */
+uint32_t orter_io_get_32be(uint8_t *p);
+
 /* set 16 bit BE int */
 void orter_io_set_16be(uint16_t u, uint8_t *p);
 
