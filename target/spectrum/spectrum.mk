@@ -14,12 +14,12 @@ FUSEOPTS := \
 SPECTRUMINSTMACHINE := fuse
 # locates inst code at 0xC800
 SPECTRUMINSTOFFSET := 18432
+# TODO SPECTRUMDEPS
 # command line linked libraries
 SPECTRUMLIBS := \
 	-lmzx_tiny \
 	-lndos \
 	-lspectrum/inst \
-	-lspectrum/rf \
 	-lspectrum/system
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 0x8000
@@ -100,7 +100,7 @@ ifeq ($(SPECTRUMOPTION),assembly)
 # TODO pragma not in libs
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORIGIN
-SPECTRUMORIGIN := 0x8720
+SPECTRUMORIGIN := 0x8700
 # assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
 # superzazu emulator is minimal and launches no GUI
@@ -119,9 +119,9 @@ endif
 # z88dk / pure C based
 ifeq ($(SPECTRUMOPTION),default)
 # requires z88dk RS232 library
-SPECTRUMLIBS += -lrs232if1
+SPECTRUMLIBS += -lspectrum/rf -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs and pure C impl
-SPECTRUMORIGIN := 0x9B80
+SPECTRUMORIGIN := 0x9C00
 endif
 
 # superzazu fast partial emulator can't be used for run time

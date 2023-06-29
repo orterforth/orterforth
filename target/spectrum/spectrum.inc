@@ -16,6 +16,12 @@
 
 /* skip C based definitions of functions defined in Z80 assembler */
 #ifdef RF_ASSEMBLY
+#define RF_TARGET_FP
+#define RF_TARGET_IP
+#define RF_TARGET_RP
+#define RF_TARGET_SP
+#define RF_TARGET_UP
+#define RF_TARGET_W
 #define RF_TARGET_TRAMPOLINE
 #define RF_TARGET_CODE_LIT
 #define RF_TARGET_NEXT
@@ -70,9 +76,7 @@
 #define RF_TARGET_CODE_COLD
 #define RF_TARGET_CODE_TG
 #define RF_TARGET_CODE_XT
-#ifndef RF_ASSEMBLY_Z88DK
+#endif
 #define RF_TARGET_CODE_DCHAR
 #define RF_TARGET_CODE_BREAD
 #define RF_TARGET_CODE_BWRIT
-#endif
-#endif

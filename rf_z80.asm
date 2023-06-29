@@ -68,12 +68,6 @@ SECTION code_user
 ;           "HPUSH" called
 ;
 ;
-EXTERN _rf_ip                   ; integrates with C based IP,
-EXTERN _rf_rp                   ; RP,
-EXTERN _rf_sp                   ; SP,
-EXTERN _rf_fp                   ; trampoline function pointer,
-EXTERN _rf_up                   ; UP,
-EXTERN _rf_w                    ; W
 ;
 ;
 ; COMMENT CONVENTIONS:
@@ -1050,3 +1044,35 @@ _rf_code_xt:
   ld (_rf_fp), hl
   call _rf_start
   ret
+
+SECTION data_user
+
+PUBLIC _rf_fp
+
+_rf_fp:
+  defw $0000
+
+PUBLIC _rf_ip
+
+_rf_ip:
+  defw $0000
+
+PUBLIC _rf_rp
+
+_rf_rp:
+  defw $0000
+
+PUBLIC _rf_sp
+
+_rf_sp:
+  defw $0000
+
+PUBLIC _rf_up
+
+_rf_up:
+  defw $0000
+
+PUBLIC _rf_w
+
+_rf_w:
+  defw $0000

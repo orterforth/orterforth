@@ -21,7 +21,7 @@ void rf_code_emit()
   {
     uint8_t c;
     
-    c = RF_SP_POP & 0x7F;
+    c = (*(rf_sp++)) & 0x7F;
     fputc_cons(c);
     RF_USER_OUT++;
   }
@@ -63,7 +63,7 @@ void rf_code_key(void)
     }
 
     /* return key */
-    RF_SP_PUSH(c & 0x7F);
+    *(--rf_sp) = (c & 0x7F);
   }
   RF_JUMP_NEXT;
 }
@@ -71,7 +71,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  RF_SP_PUSH(in_KeyPressed(0x817F));
+  *(--rf_sp) = (in_KeyPressed(0x817F));
   RF_JUMP_NEXT;
 }
 
@@ -100,6 +100,42 @@ void rf_disc_write(char *p, uint8_t len)
     }
     p++;
   }
+}
+
+void rf_code_dchar(void)
+{
+  RF_START;
+  {
+    char a, c;
+
+    a = (char) (*(rf_sp++));
+    rf_disc_read(&c, 1);
+    *(--rf_sp) = (c == a);
+    *(--rf_sp) = (c);
+  }
+  RF_JUMP_NEXT;
+}
+
+void rf_code_bread(void)
+{
+  RF_START;
+  rf_disc_read((char *) (*(rf_sp++)), RF_BBLK);
+  RF_JUMP_NEXT;
+}
+
+static char eot = 0x04;
+
+void rf_code_bwrit(void)
+{
+  RF_START;
+  {
+    uint8_t a = (uint8_t) (*(rf_sp++));
+    char *b = (char *) (*(rf_sp++));
+
+    rf_disc_write(b, a);
+    rf_disc_write(&eot, 1);
+  }
+  RF_JUMP_NEXT;
 }
 
 void rf_fin(void)
