@@ -10,3 +10,6 @@
 [submodule "tools/github.com/mcleod-ideafix/zx81putil"]
 	path = tools/github.com/mcleod-ideafix/zx81putil
 	url = https://github.com/mcleod-ideafix/zx81putil.git
+[submodule "tools/github.com/nanoflite/c64-up2400-cc65"]
+	path = tools/github.com/nanoflite/c64-up2400-cc65
+	url = https://github.com/nanoflite/c64-up2400-cc65.git
