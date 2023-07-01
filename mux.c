@@ -92,6 +92,9 @@ void rf_mux_disc_read(char *p, unsigned char len)
 void rf_mux_disc_write(char *c, unsigned char len)
 {
   for (; len; len--) {
-    putchar(*(c++) | 0x80);
+    while (putchar(*c | 0x80) == -1) {
+      RF_SLEEP(1000);
+    }
+    c++;
   }
 }
