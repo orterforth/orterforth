@@ -28,6 +28,15 @@ ql-clean :
 
 	rm -rf ql/*
 
+QLMACHINE := sqlux
+
+.PHONY : ql-hw
+ql-hw : ql/hw.ser
+
+ifeq ($(QLMACHINE),sqlux)
+	sqlux --ramsize 128 --romdir ../sQLux/roms --win_size 2x --ser2 ql/hw.ser
+endif
+
 QLSERIALBAUD := 4800
 
 # load from serial
@@ -59,7 +68,7 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 ql/hw.ser : target/ql/hw.bas
 
 	cat $< > $@.io
-	printf '\032' >> $@.io
+	printf '\032\n                                                         ' >> $@.io
 	mv $@.io $@
 
 # inst executable
@@ -105,8 +114,6 @@ ql/orterforth : ql/link.o $(QLDEPS)
 ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
-
-QLMACHINE := sqlux
 
 # saved binary as hex
 ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
