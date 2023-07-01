@@ -126,8 +126,17 @@ void rf_code_cr(void)
 
 void rf_disc_read(char *p, uint8_t len)
 {
+  int c;
+
   for (; len; --len) {
-    *(p++) = rf_persci_getc();
+    c = rf_persci_getc();
+    if (c == -1) {
+      break;
+    }
+    *(p++) = c;
+    if (c == 0x04) {
+      break;
+    }
   }
 }
 
