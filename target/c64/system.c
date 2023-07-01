@@ -66,20 +66,11 @@ void rf_code_key(void)
 /*
     c = getchar();
 */
-    c = cgetc();
 /*
     while ((c = cbm_k_getin()) == 0) { }
 */
-    /* BS */
-/*
-    if (c == 0x08) {
-      cputc(' ');
-      cputc(c);
-    }
-*/
-/*
-    if (c < 32) printf("[%02X] ", c);
-*/
+    c = cgetc();
+
     /* return key */
     RF_SP_PUSH(c & 0x7F);
   }
@@ -89,8 +80,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  /* TODO break? */
-  RF_SP_PUSH(0);
+  RF_SP_PUSH(*((uint8_t *) 0x00CB) == 0x3F);
   RF_JUMP_NEXT;
 }
 

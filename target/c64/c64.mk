@@ -1,5 +1,7 @@
 # === Commodore 64 ===
 
+C64ORIGIN := 0x3300
+
 c64 :
 
 	mkdir $@
@@ -12,6 +14,15 @@ c64-clean :
 
 	rm -rf c64/*
 
+.PHONY : vice
+vice :
+
+	x64 \
+		-kernal roms/c64p/901227-02.u4 \
+		-basic roms/c64p/901226-01.u3 \
+		-chargen roms/c64p/901225-01.u5 \
+		+warp +saveres +confirmonexit
+
 .PHONY : c64-hw
 c64-hw : c64/hw.prg
 
@@ -19,7 +30,7 @@ c64-hw : c64/hw.prg
 		-kernal roms/c64p/901227-02.u4 \
 		-basic roms/c64p/901226-01.u3 \
 		-chargen roms/c64p/901225-01.u5 \
-		+saveres +confirmonexit -autostartprgmode 1 -autostart $<
+		+warp +saveres +confirmonexit -autostartprgmode 1 -autostart $<
 
 # TODO cfg file with sections for inst
 .PHONY : c64-run
@@ -35,7 +46,7 @@ c64-run : c64/orterforth.prg
 
 c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 
-	@$(CHECKMEMORY) 0x801 0x3300 $(shell $(STAT) c64/inst.prg)
+	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $(shell $(STAT) c64/inst.prg)
 
 	rm -f $@.io
 	touch $@.io
@@ -72,7 +83,7 @@ c64/%.o : c64/%.s
 # general compile rule
 c64/%.s : %.c | c64
 
-	cc65 -O -t c64 -DRF_TARGET_INC='"target/c64/default.inc"' -o $@ $<
+	cc65 -O -t c64 -DRF_ORIGIN=$(C64ORIGIN) -o $@ $<
 
 # serial driver
 # TODO diagnose issue with driver built from source

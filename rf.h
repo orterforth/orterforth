@@ -81,11 +81,8 @@ typedef uint32_t rf_double_t;
 #endif
 #endif
 #ifdef __C64__
-/* C64 */
-#define RF_TARGET_HI 0x0000
-#define RF_TARGET_LO 0x3d9c
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/c64/default.inc"
+#define RF_TARGET_INC "target/c64/c64.inc"
 #endif
 #endif
 #endif

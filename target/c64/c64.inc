@@ -258,6 +258,10 @@
 #pragma charmap (0xFF, 0xFF)
 #pragma warn (remap-zero, pop)
 
+/* C64 */
+#define RF_TARGET_HI 0x0000
+#define RF_TARGET_LO 0x3d9c
+
 /* RP and SP operations not inline, code is smaller */
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
@@ -265,16 +269,13 @@
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
 
-/* DC4 */
+/* PETSCII DEL */
 #define RF_BS 0x0014
 
 /* default CC65 org */
 #define RF_ORG 0x0801
 
-/* default inst is large */
-#define RF_ORIGIN 0x3300
-
-/* start of BASIC ROM */
-#define RF_LIMIT 0xA000
+/* in front of C stack at 0xCFFF */
+#define RF_LIMIT 0xCF00
 
 /* no assembly definitions */
