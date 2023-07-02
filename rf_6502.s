@@ -915,7 +915,6 @@ _rf_code_dodoe:
 .export _rf_code_cold
 
 _rf_code_cold:
-
     ; This preamble modifies the following code to hold the
 	; parameter field addresses required. The original Forth
 	; model source compiled these values inline using the 
@@ -939,7 +938,7 @@ cold2:
 	lda RF_ORIGIN+$0024
 	sta cold8+1
 
-	lda RF_ORIGIN+$000C           ; set FORTH vocab to ORIGIN + 6
+	lda RF_ORIGIN+$000C           ; FORTH vocabulary init
 cold3:
 	sta $FFFF                     ; self modified
 	lda RF_ORIGIN+$000D
@@ -950,25 +949,25 @@ cold4:
 warm:
 	ldy #$0F                      ; warm, copy 8 words
 cold5:
-	lda RF_ORIGIN+$0010           ; set UP to ORIGIN + 8
+	lda RF_ORIGIN+$0010           ; UP init
 	sta _rf_up
 	lda RF_ORIGIN+$0011
 	sta _rf_up+1
 cold6:
-	lda RF_ORIGIN+$000C,y         ; copy from ORIGIN to UP
+	lda RF_ORIGIN+$000C,y         ; USER variables init
 	sta (_rf_up),y
 	dey
 	bpl cold6
 cold7:
 	lda #$FF                      ; self modified
-	sta _rf_ip+1                  ; set IP to ABORT
+	sta _rf_ip+1                  ; IP init to ABORT
 cold8:
 	lda #$FF                      ; self modified
 	sta _rf_ip
 	cld
 	lda #$6C                      ; set JMP
 	sta _rf_w-1
-	jmp _rf_code_rpsto            ; to RP!
+	jmp _rf_code_rpsto            ; jump to RP!
 
 .export _rf_code_stod
 
