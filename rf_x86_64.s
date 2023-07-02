@@ -86,8 +86,8 @@ _rf_start:
   popq  %rbp                    # get the pushed rbp (this is RP)
   movq  %rbp, _rf_rp(%rip)      # rbp to RP
   movq  %rsp, _rf_sp(%rip)      # rsp to SP
-  movq  rbpsave(%rip), %rbp # restore rbp
-  movq  rspsave(%rip), %rsp # restore rsp
+  movq  rbpsave(%rip), %rbp     # restore rbp
+  movq  rspsave(%rip), %rsp     # restore rsp
   pushq %rbp                    # push rbp as it would have been
   movq  %rsp, %rbp              # and mov rsp into rbp
   subq  %rcx, %rsp              # sub the difference from rsp
