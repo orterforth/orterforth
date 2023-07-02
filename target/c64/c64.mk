@@ -32,9 +32,12 @@ c64-hw : c64/hw.prg
 		-chargen roms/c64p/901225-01.u5 \
 		+warp +saveres +confirmonexit -autostartprgmode 1 -autostart $<
 
+# TODO diagnose orterforth.prg
 # TODO cfg file with sections for inst
 .PHONY : c64-run
-c64-run : c64/orterforth.prg
+c64-run : c64/orterforth.prg $(DR0) $(DR1)
+
+	# $(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
 
 	# x64 \
 	# 	-kernal roms/c64p/901227-02.u4 \
