@@ -33,8 +33,12 @@ QLMACHINE := sqlux
 .PHONY : ql-hw
 ql-hw : ql/hw.ser
 
+	(sleep 10 && cat ql/hw.ser && sleep 50) | $(ORTER) pty ql/pty &
+#	(sleep 5 && cat ql/hw.ser && sleep 50) | socat - pty,rawer,link=ql/pty &
+
 ifeq ($(QLMACHINE),sqlux)
-	sqlux --ramsize 128 --romdir ../sQLux/roms --win_size 2x --ser2 ql/hw.ser
+#	sqlux --ramsize 128 --romdir ../sQLux/roms --win_size 2x --ser2 ql/pty --boot_cmd 'LRUN SER2Z'
+	sqlux --ramsize 128 --romdir ../sQLux/roms --win_size 2x --ser2 ql/pty # --boot_cmd 'EXEC_W SER2Z'
 endif
 
 QLSERIALBAUD := 4800
@@ -65,11 +69,23 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 	@touch data.img
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.img data.img
 
-ql/hw.ser : target/ql/hw.bas
+#ql/hw.ser : target/ql/hw.bas
 
-	cat $< > $@.io
-	printf '\032\n                                                         ' >> $@.io
-	mv $@.io $@
+#	cat $< > $@.io
+#	printf '\032' >> $@.io
+#	mv $@.io $@
+
+ql/hw.ser : ql/hw
+
+	$(ORTER) ql serial-xtcc $< > $@
+
+ql/hw : ql/hw.o
+
+	qld -ms -o $@ $^
+
+ql/hw.o : hw.c | ql
+
+	qcc -o $@ -c $<
 
 # inst executable
 ql/inst : ql/inst.o $(QLDEPS)
@@ -149,11 +165,11 @@ ifeq ($(QLMACHINE),sqlux)
 	# ls -l /dev/pts
 	# sleep 5
 	# TODO link will be read by IDE file watching
-	socat - pty,rawer,link=pty < rx &
+	socat - pty,rawer,link=ql/pty < rx &
 	(sleep 15 && cat ql/hw.ser && sleep 1000) > rx &
 	sleep 1
 	ps
-	sqlux --ser2 pty --ramsize 128 --romdir ../sQLux/roms --win_size 2x &
+	sqlux --ser2 ql/pty --ramsize 128 --romdir ../sQLux/roms --win_size 2x &
 	sleep 60
 	exit 1
 
