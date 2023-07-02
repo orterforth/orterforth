@@ -868,7 +868,7 @@ _rf_code_dodoe:
 .export _rf_code_cold
 
 _rf_code_cold:
-    ; This preamble modifies the following code to hold the
+  ; This preamble modifies the following code to hold the
   ; parameter field addresses required. The original Forth
   ; model source compiled these values inline using the 
   ; Forth 6502 assembler, which we cannot do. The rest of
