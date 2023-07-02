@@ -809,18 +809,6 @@ _rf_code_ln:
 ln1:
 	jmp apush
 
-	.globl rf_code_tg
-	.globl _rf_code_tg
-rf_code_tg:
-_rf_code_tg:
-
-	call __x86.get_pc_thunk.ax
-	addl $_GLOBAL_OFFSET_TABLE_, %eax
-	movl _rf_origin@GOTOFF(%eax), %edx
-	movl 0x4C(%edx), %eax
-	movl 0x50(%edx), %edx
-	jmp dpush
-
 	.globl rf_code_xt
 	.globl _rf_code_xt
 rf_code_xt:

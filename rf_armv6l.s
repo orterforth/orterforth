@@ -815,19 +815,6 @@ ln1:
   ldr   r0, [r3]
   bx    r0
 
-   .p2align 2
-   .global rf_code_tg
-rf_code_tg:
-  ldr   r3, =rf_origin
-  ldr   r3, [r3]
-  ldr   r0, [r3, #76]
-  ldr   r3, [r3, #80]
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
-
   .p2align 2
   .global rf_code_xt
 rf_code_xt:

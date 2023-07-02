@@ -498,8 +498,6 @@ void rf_code_cs(void);
 
 void rf_code_ln(void);
 
-void rf_code_tg(void);
-
 void rf_code_xt(void);
 
 #endif /* RF_H_ */

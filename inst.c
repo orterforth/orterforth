@@ -288,7 +288,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cl", rf_code_cl },
   { "cs", rf_code_cs },
   { "ln", rf_code_ln },
-  { 0, rf_code_tg },
+  { 0, 0 }, /* TODO remove this row */
   { "xt", rf_code_xt },
   { "LIT", rf_code_lit },
   { "EXECUTE", rf_code_exec },
@@ -309,7 +309,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, rf_code_key },
   { 0, rf_code_qterm },
   { 0, rf_code_cr },
-  { 0, rf_code_cr },
+  { 0, rf_code_cr }, /* TODO remove this row */
   { "CMOVE", rf_code_cmove },
   { "U*", rf_code_ustar },
   { 0, rf_code_uslas },
@@ -431,7 +431,7 @@ static void rf_inst_load(void)
   rf_inst_constant("s0", (uintptr_t) RF_S0);
   rf_inst_constant("r0", (uintptr_t) RF_R0);
   rf_inst_constant("tib", (uintptr_t) RF_TIB);
-  /* boot time literals used by tg */
+  /* boot time literals to identify platform */
   rf_inst_constant("th", RF_TARGET_HI);
   rf_inst_constant("tl", RF_TARGET_LO);
   /* for +ORIGIN and also for save */

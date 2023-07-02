@@ -4,7 +4,6 @@ SECTION code_user
 
 EXTERN _rf_next                 ; NEXT, when jp (ix) not available
 EXTERN _rf_up                   ; UP, for incrementing OUT
-EXTERN _rf_z80_dpush            ; DPUSH, used by tg
 EXTERN _rf_z80_hpush            ; HPUSH, for restoring into iy
 
 DEFINE USEIY                    ; to hold HPUSH

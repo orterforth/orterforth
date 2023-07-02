@@ -1441,14 +1441,14 @@ save                            ( now save                    )
 ( COMPILED AFTER BOOT-UP LITERALS                             )
 ( extra boot-up literals for COLD                             )
 0 , 0 ,
-( extra boot-up literals for tg                               )
+( extra boot-up literals for target platform                  )
 th , tl ,
 ( additional words                                            )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - !
 CODE cs 1 cd HERE cl - !
 CODE ln 2 cd HERE cl - !
-CODE tg 3 cd HERE cl - !
 CODE xt 4 cd HERE cl - !
+
 
 
 

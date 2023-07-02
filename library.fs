@@ -289,11 +289,11 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 ( sys: system dependent operations - BBC                      )
 FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : D= SWAP >R = SWAP R> = AND ;  ( compare double numbers      )
+: tg 20 cs +ORIGIN @ 19 cs +ORIGIN @ ;
 : only tg D= 0= IF [COMPILE] --> ENDIF ;
 36 BASE ! BBC. DECIMAL only
 40 CONSTANT columns 25 CONSTANT rows
 ;S
-
 
 
 

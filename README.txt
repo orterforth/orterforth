@@ -193,11 +193,6 @@ system-independent:
                          (ALIGNED is not part of this version
                          of fig-Forth.)
 
- tg ( -- d )             Returns a base-36 representation of
-                         the target system (e.g., one of: BBC.
-                         CYGWIN. DARWIN. LINUX. PICO. QL.
-                         RC2014. SPECTR. etc).
-
  xt ( -- )               Exits orterforth (and returns to the
                          shell, BASIC prompt or equivalent).
                          Used to exit the install process.

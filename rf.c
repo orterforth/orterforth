@@ -1336,13 +1336,3 @@ void rf_code_ln(void)
   RF_JUMP_NEXT;
 }
 #endif
-
-#ifndef RF_TARGET_CODE_TG
-void rf_code_tg(void)
-{
-  RF_START;
-  RF_SP_PUSH(RF_TARGET_LO);
-  RF_SP_PUSH(RF_TARGET_HI);
-  RF_JUMP_NEXT;
-}
-#endif

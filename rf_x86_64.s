@@ -949,21 +949,6 @@ _rf_code_xt:
   popq  %rbp
   ret
 
-  .globl rf_code_tg
-  .globl _rf_code_tg
-  .p2align 4, 0x90
-rf_code_tg:
-_rf_code_tg:
-  movq  _rf_origin(%rip), %rdx
-  movq  0x98(%rdx), %rax
-  movq  0xA0(%rdx), %rdx
-# jmp   dpush
-  pushq %rdx
-  pushq %rax
-  lodsq
-  movq  %rax, %rdx
-  jmp   *(%rdx)
-
   .globl rf_code_cold
   .globl _rf_code_cold
   .p2align 4, 0x90

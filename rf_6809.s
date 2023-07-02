@@ -851,16 +851,6 @@ _rf_code_cs EQU *
 funcend_rf_code_cs EQU *
 funcsize_rf_code_cs EQU funcend_rf_code_cs-_rf_code_cs
 
-_rf_code_tg EXPORT
-_rf_code_tg EQU *
-	LDX    #RF_ORIGIN
-	LDD    38,X
-	LDX    40,X
-	PSHU   D,X
-	LBRA   NEXT
-funcend_rf_code_tg EQU *
-funcsize_rf_code_tg EQU funcend_rf_code_tg-_rf_code_tg
-
 	ENDSECTION
 
 	SECTION	rwdata

@@ -804,20 +804,6 @@ ln1:
   br    x0
 
   .align 2
-  .global rf_code_tg
-rf_code_tg:
-  ldr   x3, =rf_origin
-  ldr   x3, [x3]
-  add   x3, x3, #152
-  ldr   x0, [x3]
-  ldr   x3, [x3, #8]
-# b     dpush
-  stp   x0, x3, [x14, #-16]!
-  ldr   x3, [x15], #8
-  ldr   x0, [x3]
-  br    x0
-
-  .align 2
   .global rf_code_xt
 rf_code_xt:
   stp   x29, x30, [sp, -16]!

@@ -547,5 +547,4 @@ _rf_code_cs:
   jmp    (a0)
 
 ; TODO _rf_code_ln
-; TODO _rf_code_tg
 ; TODO _rf_code_cold
