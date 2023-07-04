@@ -188,17 +188,22 @@ rc2014/orterforth.hex : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload
 	@printf '* \033[1;33mLoading hexload\033[0;0m\n'
 	@$(ORTER) serial -o onlcrx -e 5 $(RC2014SERIALPORT) 115200 < tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas
 	@printf '* \033[1;33mLoading inst\033[0;0m\n'
-	@$(ORTER) serial -o onlcrx -e 4 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
+	@$(ORTER) serial -o onlcrx -e 6 $(RC2014SERIALPORT) 115200 < rc2014/inst.ihx
 
 	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
 	@rm -f $@.io
 	@touch $@.io
 
-	@$(STARTDISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
+# Linux (though not Darwin) reads EOF from stdin if run in background
+# so pipe no bytes into stdin to keep disc from detecting EOF and terminating
+	@sh scripts/start.sh /dev/null tx tail.pid tail -f
+	@sh scripts/start.sh tx /dev/stdout disc.pid $(DISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
+	@#$(STARTDISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
 
 	@$(WAITUNTILSAVED) $@.io
 
 	@$(STOPDISC)
+	@sh scripts/stop.sh tail.pid
 
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
