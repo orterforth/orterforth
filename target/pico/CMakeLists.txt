@@ -1,6 +1,10 @@
 # Set minimum required version of CMake
 cmake_minimum_required(VERSION 3.12)
 
+option(RF_ASSEMBLY "Use assembly code" OFF)
+
+add_compile_options("-O0" "-fno-inline")
+
 # Include build functions from Pico SDK
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
@@ -13,14 +17,32 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 add_compile_definitions(PICO)
+if(RF_ASSEMBLY)
+    add_compile_definitions(RF_ASSEMBLY)
+endif(RF_ASSEMBLY)
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=orterforth.map")
 add_library(mux OBJECT ../../mux.c $<TARGET_OBJECTS:rf>)
-add_library(rf OBJECT ../../rf.c)
 add_library(persci OBJECT ../../persci.c)
+add_library(rf OBJECT ../../rf.c)
+if(RF_ASSEMBLY)
+    add_library(rf_armv6m OBJECT ../../rf_armv6-m.s)
+endif(RF_ASSEMBLY)
 add_library(system OBJECT system.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:persci>)
 add_library(inst OBJECT ../../inst.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:persci>)
 
 # Tell CMake where to find the executable source file
+if(RF_ASSEMBLY)
+add_executable(${PROJECT_NAME} 
+    ../../main.c
+    $<TARGET_OBJECTS:mux>
+    $<TARGET_OBJECTS:rf>
+    $<TARGET_OBJECTS:rf_armv6m>
+    $<TARGET_OBJECTS:persci>
+    $<TARGET_OBJECTS:system>
+    $<TARGET_OBJECTS:inst>
+)
+else()
 add_executable(${PROJECT_NAME} 
     ../../main.c
     $<TARGET_OBJECTS:mux>
@@ -29,6 +51,7 @@ add_executable(${PROJECT_NAME}
     $<TARGET_OBJECTS:system>
     $<TARGET_OBJECTS:inst>
 )
+endif(RF_ASSEMBLY)
 
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${PROJECT_NAME})

@@ -1,5 +1,13 @@
 # === Raspberry Pi Pico ===
 
+PICOOPTION := default
+#PICOOPTION := assembly
+
+PICOCMAKEOPTION := -DRF_ASSEMBLY=OFF
+ifeq ($(PICOOPTION),assembly)
+PICOCMAKEOPTION := -DRF_ASSEMBLY=ON
+endif
+
 pico :
 
 	mkdir $@
@@ -30,7 +38,7 @@ pico-run : | $(ORTER) $(DISC)
 
 pico/Makefile : target/pico/CMakeLists.txt | pico
 
-	cd pico && PICO_SDK_PATH=~/pico-sdk cmake ../target/pico
+	cd pico && PICO_SDK_PATH=~/pico-sdk cmake $(PICOCMAKEOPTION) ../target/pico
 
 pico/orterforth.uf2 : \
 	pico/Makefile \
@@ -44,6 +52,7 @@ pico/orterforth.uf2 : \
 	persci.h \
 	rf.c \
 	rf.h \
+	rf_armv6-m.s \
 	target/pico/system.c \
 	system.inc
 
