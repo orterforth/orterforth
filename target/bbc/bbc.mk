@@ -95,18 +95,6 @@ endif
 BBCMAMEINST := -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
 BBCMAMERUN := -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
 
-bbc :
-
-	mkdir $@
-
-.PHONY : bbc-build
-bbc-build : $(BBCMEDIA)
-
-.PHONY : bbc-clean
-bbc-clean : 
-
-	rm -f bbc/*
-
 # MAME command line
 BBCMAME := bbcb $(MAMEOPTS) -rs423 null_modem -bitb socket.127.0.0.1:5705
 
@@ -122,34 +110,50 @@ BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033
 	printf '* \033[1;33mLoading via serial\033[0;0m\n' ; \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
 
-# load and run
+# notes: real disc runs after serial load
+# MAME needs disc tcp running before it starts
+# ideal is that disc starts after load in all cases
+# requires a disc tcp client to connect to MAME tcp server
+EMPTYDR1FILE := printf '* \033[1;33mClearing DR1\033[0;0m\n' ; printf '' >
+ifeq ($(BBCMACHINE),mame)
+BBCSTARTDISC := $(STARTDISCTCP)
+BBCSTARTMACHINE := sleep 1 ; $(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
+BBCRUNMACHINE := sleep 1 ; printf '* \033[1;33mRunning MAME\033[0;0m\n' ; mame $(BBCMAME) $(BBCMAMERUN)
+BBCLOAD := :
+BBCLOADINST := :
+BBCSTOPMACHINE := $(STOPMAME)
+endif
+ifeq ($(BBCMACHINE),real)
+BBCSTARTDISC := :
+BBCSTARTMACHINE := :
+BBCRUNMACHINE := :
+BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser ; printf '* \033[1;33mRunning disc\033[0;0m\n' ; $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+BBCLOADINST := $(BBCLOADSERIAL) $(BBCINSTMEDIA) ; $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
+BBCSTOPMACHINE := :
+endif
+
+bbc :
+
+	mkdir $@
+
+.PHONY : bbc-build
+bbc-build : $(BBCMEDIA)
+
+.PHONY : bbc-clean
+bbc-clean : 
+
+	rm -f bbc/*
+
 .PHONY : bbc-run
 bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
 
-ifeq ($(BBCMACHINE),mame)
-# start disc over tcp
-	@$(STARTDISCTCP) $(DR0) $(DR1)
-	@sleep 1 # avoid MAME serial race condition
-# run emulator and load media
-	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
-	@mame $(BBCMAME) $(BBCMAMERUN)
-# stop disc
+	@$(BBCSTARTDISC) $(DR0) $(DR1)
+
+	@$(BBCRUNMACHINE)
+
+	@$(BBCLOAD)
+
 	@$(STOPDISC)
-endif
-ifeq ($(BBCMACHINE),real)
-ifeq ($(BBCLOADINGMETHOD),serial)
-# load over serial
-	@$(BBCLOADSERIAL) bbc/orterforth.ser
-endif
-ifeq ($(BBCLOADINGMETHOD),tape)
-# load over tape TODO
-	@printf '* \033[1;35mTODO tape loading script\033[0;0m\n'
-	@exit 1
-endif
-# run disc
-	@printf '* \033[1;33mRunning disc\033[0;0m\n'
-	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
-endif
 
 BBCCC65OPTS := -O -t none \
 	-D__BBC__ \
@@ -257,93 +261,64 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 
-# check for overlap with origin
 	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$(shell echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
 
-# empty DR1 to take hex save
-	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
-	@rm -f $@.io
-	@touch $@.io
+	@$(EMPTYDR1FILE) $@.io
 
-ifeq ($(BBCMACHINE),mame)
-# start disc over tcp
-	@$(STARTDISCTCP) model.img $@.io
-	@sleep 1 # avoid MAME serial race condition
-# start emulator and load media
-	@$(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
-endif
-ifeq ($(BBCMACHINE),real)
-# load over serial
-	@$(BBCLOADSERIAL) $(BBCINSTMEDIA)
+	@$(BBCSTARTDISC) model.img $@.io
 
-# start disc over serial
-	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
-endif
+	@$(BBCSTARTMACHINE)
 
-# wait for save complete
+	@$(BBCLOADINST)
+
 	@$(WAITUNTILSAVED) $@.io
 
-ifeq ($(BBCMACHINE),mame)
-# stop emulator
-	@$(STOPMAME)
-endif
+	@$(BBCSTOPMACHINE)
 
-# stop disc
 	@$(STOPDISC)
 
-# complete file
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
-# disc inf
 bbc/orterforth.inf : | bbc
 
 	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
 
-# disc image
 bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
 
 	rm -f $@
 	bbcim -a $@ bbc/boot
 	bbcim -a $@ bbc/orterforth
 
-# tape image
-bbc/orterforth.uef : bbc/orterforth $(ORTER)
+bbc/orterforth.uef : bbc/orterforth | $(ORTER)
 
-	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
+	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
 	mv $@.io $@
 
-# main lib
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 
-# main lib, assembly
 bbc/rf_6502.o : rf_6502.s | bbc
 
 	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
 
-# system lib, assembly
 bbc/system_asm.o : target/bbc/system.s | bbc
 
 	ca65 -o $@ $<
 
-# system lib, C
 bbc/system_c.s : target/bbc/system.c | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 
-# ROM files dir
 roms/bbcb : | roms
 
 	mkdir $@
 
-# ROM files
 roms/bbcb/% : | roms/bbcb
 
 	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
 
 tools/github.com/haerfest/uef/uef2wave.py :
 
-	git submodule init tools/github.com/haerfest/uef
 	git submodule update --init tools/github.com/haerfest/uef
