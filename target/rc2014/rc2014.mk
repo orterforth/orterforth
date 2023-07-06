@@ -1,15 +1,9 @@
 # === RC2014 ===
 
-RC2014DEPS := \
-	rc2014/inst.lib \
-	rc2014/mux.lib \
-	rc2014/system.lib
+RC2014DEPS := rc2014/inst.lib
 RC2014HEXLOAD := rc2014/hexload-ack.bas
 RC2014INSTOFFSET := 0x5000
-RC2014LIBS := \
-	-lrc2014/inst \
-	-lrc2014/mux \
-	-lrc2014/system
+RC2014LIBS := -lrc2014/inst
 RC2014MACHINE := real
 RC2014ORG := 0x9000
 
@@ -26,9 +20,6 @@ ifeq ($(RC2014MACHINE),emulator)
 # RC2014SERIALPORT := ...
 # RC2014STARTMACHINE := sh scripts/start.sh ...
 # RC2014STOPMACHINE := sh scripts/stop.sh ...
-RC2014SERIALPORT := $(HOME)/Desktop/pty
-RC2014STARTMACHINE := $(ORTER) pty $(RC2014SERIALPORT) < tx | ../rem/rc2014 > tx & echo "$$!" > rc2014/emulator.pid
-RC2014STOPMACHINE := sh scripts/stop.sh rc2014/emulator.pid
 endif
 ifeq ($(RC2014MACHINE),real)
 ifeq ($(OPER),cygwin)
@@ -67,13 +58,13 @@ RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' 
 	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 ifeq ($(RC2014OPTION),assembly)
-RC2014DEPS += rc2014/rf_z80.lib
-RC2014LIBS += -lrc2014/rf_z80
-RC2014ORIGIN := 0xA000
+RC2014DEPS += rc2014/rf_z80.lib rc2014/system_asm.lib
+RC2014LIBS += -lrc2014/rf_z80 -lrc2014/system_asm
+RC2014ORIGIN := 0x9CC0
 endif
 ifeq ($(RC2014OPTION),default)
-RC2014DEPS += rc2014/rf.lib
-RC2014LIBS += -lrc2014/rf
+RC2014DEPS += rc2014/mux.lib rc2014/rf.lib rc2014/system.lib
+RC2014LIBS += -lrc2014/mux.lib -lrc2014/rf -lrc2014/system
 RC2014ORIGIN := 0xAB00
 endif
 
@@ -204,6 +195,10 @@ rc2014/rf_z80.lib : rf_z80.asm | rc2014
 	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
 rc2014/system.lib : target/rc2014/system.c mux.h rf.h $(RC2014INC) | rc2014
+
+	zcc $(RC2014ZCCOPTS) -x -o $@ $<
+
+rc2014/system_asm.lib : target/rc2014/system.asm | rc2014
 
 	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
