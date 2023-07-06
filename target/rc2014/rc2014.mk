@@ -171,14 +171,7 @@ rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) tx $(DISC) 
 
 # Linux (though not Darwin) reads EOF from stdin if run in background
 # so pipe no bytes into stdin to keep disc from detecting EOF and terminating
-	@sh scripts/start.sh /dev/null tx tail.pid tail -f
-	@sh scripts/start.sh tx /dev/stdout disc.pid $(DISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
-	@#$(STARTDISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
-
-	@$(WAITUNTILSAVED) $@.io
-
-	@$(STOPDISC)
-	@sh scripts/stop.sh tail.pid
+	@$(WAITUNTILSAVED) $@.io | $(DISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
 
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
