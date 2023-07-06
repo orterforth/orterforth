@@ -26,6 +26,9 @@ ifeq ($(RC2014MACHINE),emulator)
 # RC2014SERIALPORT := ...
 # RC2014STARTMACHINE := sh scripts/start.sh ...
 # RC2014STOPMACHINE := sh scripts/stop.sh ...
+RC2014SERIALPORT := $(HOME)/Desktop/pty
+RC2014STARTMACHINE := $(ORTER) pty $(RC2014SERIALPORT) < tx | ../rem/rc2014 > tx & echo "$$!" > rc2014/emulator.pid
+RC2014STOPMACHINE := sh scripts/stop.sh rc2014/emulator.pid
 endif
 ifeq ($(RC2014MACHINE),real)
 ifeq ($(OPER),cygwin)
@@ -114,10 +117,10 @@ rc2014-hw : rc2014/hw.ihx | $(RC2014HEXLOAD) $(ORTER)
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC)
 
-	$(RC2014STARTMACHINE)
-	$(RC2014LOAD) $<
-	$(RC2014CONNECT)
-	$(RC2014STOPMACHINE)
+	@$(RC2014STARTMACHINE)
+	@$(RC2014LOAD) $<
+	@$(RC2014CONNECT)
+	@$(RC2014STOPMACHINE)
 
 # modify hexload.bas to send ACK once when run and once when hex load complete
 $(RC2014HEXLOAD) : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
