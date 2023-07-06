@@ -7,6 +7,7 @@ CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic
 CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh scripts/check-memory.sh
 DR0=library.img
 DR1=data.img
+EMPTYDR1FILE := printf '* \033[1;33mClearing DR1\033[0;0m\n' ; printf '' >
 MAMEOPTS := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
 SERIALBAUD := 9600
 START := sh scripts/start.sh /dev/stdin /dev/stdout
@@ -160,6 +161,10 @@ $(SYSTEM)/rf_$(PROC).o : rf_$(PROC).s | $(SYSTEM)
 $(SYSTEM)/system.o : system.c rf.h system.inc persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# audio for tape load
+.PHONY : audio
+audio : $(TARGET)/orterforth.wav
 
 # help
 .PHONY : $(TARGET)-help

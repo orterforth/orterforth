@@ -114,7 +114,6 @@ BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033
 # MAME needs disc tcp running before it starts
 # ideal is that disc starts after load in all cases
 # requires a disc tcp client to connect to MAME tcp server
-EMPTYDR1FILE := printf '* \033[1;33mClearing DR1\033[0;0m\n' ; printf '' >
 ifeq ($(BBCMACHINE),mame)
 BBCSTARTDISC := $(STARTDISCTCP)
 BBCSTARTMACHINE := sleep 1 ; $(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)

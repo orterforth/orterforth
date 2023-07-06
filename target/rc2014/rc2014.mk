@@ -165,9 +165,7 @@ rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) tx $(DISC) 
 
 	@$(RC2014LOAD) rc2014/inst.ihx
 
-	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
-	@rm -f $@.io
-	@touch $@.io
+	@$(EMPTYDR1FILE) $@.io
 
 # Linux (though not Darwin) reads EOF from stdin if run in background
 # so pipe no bytes into stdin to keep disc from detecting EOF and terminating
