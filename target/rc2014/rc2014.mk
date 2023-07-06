@@ -3,17 +3,31 @@
 RC2014DEPS := \
 	rc2014/inst.lib \
 	rc2014/mux.lib \
-	rc2014/rf.lib \
 	rc2014/system.lib
 RC2014HEXLOAD := rc2014/hexload-ack.bas
 RC2014INSTOFFSET := 0x5000
 RC2014LIBS := \
-	-lrc2014/mux \
 	-lrc2014/inst \
-	-lrc2014/rf \
+	-lrc2014/mux \
 	-lrc2014/system
+RC2014MACHINE := real
 RC2014ORG := 0x9000
 
+RC2014OPTION := assembly
+#RC2014OPTION := default
+ifeq ($(TARGET),rc2014)
+ifneq ($(OPTION),)
+RC2014OPTION := $(OPTION)
+endif
+endif
+
+ifeq ($(RC2014MACHINE),emulator)
+# TODO any emulator needs a pty and command line to run
+# RC2014SERIALPORT := ...
+# RC2014STARTMACHINE := sh scripts/start.sh ...
+# RC2014STOPMACHINE := sh scripts/stop.sh ...
+endif
+ifeq ($(RC2014MACHINE),real)
 ifeq ($(OPER),cygwin)
 RC2014SERIALPORT := /dev/ttyS2
 endif
@@ -22,6 +36,9 @@ RC2014SERIALPORT := /dev/cu.usbserial-A50285BI
 endif
 ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
+endif
+RC2014STARTMACHINE := :
+RC2014STOPMACHINE := :
 endif
 
 # ensure RC2014 is reset before starting
@@ -46,16 +63,14 @@ RC2014LOAD := $(RC2014RESET) ; $(RC2014LOADLOADER) ; $(RC2014LOADIHEX)
 RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' ; \
 	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
-# build option
-RC2014OPTION := assembly
-#RC2014OPTION := default
-
 ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/rf_z80.lib
 RC2014LIBS += -lrc2014/rf_z80
 RC2014ORIGIN := 0xA000
 endif
 ifeq ($(RC2014OPTION),default)
+RC2014DEPS += rc2014/rf.lib
+RC2014LIBS += -lrc2014/rf
 RC2014ORIGIN := 0xAB00
 endif
 
@@ -64,7 +79,6 @@ RC2014ZCCOPTS := \
 	-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
 	-DRF_ORIGIN=$(RC2014ORIGIN) \
 	-DRF_ORG=$(RC2014ORG) \
-	-DRF_TARGET_INC='\"target/rc2014/default.inc\"' \
 	-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
 	-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
@@ -100,8 +114,10 @@ rc2014-hw : rc2014/hw.ihx | $(RC2014HEXLOAD) $(ORTER)
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC)
 
-	@$(RC2014LOAD) $<
-	@$(RC2014CONNECT)
+	$(RC2014STARTMACHINE)
+	$(RC2014LOAD) $<
+	$(RC2014CONNECT)
+	$(RC2014STOPMACHINE)
 
 # modify hexload.bas to send ACK once when run and once when hex load complete
 $(RC2014HEXLOAD) : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
@@ -162,15 +178,13 @@ rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) tx $(DISC) 
 
 	@# NB this does not allow for BSS
 	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
-
+	@$(RC2014STARTMACHINE)
 	@$(RC2014LOAD) rc2014/inst.ihx
-
 	@$(EMPTYDR1FILE) $@.io
-
 # Linux (though not Darwin) reads EOF from stdin if run in background
 # so pipe no bytes into stdin to keep disc from detecting EOF and terminating
 	@$(WAITUNTILSAVED) $@.io | $(DISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
-
+	@$(RC2014STOPMACHINE)
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 

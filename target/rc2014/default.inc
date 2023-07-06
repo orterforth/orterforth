@@ -1,5 +1,9 @@
 #undef RF_INST_LOCAL_DISC
 
+/* RC2014 */
+#define RF_TARGET_HI 0x6284
+#define RF_TARGET_LO 0x44a8
+
 /* RP and SP operations not inline, code is smaller but slower */
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
@@ -87,5 +91,7 @@
 #define RF_TARGET_CODE_LN
 #define RF_TARGET_CODE_TG
 #define RF_TARGET_CODE_XT
-
 #endif
+#define RF_TARGET_CODE_DCHAR
+#define RF_TARGET_CODE_BREAD
+#define RF_TARGET_CODE_BWRIT

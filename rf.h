@@ -121,9 +121,6 @@ typedef unsigned long rf_double_t;
 typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __RC2014
-/* RC2014 */
-#define RF_TARGET_HI 0x6284
-#define RF_TARGET_LO 0x44a8
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/rc2014/default.inc"
 #endif

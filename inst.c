@@ -507,7 +507,7 @@ void rf_inst(void)
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
   /* wait for disc server to init */
-  z80_delay_ms(10000);
+  z80_delay_ms(5000);
 #endif
 #endif
 

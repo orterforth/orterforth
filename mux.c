@@ -16,7 +16,7 @@ void rf_code_emit(void)
 {
   RF_START;
   {
-    int c = RF_SP_POP & 0x7F;
+    int c = *(rf_sp++) & 0x7F;
     
     /* write char, wait if serial disconnected */
     while (putchar(c) == -1) {
@@ -53,7 +53,7 @@ void rf_code_key(void)
       c = 13;
     }
 
-    RF_SP_PUSH(c & 0x7F);
+    *(--rf_sp) = (c & 0x7F);
   }
   RF_JUMP_NEXT;
 }
@@ -61,7 +61,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  RF_SP_PUSH(0);
+  *(--rf_sp) = (0);
   RF_JUMP_NEXT;
 }
 
