@@ -264,8 +264,7 @@ pfin6:
   .thumb_func
   .code 16
 rf_code_encl:
-  ldr   r0, [r5]                @ S1 - TERMINATOR CHAR.
-  adds  r5, r5, #4
+  ldm   r5!, {r0}               @ S1 - TERMINATOR CHAR.
   ldr   r1, [r5]                @ S2 - TEXT ADDR
   movs  r2, #255
   ands  r0, r2                  @ ZERO
@@ -341,34 +340,27 @@ cmov2:
   .thumb_func
   .code 16
 rf_code_ustar:
-@ TODO ldm, reversing r0 r1?
-  ldr   r1, [r5]
-  adds  r5, r5, #4
-  ldr   r0, [r5]
-  adds  r5, r5, #4
+  ldm   r5!, {r0, r3}
   mov   r8, r4
-  uxth  r2, r1
-  lsrs  r3, r0, #16
-  lsrs  r1, r1, #16
-  mov   r4, r1
-  muls  r1, r3
-  uxth  r0, r0
+  uxth  r2, r0
+  lsrs  r1, r3, #16
+  lsrs  r0, r0, #16
+  mov   r4, r0
+  muls  r0, r1
+  uxth  r3, r3
+  muls  r1, r2
+  muls  r4, r3
   muls  r3, r2
-  muls  r4, r0
-  muls  r0, r2
   movs  r2, #0
-  adds  r3, r4
+  adds  r1, r4
   adcs  r2, r2
   lsls  r2, #16
-  adds  r1, r2
-  lsls  r2, r3, #16
-  lsrs  r3, #16
   adds  r0, r2
-  adcs  r1, r3
+  lsls  r2, r1, #16
+  lsrs  r1, #16
+  adds  r3, r2
+  adcs  r0, r1
   mov   r4, r8
-@ TODO change regs to avoid below
-  movs  r3, r0
-  movs  r0, r1
   b     dpush
 
   .align 1
@@ -797,14 +789,13 @@ rf_code_cold:
   ldr   r0, =rf_up
   str   r1, [r0]
   movs  r2, #11                 @ USER variables init
-  mov   r6, r3
-  adds  r6, r6, #24             @ TODO use r3 and change below offset
+  adds  r3, r3, #24
 cold1:
-  ldm   r6!, {r0}
+  ldm   r3!, {r0}
   stm   r1!, {r0}
   subs  r2, r2, #1
   bne   cold1
-  ldr   r6, [r3, #72]           @ IP init to ABORT
+  ldr   r6, [r3, #4]            @ IP init to ABORT
   b     rf_code_rpsto           @ jump to RP!
 
   .align 1
