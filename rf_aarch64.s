@@ -757,14 +757,13 @@ rf_code_cold:
   ldr   x0, =rf_up
   str   x1, [x0]
   mov   x2, #11                 // USER variables init
-  mov   x15, x3
-  add   x15, x15, #48           // TODO use x3 and change below offset
+  add   x3, x3, #48
 cold1:
-  ldr   x0, [x15], #8
+  ldr   x0, [x3], #8
   str   x0, [x1], #8
   subs  x2, x2, #1
   bne   cold1
-  ldr   x15, [x3, #144]         // IP init to ABORT
+  ldr   x15, [x3, #8]           // IP init to ABORT
   b     rf_code_rpsto           // jump to RP!
 
   .align 2
