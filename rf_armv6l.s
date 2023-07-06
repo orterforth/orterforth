@@ -698,7 +698,7 @@ rf_code_docol:
   .p2align 2
   .global rf_code_docon
 rf_code_docon:
-  ldr   r0, [r3, #4]!           @ PFA @ GET DATA
+  ldr   r0, [r3, #4]            @ PFA @ GET DATA
 @ b     apush
   str   r0, [r8, #-4]!
   ldr   r3, [r10], #4
@@ -708,9 +708,9 @@ rf_code_docon:
   .p2align 2
   .global rf_code_dovar
 rf_code_dovar:
-  add  r3, r3, #4               @ (DE) <- PFA
-  str  r3, [r8, #-4]!           @ (S1) <- PFA
-@ b    next
+  add   r3, r3, #4              @ (DE) <- PFA
+  str   r3, [r8, #-4]!          @ (S1) <- PFA
+@ b     next
   ldr   r3, [r10], #4
   ldr   r0, [r3]
   bx    r0
@@ -718,7 +718,7 @@ rf_code_dovar:
   .p2align 2
   .global rf_code_douse
 rf_code_douse:
-  ldrb  r1, [r3, #4]!           @ PFA
+  ldrb  r1, [r3, #4]            @ PFA
   ldr   r0, =rf_up              @ USER VARIABLE ADDR
   ldr   r0, [r0]
   add   r0, r0, r1
@@ -769,14 +769,13 @@ rf_code_cold:
   ldr   r0, =rf_up
   str   r1, [r0]
   mov   r2, #11                 @ USER variables init
-  mov   r10, r3
-  add   r10, r10, #24           @ TODO use r3 and change below offset
+  add   r3, r3, #24
 cold1:
-  ldr   r0, [r10], #4
+  ldr   r0, [r3], #4
   str   r0, [r1], #4
   subs  r2, r2, #1
   bne   cold1
-  ldr   r10, [r3, #72]          @ IP init to ABORT
+  ldr   r10, [r3, #4]           @ IP init to ABORT
   b     rf_code_rpsto           @ jump to RP!
 
   .p2align 2
