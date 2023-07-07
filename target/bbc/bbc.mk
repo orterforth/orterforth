@@ -167,16 +167,15 @@ ifeq ($(BBCOPTION),tape)
 BBCCC65OPTS += -DRF_ASSEMBLY
 endif
 
-# TODO remove general o and s rules?
 # general assemble rule
 bbc/%.o : bbc/%.s
 
 	ca65 -DRF_ORIGIN='$$$(BBCORIGIN)' -o $@ $<
 
-# general compile rule
-bbc/%.s : %.c | bbc
+# # general compile rule
+# bbc/%.s : %.c | bbc
 
-	cc65 $(BBCCC65OPTS) -o $@ $<
+# 	cc65 $(BBCCC65OPTS) -o $@ $<
 
 # serial load file
 bbc/%.ser : bbc/%
@@ -246,6 +245,11 @@ bbc/inst.uef : bbc/inst $(ORTER)
 
 	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
 	mv $@.io $@
+
+# main
+bbc/main.s : main.c inst.h rf.h $(BBCINC) | bbc
+
+	cc65 $(BBCCC65OPTS) -o $@ $<
 
 # MOS bindings
 bbc/mos.o : target/bbc/mos.s | bbc
