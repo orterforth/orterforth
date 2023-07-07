@@ -11,7 +11,8 @@ You will need:
 
 To build, call:
 
- make TARGET=pico
+ make TARGET=pico                 (for default C version)
+ make TARGET=pico OPTION=assembly (for asm version)
 
 Target file is:
 
