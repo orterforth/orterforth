@@ -83,17 +83,8 @@ int orter_spectrum_header(const char *filename, unsigned char type_, unsigned sh
   }
 
   /* get file size */
-  if (fseek(ptr, 0, SEEK_END)) {
-    perror("fseek failed");
-    return errno;
-  }
-  size = ftell(ptr);
-  if (size == -1) {
-    perror("file size failed");
-    return errno;
-  }
-  if (fseek(ptr, 0L, SEEK_SET)) {
-    perror("fseek failed");
+  if (orter_io_file_size(ptr, &size)) {
+    perror("orter_io_file_size failed");
     return errno;
   }
 
