@@ -3,13 +3,13 @@
   .global rf_start
   .align 4
 rf_start:
-  ldr   r0, =rf_ip              @ r6 into IP
+  ldr   r0, ipp                 @ r6 into IP
   str   r6, [r0]
-  ldr   r0, =rf_sp              @ r5 into SP
+  ldr   r0, spp                 @ r5 into SP
   str   r5, [r0]
-  ldr   r0, =rf_rp              @ r4 into RP
+  ldr   r0, rpp                 @ r4 into RP
   str   r4, [r0]
-  ldr   r0, =rf_w               @ r3 into W
+  ldr   r0, wp                  @ r3 into W
   str   r3, [r0]
   bx    lr
 
@@ -18,22 +18,34 @@ rf_start:
 rf_trampoline:
   push  {r3, r4, r6, r7, lr}
 trampoline1:
-  ldr   r4, =rf_fp
+  ldr   r4, fpp
   ldr   r0, [r4]
   cmp   r0, #0
   beq   trampoline2
-  ldr   r6, =rf_ip              @ IP into r6
+  ldr   r6, ipp                 @ IP into r6
   ldr   r6, [r6]
-  ldr   r5, =rf_sp              @ SP into r5
+  ldr   r5, spp                 @ SP into r5
   ldr   r5, [r5]
-  ldr   r4, =rf_rp              @ RP into r4
+  ldr   r4, rpp                 @ RP into r4
   ldr   r4, [r4]
-  ldr   r3, =rf_w               @ W into r3
+  ldr   r3, wp                  @ W into r3
   ldr   r3, [r3]
   blx   r0
   b     trampoline1
 trampoline2:
   pop  {r3, r4, r6, r7, pc}
+
+  .align 4
+fpp:
+  .word rf_fp
+ipp:
+  .word rf_ip
+rpp:
+  .word rf_rp
+spp:
+  .word rf_sp
+wp:
+  .word rf_w
 
   .align 1
   .syntax unified
@@ -58,9 +70,6 @@ apush:
 rf_next:
 next:
   ldm   r6!, {r3}               @ (W) <- (IP)
-  .align 1
-  .thumb_func
-  .code 16
 next1:
   ldr   r0, [r3]                @ TO 'CFA'
   bx    r0
@@ -72,7 +81,12 @@ next1:
   .code 16
 rf_code_lit:
   ldm   r6!, {r0}               @ AX <- LITERAL
-  b     apush                   @ TO TOP OF STACK
+@ b     apush                   @ TO TOP OF STACK
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_exec
@@ -81,7 +95,9 @@ rf_code_lit:
   .code 16
 rf_code_exec:
   ldm   r5!, {r3}               @ GET CFA
-  b     next1                   @ EXECUTE NEXT
+@ b     next1                   @ EXECUTE NEXT
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_bran
@@ -92,7 +108,10 @@ rf_code_bran:
 bran1:
   ldr   r0, [r6]
   add   r6, r6, r0              @ (IP) <- (IP) + ((IP))
-  b     next                    @ JUMP TO OFFSET
+@ b     next                    @ JUMP TO OFFSET
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_zbran
@@ -104,7 +123,10 @@ rf_code_zbran:
   orrs  r0, r0                  @ ZERO?
   beq   bran1                   @ YES, BRANCH
   adds  r6, r6, #4              @ NO, CONTINUE...
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_xloop
@@ -125,7 +147,10 @@ xloo1:
 @ END OF 'DO' LOOP
   adds  r4, r4, #8              @ ADJ. RETURN STK
   adds  r6, r6, #4              @ BYPASS BRANCH OFFSET
-  b     next                    @ CONTINUE...
+@ b     next                    @ CONTINUE...
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_xploo
@@ -148,7 +173,10 @@ rf_code_xdo:
   str   r3, [r4]
   subs  r4, r4, #4
   str   r0, [r4]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_rr
@@ -157,7 +185,12 @@ rf_code_xdo:
   .code 16
 rf_code_rr:
   ldr   r0, [r4]                @ GET INDEX VALUE
-  b     apush                   @ TO PARAMETER STACK
+@ b     apush                   @ TO PARAMETER STACK
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_digit
@@ -182,13 +215,25 @@ digi1:
   bge   digi2                   @ NUMBER ERROR
   movs  r3, r0                  @ NEW BINARY NUMBER
   movs  r0, #1                  @ TRUE FLAG
-  b     dpush                   @ ADD TO STACK
+@ b     dpush                   @ ADD TO STACK
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
 @ NUMBER ERROR
 @
 digi2:
   movs  r0, #0                  @ FALSE FLAG
-  b     apush                   @ BYE
+@ b     apush                   @ BYE
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_pfind
@@ -234,7 +279,14 @@ pfin2:
   movs  r1, #255
   ands  r3, r1                  @ CLEAR HIGH LENGTH
 
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
 @ NO NAME FIELD MATCH, TRY ANOTHER
 @
@@ -256,7 +308,12 @@ pfin6:
   movs  r0, #0                  @ FALSE FLAG
 
   pop   {r4, r5, r6}
-  b     apush                   @ DONE (NO MATCH FOUND)
+@ b     apush                   @ DONE (NO MATCH FOUND)
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_encl
@@ -288,7 +345,14 @@ encl1:
 @ FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
   mov   r0, r3                  @ COPY COUNTER
   adds  r3, r3, #1              @ +1
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 @
 @ FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
 @
@@ -305,13 +369,27 @@ encl2:
 @
 encl3:
   mov   r0, r3                  @ COUNTERS ARE EQUAL
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
 @ FOUND TERINATOR CHARACTER
 encl4:
   mov   r0, r3
   adds  r0, r0, #1              @ COUNT +1
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_cmove
@@ -332,7 +410,10 @@ cmov1:
   subs  r1, r1, #1
   bne   cmov1
 cmov2:
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_ustar
@@ -361,7 +442,14 @@ rf_code_ustar:
   adds  r3, r2
   adcs  r0, r1
   mov   r4, r8
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_uslas
@@ -406,7 +494,10 @@ umdiv3:
   subs  r5, r5, #4
   str   r4, [r5]                @ quotient
   mov   r4, r8
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_andd
@@ -418,7 +509,10 @@ rf_code_andd:
   ldr   r1, [r5]
   ands  r0, r0, r1
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_orr
@@ -430,7 +524,10 @@ rf_code_orr:
   ldr   r1, [r5]
   orrs  r0, r0, r1
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_xorr
@@ -442,7 +539,10 @@ rf_code_xorr:
   ldr   r1, [r5]
   eors  r0, r0, r1
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_spat
@@ -451,7 +551,12 @@ rf_code_xorr:
   .code 16
 rf_code_spat:
   mov   r0, r5
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_spsto
@@ -462,7 +567,10 @@ rf_code_spsto:
   ldr   r1, =rf_up              @ USER VAR BASE ADDR
   ldr   r1, [r1]
   ldr   r5, [r1, #12]           @ RESET PARAM. STACK PT.
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_rpsto
@@ -473,7 +581,10 @@ rf_code_rpsto:
   ldr   r1, =rf_up              @ (AX) <- USR VAR. BASE
   ldr   r1, [r1]
   ldr   r4, [r1, #16]           @ RESET RETURN STACK PT.
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_semis
@@ -482,7 +593,10 @@ rf_code_rpsto:
   .code 16
 rf_code_semis:
   ldm   r4!, {r6}               @ (IP) <- (R1)
-  b     next                    @ ADJUST STACK
+@ b     next                    @ ADJUST STACK
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_leave
@@ -492,7 +606,10 @@ rf_code_semis:
 rf_code_leave:
   ldr   r0, [r4]                @ GET INDEX
   str   r0, [r4, #4]            @ STORE IT AT LIMIT
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_tor
@@ -503,7 +620,10 @@ rf_code_tor:
   ldm   r5!, {r1}               @ GET STACK PARAMETER
   subs  r4, r4, #4
   str   r1, [r4]                @ ADD TO RETURN STACK
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_fromr
@@ -514,7 +634,10 @@ rf_code_fromr:
   ldm   r4!, {r1}               @ GET RETURN STACK VALUE
   subs  r5, r5, #4
   str   r1, [r5]                @ DELETE FROM STACK
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_zequ
@@ -528,7 +651,12 @@ rf_code_zequ:
   beq   zequ1                   @ ITS ZERO
   subs  r0, r0, #1              @ FALSE
 zequ1:
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_zless
@@ -542,7 +670,12 @@ rf_code_zless:
   bmi   zless1
   subs  r0, r0, #1              @ FLASE
 zless1:
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_plus
@@ -552,7 +685,12 @@ zless1:
 rf_code_plus:
   ldm   r5!, {r0, r1}
   adds  r0, r0, r1
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_dplus
@@ -566,7 +704,14 @@ rf_code_dplus:
                                 @ XLW
   adds  r3, r3, r1              @ SLW
   adcs  r0, r0, r2              @ SHW
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_minus
@@ -576,7 +721,12 @@ rf_code_dplus:
 rf_code_minus:
   ldm   r5!, {r0}
   negs  r0, r0
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_dminu
@@ -589,7 +739,14 @@ rf_code_dminu:
   mov   r3, r0
   subs  r3, r3, r2              @ MAKE 2'S COMPLEMENT
   sbcs  r0, r0, r1              @ HIGH WORD
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_over
@@ -598,7 +755,12 @@ rf_code_dminu:
   .code 16
 rf_code_over:
   ldr   r0, [r5, #4]
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_drop
@@ -607,7 +769,10 @@ rf_code_over:
   .code 16
 rf_code_drop:
   adds  r5, r5, #4
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_swap
@@ -619,7 +784,10 @@ rf_code_swap:
   ldr   r0, [r5, #4]
   str   r3, [r5, #4]
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_dup
@@ -628,7 +796,12 @@ rf_code_swap:
   .code 16
 rf_code_dup:
   ldr   r0, [r5]
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_pstor
@@ -641,7 +814,10 @@ rf_code_pstor:
   ldr   r2, [r0]
   add   r2, r2, r1
   str   r2, [r0]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_toggl
@@ -654,7 +830,10 @@ rf_code_toggl:
   ldrb  r2, [r1]
   eors  r2, r2, r0
   strb  r2, [r1]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_at
@@ -665,7 +844,10 @@ rf_code_at:
   ldr   r1, [r5]
   ldr   r0, [r1]
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_cat
@@ -676,7 +858,10 @@ rf_code_cat:
   ldr   r1, [r5]
   ldrb  r0, [r1]
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_store
@@ -687,7 +872,10 @@ rf_code_store:
   ldm   r5!, {r0, r1}           @ ADDR
                                 @ DATA
   str   r1, [r0]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_cstor
@@ -698,7 +886,10 @@ rf_code_cstor:
   ldm   r5!, {r0, r1}           @ ADDR
                                 @ DATA
   strb  r1, [r0]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_docol
@@ -710,7 +901,10 @@ rf_code_docol:
   subs  r4, r4, #4
   str   r6, [r4]                @ R1 <- (RP)
   mov   r6, r3                  @ (IP) <- (W)
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_docon
@@ -719,7 +913,12 @@ rf_code_docol:
   .code 16
 rf_code_docon:
   ldr   r0, [r3, #4]            @ PFA @ GET DATA
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_dovar
@@ -730,7 +929,10 @@ rf_code_dovar:
   adds  r3, r3, #4              @ (DE) <- PFA
   subs  r5, r5, #4
   str   r3, [r5]                @ (S1) <- PFA
-  b    next
+@ b    next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_douse
@@ -742,7 +944,12 @@ rf_code_douse:
   ldr   r0, =rf_up              @ USER VARIABLE ADDR
   ldr   r0, [r0]
   add   r0, r0, r1
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_dodoe
@@ -756,7 +963,10 @@ rf_code_dodoe:
   adds  r3, r3, #8              @ PFA
   subs  r5, r5, #4
   str   r3, [r5]                @ PFA
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_stod
@@ -770,7 +980,14 @@ rf_code_stod:
   bpl   stod1                   @ POSITIVE NUMBER
   subs  r0, r0, #1              @ NEGITIVE NUMBER
 stod1:
-  b     dpush
+@ b     dpush
+  subs  r5, r5, #4
+  str   r3, [r5]
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_cold
@@ -805,7 +1022,12 @@ cold1:
   .code 16
 rf_code_cl:
   movs  r0, #4
-  b     apush
+@ b     apush
+  subs  r5, r5, #4
+  str   r0, [r5]
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_cs
@@ -816,7 +1038,10 @@ rf_code_cs:
   ldr   r0, [r5]
   lsls  r0, #2
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_ln
@@ -833,7 +1058,10 @@ rf_code_ln:
   adds  r0, r0, #4
 ln1:
   str   r0, [r5]
-  b     next
+@ b     next
+  ldm   r6!, {r3}
+  ldr   r0, [r3]
+  bx    r0
 
   .align 1
   .global rf_code_xt
