@@ -102,6 +102,27 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
   return (n < 0) ? 0 : n;
 }
 
+int orter_io_file_size(FILE *ptr, long *size)
+{
+  /* get file size */
+  if (fseek(ptr, 0, SEEK_END)) {
+    perror("fseek failed");
+    return errno;
+  }
+  *size = ftell(ptr);
+  if (*size == -1) {
+    perror("ftell failed");
+    return errno;
+  }
+  /* return to start */
+  if (fseek(ptr, 0L, SEEK_SET)) {
+    perror("fseek failed");
+    return errno;
+  }
+
+  return 0;
+}
+
 int orter_io_std_open(void)
 {
   /* make stdin nonblocking (also applies to stdout/stderr) */

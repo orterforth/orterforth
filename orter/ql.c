@@ -7,27 +7,6 @@
 #include "io.h"
 #include "ql.h"
 
-static int getfilesize(FILE *ptr, long *size)
-{
-  /* get file size */
-  if (fseek(ptr, 0, SEEK_END)) {
-    perror("fseek failed");
-    return errno;
-  }
-  *size = ftell(ptr);
-  if (*size == -1) {
-    perror("ftell failed");
-    return errno;
-  }
-  /* return to start */
-  if (fseek(ptr, 0L, SEEK_SET)) {
-    perror("fseek failed");
-    return errno;
-  }
-
-  return 0;
-}
-
 static int writefile(FILE *ptr)
 {
   int c;
@@ -112,7 +91,7 @@ int orter_ql_serial_bytes(int argc, char **argv)
   }
 
   /* size */
-  if (getfilesize(ptr, &size)) {
+  if (orter_io_file_size(ptr, &size)) {
     return errno;
   }
   len = size;
@@ -161,7 +140,7 @@ int orter_ql_serial_xtcc(int argc, char **argv)
   dsp = orter_io_get_32be(buf + 4);
 
   /* size */
-  if (getfilesize(ptr, &size)) {
+  if (orter_io_file_size(ptr, &size)) {
     return errno;
   }
   len = size;

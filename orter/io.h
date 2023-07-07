@@ -40,6 +40,9 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len);
 /* nonblocking write to fd */
 size_t orter_io_fd_wr(int fd, char *off, size_t len);
 
+/* stdio file size */
+int orter_io_file_size(FILE *ptr, long *size);
+
 /* set up nonblocking stdin/stdout */
 int orter_io_std_open(void);
 
