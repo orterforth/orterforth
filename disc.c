@@ -231,9 +231,12 @@ static size_t mux_disc_wr(char *off, size_t len)
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
-  /* insert the disc image files */
+  /* insert DR0 */
   rf_persci_insert(0, dr0);
-  rf_persci_insert(1, dr1);
+  /* insert DR1 (only if present) */
+  if (dr1) {
+    rf_persci_insert(1, dr1);
+  }
 
   return orter_io_pipe_loop(pipes, pipe_count);
 }
@@ -248,7 +251,7 @@ static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
   return serve(dr0, dr1);
 }
 
-static int disc_pty(char **argv)
+static int disc_pty(int argc, char **argv)
 {
   int exit = 0;
 
@@ -256,14 +259,14 @@ static int disc_pty(char **argv)
   CHECK(exit, orter_pty_open(argv[2]));
 
   /* run */
-  exit = serve_with_fds(orter_pty_master_fd, orter_pty_master_fd, argv[3], argv[4]);
+  exit = serve_with_fds(orter_pty_master_fd, orter_pty_master_fd, argv[3], argc > 4 ? argv[4] : 0);
 
   /* close and exit */
   orter_pty_close();
   return exit;
 }
 
-static int disc_serial(char **argv)
+static int disc_serial(int argc, char **argv)
 {
   int exit = 0;
 
@@ -271,14 +274,14 @@ static int disc_serial(char **argv)
   CHECK(exit, orter_serial_open(argv[2], atoi(argv[3])));
 
   /* run */
-  exit = serve_with_fds(orter_serial_fd, orter_serial_fd, argv[4], argv[5]);
+  exit = serve_with_fds(orter_serial_fd, orter_serial_fd, argv[4], argc > 5 ? argv[5] : 0);
 
   /* close and exit */
   orter_serial_close();
   return exit;
 }
 
-static int disc_mux(char **argv)
+static int disc_mux(int argc, char **argv)
 {
   int exit = 0;
 
@@ -307,7 +310,7 @@ static int disc_mux(char **argv)
   log = 0;
 
   /* run */
-  exit = serve(argv[4], argv[5]);
+  exit = serve(argv[4], argc > 5 ? argv[5] : 0);
 
   /* close and exit */
   orter_serial_close();
@@ -315,7 +318,7 @@ static int disc_mux(char **argv)
   return exit;
 }
 
-static int disc_standard(char **argv)
+static int disc_standard(int argc, char **argv)
 {
   int exit = 0;
 
@@ -323,14 +326,14 @@ static int disc_standard(char **argv)
   CHECK(exit, orter_io_std_open());
 
   /* run */
-  exit = serve_with_fds(0, 1, argv[1], argv[2]);
+  exit = serve_with_fds(0, 1, argv[1], argc > 2 ? argv[2] : 0);
 
   /* close and exit */
   orter_io_std_close();
   return exit;
 }
 
-static int disc_tcp(char **argv)
+static int disc_tcp(int argc, char **argv)
 {
   int exit = 0;
 
@@ -338,7 +341,7 @@ static int disc_tcp(char **argv)
   CHECK(exit, orter_tcp_open(atoi(argv[2])));
 
   /* run */
-  exit = serve_with_fds(orter_tcp_fd, orter_tcp_fd, argv[3], argv[4]);
+  exit = serve_with_fds(orter_tcp_fd, orter_tcp_fd, argv[3], argc > 4 ? argv[4] : 0);
 
   /* close and exit */
   orter_tcp_close();
@@ -353,28 +356,28 @@ int main(int argc, char *argv[])
   }
 
   /* Physical serial port but multiplex serial and disc */
-  if (argc == 6 && !strcmp("mux", argv[1])) {
-    return disc_mux(argv);
+  if ((argc == 5 || argc == 6) && !strcmp("mux", argv[1])) {
+    return disc_mux(argc, argv);
   }
 
   /* Pty */
-  if (argc == 5 && !strcmp("pty", argv[1])) {
-    return disc_pty(argv);
+  if ((argc == 4 || argc == 5) && !strcmp("pty", argv[1])) {
+    return disc_pty(argc, argv);
   }
 
   /* Physical serial port */
-  if (argc == 6 && !strcmp("serial", argv[1])) {
-    return disc_serial(argv);
+  if ((argc == 5 || argc == 6) && !strcmp("serial", argv[1])) {
+    return disc_serial(argc, argv);
   }
 
   /* Console */
-  if (argc == 3) {
-    return disc_standard(argv);
+  if (argc == 2 || argc == 3) {
+    return disc_standard(argc, argv);
   }
 
   /* TCP */
-  if (argc == 5 && !strcmp("tcp", argv[1])) {
-    return disc_tcp(argv);
+  if ((argc == 4 || argc == 5) && !strcmp("tcp", argv[1])) {
+    return disc_tcp(argc, argv);
   }
 
   /* Usage */
