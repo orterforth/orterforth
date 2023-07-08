@@ -1333,7 +1333,7 @@ CREATE : 51 cd HERE cl - ! 192 STATE !
   ;S [ CURRENT @ @ 96 TOGGLE
 : IMMEDIATE CURRENT @ @ 64 TOGGLE ;
 : ( 41 WORD ; IMMEDIATE ( now we have comment syntax.         )
-
+: SMUDGE CURRENT @ @ 32 TOGGLE ; : CODE CREATE SMUDGE ;
 ( need --> in order to progress to next screen                )
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
 -->
@@ -1342,36 +1342,36 @@ CREATE : 51 cd HERE cl - ! 192 STATE !
 
 
 
-( forward reference words - these may be no-ops but may need  )
-( stack effects e.g. . calls DROP. Others may never be called )
-: ?EXEC ; : !CSP SP@ CSP ! ; : ] 192 STATE ! ;
-: ?CSP ; : SMUDGE CURRENT @ @ 32 TOGGLE ; : ERROR ; : ABORT ;
-: MESSAGE ; : QUIT ; : MIN ; : DR0 ; : R/W ; : . DROP ;
-( these words are called by the model source                  )
-: HEX 16 BASE ! ; : CODE CREATE SMUDGE ;
-: DECIMAL 10 BASE ! ;
-: LITERAL 0 , , ; IMMEDIATE     ( forward reference to LIT    )
-: +ORIGIN origin + ;
-: [COMPILE] -FIND DROP DROP cl - , ; IMMEDIATE
-: BYTE.IN -FIND DROP DROP + ;
+( forward reference words - not executed so definitions empty )
+CODE ABORT CODE DR0 CODE ERROR CODE MESSAGE CODE MIN CODE QUIT
+CODE R/W
+( these words are executed during inst                        )
+: ?EXEC ; : !CSP SP@ CSP ! ; : ?CSP ; : . DROP ;
+: HEX         16 BASE ! ; : ] 192 STATE ! ;
+: DECIMAL     10 BASE ! ;
+: LITERAL     0 , , ; IMMEDIATE ( forward reference to LIT    )
+: +ORIGIN     origin + ;
+: [COMPILE]   -FIND DROP DROP cl - , ; IMMEDIATE
+: BYTE.IN     -FIND DROP DROP + ;
 : REPLACED.BY -FIND DROP DROP cl - SWAP ! ;
 -->
 
 
-( control words - some containing forward references          )
-: BACK HERE - , ;
-: BEGIN HERE 1 ; IMMEDIATE
-: ENDIF DROP HERE OVER - SWAP ! ; IMMEDIATE
-: DO 0 , HERE 3 ; IMMEDIATE     ( forward reference to (DO    )
-: LOOP DROP 0 , BACK ; IMMEDIATE ( forward reference to (LOOP )
-: UNTIL DROP 0 , BACK ; IMMEDIATE ( forward ref to 0BRANCH    )
-: AGAIN DROP 0 , BACK ; IMMEDIATE ( forward ref to BRANCH     )
+
+( control words - some containing forward references as 0 ,   )
+: BACK   HERE - , ;
+: BEGIN  HERE 1 ; IMMEDIATE
+: ENDIF  DROP HERE OVER - SWAP ! ; IMMEDIATE
+: DO     0 , HERE 3 ; IMMEDIATE    ( forward reference to (DO )
+: LOOP   DROP 0 , BACK ; IMMEDIATE ( forward ref to (LOOP     )
+: UNTIL  DROP 0 , BACK ; IMMEDIATE ( forward ref to 0BRANCH   )
+: AGAIN  DROP 0 , BACK ; IMMEDIATE ( forward ref to BRANCH    )
 : REPEAT >R >R [COMPILE] AGAIN R> R> 2 - [COMPILE] ENDIF ;
-IMMEDIATE
-: IF 0 , HERE 0 , 2 ; IMMEDIATE ( forward ref to 0BRANCH      )
-: ELSE DROP 0 , HERE 0 , SWAP 2 [COMPILE] ENDIF 2 ;
-IMMEDIATE                       ( forward ref to BRANCH       )
-: WHILE [COMPILE] IF 2 + ; IMMEDIATE
+         IMMEDIATE
+: IF     0 , HERE 0 , 2 ; IMMEDIATE ( forward ref to 0BRANCH  )
+: ELSE   DROP 0 , HERE 0 , SWAP 2 [COMPILE] ENDIF 2 ;
+         IMMEDIATE              ( forward ref to BRANCH       )
+: WHILE  [COMPILE] IF 2 + ; IMMEDIATE
 -->
 
 ( move DP back to origin                                      )
