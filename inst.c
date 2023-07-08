@@ -276,9 +276,44 @@ typedef struct rf_inst_code_t {
 
 #define RF_INST_CODE_LIT_LIST_SIZE 65
 
-static void rf_inst_code_sb(void);
+#ifdef RF_INST_SAVE
+/* return an ASCII hex digit */
+static uint8_t __FASTCALL__ rf_inst_hex(uint8_t b)
+{
+  return b + (b < 10 ? 48 : 55);
+}
+#endif
 
-static void rf_inst_code_compile(void);
+static void rf_inst_code_sb(void)
+{
+  RF_START;
+#ifdef RF_INST_SAVE
+  {
+    uint8_t *buf = (uint8_t *) RF_INST_SP_POP;
+    uint8_t *i = (uint8_t *) RF_INST_SP_POP;
+    uint8_t j;
+
+    /* inner hex loop */
+    for (j = 0; j < 128;) {
+      uint8_t b = *i++;
+      buf[j++] = rf_inst_hex(b >> 4);
+      buf[j++] = rf_inst_hex(b & 15);
+    }
+  }
+#endif
+  RF_JUMP_NEXT;
+}
+
+/* run proto interpreter */
+static void rf_inst_code_compile(void)
+{
+  RF_START;
+  {
+    char *addr = (char *) RF_INST_SP_POP;
+    rf_inst_compile(addr);
+  }
+  RF_JUMP_NEXT;
+}
 
 static void rf_inst_code_cd(void);
 
@@ -357,10 +392,6 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cd", rf_inst_code_cd }
 };
 
-#ifndef RF_BS
-#define RF_BS 0x007F
-#endif
-
 /* look up a code address in the table */
 static void rf_inst_code_cd(void)
 {
@@ -372,47 +403,12 @@ static void rf_inst_code_cd(void)
   RF_JUMP_NEXT;
 }
 
-/* run proto interpreter */
-static void rf_inst_code_compile(void)
-{
-  RF_START;
-  {
-    char *addr = (char *) RF_INST_SP_POP;
-    rf_inst_compile(addr);
-  }
-  RF_JUMP_NEXT;
-}
+#ifndef RF_BS
+#define RF_BS 0x007F
+#endif
 
 /* flag to indicate completion of install */
 extern char rf_installed;
-
-#ifdef RF_INST_SAVE
-/* return an ASCII hex digit */
-static uint8_t __FASTCALL__ rf_inst_hex(uint8_t b)
-{
-  return b + (b < 10 ? 48 : 55);
-}
-#endif
-
-static void rf_inst_code_sb(void)
-{
-  RF_START;
-#ifdef RF_INST_SAVE
-  {
-    uint8_t *buf = (uint8_t *) RF_INST_SP_POP;
-    uint8_t *i = (uint8_t *) RF_INST_SP_POP;
-    uint8_t j;
-
-    /* inner hex loop */
-    for (j = 0; j < 128;) {
-      uint8_t b = *i++;
-      buf[j++] = rf_inst_hex(b >> 4);
-      buf[j++] = rf_inst_hex(b & 15);
-    }
-  }
-#endif
-  RF_JUMP_NEXT;
-}
 
 /* bootstrap the installing Forth vocabulary */
 static void rf_inst_load(void)
