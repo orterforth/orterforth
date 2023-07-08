@@ -17,6 +17,8 @@ const
 
 /* INST TIME STACK OPERATIONS */
 
+/* we don't rely on macros from rf.h because 
+   functions defined in rf.c may not be present */
 #define RF_INST_SP_POP (*(rf_sp++))
 #define RF_INST_SP_PUSH(a) { *(--rf_sp) = (a); }
 
@@ -53,20 +55,22 @@ static void rf_inst_code_hld(void)
 
 /* INST TIME DICTIONARY OPERATIONS */
 
+static uint8_t **rf_inst_dp = 0;
+
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 {
-  *((uintptr_t *) RF_USER_DP) = word;
-  RF_USER_DP += RF_WORD_SIZE;
+  *((uintptr_t *) *rf_inst_dp) = word;
+  *rf_inst_dp += RF_WORD_SIZE;
 }
 
 /* CURRENT and CONTEXT vocabulary during inst */
 static uint8_t *rf_inst_vocabulary = 0;
 
-/* CREATE + SMUDGE */
-static void __FASTCALL__ rf_inst_def(const char *name)
+/* compile a definition and set CFA */
+static void rf_inst_code(const char *name, rf_code_t code)
 {
-  uint8_t *here = (uint8_t *) RF_USER_DP;
+  uint8_t *here = *rf_inst_dp;
   uint8_t *there = here;
 
   /* name */
@@ -94,11 +98,14 @@ static void __FASTCALL__ rf_inst_def(const char *name)
   *(here - 1) |= 0x80;
 
   /* update DP */
-  RF_USER_DP = (uintptr_t) here;
+  *rf_inst_dp = here;
 
   /* link field */
   rf_inst_comma((uintptr_t) rf_inst_vocabulary);
   rf_inst_vocabulary = there;
+
+  /* code field */
+  rf_inst_comma((uintptr_t) code);
 }
 
 /* NFA LFA */
@@ -139,13 +146,6 @@ static uint8_t *rf_inst_find(const char *t, uint8_t length)
 
   /* not found */
   return 0;
-}
-
-/* compile a definition and set CFA */
-static void rf_inst_code(const char *name, rf_code_t code)
-{
-  rf_inst_def(name);
-  rf_inst_comma((uintptr_t) code);
 }
 
 /* compile a colon definition */
@@ -420,6 +420,7 @@ static void rf_inst_load(void)
   rf_inst_vocabulary = 0;
   rf_up = (uintptr_t *) RF_USER;
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
+  rf_inst_dp = (uint8_t **) &(RF_USER_DP);
 
   /* forward defined code words */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
@@ -490,7 +491,7 @@ static void rf_inst_load(void)
   origin[9] = (uintptr_t) RF_S0;
   origin[10] = (uintptr_t) RF_R0;
   origin[13] = 0;
-  origin[15] = (uintptr_t) RF_USER_DP;
+  origin[15] = (uintptr_t) *rf_inst_dp;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
   origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("inst", 4)) + 1);
   rf_fp = rf_code_cold;
