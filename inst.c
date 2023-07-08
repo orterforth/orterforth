@@ -267,14 +267,6 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
 /* USRVER = r for retro */
 #define RF_USRVER 0x0072
 
-/* inst time cold start */
-static void rf_inst_cold(void)
-{
-  rf_inst_vocabulary = 0;
-  rf_up = (uintptr_t *) RF_USER;
-  RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
-}
-
 /* Table of inst time code addresses */
 
 typedef struct rf_inst_code_t {
@@ -282,7 +274,13 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 62
+#define RF_INST_CODE_LIT_LIST_SIZE 65
+
+static void rf_inst_code_sb(void);
+
+static void rf_inst_code_compile(void);
+
+static void rf_inst_code_cd(void);
 
 static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cl", rf_code_cl },
@@ -350,7 +348,13 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "D/CHAR", rf_code_dchar },
   { "BLOCK-WRITE", rf_code_bwrit },
   { "BLOCK-READ", rf_code_bread },
-  { "hld", rf_inst_code_hld }
+  { "hld", rf_inst_code_hld },
+  /* write hex block */
+  { "sb", rf_inst_code_sb },
+  /* proto interpreter */
+  { "compile", rf_inst_code_compile },
+  /* code address lookup */
+  { "cd", rf_inst_code_cd }
 };
 
 #ifndef RF_BS
@@ -416,6 +420,11 @@ static void rf_inst_load(void)
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
+  /* cold start */
+  rf_inst_vocabulary = 0;
+  rf_up = (uintptr_t *) RF_USER;
+  RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
+
   /* forward defined code words */
   for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
     const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
@@ -459,12 +468,6 @@ static void rf_inst_load(void)
 #else
   rf_inst_constant("save?", 0);
 #endif
-  rf_inst_code("sb", rf_inst_code_sb);
-
-  /* proto interpreter */
-  rf_inst_code("compile", rf_inst_code_compile);
-  /* code address lookup */
-  rf_inst_code("cd", rf_inst_code_cd);
 
   /* ?DISC */
   rf_inst_compile(
@@ -506,13 +509,10 @@ void rf_inst(void)
 {
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
-  /* wait for disc server to init */
+  /* wait for disc server to init */ 
   z80_delay_ms(5000);
 #endif
 #endif
-
-  /* cold start */
-  rf_inst_cold();
 
 #ifdef RF_INST_LOCAL_DISC
   /* "insert" the inst disc */
