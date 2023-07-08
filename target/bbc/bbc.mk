@@ -58,7 +58,7 @@ ifeq ($(BBCOPTION),tape)
 # starts FIRST at 0x0B00, ORG at 0x0F20
 # if 0x0B00 onwards not used then MODE 0, 1, 2 are available
 	# BBCORG := 0F20
-	# BBCORIGIN := 1A00
+	# BBCORIGIN := 1900
 endif
 
 # apparently bbc.lib must be the last dep
@@ -171,11 +171,6 @@ endif
 bbc/%.o : bbc/%.s
 
 	ca65 -DRF_ORIGIN='$$$(BBCORIGIN)' -o $@ $<
-
-# # general compile rule
-# bbc/%.s : %.c | bbc
-
-# 	cc65 $(BBCCC65OPTS) -o $@ $<
 
 # serial load file
 bbc/%.ser : bbc/%
