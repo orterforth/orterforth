@@ -32,7 +32,6 @@ void rf_init(void)
   }
   if (ser_ioctl(1, NULL)) {
   }
-  /* TODO deal with bad return values */
 }
 
 void rf_code_emit(void)
@@ -63,12 +62,6 @@ void rf_code_key(void)
     int c;
 
     /* get key */
-/*
-    c = getchar();
-*/
-/*
-    while ((c = cbm_k_getin()) == 0) { }
-*/
     c = cgetc();
 
     /* return key */
