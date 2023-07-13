@@ -236,6 +236,25 @@ static void bufwrite(int out, orter_io_rdwr_t wr, char *buf, char **offset, size
   }
 }
 
+size_t orter_io_buf_rd(char *from_buf, char **from_off, size_t *from_len, char *off, size_t len)
+{
+  /* number of bytes to read */
+  size_t s = (*from_len > len) ? len : *from_len;
+
+  /* read bytes from buffer */
+  memcpy(off, *from_off, s);
+  *from_off += s;
+  *from_len -= s;
+
+  /* reset buffer */
+  if (!*from_len) {
+    *from_off = from_buf;
+    *from_len = 0;
+  }
+
+  return s;
+}
+
 size_t orter_io_buf_wr(char *off, size_t len, char *buf, char **offset, size_t *pending)
 {
   /* need empty buffer */

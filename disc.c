@@ -11,13 +11,12 @@
 
 #define RF_BBLK 128
 
+static char line[66];
+
 static int lineno = 0;
 
-/* TODO rename */
-static int disclinetoblock(char *block)
+static int disc_create_line(char *block)
 {
-  /* TODO static, or ptr  */
-	char line[66];
   size_t len;
 
   /* read line from stdin */
@@ -50,7 +49,6 @@ static int disclinetoblock(char *block)
   return 0;
 }
 
-/* TODO sure? use widely or remove */
 #define CHECK(exit, function) exit = (function); if (exit) return exit;
 
 static int disc_create(void)
@@ -66,8 +64,8 @@ static int disc_create(void)
     memset(&block, ' ', RF_BBLK);
 
     /* read two lines */
-    CHECK(status, disclinetoblock(block));
-    CHECK(status, disclinetoblock(block + 64));
+    CHECK(status, disc_create_line(block));
+    CHECK(status, disc_create_line(block + 64));
 
     /* write block to stdout */
     if (fwrite(block, 1, RF_BBLK, stdout) != RF_BBLK) {
@@ -210,30 +208,10 @@ static size_t mux_wr(char *off, size_t len)
   return j + k;
 }
 
-/* TODO move to orter_io_buf_rd */
-size_t buf_rd(char *from_buf, char **from_off, size_t *from_len, char *off, size_t len)
-{
-  /* number of bytes to read */
-  size_t s = (*from_len > len) ? len : *from_len;
-
-  /* read bytes from buffer */
-  memcpy(off, *from_off, s);
-  *from_off += s;
-  *from_len -= s;
-
-  /* reset buffer */
-  if (!*from_len) {
-    *from_off = from_buf;
-    *from_len = 0;
-  }
-
-  return s;
-}
-
 /* read from mux console buffer */
 static size_t mux_out_rd(char *off, size_t len)
 {
-  return buf_rd(mux_out_buf, &mux_out_off, &mux_out_len, off, len);
+  return orter_io_buf_rd(mux_out_buf, &mux_out_off, &mux_out_len, off, len);
 }
 
 /* Server loop */
@@ -316,7 +294,7 @@ static int disc_mux(int argc, char **argv)
   orter_io_pipe_init(&mux_out, -1, mux_out_rd, 0, 1);
 
   /* don't log as we are using the console for output */
-  /*log = 0;*/
+  log = 0;
 
   /* run */
   exit = serve(argv[4], argc > 5 ? argv[5] : 0);

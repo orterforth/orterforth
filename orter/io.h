@@ -55,6 +55,9 @@ size_t orter_io_stdin_rd(char *off, size_t len);
 /* nonblocking write to stdout */
 size_t orter_io_stdout_wr(char *off, size_t len);
 
+/* read from a buffer and reset it if empty */
+size_t orter_io_buf_rd(char *from_buf, char **from_off, size_t *from_len, char *off, size_t len);
+
 /* write to a buffer if not already full */
 size_t orter_io_buf_wr(char *off, size_t len, char *buf, char **offset, size_t *pending);
 
