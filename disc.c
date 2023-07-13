@@ -13,8 +13,10 @@
 
 static int lineno = 0;
 
+/* TODO rename */
 static int disclinetoblock(char *block)
 {
+  /* TODO static, or ptr  */
 	char line[66];
   size_t len;
 
@@ -48,6 +50,7 @@ static int disclinetoblock(char *block)
   return 0;
 }
 
+/* TODO sure? use widely or remove */
 #define CHECK(exit, function) exit = (function); if (exit) return exit;
 
 static int disc_create(void)
@@ -116,7 +119,6 @@ static size_t disc_wr(char *off, size_t len)
       /* finish log line */
       if (log) {
         fputs("\033[0m\n", stderr);
-        fflush(stderr);
       }
 
       /* for correct length */
@@ -151,10 +153,21 @@ static size_t disc_rd(char *off, size_t len)
       if (log) {
         fwrite(off - i, 1, i, stderr);
         fputc('\n', stderr);
-        fflush(stderr);
       }
       break;
     }
+  }
+
+  return i;
+}
+
+static size_t disc_rd_mux(char *off, size_t len)
+{
+  size_t i, j;
+
+  i = disc_rd(off, len);
+  for (j = 0; j < i; j++) {
+    off[j] |= 0x80;
   }
 
   return i;
@@ -164,23 +177,29 @@ static char mux_out_buf[256];
 static char *mux_out_off = mux_out_buf;
 static size_t mux_out_len;
 
-/* read data from serial and mux into two buffers */
-static size_t mux_disc_rd(char *off, size_t len)
+/* serial data to disc and buffer for stdout */
+static size_t mux_wr(char *off, size_t len)
 {
-  char buf[256];
-  size_t i, j = 0, k = 0, size;
+  size_t i, j = 0, k = 0;
 
   /* don't read if mux out buff full */
   if (mux_out_len) {
     return 0;
   }
 
-  /* read for disc and console output */
-  size = orter_io_fd_rd(orter_serial_fd, buf, len);
-  for (i = 0; i < size; i++) {
-    char c = buf[i];
+  /* mux between disc and mux_out_buf */
+  for (i = 0; i < len; i++) {
+    char c = off[i];
     if (c & 0x80) {
-      off[j++] = c & 0x7F;
+      c &= 0x7F;
+      if (rf_persci_putc(c) == -1) {
+        break;
+      }
+      j++;
+      /* TODO consistent log mechanism */
+      if (log) {
+        fputc(c == 0x04 ? 0x0A : c, stderr);
+      }
     } else {
       mux_out_off[k++] = c;
     }
@@ -188,9 +207,10 @@ static size_t mux_disc_rd(char *off, size_t len)
 
   /* record/return both lengths */
   mux_out_len = k;
-  return j;
+  return j + k;
 }
 
+/* TODO move to orter_io_buf_rd */
 size_t buf_rd(char *from_buf, char **from_off, size_t *from_len, char *off, size_t len)
 {
   /* number of bytes to read */
@@ -214,18 +234,6 @@ size_t buf_rd(char *from_buf, char **from_off, size_t *from_len, char *off, size
 static size_t mux_out_rd(char *off, size_t len)
 {
   return buf_rd(mux_out_buf, &mux_out_off, &mux_out_len, off, len);
-}
-
-/* write disc data to serial */
-static size_t mux_disc_wr(char *off, size_t len)
-{
-  size_t i;
-  char buf[256];
-
-  for (i = 0; i < len; i++) {
-    buf[i] = off[i] | 0x80;
-  }
-  return orter_io_fd_wr(orter_serial_fd, buf, len);
 }
 
 /* Server loop */
@@ -299,16 +307,16 @@ static int disc_mux(int argc, char **argv)
   /* include mux pipes, create pipelines */
   pipe_count = 4;
   /* serial in to disc (and stdout buffer) */
-  orter_io_pipe_init(&in, orter_serial_fd, mux_disc_rd, disc_wr, -1);
+  orter_io_pipe_init(&in, orter_serial_fd, 0, mux_wr, -1);
   /* stdin to serial out */
   orter_io_pipe_init(&mux_in, 0, 0, 0, orter_serial_fd);
   /* disc read to serial out */
-  orter_io_pipe_init(&out, -1, disc_rd, mux_disc_wr, orter_serial_fd);
+  orter_io_pipe_init(&out, -1, disc_rd_mux, 0, orter_serial_fd);
   /* stdout buffer to stdout */
   orter_io_pipe_init(&mux_out, -1, mux_out_rd, 0, 1);
 
   /* don't log as we are using the console for output */
-  log = 0;
+  /*log = 0;*/
 
   /* run */
   exit = serve(argv[4], argc > 5 ? argv[5] : 0);
