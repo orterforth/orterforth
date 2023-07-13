@@ -45,14 +45,14 @@ RC2014RESET := \
 # load modified hexload.bas
 RC2014LOADLOADER := \
 	printf '* \033[1;33mLoading $(RC2014HEXLOAD)\033[0;0m\n' ; \
-	$(ORTER) serial -o onlcrx -e 5 $(RC2014SERIALPORT) 115200 < $(RC2014HEXLOAD)
+	$(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200 < $(RC2014HEXLOAD)
 
 # load an IHEX file
 RC2014LOADIHEX := \
 	printf '* \033[1;33mLoading IHEX\033[0;0m\n' ; \
 	$(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200 <
 
-RC2014LOAD := $(RC2014RESET) ; $(RC2014LOADLOADER) ; $(RC2014LOADIHEX)
+RC2014LOAD := $(RC2014RESET) ; $(RC2014LOADLOADER) ; sleep 5 ; $(RC2014LOADIHEX)
 
 RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' ; \
 	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
