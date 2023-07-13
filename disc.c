@@ -231,9 +231,10 @@ static size_t mux_disc_wr(char *off, size_t len)
 /* Server loop */
 static int serve(char *dr0, char *dr1)
 {
-  /* insert DR0 */
-  rf_persci_insert(0, dr0);
-  /* insert DR1 (only if present) */
+  /* insert DR0 and DR1 if present */
+  if (dr0) {
+    rf_persci_insert(0, dr0);
+  }
   if (dr1) {
     rf_persci_insert(1, dr1);
   }
