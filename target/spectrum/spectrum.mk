@@ -341,81 +341,59 @@ SPECTRUMINSTDEPS := \
 	spectrum/fuse-rs232-tx \
 	rx \
 	tx
+SPECTRUMSTARTINSTMACHINE := \
+		printf '* \033[1;33mStarting Fuse\033[0;0m\n' ; \
+		$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx & \
+		$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx & \
+		$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
+SPECTRUMSTOPINSTMACHINE := printf '* \033[1;33mStopping Fuse\033[0;0m\n' ; sh scripts/stop.sh fuse.pid
 endif
 ifeq ($(SPECTRUMINSTMACHINE),real)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.ser | \
 	$(DISC) \
 	$(ORTER)
+SPECTRUMSTARTINSTMACHINE := \
+	printf '* \033[1;35mOn the Spectrum type:\033[0;0m\n' ; \
+	printf '  FORMAT "b";$(SERIALBAUD) <enter>\n' ; \
+	printf '  LOAD *"b" <enter>\n' ; \
+	read -p '  then press enter to start: ' LINE ; \
+	printf '* \033[1;33mLoading loader\033[0;0m\n' ; \
+	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas ; \
+	printf '* \033[1;33mLoading inst\033[0;0m\n' ; \
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser ; \
+	printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
+SPECTRUMSTOPINSTMACHINE := :
 endif
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
 	$(SYSTEM)/emulate_spectrum \
 	$(SPECTRUMROMS)
+SPECTRUMSTARTINSTMACHINE := \
+	printf '* \033[1;33mRunning headless emulator\033[0;0m\n' ; \
+	./$(SYSTEM)/emulate_spectrum
+SPECTRUMSTOPINSTMACHINE := :
 endif
 
 spectrum/orterforth.bin.hex : model.img $(SPECTRUMINSTDEPS)
 
-# validate memory limits
 	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $(shell $(STAT) spectrum/inst.bin)
 
-# empty DR1
-	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
-	@rm -f $@.io
-	@touch $@.io
+	@$(EMPTYDR1FILE) $@.io
 
-# start machine
-ifeq ($(SPECTRUMINSTMACHINE),fuse)
-	@printf '* \033[1;33mStarting Fuse\033[0;0m\n'
-	@$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx &
-	@$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx &
-	@$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
-endif
-ifeq ($(SPECTRUMINSTMACHINE),superzazu)
-	@printf '* \033[1;33mRunning headless emulator\033[0;0m\n'
-	@./$(SYSTEM)/emulate_spectrum
-endif
+	@$(SPECTRUMSTARTINSTMACHINE)
 
-# load inst
-ifeq ($(SPECTRUMINSTMACHINE),real)
-	@printf '* \033[1;35mOn the Spectrum type:\033[0;0m\n'
-	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
-	@printf '  LOAD *"b" <enter>\n'
-	@read -p '  then press enter to start: ' LINE
-
-	@printf '* \033[1;33mLoading loader\033[0;0m\n'
-	@# TODO load-serial could send ACK and we could use -a
-	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
-	@printf '* \033[1;33mLoading inst\033[0;0m\n'
-	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
-endif
-
-# start disc
 ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(SPECTRUMSTARTDISC) model.img $@.io
-endif
-ifeq ($(SPECTRUMINSTMACHINE),real)
-	@printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
-endif
 
-# wait for save
-ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(WAITUNTILSAVED) $@.io
-endif
 
-# stop machine
-ifeq ($(SPECTRUMINSTMACHINE),fuse)
-	@printf '* \033[1;33mStopping Fuse\033[0;0m\n'
-	@sh scripts/stop.sh fuse.pid
-endif
+	@$(SPECTRUMSTOPINSTMACHINE)
 
-# stop disc
-ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(STOPDISC)
 endif
 
-# done
 	@printf '* \033[1;33mDone\033[0;0m\n'
 	@mv $@.io $@
 
