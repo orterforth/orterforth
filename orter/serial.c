@@ -275,7 +275,7 @@ static void restore(void)
   }
 }
 
-size_t orter_serial_rd(char *off, size_t len)
+static size_t orter_serial_rd(char *off, size_t len)
 {
   size_t size = orter_io_fd_rd(orter_serial_fd, off, len);
 
@@ -295,11 +295,6 @@ size_t orter_serial_rd(char *off, size_t len)
   }
 
   return size;
-}
-
-size_t orter_serial_wr(char *off, size_t len)
-{
-  return orter_io_fd_wr(orter_serial_fd, off, len);
 }
 
 /* usage message */
@@ -404,10 +399,9 @@ int orter_serial(int argc, char **argv)
   }
 
   /* set up pipes */
-  /* TODO omit stdin/stdout fps */
-  orter_io_pipe_init(&in, 0, orter_io_stdin_rd, omap_wr, -1);
-  orter_io_pipe_init(&swr, -1, omap_rd, orter_serial_wr, orter_serial_fd);
-  orter_io_pipe_init(&out, orter_serial_fd, orter_serial_rd, orter_io_stdout_wr, 1);
+  orter_io_pipe_init(&in, 0, 0, omap_wr, -1);
+  orter_io_pipe_init(&swr, -1, omap_rd, 0, orter_serial_fd);
+  orter_io_pipe_init(&out, orter_serial_fd, orter_serial_rd, 0, 1);
 
   while (!orter_io_finished) {
 
