@@ -169,9 +169,8 @@ rf_code_xploo:
 rf_code_xdo:
   ldm   r5!, {r0, r3}           @ INITIAL INDEX VALUE
                                 @ LIMIT VALUE
-  subs  r4, r4, #4
-  str   r3, [r4]
-  subs  r4, r4, #4
+  subs  r4, r4, #8
+  str   r3, [r4, #4]
   str   r0, [r4]
 @ b     next
   ldm   r6!, {r3}
@@ -483,9 +482,8 @@ umdiv2:
   ands  r3, r3, r3
   bne   umdiv1
 umdiv3:
-  subs  r5, r5, #4
-  str   r1, [r5]                @ remainder
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r1, [r5, #4]            @ remainder
   str   r4, [r5]                @ quotient
   mov   r4, r8
 @ b     next
