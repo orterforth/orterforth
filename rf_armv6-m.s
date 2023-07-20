@@ -16,7 +16,7 @@ rf_start:
   .global rf_trampoline
   .align 4
 rf_trampoline:
-  push  {r3, r4, r6, r7, lr}
+  push  {r3, r4, r5, r6, r7, lr}
 trampoline1:
   ldr   r4, fpp
   ldr   r0, [r4]
@@ -33,7 +33,7 @@ trampoline1:
   blx   r0
   b     trampoline1
 trampoline2:
-  pop  {r3, r4, r6, r7, pc}
+  pop  {r3, r4, r5, r6, r7, pc}
 
   .align 4
 fpp:
@@ -216,9 +216,8 @@ digi1:
   movs  r3, r0                  @ NEW BINARY NUMBER
   movs  r0, #1                  @ TRUE FLAG
 @ b     dpush                   @ ADD TO STACK
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -280,9 +279,8 @@ pfin2:
   ands  r3, r1                  @ CLEAR HIGH LENGTH
 
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -346,9 +344,8 @@ encl1:
   mov   r0, r3                  @ COPY COUNTER
   adds  r3, r3, #1              @ +1
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -370,9 +367,8 @@ encl2:
 encl3:
   mov   r0, r3                  @ COUNTERS ARE EQUAL
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -383,9 +379,8 @@ encl4:
   mov   r0, r3
   adds  r0, r0, #1              @ COUNT +1
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -443,9 +438,8 @@ rf_code_ustar:
   adcs  r0, r1
   mov   r4, r8
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -705,9 +699,8 @@ rf_code_dplus:
   adds  r3, r3, r1              @ SLW
   adcs  r0, r0, r2              @ SHW
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -740,9 +733,8 @@ rf_code_dminu:
   subs  r3, r3, r2              @ MAKE 2'S COMPLEMENT
   sbcs  r0, r0, r1              @ HIGH WORD
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
@@ -981,9 +973,8 @@ rf_code_stod:
   subs  r0, r0, #1              @ NEGITIVE NUMBER
 stod1:
 @ b     dpush
-  subs  r5, r5, #4
-  str   r3, [r5]
-  subs  r5, r5, #4
+  subs  r5, r5, #8
+  str   r3, [r5, #4]
   str   r0, [r5]
   ldm   r6!, {r3}
   ldr   r0, [r3]
