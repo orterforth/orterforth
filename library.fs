@@ -94,6 +94,22 @@ DECLARE VOCABULARY
 
 
 
+( examples index                                              )
+FORTH DEFINITIONS VOCABULARY example IMMEDIATE
+example DEFINITIONS
+: hw 7 LOAD ;
+: fib 8 LOAD ;
+: fac 9 LOAD ;
+: reverse 10 LOAD ;
+: roman 11 LOAD ;
+: mandelbrot 13 LOAD ;
+FORTH DEFINITIONS
+
+
+
+
+
+;S
 ( Hello World                                                 )
 ." Hello World" CR
 
@@ -143,7 +159,7 @@ CR fac list CR
 
 ;S
 ( Reverse a string                                            )
-14 LOAD                        ( load str vocabulary          )
+15 LOAD                        ( load str vocabulary          )
 FORTH DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
@@ -191,7 +207,7 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios              )
-18 LOAD ( sys vocabulary ) HEX
+19 LOAD ( sys vocabulary ) HEX
 FORTH DEFINITIONS
 : mandelbrot
     CR
@@ -285,7 +301,7 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 
 
 
--->
+;S
 ( sys: system dependent operations - BBC                      )
 FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : D= SWAP >R = SWAP R> = AND ;  ( compare double numbers      )
