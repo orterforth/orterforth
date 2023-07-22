@@ -15,16 +15,16 @@ You will need:
 
 To build in MAME, call:
 
- make TARGET=bbc                    (C code, slower)
- make TARGET=bbc BBCOPTION=assembly (assembly code)
- make TARGET=bbc BBCOPTION=tape     (assembly code, no disk
-                                     buffers, so starts at
-                                     &0E00)
+ make TARGET=bbc                 (C code, slower)
+ make TARGET=bbc OPTION=assembly (assembly code)
+ make TARGET=bbc OPTION=tape     (assembly code, no disk
+                                 buffers, so starts at
+                                 &0E00)
 
 To load via serial and build on a physical BBC Micro Model B,
 call:
 
- make TARGET=bbc [BBCOPTION=...] BBCMACHINE=real
+ make TARGET=bbc [OPTION=...] BBCMACHINE=real
 
 and follow the instructions.
 
@@ -36,19 +36,19 @@ Target files are:
 
 To run in MAME, call:
 
- make run TARGET=bbc                    (loads .ssd)
- make run TARGET=bbc BBCOPTION=assembly (loads .ssd)
- make run TARGET=bbc BBCOPTION=tape     (loads .uef)
+ make run TARGET=bbc                 (loads .ssd)
+ make run TARGET=bbc OPTION=assembly (loads .ssd)
+ make run TARGET=bbc OPTION=tape     (loads .uef)
 
 Likewise, to load via serial and run on a physical machine,
 call:
 
- make run TARGET=bbc [BBCOPTION=...] BBCMACHINE=real
+ make run TARGET=bbc [OPTION=...] BBCMACHINE=real
 
-It is necessary to supply the BBCOPTION variable, because make
+It is necessary to supply the OPTION variable, because make
 will attempt to build any intermediate targets which may be
-different depending on BBCOPTION. Builds may fail because libs
-built with different values of BBCOPTION are incompatible.
+different depending on OPTION. Builds may fail because libs
+built with different values of OPTION are incompatible.
 
 To specify disc images, use:
 
