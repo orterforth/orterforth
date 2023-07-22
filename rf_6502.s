@@ -470,77 +470,98 @@ L411:  DEY
 .export _rf_code_uslas
 
 _rf_code_uslas:
-       ; LDA 4,X
-       ; LDY 2,X
-       ; STY 4,X
-       ; ASL A
-       ; STA 2,X
-       ; LDA 5,X
-       ; LDY 3,X
-       ; STY 5,X
-       ; ROL
-       ; STA 3,X
-       ; LDA #16       ; for 16 bits
-       ; STA N
+;        LDA 4,X
+;        LDY 2,X
+;        STY 4,X
+;        ASL A
+;        STA 2,X
+;        LDA 5,X
+;        LDY 3,X
+;        STY 5,X
+;        ROL A
+;        STA 3,X
+;        LDA #16       ; for 16 bits
+;        STA N
 ; L433:  ROL 4,X
-       ; ROL 5,X
-       ; SEC
-       ; LDA 4,X
-       ; SBC 0,X
-       ; TAY
-       ; LDA 5,X
-       ; SBC 1,X
-       ; BCC L444
-       ; STY 4,X
-       ; STA 5,X
+;        ROL 5,X
+;        SEC
+;        LDA 4,X
+;        SBC 0,X
+;        TAY
+;        LDA 5,X
+;        SBC 1,X
+;        BCC L444
+;        STY 4,X
+;        STA 5,X
 ; L444:  ROL 2,X
-       ; ROL 3,X
-       ; DEC N
-       ; BNE L433
-       ; JMP POP
+;        ROL 3,X
+;        DEC N
+;        BNE L433
+;        JMP POP
 
-; http://6502.org/source/integers/ummodfix/ummodfix.htm
 ; https://dwheeler.com/6502/ummod.txt
 
-       SEC
-       LDA 2,X
-       SBC 0,X
-       LDA 3,X
-       SBC 1,X
-       BCS uslas2
-       LDA #$11
-       STA N
-uslas1:ROL 4,X
-       ROL 5,X
-       DEC N
-       BEQ uslas3
-       ROL 2,X 
-       ROL 3,X
-       LDA #0
-       STA N+1
-       ROL N+1
-       SEC
-       LDA 2,X 
-       SBC 0,X
-       STA N+2 
-       LDA 3,X
-       SBC 1,X
-       TAY               
-       LDA N+1 
-       SBC #0
-       BCC uslas1
-       LDA N+2 
-       STA 2,X 
-       STY 3,X 
-       BCS uslas1
-uslas2:LDA #$FF              
-       STA 2,X 
-       STA 3,X
-       STA 4,X 
-       STA 5,X
-uslas3:INX               
-       INX               
-       JMP _rf_code_swap
+; The following is Garth Wilson's corrected UM/MOD code for Forth,
+; compared to the buggy fig-Forth, per
+; http://6502.org/source/integers/ummodfix/ummodfix.htm
+
+
+; HEADER "UM/MOD", NOT_IMMEDIATE          ; ( ud u -- rem quot )
+;         CODE            ; (Make Forth CFA point to PFA for a code definition.)
+
+        SEC
+        LDA     2,X     ; Subtract hi cell of dividend by
+        SBC     0,X     ; divisor to see if there's an overflow condition.
+        LDA     3,X
+        SBC     1,X
+        BCS     ofloS   ; Branch if /0 or overflow.
+
+        LDA     #11H    ; Loop 17x.
+        STA     N       ; Use N for loop counter.
+ loop:  ROL     4,X     ; Rotate dividend lo cell left one bit.
+        ROL     5,X
+        DEC     N       ; Decrement loop counter.
+        BEQ     endS    ; If we're done, then branch to end.
+        ROL     2,X     ; Otherwise rotate dividend hi cell left one bit.
+        ROL     3,X
+;       STZ     N+1
+        LDA     #0
+        STA     N+1
+
+        ROL     N+1     ; Rotate the bit carried out of above into N+1.
+
+        SEC
+        LDA     2,X     ; Subtract dividend hi cell minus divisor.
+        SBC     0,X
+        STA     N+2     ; Put result temporarily in N+2 (lo byte)
+        LDA     3,X
+        SBC     1,X
+        TAY             ; and Y (hi byte).
+        LDA     N+1     ; Remember now to bring in the bit carried out above.
+        SBC     #0
+        BCC     loop
+
+        LDA     N+2     ; If that didn't cause a borrow,
+        STA     2,X     ; make the result from above to
+        STY     3,X     ; be the new dividend hi cell
+;       BRA     loop    ; and then brach up.  (NMOS 6502 can use BCS here.)
+        BCS     loop
+
+ ofloS: LDA     #0FFH   ; If overflow or /0 condition found,
+        STA     2,X     ; just put FFFF in both the remainder
+        STA     3,X
+        STA     4,X     ; and the quotient.
+        STA     5,X
+
+ endS:  INX             ; When you're done, show one less cell on data stack,
+        INX             ; (INX INX is exactly what the Forth word DROP does) 
+;       JMP     SWAP    ; and swap the two top cells to put quotient on top.
+                        ; (Actually you'll jump to the beginning of SWAP's
+                        ; executable code.  Assembler label "SWAP" is at SWAP's
+                        ; PFA, not the CFA that ' SWAP would give you in Forth.
+        JMP     _rf_code_swap
+;-------------------
+
 ;
 ;                             AND
 ;                             SCREEN 25 LINE 2
