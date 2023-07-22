@@ -31,42 +31,49 @@ _rf_init:
 .export _rf_code_emit
 
 _rf_code_emit:
-       TYA
+;
+;     XEMIT writes one ascii character to terminal
+;
+XEMIT: TYA
        SEC
        LDY #$1A
        ADC (UP),Y
        STA (UP),Y
-       INY
+       INY            ;  bump user variable OUT
        LDA #0
        ADC (UP),Y
        STA (UP),Y
-       LDA 0,X
+       LDA 0,X        ; fetch character to output
        AND #$7F
        STX XSAVE
+       CMP #8         ; backspace erase
+       BNE emit1
        JSR oswrch
+       LDA #32
+       JSR oswrch
+       LDA #8
+emit1: JSR oswrch     ; and display it
        LDX XSAVE
        JMP POP
 
 .export _rf_code_key
 
 _rf_code_key:
-       STX XSAVE
-       JSR osrdch
-       LDX XSAVE
+;
+;      XKEY reads one terminal keystroke to stack
+;
+XKEY:  STX XSAVE
+       JSR osrdch     ;    might otherwise clobber it while
+       LDX XSAVE      ;    inputting a character to accumulator.
        JMP PUSH0A
-
-.export _rf_code_cr
-
-_rf_code_cr:
-       STX XSAVE
-       JSR osnewl
-       LDX XSAVE
-       JMP NEXT
 
 .export _rf_code_qterm
 
 _rf_code_qterm:
-       STX XSAVE
+;
+;      XQTER leaves a boolean representing terminal break
+;
+XQTER: STX XSAVE      ;  System dependent port test
        LDA #121                 ; *FX 121,240 (scan for escape key)
        LDX #240
        JSR osbyte
@@ -76,6 +83,16 @@ _rf_code_qterm:
        LDA #1
 qterm1:LDX XSAVE
        JMP PUSH0A
+
+.export _rf_code_cr
+_rf_code_cr:
+;
+;        XCR displays a CR and LF to terminal
+;
+XCR:   STX XSAVE
+       JSR osnewl
+       LDX XSAVE
+       JMP NEXT
 
 .export _rf_fin
 
