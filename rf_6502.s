@@ -1,7 +1,3 @@
-.import _rf_rp
-.import _rf_sp
-.import _rf_fp
-
 temps := $76
 
 n := $78                        ; n-1 must be reserved for the length of n in words
@@ -959,3 +955,17 @@ _rf_code_xt:
   sty _rf_fp+1
   jsr _rf_start
   rts
+
+.bss
+
+.export _rf_fp
+
+_rf_fp: .res 2
+
+.export _rf_rp
+
+_rf_rp: .res 2
+
+.export _rf_sp
+
+_rf_sp: .res 2

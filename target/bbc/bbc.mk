@@ -1,7 +1,7 @@
 # === BBC Micro ===
 
 # common dependencies
-BBCDEPS := bbc/inst.o bbc/main.o bbc/rf.o
+BBCDEPS := bbc/inst.o bbc/main.o
 
 # default loading method
 BBCLOADINGMETHOD := disk
@@ -45,7 +45,7 @@ endif
 
 # default C code
 ifeq ($(BBCOPTION),default)
-	BBCDEPS += bbc/mos.o bbc/system_c.o
+	BBCDEPS += bbc/mos.o bbc/rf.o bbc/system_c.o
 endif
 
 # assembly code, tape only

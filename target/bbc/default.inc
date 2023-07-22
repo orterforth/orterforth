@@ -58,7 +58,10 @@
 /*#define RF_ORIGIN xxxx*/
 
 /* assembly definitions */
+#define RF_TARGET_FP
 #define RF_TARGET_IP
+#define RF_TARGET_RP
+#define RF_TARGET_SP
 #define RF_TARGET_UP
 #define RF_TARGET_W
 #define RF_TARGET_TRAMPOLINE
