@@ -1,11 +1,10 @@
-.importzp _rf_6502_n
-.importzp _rf_6502_up
-.importzp _rf_6502_w
-.import pop
-.import setup
-.import _rf_next
-.importzp xsave
-.import push0a
+.importzp N
+.importzp UP
+.importzp XSAVE
+.import POP
+.import SETUP
+.import NEXT
+.import PUSH0A
 
 osrdch := $FFE0
 oswrch := $FFEE
@@ -15,160 +14,144 @@ osbyte := $FFF4
 .export _rf_init
 
 _rf_init:
-
-	lda #$07                      ; *FX 7,7 (9600 baud receive)
-	tax
-	jsr osbyte
-	lda #$08                      ; *FX 8,7 (9600 baud transmit)
-	ldx #$07
-	jsr osbyte
-	lda #$02                      ; *FX 2,2 (enable RS423, input from keyboard)
-	tax
-	jsr osbyte
-	lda #$03                      ; *FX 3,4 (output to screen only)
-	ldx #$04
-	jsr osbyte
-	rts
+       LDA #7                   ; *FX 7,7 (9600 baud receive)
+       TAX
+       JSR osbyte
+       LDA #8                   ; *FX 8,7 (9600 baud transmit)
+       LDX #7
+       JSR osbyte
+       LDA #2                   ; *FX 2,2 (enable RS423, input from keyboard)
+       TAX
+       JSR osbyte
+       LDA #3                   ; *FX 3,4 (output to screen only)
+       LDX #4
+       JSR osbyte
+       RTS
 
 .export _rf_code_emit
 
 _rf_code_emit:
-
-	tya
-	sec
-	ldy #$1A
-	adc (_rf_6502_up),y
-	sta (_rf_6502_up),y
-	iny
-	lda #$00
-	adc (_rf_6502_up),y
-	sta (_rf_6502_up),y
-	lda $00,x
-	and #$7F
-	stx xsave
-	jsr oswrch
-	ldx xsave
-	jmp pop
+       TYA
+       SEC
+       LDY #$1A
+       ADC (UP),Y
+       STA (UP),Y
+       INY
+       LDA #0
+       ADC (UP),Y
+       STA (UP),Y
+       LDA 0,X
+       AND #$7F
+       STX XSAVE
+       JSR oswrch
+       LDX XSAVE
+       JMP POP
 
 .export _rf_code_key
 
 _rf_code_key:
-
-	stx xsave
-	jsr osrdch
-	ldx xsave
-	jmp push0a
+       STX XSAVE
+       JSR osrdch
+       LDX XSAVE
+       JMP PUSH0A
 
 .export _rf_code_cr
 
 _rf_code_cr:
-
-	stx xsave
-	jsr osnewl
-	ldx xsave
-	jmp _rf_next
+       STX XSAVE
+       JSR osnewl
+       LDX XSAVE
+       JMP NEXT
 
 .export _rf_code_qterm
 
 _rf_code_qterm:
-
-	stx xsave
-	lda #$79                      ; *FX 121,240 (scan for escape key)
-	ldx #$F0
-	jsr osbyte
-	lda #$00                      ; return 1 if pressed
-	cpx #$00
-	bpl qterm1
-	lda #01
-qterm1:
-	ldx xsave
-	jmp push0a
+       STX XSAVE
+       LDA #121                 ; *FX 121,240 (scan for escape key)
+       LDX #240
+       JSR osbyte
+       LDA #0                   ; return 1 if pressed
+       CPX #0
+       BPL qterm1
+       LDA #1
+qterm1:LDX XSAVE
+       JMP PUSH0A
 
 .export _rf_fin
 
 _rf_fin:
-
-	lda #$02                      ; *FX 2,0 (use keyboard, disable RS423)
-	ldx #$00
-	jsr osbyte
-	lda #$03                      ; *FX 3,4 (output to screen only)
-	ldx #$04
-	jmp osbyte
+       LDA #2                   ; *FX 2,0 (use keyboard, disable RS423)
+       LDX #0
+       JSR osbyte
+       LDA #3                   ; *FX 3,4 (output to screen only)
+       LDX #4
+       JMP osbyte
 
 .export _rf_code_dchar
 
 _rf_code_dchar:
-
-	stx xsave
-	lda #$02                      ; *FX 2,1 (read from RS423)
-	ldx #$01
-	jsr osbyte
-	jsr	osrdch                    ; read 1 byte and push
-	pha
-	lda #$02                      ; *FX 2,2 (read from keyboard)
-	tax
-	jsr osbyte
-	ldx xsave
-	ldy #$00
-
-	dex
-	dex
-	sty 1,x                       ; zero high byte
-	pla                           ; pull 1 byte
-	sta 0,x
-	cmp 2,x                       ; return true if equal
-	bne dchar1
-	iny
-dchar1:
-	sty 2,x
-	jmp _rf_next
+       STX XSAVE
+       LDA #2                   ; *FX 2,1 (read from RS423)
+       LDX #1
+       JSR osbyte
+       JSR osrdch               ; read 1 byte and push
+       PHA
+       LDA #2                   ; *FX 2,2 (read from keyboard)
+       TAX
+       JSR osbyte
+       LDX XSAVE
+       LDY #0
+       DEX
+       DEX
+       STY 1,X                  ; zero high byte
+       PLA                      ; pull 1 byte
+       STA 0,X
+       CMP 2,X                  ; return true if equal
+       BNE dchar1
+       INY
+dchar1:STY 2,X
+       JMP NEXT
 
 .export _rf_code_bread
 
 _rf_code_bread:
-
-	lda #$01                      ; fetch addr into N
-	jsr setup
-	stx xsave
-	lda #$02                      ; *FX 2,1 (read from RS423)
-	ldx #$01
-	jsr osbyte
-	ldy #$00                      ; read 128 bytes
-bread1:
-	jsr	osrdch
-	sta (_rf_6502_n),y
-	iny
-	bpl bread1
-bread2:
-	lda #$02                      ; *FX 2,2 (read from keyboard)
-	tax
-	jsr osbyte
-	ldx xsave
-	jmp _rf_next
+       LDA #1                   ; fetch addr into N
+       JSR SETUP
+       STX XSAVE
+       LDA #2                   ; *FX 2,1 (read from RS423)
+       LDX #1
+       JSR osbyte
+       LDY #0                   ; read 128 bytes
+bread1:JSR osrdch
+       STA (N),Y
+       INY
+       BPL bread1
+bread2:LDA #2                   ; *FX 2,2 (read from keyboard)
+       TAX
+       JSR osbyte
+       LDX XSAVE
+       JMP NEXT
 
 .export _rf_code_bwrit
 
 _rf_code_bwrit:
-
-	lda #$02
-	jsr setup
-	stx xsave
-	lda #$03                      ; *FX 3,7 (write to RS423)
-	ldx #$07
-	jsr osbyte
-	ldy #$00
-bwrit1:
-  cpy _rf_6502_n
-	bne bwrit2
-	lda #$04                      ; EOT
-	jsr oswrch
-	tax                           ; *FX 3,4 (write to screen)
-	lda #$03
-	jsr osbyte
-	ldx xsave
-	jmp _rf_next
-bwrit2:
-  lda (_rf_6502_n+2),y          ; write 1 byte
-	jsr oswrch
-	iny                           ; loop
-	bne bwrit1
+       LDA #2
+       JSR SETUP
+       STX XSAVE
+       LDA #3                   ; *FX 3,7 (write to RS423)
+       LDX #7
+       JSR osbyte
+       LDY #0
+bwrit1:CPY N
+       BNE bwrit2
+       LDA #4                   ; EOT
+       JSR oswrch
+       TAX                      ; *FX 3,4 (write to screen)
+       LDA #3
+       JSR osbyte
+       LDX XSAVE
+       JMP NEXT
+bwrit2:LDA (N+2),Y              ; write 1 byte
+       JSR oswrch
+       INY                      ; loop
+       BNE bwrit1

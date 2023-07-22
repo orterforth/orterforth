@@ -1,10 +1,46 @@
+; The below is adapted from the fig-FORTH 6502 ASSEMBLY 
+; SOURCE LISTING, to apply cc65 assembler syntax and
+; orterforth integration requirements. Some of the information
+; in the comments no longer applies.
+
+;
+;       Through the courtesy of
+;
+;        FORTH INTEREST GROUP
+;           P. O. Box 1105
+;      San Carlos, CA   94070
+;
+;             Release 1.1
+;       With compiler security
+;               and
+;       variable length names
+;
+; Further distribution must include the above notice
+; The FIG Installation Manual is required as it 
+; contains the model of FORTH and glossary of the system.
+; Available from FIG at the above address for $10.00 postpai
+;
+; Translated from the FIG Model by W. F. Ragsdale
+; with input-output given for the Rockewell System-65.
+; Transportation to other systems only requires
+; alteration of:  XEMIT, XKEY, XQTER, XCR, and RSLW.
+;
+;
+;   Equates giving memory assigments, machine
+;   registers, and disk parameters.
+;
+;
+N      :=$78 ;     xXxxxxxxx    scratch workspace
+IP     :=$80 ;      Xx          interpretive pointer
+W      :=$83 ;     xXx          code field pointer
+UP     :=$85 ;      Xx          user area pointer
+XSAVE  :=$87 ;      X           temporary for X register
+
+.exportzp N
+.exportzp UP
+.exportzp XSAVE
+
 temps := $76
-
-n := $78                        ; n-1 must be reserved for the length of n in words
-
-.exportzp _rf_6502_n
-
-_rf_6502_n := $78               ; export as zp for use by other asm
 
 .export _rf_ip: near
 
@@ -14,852 +50,939 @@ _rf_ip := $80
 
 _rf_w := $83                    ; _rf_w-1 must be reserved for $6C JMP (W)
 
-.exportzp _rf_6502_w
-
-_rf_6502_w := $83               ; also as zp for use by other asm
-
 .export _rf_up: near
 
 _rf_up := $85
 
-.exportzp _rf_6502_up
-
-_rf_6502_up := $85              ; also as zp for use by other asm
-
-.exportzp xsave
-
-xsave := $87
-
 .export _rf_trampoline
 
 _rf_trampoline:
-  lda _rf_fp                    ; return if FP is null
-  ora _rf_fp+1
-  bne trampoline1
-  rts
+       LDA _rf_fp               ; return if FP is null
+       ORA _rf_fp+1
+       BNE trampoline1
+       RTS
 trampoline1:
-  lda #>(_rf_trampoline-1)      ; put return addr on stack
-  pha
-  lda #<(_rf_trampoline-1)
-  pha
-  tsx                           ; save S to temp
-  stx temps
-  ldx _rf_rp                    ; set S to RP-1 (high byte is $01)
-  dex
-  txs
-  ldx _rf_sp                    ; set X to SP (high byte is $00)
-  ldy #$00                      ; set Y to $00, this is expected
-  jmp (_rf_fp)                  ; jump to FP and return to trampoline
+       LDA #>(_rf_trampoline-1) ; put return addr on stack
+       PHA
+       LDA #<(_rf_trampoline-1)
+       PHA
+       TSX                      ; save S to temp
+       STX temps
+       LDX _rf_rp               ; set S to RP-1 (high byte is $01)
+       DEX
+       TXS
+       LDX _rf_sp               ; set X to SP (high byte is $00)
+       LDY #0                   ; set Y to $00, this is expected
+       JMP (_rf_fp)             ; jump to FP and return to trampoline
 
 .export _rf_start
 
 _rf_start:
-  stx _rf_sp                    ; restore SP from X
-  pla                           ; save return address (from jsr _rf_start)
-  tay
-  pla
-  tsx                           ; restore RP from S+1
-  inx
-  stx _rf_rp
-  ldx temps                     ; restore S from temp
-  txs
-  pha                           ; restore return address on stack
-  tya
-  pha
+       STX _rf_sp               ; restore SP from X
+       PLA                      ; save return address (from JSR _rf_start)
+       TAY
+       PLA
+       TSX                      ; restore RP from S+1
+       INX
+       STX _rf_rp
+       LDX temps                ; restore S from temp
+       TXS
+       PHA                      ; restore return address on stack
+       TYA
+       PHA
 start1:
-  rts                           ; return to C
+       RTS                      ; return to C
 
 .export _rf_code_lit
 
 _rf_code_lit:
-  lda (_rf_ip),y
-  pha
-  inc _rf_ip
-  bne lit1
-  inc _rf_ip+1
-lit1:
-  lda (_rf_ip),y
-  inc _rf_ip
-  bne push
-  inc _rf_ip+1
-push:
-  dex
-  dex
-put:
-  sta 1,x
-  pla
-  sta 0,x
-
+       LDA (IP),Y ; <---- start of parameter field
+       PHA
+       INC IP
+       BNE L30
+       INC IP+1
+L30:   LDA (IP),Y
+L31:   INC IP
+       BNE PUSH
+       INC IP+1
+;
+PUSH:  DEX
+       DEX
+;
+PUT:   STA 1,X
+       PLA
+       STA 0,X
+;
+;     NEXT is the address interpreter that moves from
+;     machine level word to word.
+;
 .export _rf_next
+.export NEXT
 
 _rf_next:
-  ldy #$01                      ; W = (IP)
-  lda (_rf_ip),y
-  sta _rf_w+1
-  dey
-  lda (_rf_ip),y
-  sta _rf_w
+NEXT:  LDY #1
+       LDA (IP),Y    ; Fetch code address pointed
+       STA W+1       ; to by IP
+       DEY
+       LDA (IP),Y
+       STA W
+       ; JSR TRACE   ; Remove this when all is well
+       CLC           ; Increment IP by two
+       LDA IP
+       ADC #2
+       STA IP
+       BCC L54
+       INC IP+1
+L54:   JMP W-1     ; jump to an indirect jump (W)
+;                 which vectors to code pointed by a code fiel
 
-  clc                           ; IP++
-  lda _rf_ip
-  adc #$02
-  sta _rf_ip
-  bcc next1
-  inc _rf_ip+1
+;
+;
+.export SETUP
 
-next1:
-  jmp _rf_w-1                   ; jump to (W)
-
-.export setup
-
-setup:
-  asl                           ; store number of bytes
-  sta n-1
-setup1:
-  lda $00,x                     ; pop words into N
-  sta n,y
-  inx
-  iny
-  cpy n-1
-  bne setup1
-  ldy #$00
-  rts
-
+SETUP: ASL A
+       STA N-1
+L63:   LDA 0,X
+       STA N,Y
+       INX
+       INY
+       CPY N-1
+       BNE L63
+       LDY #0
+       RTS
+;
+;                             EXECUTE
+;                             SCREEN 14 LINE 11
+;
 .export _rf_code_exec
 
 _rf_code_exec:
-  lda $00,x
-  sta _rf_w
-  lda $01,x
-  sta _rf_w+1
-  inx
-  inx
-  jmp _rf_w-1
-
+       LDA 0,X
+       STA W
+       LDA 1,X
+       STA W+1
+       INX
+       INX
+       JMP W-1         ; To JMP (W) in z-page
+;
+;                             BRANCH
+;                             SCREEN 15 LINE 1
+;
 .export _rf_code_bran
 
 _rf_code_bran:
-  clc
-  lda (_rf_ip),y
-  adc _rf_ip
-  pha
-  iny
-  lda (_rf_ip),y
-  adc _rf_ip+1
-  sta _rf_ip+1
-  pla
-  sta _rf_ip
-  jmp _rf_next+2
-
+       CLC
+       LDA (IP),Y
+       ADC IP
+       PHA
+       INY
+       LDA (IP),Y
+       ADC IP+1
+       STA IP+1
+       PLA
+       STA IP
+       JMP NEXT+2
+;
+;                             0BRANCH
+;                             SCREEN 15 LINE 6
+;
 .export _rf_code_zbran
 
 _rf_code_zbran:
-  inx
-  inx
-  lda $FE,x
-  ora $FF,x
-  beq _rf_code_bran
-bump:
-  clc
-  lda _rf_ip
-  adc #$02
-  sta _rf_ip
-  bcc zbran1
-  inc _rf_ip+1
-zbran1:
-  jmp _rf_next
-
+       INX
+       INX
+       LDA $FE,X
+       ORA $FF,X
+       BEQ _rf_code_bran
+BUMP:  CLC
+       LDA IP
+       ADC #$02
+       STA IP
+       BCC L122
+       INC IP+1
+L122:  JMP NEXT
+;
+;                             (LOOP)
+;                             SCREEN 16 LINE 1
+;
 .export _rf_code_xloop
 
 _rf_code_xloop:
-  stx xsave
-  tsx
-  inc $0101,x
-  bne xloop1
-  inc $0102,x
-xloop1:
-  clc
-  lda $0103,x
-  sbc $0101,x
-  lda $0104,x
-  sbc $0102,x
-xloop2:
-  ldx xsave
-  asl
-  bcc _rf_code_bran
-  pla
-  pla
-  pla
-  pla
-  jmp bump
-
+L130:  STX XSAVE
+       TSX
+       INC $101,X
+       BNE PL1
+       INC $102,X
+;
+PL1:   CLC
+       LDA $103,X
+       SBC $101,X
+       LDA $104,X
+       SBC $102,X
+;
+PL2:   LDX XSAVE
+       ASL A
+       BCC _rf_code_bran
+       PLA
+       PLA
+       PLA
+       PLA
+       JMP BUMP
+;
+;                             (+LOOP)
+;                             SCREEN 16 LINE 8
+;
 .export _rf_code_xploo
 
 _rf_code_xploo:
-  inx
-  inx
-  stx xsave
-  lda $FF,x
-  pha
-  pha
-  lda $FE,x
-  tsx
-  inx
-  inx
-  clc
-  adc $0101,x
-  sta $0101,x
-  pla
-  adc $0102,x
-  sta $0102,x
-  pla
-  bpl xloop1
-  clc
-  lda $0101,x
-  sbc $0103,x
-  lda $0102,x
-  sbc $0104,x
-  jmp xloop2
-
+       INX
+       INX
+       STX XSAVE
+       LDA $FF,X
+       PHA
+       PHA
+       LDA $FE,X
+       TSX
+       INX
+       INX
+       CLC
+       ADC $101,X
+       STA $101,X
+       PLA
+       ADC $102,X
+       STA $102,X
+       PLA
+       BPL PL1
+       CLC
+       LDA $101,X
+       SBC $103,X
+       LDA $102,X
+       SBC $104,X
+       JMP PL2
+;
+;                             (DO)
+;                             SCREEN 17 LINE 2
+;
 .export _rf_code_xdo
-.export pop
+.export POP
 
 _rf_code_xdo:
-  lda $03,x
-  pha
-  lda $02,x
-  pha
-  lda $01,x
-  pha
-  lda $00,x
-  pha
-poptwo:
-  inx
-  inx
+       LDA 3,X
+       PHA
+       LDA 2,X
+       PHA
+       LDA 1,X
+       PHA
+       LDA 0,X
+       PHA
+;
+POPTWO:
+       INX
+       INX
+;
 _rf_code_drop:
-pop:
-  inx
-  inx
-  jmp _rf_next
-
+POP:   INX
+       INX
+       JMP NEXT
+;
+;                             DIGIT
+;                             SCREEN 18 LINE 1
+;
 .export _rf_code_digit
 
 _rf_code_digit:
-  sec
-  lda 2,x
-  sbc #$30
-  bmi digit2
-  cmp #$0A
-  bmi digit1
-  sec
-  sbc #$07
-  cmp #$0A
-  bmi digit2
-digit1:
-  cmp 0,x
-  bpl digit2
-  sta 2,x
-  lda #$01
-  pha
-  tya
-  jmp put
-digit2:
-  tya
-  pha
-  inx
-  inx
-  jmp put
-
+       SEC
+       LDA 2,X
+       SBC #$30
+       BMI L234
+       CMP #$A
+       BMI L227
+       SEC
+       SBC #7
+       CMP #$A
+       BMI L234
+L227:  CMP 0,X
+       BPL L234
+       STA 2,X
+       LDA #1
+       PHA
+       TYA
+       JMP PUT       ; exit true with converted value
+L234:  TYA
+       PHA
+       INX
+       INX
+       JMP PUT       ; exit false for bad conversion
+;
+;                             (FIND)
+;                             SCREEN 19 LINE 1
+;
 .export _rf_code_pfind
 
 _rf_code_pfind:
-  lda #$02
-  jsr setup
-  stx xsave
-pfind1:
-  ldy #$00
-  lda (n),y
-  eor (n+2),y
-  and #$3F
-  bne pfind4
-pfind2:
-  iny
-  lda (n),y
-  eor (n+2),y
-  asl
-  bne pfind3
-  bcc pfind2
-  ldx xsave
-  dex
-  dex
-  dex
-  dex
-  clc
-  tya
-  adc #$05
-  adc n
-  sta $02,x
-  ldy #$00
-  tya
-  adc n+1
-  sta $03,x
-  sty $01,x
-  lda (n),y
-  sta $00,x
-  lda #$01
-  pha
-  jmp push
-pfind3:
-  bcs pfind5
-pfind4:
-  iny
-  lda (n),y
-  bpl pfind4
-pfind5:
-  iny
-  lda (n),y
-  tax
-  iny
-  lda (n),y
-  sta n+1
-  stx n
-  ora n 
-  bne pfind1
-  ldx xsave
-  lda #$00
-  pha
-  jmp push
-
+       LDA #2
+       JSR SETUP
+       STX XSAVE
+L249:  LDY #0
+       LDA (N),Y
+       EOR (N+2),Y
+       AND #$3F
+       BNE L281
+L254:  INY
+       LDA (N),Y
+       EOR (N+2),Y
+       ASL A
+       BNE L280
+       BCC L254
+       LDX XSAVE
+       DEX
+       DEX
+       DEX
+       DEX
+       CLC
+       TYA
+       ADC #5
+       ADC N
+       STA 2,X
+       LDY #0
+       TYA
+       ADC N+1
+       STA 3,X
+       STY 1,X
+       LDA (N),Y
+       STA 0,X
+       LDA #1
+       PHA
+       JMP PUSH
+L280:  BCS L284
+L281:  INY
+       LDA (N),Y
+       BPL L281
+L284:  INY
+       LDA (N),Y
+       TAX
+       INY
+       LDA (N),Y
+       STA N+1
+       STX N
+       ORA N
+       BNE L249
+       LDX XSAVE
+       LDA #0
+       PHA
+       JMP PUSH     ; exit false upon reading null link
+;
+;                             ENCLOSE
+;                             SCREEN 20 LINE 1
+;
 .export _rf_code_encl
 
 _rf_code_encl:
-  lda #$02
-  jsr setup
-  txa
-  sec
-  sbc #$08
-  tax
-  sty 3,x
-  sty 1,x
-  dey
-encl1:
-  iny
-  lda (n+2),y
-  cmp n
-  beq encl1
-  sty 4,x
-encl2:
-  lda (n+2),y
-  bne encl4
-  sty 2,x
-  sty 0,x
-  tya
-  cmp 4,x
-  bne encl3
-  inc 2,x
-encl3:
-  jmp _rf_next
-encl4:
-  sty 2,x
-  iny
-  cmp n
-  bne encl2
-  sty 0,x
-  jmp _rf_next
-
+       LDA #2
+       JSR SETUP
+       TXA
+       SEC
+       SBC #8
+       TAX
+       STY 3,X
+       STY 1,X
+       DEY
+L313:  INY
+       LDA (N+2),Y
+       CMP N
+       BEQ L313
+       STY 4,X
+L318:  LDA (N+2),Y
+       BNE L327
+       STY 2,X
+       STY 0,X
+       TYA
+       CMP 4,X
+       BNE L326
+       INC 2,X
+L326:  JMP NEXT
+L327:  STY 2,X
+       INY
+       CMP N
+       BNE L318
+       STY 0,X
+       JMP NEXT
+;
+;                             CMOVE
+;                             SCREEN 22 LINE 1
+;
 .export _rf_code_cmove
 
 _rf_code_cmove:
-  lda #$03
-  jsr setup
-cmove1:
-  cpy n
-  bne cmove2
-  dec n+1
-  bpl cmove2
-  jmp _rf_next
-cmove2:
-  lda (n+4),y
-  sta (n+2),y
-  iny
-  bne cmove1
-  inc n+5
-  inc n+3
-  jmp cmove1
-
+       LDA #3
+       JSR SETUP
+L370:  CPY N
+       BNE L375
+       DEC N+1
+       BPL L375
+       JMP NEXT
+L375:  LDA (N+4),Y
+       STA (N+2),Y
+       INY
+       BNE L370
+       INC N+5
+       INC N+3
+       JMP L370
+;
+;                             U*
+;                             SCREEN 23 LINE 1
+;
 .export _rf_code_ustar
 
 _rf_code_ustar:
-  lda $02,x
-  sta n
-  sty $02,x
-  lda $03,x
-  sta n+1
-  sty $03,x
-  ldy #$10
-ustar1:
-  asl $02,x
-  rol $03,x
-  rol $00,x
-  rol $01,x
-  bcc ustar2
-  clc
-  lda n
-  adc $02,x
-  sta $02,x
-  lda n+1
-  adc $03,x
-  sta $03,x
-  bcc ustar2
-  inc $00,x
-  bne ustar2
-  inc $01,x
-ustar2:
-  dey
-  bne ustar1
-  jmp _rf_next
-
+       LDA 2,X
+       STA N
+       STY 2,X
+       LDA 3,X
+       STA N+1
+       STY 3,X
+       LDY #16       ; for 16 bits
+L396:  ASL 2,X
+       ROL 3,X
+       ROL 0,X
+       ROL 1,X
+       BCC L411
+       CLC
+       LDA N
+       ADC 2,X
+       STA 2,X
+       LDA N+1
+       ADC 3,X
+       STA 3,X
+       ; LDA #0
+       ; ADC 0,X
+       ; STA 0,X
+       BCC L411
+       INC 0,X
+       BNE L411
+       INC 1,X
+L411:  DEY
+       BNE L396
+       JMP NEXT
+;
+;                             U/
+;                             SCREEN 24 LINE 1
+;
 .export _rf_code_uslas
 
 _rf_code_uslas:
-;  lda $04,x
-;  ldy $02,x
-;  sty $04,x
-;  asl
-;  sta $02,x
-;  lda $05,x
-;  ldy $03,x
-;  sty $05,x
-;  rol
-;  sta $03,x
-;  lda #$10
-;  sta n
-;uslas1:
-;  rol $04,x
-;  rol $05,x
-;  sec
-;  lda $04,x
-;  sbc $00,x
-;  tay
-;  lda $05,x
-;  sbc $01,x
-;  bcc uslas2
-;  sty $04,x
-;  sta $05,x
-;uslas2:
-;  rol $02,x
-;  rol $03,x
-;  dec n
-;  bne uslas1
-;  jmp pop
+       ; LDA 4,X
+       ; LDY 2,X
+       ; STY 4,X
+       ; ASL A
+       ; STA 2,X
+       ; LDA 5,X
+       ; LDY 3,X
+       ; STY 5,X
+       ; ROL
+       ; STA 3,X
+       ; LDA #16       ; for 16 bits
+       ; STA N
+; L433:  ROL 4,X
+       ; ROL 5,X
+       ; SEC
+       ; LDA 4,X
+       ; SBC 0,X
+       ; TAY
+       ; LDA 5,X
+       ; SBC 1,X
+       ; BCC L444
+       ; STY 4,X
+       ; STA 5,X
+; L444:  ROL 2,X
+       ; ROL 3,X
+       ; DEC N
+       ; BNE L433
+       ; JMP POP
 
 ; http://6502.org/source/integers/ummodfix/ummodfix.htm
 ; https://dwheeler.com/6502/ummod.txt
 
-  sec
-  lda $02,x
-  sbc $00,x
-  lda $03,x
-  sbc $01,x
-  bcs uslas2
-  lda #$11
-  sta n
+       SEC
+       LDA 2,X
+       SBC 0,X
+       LDA 3,X
+       SBC 1,X
+       BCS uslas2
+       LDA #$11
+       STA N
 uslas1:
-  rol $04,x
-  rol $05,x
-  dec n   
-  beq uslas3
-  rol $02,x 
-  rol $03,x
-  lda #00
-  sta n+1
-  rol n+1
-  sec
-  lda $02,x 
-  sbc $00,x
-  sta n+2 
-  lda $03,x
-  sbc $01,x
-  tay     
-  lda n+1 
-  sbc #$00
-  bcc uslas1
-  lda n+2 
-  sta $02,x 
-  sty $03,x 
-  bcs uslas1
+       ROL 4,X
+       ROL 5,X
+       DEC N
+       BEQ uslas3
+       ROL 2,X 
+       ROL 3,X
+       LDA #0
+       STA N+1
+       ROL N+1
+       SEC
+       LDA 2,X 
+       SBC 0,X
+       STA N+2 
+       LDA 3,X
+       SBC 1,X
+       TAY               
+       LDA N+1 
+       SBC #0
+       BCC uslas1
+       LDA N+2 
+       STA 2,X 
+       STY 3,X 
+       BCS uslas1
 uslas2:
-  lda #$FF    
-  sta $02,x 
-  sta $03,x
-  sta $04,x 
-  sta $05,x
+       LDA #$FF              
+       STA 2,X 
+       STA 3,X
+       STA 4,X 
+       STA 5,X
 uslas3:
-  inx     
-  inx     
-  jmp _rf_code_swap    
-
+       INX               
+       INX               
+       JMP _rf_code_swap
+;
+;                             AND
+;                             SCREEN 25 LINE 2
+;
 .export _rf_code_andd
 
 _rf_code_andd:
-  lda $00,x
-  and $02,x
-  pha
-  lda $01,x
-  and $03,x
-binary:
-  inx
-  inx
-  jmp put
-
+       LDA 0,X
+       AND 2,X
+       PHA
+       LDA 1,X
+       AND 3,X
+BINARY:INX
+       INX
+       JMP PUT
+;
+;                             OR
+;                             SCREEN 25 LINE 7
+;
 .export _rf_code_orr
 
 _rf_code_orr:
-  lda $00,x
-  ora $02,x
-  pha
-  lda $01,x
-  ora $03,x
-  inx
-  inx
-  jmp put
-
+       LDA 0,X
+       ORA 2,X
+       PHA
+       LDA 1,X
+       ORA 3,X
+       INX
+       INX
+       JMP PUT
+;
+;                             XOR
+;                             SCREEN 25 LINE 11
+;
 .export _rf_code_xorr
 
 _rf_code_xorr:
-  lda $00,x
-  eor $02,x
-  pha
-  lda $01,x
-  eor $03,x
-  inx
-  inx
-  jmp put
-
+       LDA 0,X
+       EOR 2,X
+       PHA
+       LDA 1,X
+       EOR 3,X
+       INX
+       INX
+       JMP PUT
+;
+;                             SP@
+;                             SCREEN 26 LINE 1
+;
 .export _rf_code_spat
-.export push0a
+.export PUSH0A
 
 _rf_code_spat:
-  txa
-push0a:
-  pha
-  lda #$00
-  jmp push
-
+       TXA
+PUSH0A:PHA
+       LDA #0
+       JMP PUSH
+;
+;                             SP!
+;                             SCREEN 26 LINE 5
+;
 .export _rf_code_spsto
 
 _rf_code_spsto:
-  ldy #$06
-  lda (_rf_up),y
-  tax
-  jmp _rf_next
-
+       LDY #6
+       LDA (UP),Y   ; load data stack pointer (X-reg) from
+       TAX          ; silent user variable S0.
+       JMP NEXT
+;
+;                             RP!
+;                             SCREEN 26 LINE 8
+;
 .export _rf_code_rpsto
 
 _rf_code_rpsto:
-  stx xsave
-  ldy #$08
-  lda (_rf_up),y
-  tax
-  txs
-  ldx xsave
-  jmp _rf_next
-
+       STX XSAVE    ; load return stack pointer
+       LDY #8       ; (machine stack pointer) from
+       LDA (UP),Y   ; silent user variable R0.
+       TAX
+       TXS
+       LDX XSAVE
+       JMP NEXT
+;
+;                             ;S
+;                             SCREEN 26 LINE 12
+;
 .export _rf_code_semis
 
 _rf_code_semis:
-  pla
-  sta _rf_ip
-  pla
-  sta _rf_ip+1
-  jmp _rf_next
-
+       PLA
+       STA IP
+       PLA
+       STA IP+1
+       JMP NEXT
+;
+;                             LEAVE
+;                             SCREEN 27 LINE 1
+;
 .export _rf_code_leave
 
 _rf_code_leave:
-  stx xsave
-  tsx
-  lda $0101,x
-  sta $0103,x
-  lda $0102,x
-  sta $0104,x
-  ldx xsave
-  jmp _rf_next
-
+       STX XSAVE
+       TSX
+       LDA $101,X
+       STA $103,X
+       LDA $102,X
+       STA $104,X
+       LDX XSAVE
+       JMP NEXT
+;
+;                             >R
+;                             SCREEN 27 LINE 5
+;
 .export _rf_code_tor
 
 _rf_code_tor:
-  lda $01,x
-  pha
-  lda $00,x
-  pha
-  inx
-  inx
-  jmp _rf_next
-
+       LDA 1,X      ; move high byte
+       PHA
+       LDA 0,X      ; then low byte
+       PHA          ; to return stack
+       INX
+       INX          ; popping off data stack
+       JMP NEXT
+;
+;                             R>
+;                             SCREEN 27 LINE 8
+;
 .export _rf_code_fromr
 
 _rf_code_fromr:
-  dex
-  dex
-  pla
-  sta $00,x
-  pla
-  sta $01,x
-  jmp _rf_next
-
+       DEX          ; make room on data stack
+       DEX
+       PLA          ; high byte
+       STA 0,X
+       PLA          ; then low byte
+       STA 1,X      ; restored to data stack
+       JMP NEXT
+;
+;                             R
+;                             SCREEN 27 LINE 11
+;
 .export _rf_code_rr
 
 _rf_code_rr:
-  stx xsave
-  tsx
-  lda $0101,x
-  pha
-  lda $0102,x
-  ldx xsave
-  jmp push
-
+       STX XSAVE
+       TSX          ; address return stack.
+       LDA $101,X   ; copy bottom value
+       PHA          ; to data stack.
+       LDA $102,X
+       LDX XSAVE
+       JMP PUSH
+;
+;                             0=
+;                             SCREEN 28 LINE 2
+;
 .export _rf_code_zequ
 
 _rf_code_zequ:
-  lda $00,x
-  ora $01,x
-  sty $01,x
-  bne zequ1
-  iny
-zequ1:
-  sty $00,x
-  jmp _rf_next
-
+       LDA 0,X
+       ORA 1,X
+       STY 1,X
+       BNE L613
+       INY
+L613:  STY 0,X
+       JMP NEXT
+;
+;                             0<
+;                             SCREEN 28 LINE 6
+;
 .export _rf_code_zless
 
 _rf_code_zless:
-  asl $01,x
-  tya
-  rol a
-  sty $01,x
-  sta $00,x
-  jmp _rf_next
-
+       ASL 1,X
+       TYA
+       ROL A
+       STY 1,X
+       STA 0,X
+       JMP NEXT
+;
+;                             +
+;                             SCREEN 29 LINE 1
+;
 .export _rf_code_plus
 
 _rf_code_plus:
-  clc
-  lda $00,x
-  adc $02,x
-  sta $02,x
-  lda $01,x
-  adc $03,x
-  sta $03,x
-  inx
-  inx
-  jmp _rf_next
-
+       CLC
+       LDA 0,X
+       ADC 2,X
+       STA 2,X
+       LDA 1,X
+       ADC 3,X
+       STA 3,X
+       INX
+       INX
+       JMP NEXT
+;
+;                             D+
+;                             SCREEN 29 LINE 4
+;
 .export _rf_code_dplus
 
 _rf_code_dplus:
-  clc
-  lda $02,x
-  adc $06,x
-  sta $06,x
-  lda $03,x
-  adc $07,x
-  sta $07,x
-  lda $00,x
-  adc $04,x
-  sta $04,x
-  lda $01,x
-  adc $05,x
-  sta $05,x
-  jmp poptwo
-
+       CLC
+       LDA 2,X
+       ADC 6,X
+       STA 6,X
+       LDA 3,X
+       ADC 7,X
+       STA 7,X
+       LDA 0,X
+       ADC 4,X
+       STA 4,X
+       LDA 1,X
+       ADC 5,X
+       STA 5,X
+       JMP POPTWO
+;
+;                             MINUS
+;                             SCREEN 29 LINE 9
+;
 .export _rf_code_minus
 
 _rf_code_minus:
-  sec
-  tya
-  sbc $00,x
-  sta $00,x
-  tya
-  sbc $01,x
-  sta $01,x
-  jmp _rf_next
-
+       SEC
+       TYA
+       SBC 0,X
+       STA 0,X
+       TYA
+       SBC 1,X
+       STA 1,X
+       JMP NEXT
+;
+;                             DMINUS
+;                             SCREEN 29 LINE 12
+;
 .export _rf_code_dminu
 
 _rf_code_dminu:
-  sec
-  tya
-  sbc $02,x
-  sta $02,x
-  tya
-  sbc $03,x
-  sta $03,x
-  jmp _rf_code_minus+1
-
+       SEC
+       TYA
+       SBC 2,X
+       STA 2,X
+       TYA
+       SBC 3,X
+       STA 3,X
+       JMP _rf_code_minus+1
+;
+;                             OVER
+;                             SCREEN 30 LINE 1
+;
 .export _rf_code_over
 
 _rf_code_over:
-  lda $02,x
-  pha
-  lda $03,x
-  jmp push
-
+       LDA 2,X
+       PHA
+       LDA 3,X
+       JMP PUSH
+;
+;                             DROP
+;                             SCREEN 30 LINE 4
+;
 .export _rf_code_drop
-
+;
+;                             SWAP
+;                             SCREEN 30 LINE 8
+;
 .export _rf_code_swap
 
 _rf_code_swap:
-  lda 2,x
-  pha
-  lda 0,x
-  sta 2,x
-  lda 3,x
-  ldy 1,x
-  sty 3,x
-  jmp put
-
+       LDA 2,X
+       PHA
+       LDA 0,X
+       STA 2,X
+       LDA 3,X
+       LDY 1,X
+       STY 3,X
+       JMP PUT
+;
+;                             DUP
+;                             SCREEN 30 LINE 12
+;
 .export _rf_code_dup
 
 _rf_code_dup:
-  lda 0,x
-  pha
-  lda 1,x
-  jmp push
-
+       LDA 0,X
+       PHA
+       LDA 1,X
+       JMP PUSH
+;
+;                             +!
+;                             SCREEN 31 LINE 2
+;
 .export _rf_code_pstor
 
 _rf_code_pstor:
-  clc
-  lda (0,x)
-  adc 2,x
-  sta (0,x)
-  inc 0,x
-  bne pstor1
-  inc 1,x
-pstor1:
-  lda (0,x)
-  adc 3,x
-  sta (0,x)
-  jmp poptwo
-
+       CLC
+       LDA (0,X)    ; fetch 16-bit value addressed
+       ADC 2,X      ; by bottom of stack, adding to
+       STA (0,X)    ; second item on stack, and
+       INC 0,X      ; and return to memory.
+       BNE L754
+       INC 1,X
+L754:  LDA (0,X)
+       ADC 3,X
+       STA (0,X)
+       JMP POPTWO
+;
+;                             TOGGLE
+;                             SCREEN 31 LINE 7
+;
 .export _rf_code_toggl
 
 _rf_code_toggl:
-  lda (2,x)
-  eor 0,x
-  sta (2,x)
-  jmp poptwo
-
+       LDA (2,X)    ; complement bits in memory address
+       EOR 0,X      ; second on stack, by pattern
+       STA (2,X)    ; on bottom of stack.
+       JMP POPTWO
+;
+;                             @
+;                             SCREEN 32 LINE 1
+;
 .export _rf_code_at
 
 _rf_code_at:
-  lda (0,x)
-  pha
-  inc 0,x
-  bne at1
-  inc 1,x
-at1:
-  lda (0,x)
-  jmp put
-
+       LDA (0,X)
+       PHA
+       INC 0,X
+       BNE L781
+       INC 1,X
+L781:  LDA (0,X)
+       JMP PUT
+;
+;                             C@
+;                             SCREEN 32 LINE 5
+;
 .export _rf_code_cat
 
 _rf_code_cat:
-  lda (0,x)
-  sta 0,x
-  sty 1,x
-  jmp _rf_next
-
+       LDA (0,X)    ; fetch byte addressed by bottom
+       STA 0,X      ; of stack to stack, zeroing
+       STY 1,X      ; the high byte.
+       JMP NEXT
+;
+;                             !
+;                             SCREEN 32 LINE 8
+;
 .export _rf_code_store
 
 _rf_code_store:
-  lda 2,x
-  sta (0,x)
-  inc 0,x
-  bne store1
-  inc 1,x
-store1:
-  lda 3,x
-  sta (0,x)
-  jmp poptwo
-
+       LDA 2,X
+       STA (0,X)    ; store second 16-bit value on stack
+       INC 0,X      ; to memory as addresses by
+       BNE L806
+       INC 1,X      ; bottom of stack.
+L806:  LDA 3,X
+       STA (0,X)
+       JMP POPTWO
+;
+;                             C!
+;                             SCREEN 32 LINE 12
+;
 .export _rf_code_cstor
 
 _rf_code_cstor:
-  lda 2,x
-  sta (0,x)
-  jmp poptwo
+       LDA 2,X
+       STA (0,X)
+       JMP POPTWO
 
 .export _rf_code_docol
 
 _rf_code_docol:
-  lda _rf_ip+1
-  pha
-  lda _rf_ip
-  pha
-  clc
-  lda _rf_w
-  adc #$02
-  sta _rf_ip
-  tya
-  adc _rf_w+1
-  sta _rf_ip+1
-  jmp _rf_next
+       LDA IP+1
+       PHA
+       LDA IP
+       PHA
+       ; JSR TCOLON     ; Mark the start of a traced : def.
+       CLC
+       LDA W
+       ADC #2
+       STA IP
+       TYA
+       ADC W+1
+       STA IP+1
+       JMP NEXT
 
 .export _rf_code_docon
 
 _rf_code_docon:
-  ldy #$02
-  lda (_rf_w),y
-  pha
-  iny
-  lda (_rf_w),y
-  jmp push
+       LDY #2
+       LDA (W),Y
+       PHA
+       INY
+       LDA (W),Y
+       JMP PUSH
 
 .export _rf_code_dovar
 
 _rf_code_dovar:
-  clc
-  lda _rf_w
-  adc #$02
-  pha
-  tya
-  adc _rf_w+1
-  jmp push
+       CLC
+       LDA W
+       ADC #2
+       PHA
+       TYA
+       ADC W+1
+       JMP PUSH
 
 .export _rf_code_douse
 
 _rf_code_douse:
-  ldy #$02
-  clc
-  lda (_rf_w),y
-  adc _rf_up
-  pha
-  lda #$00
-  adc _rf_up+1
-  jmp push
+       LDY #2
+       CLC
+       LDA (W),Y
+       ADC UP
+       PHA
+       LDA #0
+       ADC UP+1
+       JMP PUSH
 
 .export _rf_code_dodoe
 
 _rf_code_dodoe:
-  lda _rf_ip+1
-  pha
-  lda _rf_ip
-  pha
-  ldy #$02
-  lda (_rf_w),y
-  sta _rf_ip
-  iny
-  lda (_rf_w),y
-  sta _rf_ip+1
-  clc
-  lda _rf_w
-  adc #$04
-  pha
-  lda _rf_w+1
-  adc #$00
-  jmp push
+       LDA IP+1
+       PHA
+       LDA IP
+       PHA
+       LDY #2
+       LDA (W),Y
+       STA IP
+       INY
+       LDA (W),Y
+       STA IP+1
+       CLC
+       LDA W
+       ADC #4
+       PHA
+       LDA W+1
+       ADC #0
+       JMP PUSH
 
 .export _rf_code_cold
 
@@ -869,80 +992,74 @@ _rf_code_cold:
   ; model source compiled these values inline using the 
   ; Forth 6502 assembler, which we cannot do. The rest of
   ; the code is close to the original.
-cold1:
-  lda RF_ORIGIN+$0022           ; move FORTH field to cold3 and cold4
-  sta cold3+1
-  sta cold4+1
-  lda RF_ORIGIN+$0023
-  sta cold3+2
-  sta cold4+2
+cold1: LDA RF_ORIGIN+$0022      ; move FORTH field to cold3 and cold4
+       STA cold3+1
+       STA cold4+1
+       LDA RF_ORIGIN+$0023
+       STA cold3+2
+       STA cold4+2
 
-  inc cold4+1                   ; increment cold4 by 1
-  bne cold2
-  inc cold4+2
+       INC cold4+1              ; increment cold4 by 1
+       BNE cold2
+       INC cold4+2
 
-cold2:
-  lda RF_ORIGIN+$0025           ; move ABORT PFA to cold7, cold8
-  sta cold7+1
-  lda RF_ORIGIN+$0024
-  sta cold8+1
+cold2: LDA RF_ORIGIN+$0025      ; move ABORT PFA to cold7, cold8
+       STA cold7+1
+       LDA RF_ORIGIN+$0024
+       STA cold8+1
 
-  lda RF_ORIGIN+$000C           ; FORTH vocabulary init
-cold3:
-  sta $FFFF                     ; self modified
-  lda RF_ORIGIN+$000D
-cold4:
-  sta $FFFF                     ; self modified
-  ldy #$15                      ; cold, copy 11 words
-  bne cold5
-warm:
-  ldy #$0F                      ; warm, copy 8 words
-cold5:
-  lda RF_ORIGIN+$0010           ; UP init
-  sta _rf_up
-  lda RF_ORIGIN+$0011
-  sta _rf_up+1
-cold6:
-  lda RF_ORIGIN+$000C,y         ; USER variables init
-  sta (_rf_up),y
-  dey
-  bpl cold6
-cold7:
-  lda #$FF                      ; self modified
-  sta _rf_ip+1                  ; IP init to ABORT
-cold8:
-  lda #$FF                      ; self modified
-  sta _rf_ip
-  cld
-  lda #$6C                      ; set JMP
-  sta _rf_w-1
-  jmp _rf_code_rpsto            ; jump to RP!
-
+       LDA RF_ORIGIN+$0C        ; FORTH vocabulary init
+cold3: STA $FFFF                ; self modified
+       LDA RF_ORIGIN+$0D
+cold4: STA $FFFF                ; self modified
+       LDY #$15                 ; cold, copy 11 words
+       BNE L2433
+WARM:  LDY #$0F                 ; warm, copy 8 words
+L2433: LDA RF_ORIGIN+$10        ; UP init
+       STA UP
+       LDA RF_ORIGIN+$11
+       STA UP+1
+L2437: LDA RF_ORIGIN+$0C,Y      ; USER variables init
+       STA (UP),Y
+       DEY
+       BPL L2437
+cold7: LDA #$FF                 ; self modified
+       STA IP+1                 ; IP init to ABORT
+cold8: LDA #$FF                 ; self modified
+       STA IP
+       CLD
+       LDA #$6C                 ; set JMP
+       STA W-1
+       JMP _rf_code_rpsto       ; jump to RP!
+;
+;                             S->D
+;                             SCREEN 56 LINE 1
+;
 .export _rf_code_stod
 
 _rf_code_stod:
-  lda 1,x
-  bpl stod1
-  dey
+       LDA 1,X
+       BPL stod1
+       DEY
 stod1:
-  tya
-  pha
-  jmp push
+       TYA
+       PHA
+       JMP PUSH
 
 .export _rf_code_cl
 
 _rf_code_cl:
-  lda #$02
-  pha
-  tya
-  jmp push
+       LDA #2
+       PHA
+       TYA
+       JMP PUSH
 
 .export _rf_code_cs
 
 _rf_code_cs:
-  asl $00,x
-  rol $01,x
-  jmp _rf_next
+       ASL 0,X
+       ROL 1,X
+       JMP NEXT
 
 .export _rf_code_ln
 
@@ -951,10 +1068,10 @@ _rf_code_ln := _rf_next
 .export _rf_code_xt
 
 _rf_code_xt:
-  sty _rf_fp
-  sty _rf_fp+1
-  jsr _rf_start
-  rts
+       STY _rf_fp
+       STY _rf_fp+1
+       JSR _rf_start
+       RTS
 
 .bss
 
