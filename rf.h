@@ -465,8 +465,6 @@ void rf_code_cold(void);
 
 void rf_code_stod(void);
 
-/* FOR EMIT, KEY, CR, ?TERM */
-
 void rf_code_emit(void);
 
 void rf_code_key(void);
