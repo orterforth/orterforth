@@ -16,6 +16,7 @@ void rf_code_emit(void)
 {
   RF_START;
   {
+    /* pop char, keep 7 bits */
     int c = *(rf_sp++) & 0x7F;
     
     /* write char, wait if serial disconnected */
@@ -29,6 +30,7 @@ void rf_code_emit(void)
       putchar(c);
     }
 
+    /* advance OUT */
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
@@ -40,19 +42,19 @@ void rf_code_key(void)
   {
     int c;
 
-    /* read char, wait if serial disconnected */
-    /* skip disc input */
-    do {
-      if ((c = getchar()) == -1) {
+    /* read char, skip disc input, wait if serial disconnected */
+    while ((c = getchar()) == -1 || c & 0x80) {
+      if (c == -1) {
         RF_SLEEP(1000);
       }
-    } while (c == -1 || c & 0x80);
+    }
 
     /* LF to CR */
     if (c == 10) {
       c = 13;
     }
 
+    /* push char, keep 7 bits */
     *(--rf_sp) = (c & 0x7F);
   }
   RF_JUMP_NEXT;
@@ -79,22 +81,28 @@ void rf_mux_disc_read(char *p, unsigned char len)
   int c;
 
   for (; len; len--) {
-    /* skip keyboard input */
-    do {
-      if ((c = getchar()) == -1) {
+
+    /* read char, skip keyboard input, wait if serial disconnected */
+    while ((c = getchar()) == -1 || !(c & 0x80)) {
+      if (c == -1) {
         RF_SLEEP(1000);
       }
-    } while (c == -1 || !(c & 0x80));
+    }
+
+    /* write char, keep 7 bits */
     *(p++) = c & 0x7F;
   }
 }
 
-void rf_mux_disc_write(char *c, unsigned char len)
+void rf_mux_disc_write(char *p, unsigned char len)
 {
   for (; len; len--) {
-    while (putchar(*c | 0x80) == -1) {
+
+    /* write char, set bit 7, wait if serial disconnected */
+    while (putchar(*p | 0x80) == -1) {
       RF_SLEEP(1000);
     }
-    c++;
+
+    p++;
   }
 }
