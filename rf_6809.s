@@ -1,12 +1,5 @@
 	SECTION	code
 
-_rf_ip IMPORT
-_rf_fp IMPORT
-_rf_rp IMPORT
-_rf_sp IMPORT
-_rf_up IMPORT
-_rf_w IMPORT
-
 * cmoc - S = stack pointer, U = base pointer.
 * cmoc creates no stack frame if not necessary,
 * so we need to detect whether it did. We assume
