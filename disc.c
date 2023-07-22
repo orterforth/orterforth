@@ -9,6 +9,8 @@
 #include "orter/tcp.h"
 #include "persci.h"
 
+#define CHECK(exit, function) exit = (function); if (exit) return exit;
+
 #define RF_BBLK 128
 
 static char line[66];
@@ -48,8 +50,6 @@ static int disc_create_line(char *block)
   /* ok */
   return 0;
 }
-
-#define CHECK(exit, function) exit = (function); if (exit) return exit;
 
 static int disc_create(void)
 {
@@ -163,7 +163,10 @@ static size_t disc_rd_mux(char *off, size_t len)
 {
   size_t i, j;
 
+  /* read from disc */
   i = disc_rd(off, len);
+
+  /* set bit 7 */
   for (j = 0; j < i; j++) {
     off[j] |= 0x80;
   }
@@ -196,7 +199,7 @@ static size_t mux_wr(char *off, size_t len)
       j++;
       /* TODO consistent log mechanism */
       if (log) {
-        fputc(c == 0x04 ? 0x0A : c, stderr);
+        fputc(c == RF_ASCII_EOT ? 0x0A : c, stderr);
       }
     } else {
       mux_out_off[k++] = c;
@@ -242,7 +245,7 @@ static int disc_pty(int argc, char **argv)
 {
   int exit = 0;
 
-  /* serial port */
+  /* open serial port */
   CHECK(exit, orter_pty_open(argv[2]));
 
   /* run */
@@ -257,7 +260,7 @@ static int disc_serial(int argc, char **argv)
 {
   int exit = 0;
 
-  /* serial port */
+  /* open serial port */
   CHECK(exit, orter_serial_open(argv[2], atoi(argv[3])));
 
   /* run */
@@ -275,7 +278,7 @@ static int disc_mux(int argc, char **argv)
   /* stdin/stdout */
   CHECK(exit, orter_io_std_open());
 
-  /* serial port */
+  /* open serial port */
   exit = orter_serial_open(argv[2], atoi(argv[3]));
   if (exit) {
     orter_io_std_close();
@@ -324,7 +327,7 @@ static int disc_tcp(int argc, char **argv)
 {
   int exit = 0;
 
-  /* open */
+  /* open socket */
   CHECK(exit, orter_tcp_open(atoi(argv[2])));
 
   /* run */
@@ -368,6 +371,7 @@ int main(int argc, char *argv[])
   }
 
   /* Usage */
+  /* TODO add pty when appropriate */
   fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n"
         "       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
   fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n"
