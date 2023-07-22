@@ -35,24 +35,25 @@ IP     :=$80 ;      Xx          interpretive pointer
 W      :=$83 ;     xXx          code field pointer
 UP     :=$85 ;      Xx          user area pointer
 XSAVE  :=$87 ;      X           temporary for X register
+ORIG   :=RF_ORIGIN ; origin of FORTH's dictionary.
 
 .exportzp N
 .exportzp UP
 .exportzp XSAVE
 
-temps := $76
+ssave := $76
 
 .export _rf_ip: near
 
-_rf_ip := $80
+_rf_ip := IP
 
 .export _rf_w: near
 
-_rf_w := $83                    ; _rf_w-1 must be reserved for $6C JMP (W)
+_rf_w := W
 
 .export _rf_up: near
 
-_rf_up := $85
+_rf_up := UP
 
 .export _rf_trampoline
 
@@ -66,31 +67,30 @@ trampoline1:
        PHA
        LDA #<(_rf_trampoline-1)
        PHA
-       TSX                      ; save S to temp
-       STX temps
-       LDX _rf_rp               ; set S to RP-1 (high byte is $01)
+       TSX                      ; save S
+       STX ssave
+       LDX _rf_rp               ; RP-1 to S (high byte is $01)
        DEX
        TXS
-       LDX _rf_sp               ; set X to SP (high byte is $00)
+       LDX _rf_sp               ; SP to X (high byte is $00)
        LDY #0                   ; set Y to $00, this is expected
-       JMP (_rf_fp)             ; jump to FP and return to trampoline
+       JMP (_rf_fp)             ; jump to FP, return to _rf_trampoline
 
 .export _rf_start
 
 _rf_start:
-       STX _rf_sp               ; restore SP from X
+       STX _rf_sp               ; X to SP
        PLA                      ; save return address (from JSR _rf_start)
        TAY
        PLA
-       TSX                      ; restore RP from S+1
+       TSX                      ; S+1 to RP
        INX
        STX _rf_rp
-       LDX temps                ; restore S from temp
+       LDX ssave                ; restore S
        TXS
        PHA                      ; restore return address on stack
        TYA
        PHA
-start1:
        RTS                      ; return to C
 
 .export _rf_code_lit
@@ -276,8 +276,7 @@ _rf_code_xdo:
        LDA 0,X
        PHA
 ;
-POPTWO:
-       INX
+POPTWO:INX
        INX
 ;
 _rf_code_drop:
@@ -511,8 +510,7 @@ _rf_code_uslas:
        BCS uslas2
        LDA #$11
        STA N
-uslas1:
-       ROL 4,X
+uslas1:ROL 4,X
        ROL 5,X
        DEC N
        BEQ uslas3
@@ -535,14 +533,12 @@ uslas1:
        STA 2,X 
        STY 3,X 
        BCS uslas1
-uslas2:
-       LDA #$FF              
+uslas2:LDA #$FF              
        STA 2,X 
        STA 3,X
        STA 4,X 
        STA 5,X
-uslas3:
-       INX               
+uslas3:INX               
        INX               
        JMP _rf_code_swap
 ;
@@ -987,50 +983,48 @@ _rf_code_dodoe:
 .export _rf_code_cold
 
 _rf_code_cold:
-  ; This preamble modifies the following code to hold the
-  ; parameter field addresses required. The original Forth
-  ; model source compiled these values inline using the 
-  ; Forth 6502 assembler, which we cannot do. The rest of
-  ; the code is close to the original.
-cold1: LDA RF_ORIGIN+$0022      ; move FORTH field to cold3 and cold4
+; This preamble modifies the following code to hold the
+; parameter field addresses required. The original Forth
+; model source compiled these values inline using the 
+; Forth 6502 assembler, which we cannot do. The rest of
+; the code is close to the original.
+cold1: LDA ORIG+$22             ; move FORTH field to cold3 and cold4
        STA cold3+1
        STA cold4+1
-       LDA RF_ORIGIN+$0023
+       LDA ORIG+$23
        STA cold3+2
        STA cold4+2
-
        INC cold4+1              ; increment cold4 by 1
        BNE cold2
        INC cold4+2
-
-cold2: LDA RF_ORIGIN+$0025      ; move ABORT PFA to cold7, cold8
+cold2: LDA ORIG+$25             ; move ABORT PFA to cold7, cold8
        STA cold7+1
-       LDA RF_ORIGIN+$0024
+       LDA ORIG+$24
        STA cold8+1
 
-       LDA RF_ORIGIN+$0C        ; FORTH vocabulary init
+       LDA ORIG+$0C    ; from cold start area
 cold3: STA $FFFF                ; self modified
-       LDA RF_ORIGIN+$0D
+       LDA ORIG+$0D
 cold4: STA $FFFF                ; self modified
-       LDY #$15                 ; cold, copy 11 words
+       LDY #$15
        BNE L2433
-WARM:  LDY #$0F                 ; warm, copy 8 words
-L2433: LDA RF_ORIGIN+$10        ; UP init
+WARM:  LDY #$0F
+L2433: LDA ORIG+$10
        STA UP
-       LDA RF_ORIGIN+$11
+       LDA ORIG+$11
        STA UP+1
-L2437: LDA RF_ORIGIN+$0C,Y      ; USER variables init
+L2437: LDA ORIG+$0C,Y
        STA (UP),Y
        DEY
        BPL L2437
 cold7: LDA #$FF                 ; self modified
-       STA IP+1                 ; IP init to ABORT
+       STA IP+1
 cold8: LDA #$FF                 ; self modified
        STA IP
        CLD
-       LDA #$6C                 ; set JMP
+       LDA #$6C
        STA W-1
-       JMP _rf_code_rpsto       ; jump to RP!
+       JMP _rf_code_rpsto ; And off we go!
 ;
 ;                             S->D
 ;                             SCREEN 56 LINE 1
