@@ -194,9 +194,10 @@ _rf_code_zbran:
        LDA $FE,X
        ORA $FF,X
        BEQ _rf_code_bran
+;
 BUMP:  CLC
        LDA IP
-       ADC #$02
+       ADC #2
        STA IP
        BCC L122
        INC IP+1
@@ -574,6 +575,7 @@ _rf_code_andd:
        PHA
        LDA 1,X
        AND 3,X
+;
 BINARY:INX
        INX
        JMP PUT
@@ -616,6 +618,7 @@ _rf_code_xorr:
 
 _rf_code_spat:
        TXA
+;
 PUSH0A:PHA
        LDA #0
        JMP PUSH
@@ -933,7 +936,8 @@ _rf_code_cstor:
 .export _rf_code_docol
 
 _rf_code_docol:
-       LDA IP+1
+;
+DOCOL: LDA IP+1
        PHA
        LDA IP
        PHA
@@ -950,7 +954,8 @@ _rf_code_docol:
 .export _rf_code_docon
 
 _rf_code_docon:
-       LDY #2
+;
+DOCON: LDY #2
        LDA (W),Y
        PHA
        INY
@@ -960,7 +965,8 @@ _rf_code_docon:
 .export _rf_code_dovar
 
 _rf_code_dovar:
-       CLC
+;
+DOVAR: CLC
        LDA W
        ADC #2
        PHA
@@ -971,7 +977,8 @@ _rf_code_dovar:
 .export _rf_code_douse
 
 _rf_code_douse:
-       LDY #2
+;
+DOUSE: LDY #2
        CLC
        LDA (W),Y
        ADC UP
@@ -983,7 +990,8 @@ _rf_code_douse:
 .export _rf_code_dodoe
 
 _rf_code_dodoe:
-       LDA IP+1
+;
+DODOE: LDA IP+1
        PHA
        LDA IP
        PHA
