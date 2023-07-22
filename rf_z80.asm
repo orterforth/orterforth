@@ -105,37 +105,32 @@ _rf_z80_sp:
 PUBLIC _rf_start
 
 _rf_start:                      ; C code calls this to switch from registers to C variables
-
   pop hl                        ; save C return address
 IFDEF USEIY
 IFDEF SPECTRUM
   ld iy, $5C3A                  ; restore IY (ZX Spectrum)
 ENDIF
 ENDIF
-  ld (_rf_sp), sp               ; switch SP
+  ld (_rf_sp), sp               ; sp to SP
   ld sp, (_rf_z80_sp)
-  dec de                        ; switch W
+  dec de                        ; de to W
   ld (_rf_w), de
-  ld (_rf_ip), bc               ; switch IP
-
+  ld (_rf_ip), bc               ; bc to IP
   jp (hl)                       ; return to C
 
 PUBLIC _rf_trampoline
 
 _rf_trampoline:                 ; C code calls this to iterate over function pointers - assumes a switch into assembler
-
   ld hl, (_rf_fp)               ; returns if fp is null
   ld a, h
   or l
   ret z
-
   ld de, _rf_trampoline         ; fp will return to this address
   push de
-
-  ld bc, (_rf_ip)               ; switch IP
-  ld de, (_rf_w)                ; switch W
+  ld bc, (_rf_ip)               ; IP to bc
+  ld de, (_rf_w)                ; W to de
   inc de
-  ld (_rf_z80_sp), sp           ; switch SP
+  ld (_rf_z80_sp), sp           ; SP to sp
   ld sp, (_rf_sp)
   ld ix, next                   ; set IX
 IFDEF USEIY
