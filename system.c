@@ -50,6 +50,10 @@ void rf_code_emit(void)
   RF_JUMP_NEXT;
 }
 
+#ifdef RF_SYSTEM_POSIX
+static struct termios tp, save;
+#endif
+
 void rf_code_key(void)
 {
   RF_START;
@@ -57,12 +61,11 @@ void rf_code_key(void)
     int c;
 
     if (rf_system_auto_cmd && *rf_system_auto_cmd) {
+      /* read auto boot command */
       c = *(rf_system_auto_cmd++);
     } else {
 
 #ifdef RF_SYSTEM_POSIX
-      struct termios tp, save;
-
       if (isatty(0)) {
         /* save terminal settings */
         if (tcgetattr(0, &tp) == -1) {
