@@ -37,15 +37,15 @@ c64-hw : c64/hw.prg
 .PHONY : c64-run
 c64-run : c64/orterforth.prg $(DR0) $(DR1)
 
-	# $(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
+	$(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
 
-	# x64 \
-	# 	-kernal roms/c64p/901227-02.u4 \
-	# 	-basic roms/c64p/901226-01.u3 \
-	# 	-chargen roms/c64p/901225-01.u5 \
-	# 	+warp +saveres +confirmonexit \
-	# 	-userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 \
-	# 	-autostartprgmode 1 -autostart $<
+	x64 \
+		-kernal roms/c64p/901227-02.u4 \
+		-basic roms/c64p/901226-01.u3 \
+		-chargen roms/c64p/901225-01.u5 \
+		+warp +saveres +confirmonexit \
+		-userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 \
+		-autostartprgmode 1 -autostart $<
 
 # general assemble rule
 c64/%.o : c64/%.s
@@ -67,7 +67,7 @@ c64/hw.prg : hw.c | c64
 # inst binary
 c64/inst.prg : c64/main.o c64/rf.o c64/inst.o c64/system.o c64/c64-up2400.o | c64
 
-	cl65 -O -t c64 -o $@ -m c64/inst.map $^
+	cl65 -O -t c64 -C target/c64/c64.cfg -o $@ -m c64/inst.map $^
 
 c64/inst.s : inst.c inst.h rf.h target/c64/c64.inc | c64
 
@@ -101,12 +101,12 @@ c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 
 	@$(WAITUNTILSAVED) $@.io
 
-#	@printf '* \033[1;33mStopping Vice\033[0;0m\n'
-#	@sh scripts/stop.sh vice.pid
+	@printf '* \033[1;33mStopping Vice\033[0;0m\n'
+	@sh scripts/stop.sh vice.pid
 
-#	$(STOPDISC)
+	$(STOPDISC)
 
-#	mv $@.io $@
+	mv $@.io $@
 
 c64/orterforth.prg : c64/orterforth
 
