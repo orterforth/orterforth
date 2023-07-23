@@ -32,7 +32,6 @@ c64-hw : c64/hw.prg
 		-chargen roms/c64p/901225-01.u5 \
 		+warp +saveres +confirmonexit -autostartprgmode 1 -autostart $<
 
-# TODO diagnose orterforth.prg
 # TODO cfg file with sections for inst
 .PHONY : c64-run
 c64-run : c64/orterforth.prg $(DR0) $(DR1)
@@ -53,9 +52,7 @@ c64/%.o : c64/%.s
 	ca65 -t c64 -o $@ $<
 
 # serial driver
-# TODO diagnose issue with driver built from source
-#c64/c64-up2400.s : tools/github.com/nanoflite/c64-up2400-cc65/driver/c64-up2400.ser
-c64/c64-up2400.s : target/c64/c64-up2400.ser
+c64/c64-up2400.s : tools/github.com/nanoflite/c64-up2400-cc65/driver/c64-up2400.ser
 
 	co65 --code-label _c64_serial -o $@ $<
   
