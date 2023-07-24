@@ -1,9 +1,7 @@
 /* SYSTEM BINDINGS */
 
-/*
+
 #include <cbm.h>
-*/
-#include <conio.h>
 #include <serial.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -22,9 +20,6 @@ extern char c64_serial;
   
 void rf_init(void)
 {
-  /* conio enable cursor */
-  cursor(1);
-
   /* init serial */
   if (ser_install(&c64_serial)) {
   }
@@ -41,14 +36,17 @@ void rf_code_emit(void)
     uint8_t c;
     
     c = RF_SP_POP & 0x7F;
+
     /* PETSCII swap case */
     if (((c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z')) {
       c ^= 0x20;
     }
     /* BS */
-    if (c == 0x08) {
+    else if (c == 0x08) {
       c = 0x14;
     }
+
+    /* TODO KERNAL */
     putchar(c);
     RF_USER_OUT++;
   }
@@ -61,8 +59,33 @@ void rf_code_key(void)
   {
     int c;
 
-    /* get key */
-    c = cgetc();
+    /* show cursor */
+    *((uint8_t *) 204) = 0;
+    *((uint8_t *) 647) = 1;
+    *((uint8_t *) 207) = 0;
+
+    /* wait for key */
+    while (!(c = cbm_k_getin())) {
+    }
+
+    /* hide cursor */
+    *((uint8_t *) 647) = 14;
+    *((uint8_t *) 206) = 32;
+    *((uint8_t *) 204) = 255;
+    *((uint8_t *) 207) = 0;
+
+    /* handle shift+return */
+    if (c == 0x8D) {
+      c = 0x0D;
+    }
+    /* PETSCII map into ASCII range */
+    else if (c & 0x80) {
+      c ^= 0xA0;
+    }
+    /* PETSCII swap case */
+    if (((c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z')) {
+      c ^= 0x20;
+    }
 
     /* return key */
     RF_SP_PUSH(c & 0x7F);
