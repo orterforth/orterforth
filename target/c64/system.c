@@ -3,7 +3,6 @@
 
 #include <cbm.h>
 #include <serial.h>
-#include <stdio.h>
 #include <stdint.h>
 
 #include "../../rf.h"
@@ -46,8 +45,8 @@ void rf_code_emit(void)
       c = 0x14;
     }
 
-    /* TODO KERNAL */
-    putchar(c);
+    cbm_k_bsout(c);
+
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
@@ -74,16 +73,8 @@ void rf_code_key(void)
     *((uint8_t *) 204) = 255;
     *((uint8_t *) 207) = 0;
 
-    /* handle shift+return */
-    if (c == 0x8D) {
-      c = 0x0D;
-    }
-    /* PETSCII map into ASCII range */
-    else if (c & 0x80) {
-      c ^= 0xA0;
-    }
-    /* PETSCII swap case */
-    if (((c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z')) {
+    /* PETSCII correct case */
+    if (c >= 'A' && c <= 'Z') {
       c ^= 0x20;
     }
 
@@ -103,7 +94,7 @@ void rf_code_qterm(void)
 void rf_code_cr(void)
 {
   RF_START;
-  putchar('\r');
+  cbm_k_bsout('\r');
   RF_JUMP_NEXT;
 }
 

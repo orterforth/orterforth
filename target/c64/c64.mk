@@ -1,6 +1,6 @@
 # === Commodore 64 ===
 
-C64ORIGIN := 0x3300
+C64ORIGIN := 0x2E80
 
 c64 :
 
@@ -36,9 +36,9 @@ c64-hw : c64/hw.prg
 .PHONY : c64-run
 c64-run : c64/orterforth.prg $(DR0) $(DR1)
 
-	$(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
+	@$(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
 
-	x64 \
+	@x64 \
 		-kernal roms/c64p/901227-02.u4 \
 		-basic roms/c64p/901226-01.u3 \
 		-chargen roms/c64p/901225-01.u5 \
@@ -83,12 +83,13 @@ c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 
 	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $(shell $(STAT) c64/inst.prg)
 
-	rm -f $@.io
-	touch $@.io
+	@$(EMPTYDR1FILE) $@.io
 
-	$(START) disc.pid $(DISC) tcp 25232 model.img $@.io
+	@printf '* \033[1;33mStarting disc\033[0;0m\n'
+	@$(START) disc.pid $(DISC) tcp 25232 model.img $@.io
 
-	$(START) vice.pid x64 \
+	@printf '* \033[1;33mStarting Vice\033[0;0m\n'
+	@$(START) vice.pid x64 \
 		-kernal roms/c64p/901227-02.u4 \
 		-basic roms/c64p/901226-01.u3 \
 		-chargen roms/c64p/901225-01.u5 \
@@ -101,9 +102,9 @@ c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 	@printf '* \033[1;33mStopping Vice\033[0;0m\n'
 	@sh scripts/stop.sh vice.pid
 
-	$(STOPDISC)
+	@$(STOPDISC)
 
-	mv $@.io $@
+	@mv $@.io $@
 
 c64/orterforth.prg : c64/orterforth
 
