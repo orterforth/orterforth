@@ -1,0 +1,28 @@
+Building for the Commodore 64
+=============================
+
+You will need:
+
+ * cc65 compiler    : https://cc65.github.io
+ * serial driver    : https://github.com/nanoflite/c64-up2400-cc65
+ * VICE emulator    : https://vice-emu.sourceforge.io/
+ * C64 ROM files at : roms/c64p/901227-02.u4
+                      roms/c64p/901226-01.u3
+                      roms/c64p/901225-01.u5
+
+To build using VICE, call:
+
+ make TARGET=c64
+
+Target files are:
+
+ c64/orterforth     (pure binary)
+ c64/orterforth.prg (PRG file)
+
+To run in VICE, call:
+
+ make run TARGET=c64
+
+To specify disc images, use:
+
+ make run TARGET=c64 [...] [DR0=...] [DR1=...]

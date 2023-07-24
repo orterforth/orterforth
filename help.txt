@@ -46,6 +46,7 @@ targets, run:
 where <target> is one of:
 
   bbc
+  c64
   pico
   ql
   rc2014
