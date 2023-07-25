@@ -1,6 +1,6 @@
 # === Commodore 64 ===
 
-C64ORIGIN := 0x2E80
+C64ORIGIN := 0x2300
 
 c64 :
 
@@ -68,7 +68,12 @@ c64/inst.prg : c64/main.o c64/rf.o c64/inst.o c64/system.o c64/c64-up2400.o | c6
 
 c64/inst.s : inst.c inst.h rf.h target/c64/c64.inc | c64
 
-	cc65 -O -t c64 -DRF_ORIGIN=$(C64ORIGIN) -o $@ $<
+	cc65 -O -t c64 \
+		--bss-name INST \
+		--code-name INST \
+		--data-name INST \
+		--rodata-name INST \
+		-DRF_ORIGIN=$(C64ORIGIN) -o $@ $<
 
 c64/main.s : main.c inst.h rf.h target/c64/c64.inc | c64
 
@@ -81,7 +86,7 @@ c64/orterforth : c64/orterforth.hex | $(ORTER)
 
 c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 
-	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $(shell $(STAT) c64/inst.prg)
+	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $$(( 0x$(shell echo "$$(grep '^BSS' c64/inst.map)" | cut -c '33-36') - 0x801 ))
 
 	@$(EMPTYDR1FILE) $@.io
 
