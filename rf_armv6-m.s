@@ -33,7 +33,7 @@ trampoline1:
   blx   r0
   b     trampoline1
 trampoline2:
-  pop  {r3, r4, r5, r6, r7, pc}
+  pop   {r3, r4, r5, r6, r7, pc}
 
   .align 4
 fpp:
@@ -454,8 +454,6 @@ rf_code_uslas:
                                 @ MSW OF DIVIDEND
                                 @ LSW OF DIVIDEND
   mov   r8, r4
-@  bl   umdiv
-@umdiv:
   movs  r3, #1
   lsls  r3, r3, #31             @ init mask with highest bit set
   movs  r4, #0                  @ init quot
@@ -464,10 +462,7 @@ rf_code_uslas:
   @ overflow condition ( divide by zero ) - show max numbers
   asrs  r4, r3, #31
   mov   r1, r4
-
-@   bal   umdiv3                  @ return
   bal   umdiv3                  @ return
-
 umdiv1:
   adds  r2, r2, r2              @ double precision shift (modh, modl)
   adcs  r1, r1, r1              @ ADD with carry and set flags again !
@@ -919,7 +914,7 @@ rf_code_dovar:
   adds  r3, r3, #4              @ (DE) <- PFA
   subs  r5, r5, #4
   str   r3, [r5]                @ (S1) <- PFA
-@ b    next
+@ b     next
   ldm   r6!, {r3}
   ldr   r0, [r3]
   bx    r0
