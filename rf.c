@@ -4,7 +4,7 @@
 
 /* FORTH MACHINE */
 
-/* parameter stack pointer */
+/* SP */
 #ifndef RF_TARGET_SP
 uintptr_t *rf_sp = 0;
 #endif
@@ -21,7 +21,7 @@ void __FASTCALL__ rf_sp_push(uintptr_t a)
 }
 #endif
 
-/* return stack pointer */
+/* RP */
 #ifndef RF_TARGET_RP
 uintptr_t *rf_rp = 0;
 #endif
@@ -326,7 +326,7 @@ void rf_code_digit(void)
     b = (uint8_t) RF_SP_POP;
     c = (uint8_t) RF_SP_POP;
     d = rf_digit(b, c);
-    if (d == 255) {
+    if (d == 0xFF) {
       RF_SP_PUSH(0);
     } else {
       RF_SP_PUSH(d);
@@ -487,16 +487,12 @@ void rf_code_cmove(void)
   RF_START;
   RF_LOG("cmove");
   {
-    uintptr_t count;
-    char *to;
-    char *from;
-    uintptr_t i;
+    uintptr_t count = RF_SP_POP;
+    char *to = (char *) RF_SP_POP;
+    char *from = (char *) RF_SP_POP;
 
-    count = RF_SP_POP;
-    to = (char *) RF_SP_POP;
-    from = (char *) RF_SP_POP;
-    for (i = 0; i < count; ++i) {
-      to[i] = from[i];
+    for (; count; count--) {
+      *(to++) = *(from++);
     }
   }
   RF_JUMP_NEXT;
