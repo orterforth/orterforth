@@ -1,3 +1,7 @@
+/* BBC */
+#define RF_TARGET_HI 0x0000
+#define RF_TARGET_LO 0x3948
+
 /* RP and SP operations not inline, code is smaller */
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP

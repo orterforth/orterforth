@@ -73,9 +73,6 @@ typedef __uint128_t rf_double_t;
 typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __BBC__
-/* BBC */
-#define RF_TARGET_HI 0x0000
-#define RF_TARGET_LO 0x3948
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/bbc/default.inc"
 #endif
