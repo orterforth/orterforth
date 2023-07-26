@@ -209,7 +209,7 @@ bbc/crt0.o : target/bbc/crt0.s
 	ca65 -o $@ $<
 
 # inst binary
-bbc/inst : $(BBCDEPS)
+bbc/inst bbc/inst.map : $(BBCDEPS)
 
 	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/inst.map $^
 
@@ -299,7 +299,7 @@ bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
 bbc/rf_6502.o : rf_6502.s | bbc
 
-	ca65 -DRF_ORIGIN='0x$(BBCORIGIN)' -o $@ $<
+	ca65 -DORIG='0x$(BBCORIGIN)' -DTOS=\$$70 -o $@ $<
 
 bbc/system_asm.o : target/bbc/system.s | bbc
 

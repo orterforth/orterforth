@@ -1,6 +1,22 @@
 # === Commodore 64 ===
 
+C64DEPS := c64/main.o c64/rf.o c64/inst.o c64/system.o c64/c64-up2400.o
+# C64OPTION := assembly
+C64OPTION := default
+ifeq ($(TARGET),c64)
+ifneq ($(OPTION),)
+C64OPTION := $(OPTION)
+endif
+endif
 C64ORIGIN := 0x2300
+
+C64CC65OPTS := -O -t c64 \
+	-DRF_ORIGIN='$(C64ORIGIN)'
+
+ifeq ($(C64OPTION),assembly)
+C64CC65OPTS += -DRF_ASSEMBLY
+C64DEPS += c64/rf_6502.o
+endif
 
 c64 :
 
@@ -62,22 +78,22 @@ c64/hw.prg : hw.c | c64
 	cl65 -O -t c64 -o $@ $^
 
 # inst binary
-c64/inst.prg : c64/main.o c64/rf.o c64/inst.o c64/system.o c64/c64-up2400.o | c64
+c64/inst.prg : $(C64DEPS) | c64
 
 	cl65 -O -t c64 -C target/c64/c64.cfg -o $@ -m c64/inst.map $^
 
 c64/inst.s : inst.c inst.h rf.h target/c64/c64.inc | c64
 
-	cc65 -O -t c64 \
+	cc65 $(C64CC65OPTS) \
 		--bss-name INST \
 		--code-name INST \
 		--data-name INST \
 		--rodata-name INST \
-		-DRF_ORIGIN=$(C64ORIGIN) -o $@ $<
+		-o $@ $<
 
 c64/main.s : main.c inst.h rf.h target/c64/c64.inc | c64
 
-	cc65 -O -t c64 -DRF_ORIGIN=$(C64ORIGIN) -o $@ $<
+	cc65 $(C64CC65OPTS) -o $@ $<
 
 c64/orterforth : c64/orterforth.hex | $(ORTER)
 
@@ -119,11 +135,15 @@ c64/orterforth.prg : c64/orterforth
 
 c64/rf.s : rf.c rf.h target/c64/c64.inc | c64
 
-	cc65 -O -t c64 -DRF_ORIGIN=$(C64ORIGIN) -o $@ $<
+	cc65 $(C64CC65OPTS) -o $@ $<
+
+c64/rf_6502.o : rf_6502.s | c64
+
+	ca65 -DORIG='$(C64ORIGIN)' -DTOS=\$$60 -o $@ $<
 
 c64/system.s : target/c64/system.c rf.h target/c64/c64.inc | c64
 
-	cc65 -O -t c64 -o $@ $<
+	cc65 $(C64CC65OPTS) -o $@ $<
 
 # Johan's serial driver
 tools/github.com/nanoflite/c64-up2400-cc65/driver/c64-up2400.s :

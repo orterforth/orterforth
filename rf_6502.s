@@ -30,18 +30,20 @@
 ;   registers, and disk parameters.
 ;
 ;
-N      :=$78 ;     xXxxxxxxx    scratch workspace
-IP     :=$80 ;      Xx          interpretive pointer
-W      :=$83 ;     xXx          code field pointer
-UP     :=$85 ;      Xx          user area pointer
-XSAVE  :=$87 ;      X           temporary for X register
-ORIG   :=RF_ORIGIN ; origin of FORTH's dictionary.
+;TOS   =        ; top of data stack, in z-page.
+N      =TOS+8   ; xXxxxxxxx    scratch workspace
+IP     =N+8     ;  Xx          interpretive pointer
+W      =IP+3    ; xXx          code field pointer
+UP     =W+2     ;  Xx          user area pointer
+XSAVE  =UP+2    ;  X           temporary for X register
+;
+;ORIG  =        ; origin of FORTH's dictionary.
 
 .exportzp N
 .exportzp UP
 .exportzp XSAVE
 
-ssave := $76
+ssave = TOS+6
 
 .export _rf_ip: near
 
