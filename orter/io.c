@@ -325,26 +325,25 @@ void orter_io_pipe_fdset(orter_io_pipe_t *pipe)
 
 int orter_io_select(void)
 {
-  struct timeval timeout;
+  struct timespec timeout;
   int result;
 
   /* reset timeout */
   timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
+  timeout.tv_nsec = 0;
 
   /* select */
-  /* TODO use pselect */
-  result = select(orter_io_nfds, &orter_io_readfds, &orter_io_writefds, &orter_io_exceptfds, &timeout);
+  result = pselect(orter_io_nfds, &orter_io_readfds, &orter_io_writefds, &orter_io_exceptfds, &timeout, 0);
   if (result < 0) {
     switch (errno) {
       case EINTR:
         orter_io_exit = errno;
-        perror("select interrupted");
+        perror("pselect interrupted");
         orter_io_finished = 1;
         break;
       default:
         orter_io_exit = errno;
-        perror("select failed");
+        perror("pselect failed");
         orter_io_finished = 1;
         break;
     }
