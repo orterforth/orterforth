@@ -128,6 +128,7 @@ FORTH DEFINITIONS
 ;S
 ( Fibonacci sequence                                          )
 FORTH DEFINITIONS VOCABULARY fib IMMEDIATE fib DEFINITIONS
+DECIMAL
 : length                        ( Overflows after this point  )
   cl 2 = IF 23 ENDIF
   cl 4 = IF 46 ENDIF
@@ -140,10 +141,10 @@ FORTH DEFINITIONS VOCABULARY fib IMMEDIATE fib DEFINITIONS
 
 CR fib list CR
 
-
 ;S
 ( Factorial                                                   )
 FORTH DEFINITIONS VOCABULARY fac IMMEDIATE fac DEFINITIONS
+DECIMAL
 : length                        ( Overflows after this point  )
   cl 2 = IF 9 ENDIF
   cl 4 = IF 14 ENDIF
@@ -156,11 +157,10 @@ FORTH DEFINITIONS VOCABULARY fac IMMEDIATE fac DEFINITIONS
 CR fac list CR
 
 
-
 ;S
 ( Reverse a string                                            )
-15 LOAD                        ( load str vocabulary          )
-FORTH DEFINITIONS
+DECINAL 15 LOAD                ( load str vocabulary          )
+FORTH DEFINITIONS VOCABULARY rev IMMEDIATE rev DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
 : reverse                      ( s1 s2 --                     )
@@ -310,6 +310,22 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 36 BASE ! BBC. DECIMAL only
 40 CONSTANT columns 25 CONSTANT rows
 ;S
+
+
+
+
+
+
+
+;S
+( sys: Commodore 64                                           )
+36 BASE ! C64. DECIMAL only
+40 CONSTANT columns 25 CONSTANT rows
+;S
+
+
+
+
 
 
 
