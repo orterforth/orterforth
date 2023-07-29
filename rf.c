@@ -17,7 +17,7 @@ uintptr_t rf_sp_pop(void)
 
 void __FASTCALL__ rf_sp_push(uintptr_t a)
 {
-  *(--rf_sp) = (a);
+  *(--rf_sp) = a;
 }
 #endif
 
@@ -34,7 +34,7 @@ uintptr_t rf_rp_pop(void)
 
 void __FASTCALL__ rf_rp_push(uintptr_t a)
 {
-  *(--rf_rp) = ((uintptr_t) a);
+  *(--rf_rp) = a;
 }
 #endif
 
@@ -88,9 +88,7 @@ void rf_code_lit(void)
   RF_START;
   RF_LOG("lit");
   {
-    uintptr_t a;
-
-    a = *(RF_IP_GET);
+    uintptr_t a = *(RF_IP_GET);
     RF_SP_PUSH(a);
     RF_IP_INC;
   }
@@ -180,11 +178,8 @@ void rf_code_xloop(void)
   RF_START;
   RF_LOG("xloop");
   {
-    intptr_t index;
-    intptr_t limit;
-
-    index = (intptr_t) RF_RP_POP;
-    limit = (intptr_t) RF_RP_POP;
+    intptr_t index = (intptr_t) RF_RP_POP;
+    intptr_t limit = (intptr_t) RF_RP_POP;
     ++index;
     if (limit > index) {
       RF_RP_PUSH(limit);
@@ -208,13 +203,9 @@ void rf_code_xploo(void)
   RF_START;
   RF_LOG("xploo");
   {
-    intptr_t n;
-    intptr_t index;
-    intptr_t limit;
-
-    n = (intptr_t) RF_SP_POP;
-    index = RF_RP_POP;
-    limit = RF_RP_POP;
+    intptr_t n = (intptr_t) RF_SP_POP;
+    intptr_t index = RF_RP_POP;
+    intptr_t limit = RF_RP_POP;
 
     index += n;
     if (((index - limit) ^ n) < 0) {
@@ -232,9 +223,7 @@ void rf_code_xploo(void)
 #ifdef RF_BRANCH
 static void rf_branch(void)
 {
-  uintptr_t offset;
-  
-  offset = (uintptr_t) *(RF_IP_GET);
+  uintptr_t offset = (uintptr_t) *(RF_IP_GET);
   RF_IP_SET((uintptr_t *) (((char *) RF_IP_GET) + offset));
 }
 #endif
@@ -245,11 +234,8 @@ void rf_code_xdo(void)
   RF_START;
   RF_LOG("xdo");
   {
-    uintptr_t n1;
-    uintptr_t n2;
-
-    n2 = RF_SP_POP;
-    n1 = RF_SP_POP;
+    uintptr_t n2 = RF_SP_POP;
+    uintptr_t n1 = RF_SP_POP;
     RF_RP_PUSH(n1);
     RF_RP_PUSH(n2);
   }
@@ -289,9 +275,7 @@ void rf_code_rr(void)
   RF_START;
   RF_LOG("rr");
   {
-    uintptr_t i;
-
-    i = (uintptr_t) *(RF_RP_GET);
+    uintptr_t i = (uintptr_t) *(RF_RP_GET);
     RF_SP_PUSH(i);
   }
   RF_JUMP_NEXT;
@@ -347,23 +331,20 @@ static uint8_t __FASTCALL__ **rf_lfa(uint8_t *nfa)
 
 static uint8_t *rf_find(uint8_t *t, uint8_t length, uint8_t *nfa)
 {
-  uint8_t l;
   uint8_t i;
   uint8_t *n;
 
   while (nfa) {
-    /* length from name field incl smudge bit */
-    l = *nfa & 0x3F;
-    /* match name length */
-    if (l == length) {
+    /* match length from name field incl smudge bit */
+    if (length == (*nfa & 0x3F)) {
       /* match name */
       n = nfa;
-      for (i = 0; i < l; i++) {
+      for (i = 0; i < length; i++) {
         if (t[i] != (*(++n) & 0x7F)) {
           break;
         }
       }
-      if (i == l) {
+      if (i == length) {
         return nfa;
       }
     }
