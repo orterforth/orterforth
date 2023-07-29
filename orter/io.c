@@ -105,12 +105,12 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
 int orter_io_file_size(FILE *ptr, long *size)
 {
   /* get file size */
-  if (fseek(ptr, 0, SEEK_END)) {
+  if (fseek(ptr, 0L, SEEK_END)) {
     perror("fseek failed");
     return errno;
   }
   *size = ftell(ptr);
-  if (*size == -1) {
+  if (*size == -1L) {
     perror("ftell failed");
     return errno;
   }
