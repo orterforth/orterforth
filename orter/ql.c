@@ -64,7 +64,7 @@ static int writeheader(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext)
   return 0;
 }
 
-int orter_ql_serial_header(int argc, char **argv)
+static int orter_ql_serial_header(char **argv)
 {
   if (writeheader(
     strtol(argv[2], 0, 0),
@@ -77,7 +77,7 @@ int orter_ql_serial_header(int argc, char **argv)
   return 0;
 }
 
-int orter_ql_serial_bytes(int argc, char **argv)
+static int orter_ql_serial_bytes(char **argv)
 {
   uint32_t len;
   long size;
@@ -109,7 +109,7 @@ int orter_ql_serial_bytes(int argc, char **argv)
   return 0;
 }
 
-int orter_ql_serial_xtcc(int argc, char **argv)
+static int orter_ql_serial_xtcc(char **argv)
 {
   uint32_t len;
   uint32_t dsp;
@@ -161,15 +161,15 @@ int orter_ql_serial_xtcc(int argc, char **argv)
 int orter_ql(int argc, char **argv)
 {
   if (argc == 4 && !strcmp(argv[2], "serial-bytes")) {
-    return orter_ql_serial_bytes(argc, argv);
+    return orter_ql_serial_bytes(argv);
   }
 
   if (argc == 7 && !strcmp(argv[2], "serial-header")) {
-    return orter_ql_serial_header(argc, argv);
+    return orter_ql_serial_header(argv);
   }
 
   if (argc == 4 && !strcmp(argv[2], "serial-xtcc")) {
-    return orter_ql_serial_xtcc(argc, argv);
+    return orter_ql_serial_xtcc(argv);
   }
 
   fprintf(stderr, "Usage: orter ql serial-header <len> <typ> <dsp> <ext>\n");
