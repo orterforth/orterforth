@@ -30,6 +30,11 @@ ZX81ZCCOPTS := +zx81 \
 	# -pragma-define:CRT_ENABLE_STDIO=0 \
 	# -pragma-define:CRT_INITIALIZE_BSS=0
 
+.PHONY : zx81-hw
+zx81-hw : zx81/hw.tzx | tools/jtyone.jar
+
+	java -jar tools/jtyone.jar zx81/hw.tzx@0 -scale 3 -machine ZX81
+
 .PHONY : zx81-run
 zx81-run : zx81/inst.bin zx81/inst.tzx | tools/jtyone.jar
 
@@ -37,9 +42,13 @@ zx81-run : zx81/inst.bin zx81/inst.tzx | tools/jtyone.jar
 
 	java -jar tools/jtyone.jar zx81/inst.tzx@0 -scale 3 -machine ZX81
 
-zx81/inst.tzx : zx81/inst.P | $(SYSTEM)/zx81putil
+zx81/%.tzx : zx81/%.P | $(SYSTEM)/zx81putil
 
 	$(SYSTEM)/zx81putil -tzx $<
+
+zx81/hw.bin zx81/hw.P : hw.c
+
+	zcc $(ZX81ZCCOPTS) -lm -create-app -o zx81/hw.bin $<
 
 zx81/inst.bin zx81/inst.P : zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
 
