@@ -61,22 +61,26 @@ rf_code_t rf_fp = 0;
 #endif
 
 #ifndef RF_TARGET_TRAMPOLINE
+/* A loop that repeatedly executes function pointers. */
 void rf_trampoline(void)
 {
-  /* repeatedly execute function pointers */
   while (rf_fp) {
-    /* target implementations can switch machine state into registers */
-    /* default implementation does nothing */
+    /* Default implementation does nothing here; assembly
+    implementations can switch machine state into registers
+    (and, if the processor return stack is used by the Forth
+    machine, ensure the return address is on the C stack not
+    the Forth stack). */
     rf_fp();
-    /* C-based code returns here and the loop repeats */
   }
 }
 
+/* Called at start of each C-based code word. */
 void rf_start(void)
 {
-  /* called at start of C-based code */
-  /* target implementations can switch machine state out of registers */
-  /* default implementation does nothing */
+  /* Default implementation does nothing here; assembly
+  implementations can switch machine state out of registers
+  (and, if the processor return stack is used by the Forth
+  machine, move the stack frame). */
 }
 #endif
 
