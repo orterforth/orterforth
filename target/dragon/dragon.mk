@@ -14,18 +14,6 @@ endif
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
-dragon :
-
-	mkdir $@
-
-.PHONY : dragon-build
-dragon-build : dragon/inst.bin
-
-.PHONY : dragon-clean
-dragon-clean :
-
-	rm -f dragon/*
-
 DRAGONOPTION := assembly
 # DRAGONOPTION := default
 ifeq ($(TARGET),dragon)
@@ -55,11 +43,41 @@ ifeq ($(DRAGONLINK),true)
 endif
 
 ifeq ($(DRAGONMACHINE),mame)
+	DRAGONMAMEWARNINGS := \
+		printf '* \033[1;35mNB ORG must be 0x0C00 to allow for DragonDOS\033[0;0m\n' ; \
+		printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
 	DRAGONSTARTDISC := $(STARTDISCTCP)
+	DRAGONSTARTMACHINE := \
+		printf '* \033[1;33mStarting MAME\033[0;0m\n' ; \
+		$(DRAGONMAMEWARNINGS) ; \
+		mame dragon64 $(MAMEOPTS) \
+			-rs232 null_modem -bitb socket.localhost:5705 \
+			-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r" \
+			-cassette
+	DRAGONSTOPMACHINE := $(STOPMAME)
 endif
 ifeq ($(DRAGONMACHINE),xroar)
 	DRAGONSTARTDISC := printf '* \033[1;33mStarting disc\033[0;0m\n' ; sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC)
+	DRAGONSTARTMACHINE := \
+		printf '* \033[1;33mStarting XRoar\033[0;0m\n' ; \
+		printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n' ; \
+		$(START) xroar.pid xroar $(DRAGONXROAROPTS) -type "CLOADM:EXEC\r" -load-tape
+	DRAGONSTOPMACHINE := \
+		printf '* \033[1;33mStopping XRoar\033[0;0m\n' ; \
+		sh scripts/stop.sh xroar.pid
 endif
+
+dragon :
+
+	mkdir $@
+
+.PHONY : dragon-build
+dragon-build : dragon/inst.bin
+
+.PHONY : dragon-clean
+dragon-clean :
+
+	rm -f dragon/*
 
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | $(DRAGONROMS)
@@ -82,8 +100,7 @@ dragon-run : dragon/orterforth.cas | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
 ifeq ($(DRAGONMACHINE),mame)
 	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
-	@printf '* \033[1;35mNB not currently 64 mode compatible\033[0;0m\n'
-	@printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
+	@$(DRAGONMAMEWARNINGS)
 	@mame dragon64 $(MAMEOPTS) \
 		-rs232 null_modem -bitb socket.localhost:5705 \
 		-cassette $< \
@@ -93,6 +110,7 @@ ifeq ($(DRAGONMACHINE),xroar)
 	@printf '* \033[1;33mRunning XRoar\033[0;0m\n'
 	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
 	@xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM:EXEC\r"
+
 endif
 
 	@$(STOPDISC)
@@ -141,41 +159,19 @@ ifneq ($(DRAGONLINK),true)
 	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/inst.bin)
 endif
 
-	@printf '* \033[1;33mClearing DR1\033[0;0m\n'
-	@rm -f $@.io
-	@touch $@.io
+	@$(EMPTYDR1FILE) $@.io
 
 	@$(DRAGONSTARTDISC) model.img $@.io
 
-ifeq ($(DRAGONMACHINE),mame)
-	@printf '* \033[1;33mStarting MAME\033[0;0m\n'
-	@printf '* \033[1;35mNB not currently 64 mode compatible\033[0;0m\n'
-	@printf '* \033[1;35mNB MAME Dragon serial not working\033[0;0m\n'
-	@mame dragon64 $(MAMEOPTS) \
-		-rs232 null_modem -bitb socket.localhost:5705 \
-		-cassette $< \
-		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
-endif
-ifeq ($(DRAGONMACHINE),xroar)
-	@printf '* \033[1;33mStarting XRoar\033[0;0m\n'
-	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
-	@$(START) \
-		xroar.pid \
-		xroar \
-		$(DRAGONXROAROPTS) \
-		-load-tape $< \
-		-type "CLOADM:EXEC\r"
-endif
+	@$(DRAGONSTARTMACHINE) $<
 
 	@$(WAITUNTILSAVED) $@.io
 
-	@printf '* \033[1;33mStopping XRoar\033[0;0m\n'
-	@sh scripts/stop.sh xroar.pid
+	@$(DRAGONSTOPMACHINE)
 
 	@$(STOPDISC)
 
-	@printf '* \033[1;33mDone\033[0;0m\n'
-	@mv $@.io $@
+	@$(COMPLETEDR1FILE)
 
 dragon/link : dragon/link.bin
 

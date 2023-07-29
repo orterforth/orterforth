@@ -6,6 +6,7 @@ CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
 CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh scripts/check-memory.sh
 DR0=library.img
 DR1=data.img
+COMPLETEDR1FILE = mv $@.io $@ ; printf '* \033[1;33mDone\033[0;0m\n'
 EMPTYDR1FILE := printf '* \033[1;33mClearing DR1\033[0;0m\n' ; printf '' >
 MAMEOPTS := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
 SERIALBAUD := 9600
@@ -15,6 +16,7 @@ STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
 STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh disc.pid
 STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
 WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
+
 
 # local OS
 UNAME_S := $(shell uname -s)
