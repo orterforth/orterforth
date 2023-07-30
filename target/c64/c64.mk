@@ -125,7 +125,7 @@ c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 
 	@$(STOPDISC)
 
-	@mv $@.io $@
+	@$(COMPLETEDR1FILE)
 
 c64/orterforth.prg : c64/orterforth
 

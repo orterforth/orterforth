@@ -152,8 +152,7 @@ ifeq ($(QLMACHINE),real)
 		scripts/wait-until-saved.sh $@.io ; \
 		kill -9 $$pid
 
-	@mv $@.io $@
-	@echo "* Done"
+	@$(COMPLETEDR1FILE)
 	@sleep 1
 endif
 ifeq ($(QLMACHINE),sqlux)
@@ -192,8 +191,7 @@ ifeq ($(QLMACHINE),sqlux)
 
 	$(STOPDISC)
 
-	@mv $@.io $@
-	@echo "* Done"
+	@$(COMPLETEDR1FILE)
 	@sleep 1
 endif
 

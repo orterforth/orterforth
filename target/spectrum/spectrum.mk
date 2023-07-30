@@ -394,8 +394,7 @@ ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(STOPDISC)
 endif
 
-	@printf '* \033[1;33mDone\033[0;0m\n'
-	@mv $@.io $@
+	@$(COMPLETEDR1FILE)
 
 # make serial load file from bin
 spectrum/orterforth.ser : spectrum/orterforth.bin | $(ORTER)

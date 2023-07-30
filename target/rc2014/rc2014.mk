@@ -179,8 +179,7 @@ rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) tx $(DISC) 
 # so pipe no bytes into stdin to keep disc from detecting EOF and terminating
 	@$(WAITUNTILSAVED) $@.io | $(DISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
 	@$(RC2014STOPMACHINE)
-	@printf '* \033[1;33mDone\033[0;0m\n'
-	@mv $@.io $@
+	@$(COMPLETEDR1FILE)
 
 rc2014/orterforth.ihx : rc2014/orterforth
 

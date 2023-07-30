@@ -3,12 +3,12 @@
 # common dependencies
 BBCDEPS := bbc/inst.o bbc/main.o
 
-# default loading method
+# loading method
 BBCLOADINGMETHOD := disk
 # BBCLOADINGMETHOD := serial
 # BBCLOADINGMETHOD := tape
 
-# default emulator or real BBC Micro
+# emulator (or real machine)
 BBCMACHINE := mame
 #BBCMACHINE := real
 
@@ -22,7 +22,7 @@ BBCOPTION := $(OPTION)
 endif
 endif
 
-# default ORG and ORIGIN
+# C ORG and Forth ORIGIN
 BBCORG := 1720
 BBCORIGIN := 2F00
 
@@ -275,8 +275,7 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 
 	@$(STOPDISC)
 
-	@printf '* \033[1;33mDone\033[0;0m\n'
-	@mv $@.io $@
+	@$(COMPLETEDR1FILE)
 
 bbc/orterforth.inf : | bbc
 
