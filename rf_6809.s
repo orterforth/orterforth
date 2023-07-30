@@ -33,8 +33,7 @@ _rf_start
 
                             * STACK FRAME PUSHED
 
-start1
-        LDD    ,U           * get previous U
+start1  LDD    ,U           * get previous U
         STD    _rf_sp+0,PCR * save it into SP
 
         LEAY   2,U          * get original S (RP), skip pushed BP
@@ -77,6 +76,32 @@ trampoline2
         LDS    ssave+0,PCR
         PULS   U,Y
         RTS
+
+	ENDSECTION
+
+	SECTION	rwdata
+
+_rf_fp EXPORT
+_rf_fp  RMB    2
+
+_rf_ip EXPORT
+_rf_ip  RMB    2
+
+_rf_rp EXPORT
+_rf_rp  RMB    2
+
+_rf_sp EXPORT
+_rf_sp  RMB    2
+
+_rf_up EXPORT
+_rf_up  EQU    UP
+
+_rf_w EXPORT
+_rf_w   RMB    2
+
+ssave   RMB    2
+
+	ENDSECTION
 
 * What follows is adapted from the original document to create compatible 
 * assembly source for the orterforth project in January 2023. Some comments
@@ -171,13 +196,18 @@ trampoline2
 *
 *** * * *
 
-	ENDSECTION
-
 	SECTION	rwdata
 
 N       RMB    10        used as scratch
 UP      RMB    2         the pointer to the base of current user's
 *                                   USER table ( for multi-tasking)
+*     This system is shown for one user, but additional ones
+*     may be added by allocating additional user tables and
+*     words for switching the pointer between them.
+*     Alternatively, with SWTP SBUG dynamic memory assignment, it would
+*     be possible to have a memory management procedure in KERNAL which
+*     switches various USER 4h blocks in and out of this low space.
+
 	ENDSECTION
 
 	SECTION	code
@@ -215,29 +245,12 @@ _rf_code_semis EXPORT
 _rf_code_semis
 PSEMIS  LDY    ,S++      reset Y=IP to next addr and drop frm S=RP
         BRA    NEXT
-_rf_code_spat EXPORT
-_rf_code_spat
-        LEAX   ,U        X = VALUE OF SP
-        PSHU   X
-        BRA    NEXT
-_rf_code_spsto EXPORT
-_rf_code_spsto
-        LDU    UP,PCR
-        LDU    6,U
-        BRA    NEXT
-_rf_code_rpsto EXPORT
-_rf_code_rpsto
-        LDX    UP,PCR
-        LDS    8,X
-        BRA    NEXT
-_rf_code_lit EXPORT
-_rf_code_lit
-        LDD    ,Y++      get word pointed to by Y=IP and increment
-        BRA    PUSHD     push D to data stack and then NEXT
+
 _rf_code_exec EXPORT
 _rf_code_exec
         PULU   X
         BRA    NEXT3
+
 _rf_code_cold EXPORT
 _rf_code_cold
         LDX    #RF_ORIGIN
@@ -257,6 +270,26 @@ COLD2   LDA    ,X+
         BNE    COLD2
         LDY    2,X                  IP init to ABORT
         LBRA   _rf_code_rpsto       jump to RP!
+
+_rf_code_spat EXPORT
+_rf_code_spat
+        LEAX   ,U        X = VALUE OF SP
+        PSHU   X
+        BRA    NEXT
+_rf_code_spsto EXPORT
+_rf_code_spsto
+        LDU    UP,PCR
+        LDU    6,U
+        BRA    NEXT
+_rf_code_rpsto EXPORT
+_rf_code_rpsto
+        LDX    UP,PCR
+        LDS    8,X
+        BRA    NEXT
+_rf_code_lit EXPORT
+_rf_code_lit
+        LDD    ,Y++      get word pointed to by Y=IP and increment
+        BRA    PUSHD     push D to data stack and then NEXT
 _rf_code_zbran EXPORT
 _rf_code_zbran
         LDD    ,U++      get quantity on stack and drop it
@@ -296,11 +329,11 @@ _rf_code_xdo
         PULU   D         counter
         PULU   X         limit
         PSHS   X,D       X goes first, so becomes second on RP=S
-        LBRA    NEXT
+        LBRA   NEXT
 _rf_code_rr EXPORT
 _rf_code_rr
         LDD    ,S        get counter from RP
-        LBRA    PUSHD
+        LBRA   PUSHD
 _rf_code_digit EXPORT
 _rf_code_digit
         LDA    3,U       second item is char of interest
@@ -428,6 +461,7 @@ CMOV2   LEAY   -1,Y
 CMOV3   PULS   U
         PULS   X,Y
         RTS
+*
 _rf_code_ustar EXPORT
 _rf_code_ustar
         BSR    USTARS
@@ -556,6 +590,7 @@ _rf_code_zless
         LBRA   PUTD
 ZLESS2  CLRB
         LBRA   PUTD
+*
 _rf_code_leave EXPORT
 _rf_code_leave
         LDD    ,S
@@ -642,8 +677,8 @@ DOVAR   LEAX   2,X       gets address after CFA in W=X
         LBRA   NEXT
 _rf_code_douse EXPORT
 _rf_code_douse
-DOUSER  LDD    2,X
-        ADDD   UP,PCR
+DOUSER  LDD    2,X       gets offset to user's table
+        ADDD   UP,PCR    add to users base address
         LBRA   PUSHD
 _rf_code_xt EXPORT
 _rf_code_xt
@@ -660,35 +695,5 @@ _rf_code_cs
         ASL    1,U
         ROL    0,U
         LBRA   NEXT
-
-	ENDSECTION
-
-	SECTION	rwdata
-
-_rf_fp EXPORT
-_rf_fp
-	FDB	$0000
-
-_rf_ip EXPORT
-_rf_ip
-	FDB	$0000
-
-_rf_rp EXPORT
-_rf_rp
-	FDB	$0000
-
-_rf_sp EXPORT
-_rf_sp
-	FDB	$0000
-
-_rf_up EXPORT
-_rf_up EQU UP
-
-_rf_w EXPORT
-_rf_w
-	FDB	$0000
-
-ssave
-	FDB	$0000
 
 	ENDSECTION
