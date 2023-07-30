@@ -2,8 +2,6 @@
 
 #include "rf.h"
 
-#define RF_LOG(name)
-
 /* stack can be smaller */
 long _stack = 512L;
 
