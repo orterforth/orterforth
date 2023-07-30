@@ -59,7 +59,7 @@ typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __BBC__
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/bbc/default.inc"
+#define RF_TARGET_INC "target/bbc/bbc.inc"
 #endif
 #endif
 #ifdef __C64__
@@ -84,7 +84,7 @@ typedef unsigned long rf_double_t;
 #define RF_TARGET_HI 0x3195
 #define RF_TARGET_LO 0xC1F7
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/dragon/system.inc"
+#define RF_TARGET_INC "target/dragon/dragon.inc"
 #endif
 #endif
 #endif
@@ -104,7 +104,7 @@ typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __RC2014
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/rc2014/default.inc"
+#define RF_TARGET_INC "target/rc2014/rc2014.inc"
 #endif
 #endif
 #ifdef __M100__
@@ -125,7 +125,7 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_HI 0x0019
 #define RF_TARGET_LO 0x92f1
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/zx81/system.inc"
+#define RF_TARGET_INC "target/zx81/zx81.inc"
 #endif
 #endif
 #endif
