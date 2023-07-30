@@ -1,3 +1,5 @@
+Z88MAMEOPTS := z88 $(MAMEOPTS)
+
 Z88ORG := 0x0000
 Z88ORIGIN := 0x0000
 
@@ -19,6 +21,11 @@ z88-hw : z88/hw.imp
 z88-inst : z88/inst.imp
 
 	$(ORTER) serial -o ixon -o ixoff -e 15 $(SERIALPORT) 9600 < $<
+
+.PHONY : z88-run
+z88-run :
+
+	mame $(Z88MAMEOPTS)
 
 z88/hw.bin : hw.c | z88
 
