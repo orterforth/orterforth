@@ -80,9 +80,6 @@ typedef unsigned int uintptr_t;
 typedef unsigned long rf_double_t;
 #define RF_BE
 #ifdef DRAGON
-/* DRAGON */
-#define RF_TARGET_HI 0x3195
-#define RF_TARGET_LO 0xC1F7
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/dragon/dragon.inc"
 #endif
@@ -113,17 +110,11 @@ typedef uint32_t rf_double_t;
 #endif
 #endif
 #ifdef SPECTRUM
-/* SPECTR */
-#define RF_TARGET_HI 0x6774
-#define RF_TARGET_LO 0xe16f
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/spectrum/spectrum.inc"
 #endif
 #endif
 #ifdef ZX81
-/* ZX81 */
-#define RF_TARGET_HI 0x0019
-#define RF_TARGET_LO 0x92f1
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/zx81/zx81.inc"
 #endif
@@ -141,9 +132,6 @@ typedef unsigned char uint8_t;
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
 #ifdef QDOS
-/* QL */
-#define RF_TARGET_HI 0x00000000
-#define RF_TARGET_LO 0x000003bd
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/ql/default.inc"
 #endif

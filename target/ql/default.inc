@@ -1,3 +1,7 @@
+/* QL */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x000003bd
+
 /* saves the install to disc 1 */
 #define RF_INST_SAVE
 

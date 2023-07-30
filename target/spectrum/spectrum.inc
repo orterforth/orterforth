@@ -1,3 +1,7 @@
+/* SPECTR */
+#define RF_TARGET_HI 0x6774
+#define RF_TARGET_LO 0xe16f
+
 /* RP and SP operations not inline, code is smaller but slower */
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
