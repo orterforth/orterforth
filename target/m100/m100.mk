@@ -1,5 +1,7 @@
 # === TRS-80 Model 100 ===
 
+M100ZCCOPTS := +m100 -subtype=default
+
 m100 :
 
 	mkdir $@
@@ -21,3 +23,20 @@ m100/hw.ba : | m100
 m100/hw.co : | m100
 
 	zcc +m100 -subtype=default hw.c -o $@ -create-app
+
+m100/inst.co : m100/rf.lib m100/system.lib m100/inst.lib main.c
+
+	zcc $(M100ZCCOPTS) -lm100/rf -lm100/system -lm100/inst \
+		-create-app -m -o $@ main.c
+
+m100/inst.lib : inst.c rf.h | m100
+
+	zcc $(M100ZCCOPTS) -x -o $@ $<
+
+m100/rf.lib : rf.c rf.h | m100
+
+	zcc $(M100ZCCOPTS) -x -o $@ $<
+
+m100/system.lib : target/m100/system.c rf.h | m100
+
+	zcc $(M100ZCCOPTS) -x -o $@ $<

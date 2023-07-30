@@ -12,22 +12,15 @@
 #ifdef __clang__
 #include <stdint.h>
 #if (__WORDSIZE == 32)
-
-/* 32 bit */
 #define RF_WORD_SIZE 4
-#define RF_DOUBLE_ARITH
 typedef uint64_t rf_double_t;
-#define RF_ALIGN 4
-
 #elif (__WORDSIZE == 64)
-
-/* 64 bit */
 #define RF_WORD_SIZE 8
-#define RF_DOUBLE_ARITH
 typedef __uint128_t rf_double_t;
-#define RF_ALIGN 8
-
 #endif
+
+#define RF_DOUBLE_ARITH
+#define RF_ALIGN RF_WORD_SIZE
 
 #else
 
@@ -39,22 +32,14 @@ typedef __uint128_t rf_double_t;
 
 #include <stdint.h>
 #if __SIZEOF_POINTER__ == 4
-
-/* 32 bit */
-#define RF_WORD_SIZE 4
-#define RF_DOUBLE_ARITH
 typedef uint64_t rf_double_t;
-#define RF_ALIGN 4
-
 #elif __SIZEOF_POINTER__ == 8
-
-/* 64 bit */
-#define RF_WORD_SIZE 8
-#define RF_DOUBLE_ARITH
 typedef __uint128_t rf_double_t;
-#define RF_ALIGN 8
-
 #endif
+
+#define RF_WORD_SIZE __SIZEOF_POINTER__
+#define RF_DOUBLE_ARITH
+#define RF_ALIGN RF_WORD_SIZE
 
 #endif
 
@@ -122,12 +107,17 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/rc2014/default.inc"
 #endif
 #endif
+#ifdef __M100__
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/m100/m100.inc"
+#endif
+#endif
 #ifdef SPECTRUM
 /* SPECTR */
 #define RF_TARGET_HI 0x6774
 #define RF_TARGET_LO 0xe16f
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/spectrum/default.inc"
+#define RF_TARGET_INC "target/spectrum/spectrum.inc"
 #endif
 #endif
 #ifdef ZX81
