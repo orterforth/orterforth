@@ -12,278 +12,244 @@ PUBLIC _rf_init
 
 _rf_init:
 IFDEF USEIY
-  di                            ; use of IY means we need interrupts disabled
-  push iy
-  ld iy, $5C3A
+        DI                      ; use of IY means we need interrupts disabled
+;       PUSH    IY
+;       LD      IY,5C3AH
 ENDIF
-
-  ld hl, $5C6B                  ; DF-SZ
-  ld (hl), $00                  ; use all 24 rows on screen
-
-  call $0DAF                    ; CL_ALL clear screen
-
-  ; ld hl, $01BE                  ; 300 baud
-  ; ld hl, $006E                  ; 1200 baud
-  ld hl, $000C                  ; 9600 baud
-  ; ld hl, $0005                  ; 19200 baud
-  ld ($5CC3), hl                ; BAUD
-
-  rst $0008                     ; create Interface 1 system vars
-  defb $31
-
-  ld hl, $5CC6                  ; IOBORD
-  ld (hl), $06                  ; yellow, less disturbing than black
-
+        LD      HL,5C6BH        ; DF-SZ
+        LD      (HL),0          ; use all 24 rows on screen
+        CALL    0DAFH           ; CL_ALL clear screen
+;       LD      HL,01BEH        ; 300 baud
+;       LD      HL,006EH        ; 1200 baud
+        LD      HL,000CH        ; 9600 baud
+;       LD      HL,0005H        ; 19200 baud
+        LD      (5CC3H),HL      ; BAUD
+        RST     8H              ; create Interface 1 system vars
+        DEFB    31H
+        LD      HL,5CC6H        ; IOBORD
+        LD      (HL),6          ; yellow, less disturbing than black
 IFDEF USEIY
-  pop iy
+;       POP     IY
 ENDIF
+        RET                     ; return to C
 
-  ret                           ; return to C
-
-PUBLIC _rf_code_emit
+PUBLIC _rf_code_emit            ;EMIT
 
 _rf_code_emit:
-  pop hl                        ; get character
-  ld a, $7F                     ; reset scroll
-  ld ($5C8C), a                 ; SCR-CT
-  and l                         ; use low 7 bits
+        POP     HL              ; get character
+        LD      A,7FH           ; reset scroll
+        LD      (5C8CH),A       ; SCR-CT
+        AND     L               ; use low 7 bits
 IFDEF USEIY
-  ld iy, $5C3A                  ; print character in l
+        LD      IY,5C3AH
 ENDIF
-  rst $0010                     ; PRINT_A_1
+        RST     10H             ; PRINT_A_1
 IFDEF USEIY
-  ld iy, _rf_z80_hpush
+        LD      IY,_rf_z80_hpush
 ENDIF
-  ld hl, (_rf_up)               ; increment OUT
-  ld de, $001A
-  add hl, de
-; ld e, (hl)                    ; 7t
-; inc hl                        ; 6t
-; ld d, (hl)                    ; 7t
-; inc de                        ; 6t
-; ld (hl), d                    ; 7t
-; dec hl                        ; 6t
-; ld (hl), e                    ; 7t = 46t
-  inc (hl)                      ; 11t
-  jp nz, _rf_next               ; 10t
-  inc hl                        ; 6t
-  inc (hl)                      ; 11t = 38t max
-  jp (ix)                       ; next
+        LD      HL,(_rf_up)     ; increment OUT
+        LD      DE,1AH
+        ADD     HL,DE
+        INC     (HL)
+        JP      NZ,_rf_next
+        INC     HL
+        INC     (HL)            ; 11t = 38t max
+        JP      (IX)            ; next
 
-PUBLIC _rf_code_key
+PUBLIC _rf_code_key             ;KEY
 
 _rf_code_key:
-  push bc                       ; save IP
+        PUSH    BC              ; save IP
 IFDEF USEIY
-  ld iy, $5C3A
+        LD      IY,5C3AH
 ENDIF
-key0:
-  ld a, (key_cursor)            ; get cursor value 'L' or 'C'
-  ld e, a                       ; save for later test
-  call $18C1                    ; OUT_FLASH show cursor
-  ld a, $08                     ; back up one
-  rst $0010                     ; PRINT_A_1
-
-	xor	a                         ; set LAST-K to 0
-	ld ($5C08), a
+key0:   LD      A,(cursor)  ; get cursor value 'L' or 'C'
+        LD      E,A             ; save for later test
+        CALL    18C1H           ; OUT_FLASH show cursor
+        LD      A,8             ; back up one
+        RST     10H             ; PRINT_A_1
+	      XOR     A               ; set LAST-K to 0
+        LD      (5C08H),A
 IFDEF USEIY
-  ei                            ; enable interrupts to scan keyboard
+        EI                      ; enable interrupts to scan keyboard
 ENDIF
-key1:
-  halt                          ; wait for interrupt
-  ld a, ($5C08)                 ; loop until LAST-K set
-  and	a
-  jr z, key1
-
-  cp $06                        ; caps lock? (caps shift + 2)
-  jr nz, key2
-  ld a, e
-  xor $0F                       ; change 'L' to 'C' or vice versa
-  ld (key_cursor), a
-  jr key0                       ; show changed cursor and scan again
-key2:
-  bit 1, e                      ; test caps lock
-  jr z, key3
-  cp $61                        ; 'a'
-  jr c, key3
-  cp $7B                        ; 'z' + 1
-  jr nc, key3
-  and $5F                       ; make upper case
-key3:
-  cp $C6                        ; AND (symbol shift + Y)
-  jr nz, key4
-  ld a, $5B                     ; [
-key4:
-  cp $C5                        ; OR (symbol shift + U)
-  jr nz, key5
-  ld a, $5D                     ; ]
-key5:
-  cp $E2                        ; STOP (symbol shift + A)
-  jr nz, key6
-  ld a, $7E                     ; ~
-key6:
-  cp $C3                        ; NOT (symbol shift + S)
-  jr nz, key7
-  ld a, $7C                     ; |
-key7:
-  cp $CD                        ; STEP (symbol shift + D)
-  jr nz, key8
-  ld a, $5C                     ; \
-key8:
-  cp $CC                        ; TO (symbol shift + F)
-  jr nz, key9
-  ld a, $7B                     ; {
-key9:
-  cp $CB                        ; THEN (symbol shift + G)
-  jr nz, key10
-  ld a, $7D                     ; }
-key10:
-  and $7F                       ; now we have the code
-  ld h, $00
-	ld l, a
-
-  push hl                       ; make key click
-  ld d, $00
-  ld e, (iy-$01)                ; PIP
-  ld hl, $00C8
-  push ix
-  call $03B5                    ; BEEPER
-  pop ix
-  pop hl
-
-  ld a, $20                     ; blank out cursor
-  rst $0010                     ; PRINT_A_1
-  ld a, $08                     ; back up
-  rst $0010                     ; PRINT_A_1
-
+key1:   HALT                    ; wait for interrupt
+        LD      A,(5C08H)       ; loop until LAST-K set
+        AND     A
+        JR      Z,key1
+        CP      06H             ; caps lock? (caps shift + 2)
+        JR      NZ,key2
+        LD      A,E
+        XOR     0FH             ; change 'L' to 'C' or vice versa
+        LD      (cursor),A
+        JR      key0            ; show changed cursor and scan again
+key2:   BIT     1,E             ; test caps lock
+        JR      Z,key3
+        CP      61H             ; 'a'
+        JR      C,key3
+        CP      7BH             ; 'z' + 1
+        JR      NC,key3
+        AND     5FH             ; make upper case
+        JR      key10
+key3:   CP      0C6H            ; AND (symbol shift + Y)
+        JR      NZ,key4
+        LD      A,5BH           ; [
+key4:   CP      0C5H            ; OR (symbol shift + U)
+        JR      NZ,key5
+        LD      A,5DH           ; ]
+key5:   CP      0E2H            ; STOP (symbol shift + A)
+        JR      NZ,key6
+        LD      A,7EH           ; ~
+key6:   CP      0C3H            ; NOT (symbol shift + S)
+        JR      NZ,key7
+        LD      A,7CH           ; |
+key7:   CP      0CDH            ; STEP (symbol shift + D)
+        JR      NZ,key8
+        LD      A,5CH           ; \
+key8:   CP      0CCH            ; TO (symbol shift + F)
+        JR      NZ,key9
+        LD      A,7BH           ; {
+key9:   CP      0CBH            ; THEN (symbol shift + G)
+        JR      NZ,key10
+        LD      A,7DH           ; }
+key10:  AND     7FH             ; now we have the code
+        LD      H,0
+        LD      L,A
+        PUSH    HL              ; make key click
+        LD      D,0
+        LD      E,(IY-1)        ; PIP
+        LD      HL,00C8H
+        PUSH    IX
+        CALL    03B5H           ; BEEPER
+        POP     IX
+        POP     HL
+        LD      A,20H           ; blank out cursor
+        RST     10H             ; PRINT_A_1
+        LD      A,08H           ; back up
+        RST     10H             ; PRINT_A_1
 IFDEF USEIY
-  di                            ; restore regs IP, hpush
-  ld iy, _rf_z80_hpush
+        DI                      ; restore regs IP, hpush
+        LD      IY,_rf_z80_hpush
 ENDIF
-  pop bc
-
+        POP     BC
 IFDEF USEIY
-  jp (iy)                       ; hpush
+        JP      (IY)
 ELSE
-  jp _rf_z80_hpush
+        JP      _rf_z80_hpush
 ENDIF
 
-PUBLIC _rf_code_cr
+PUBLIC _rf_code_cr              ;CR
 
 _rf_code_cr:
-  ld a, $0D                     ; \r
-  ld ($5C8C), a                 ; reset SCR-CT
+        LD      A,0DH           ; CR
+        LD      (5C8CH),A       ; reset SCR-CT
 IFDEF USEIY
-  ld iy, $5C3A
+        LD      IY,5C3AH
 ENDIF
-  rst $0010                     ; PRINT_A_1
+        RST     10H             ; PRINT_A_1
 IFDEF USEIY
-  ld iy, _rf_z80_hpush
+        LD      IY,_rf_z80_hpush
 ENDIF
-  jp (ix)                       ; next
+        JP      (IX)            ; next
 
-PUBLIC _rf_code_qterm
+PUBLIC _rf_code_qterm           ;?TERMINAL
 
 _rf_code_qterm:
-  ld hl, $0000
-  call $1F54                    ; BREAK-KEY
-  jp c, _rf_z80_hpush           ; hpush 0 if not pressed
-  inc hl                        ; hpush 1 if pressed
+        LD      HL,0
+        CALL    1F54H           ; BREAK-KEY
+        JP      C,_rf_z80_hpush ; push 0 if not pressed
+        INC     HL              ; push 1 if pressed
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp _rf_z80_hpush
+        JP      _rf_z80_hpush
 ENDIF
 
-PUBLIC _rf_code_bwrit
+PUBLIC _rf_code_bwrit           ;BLOCK-WRITE
 
 _rf_code_bwrit:
-  pop de                        ; len
-  pop hl                        ; addr
-  push bc                       ; save IP
+        POP     DE              ; len
+        POP     HL              ; addr
+        PUSH    BC              ; save IP
 IFDEF USEIY
-  ld iy, $5C3A
+        LD      IY,5C3AH
 ENDIF
-bwrit1:
-  push de                       ; save len
-  push hl                       ; save addr
-  ld a, (hl)                    ; read a byte from addr
-  rst $0008                     ; write byte
-  defb $1E                      ; BCHAN-OUT
-  pop hl                        ; restore addr
-  pop de                        ; restore len
-  inc hl                        ; advance addr
-  dec e                         ; advance len
-  jp nz, bwrit1                 ; loop back for more bytes
-  ld a, $04                     ; EOT
-  rst $0008                     ; write byte
-  defb $1E                      ; BCHAN-OUT
+bwrit1: PUSH    DE              ; save len
+        PUSH    HL              ; save addr
+        LD      A,(HL)          ; read a byte from addr
+        RST     08H             ; BCHAN-OUT
+        DEFB    1EH
+        POP     HL              ; restore addr
+        POP     DE              ; restore len
+        INC     HL              ; advance addr
+        DEC     E               ; advance len
+        JP      NZ,bwrit1       ; loop back for more bytes
+        LD      A,04H           ; EOT
+        RST     08H             ; BCHAN-OUT
+        DEFB    1EH
 IFDEF USEIY
-  ld iy, _rf_z80_hpush          ; restore HPUSH
+        LD      IY,_rf_z80_hpush ; restore HPUSH
 ENDIF
-  pop bc                        ; restore IP
-  jp (ix)
+        POP     BC              ; restore IP
+        JP      (IX)
 
 discread:
-  push bc                       ; save IP
+        PUSH    BC              ; save IP
 IFDEF USEIY
-  ld iy, $5C3A                  ; restore Spectrum IY
+        LD      IY,5C3AH        ; restore Spectrum IY
 ENDIF
 discread1:
-  rst $0008                     ; BCHAN-IN
-  defb $1D
-  jr nc, discread1              ; loop back until byte available
+        RST     08H             ; BCHAN-IN
+        DEFB    1DH
+        JR      NC,discread1    ; loop back until byte available
 IFDEF USEIY
-  ld iy, _rf_z80_hpush          ; restore HPUSH
+        LD      IY,_rf_z80_hpush ; restore HPUSH
 ENDIF
-  pop bc                        ; restore IP
-  ret                           ; with byte in A
+        POP     BC              ; restore IP
+        RET                     ; with byte in A
 
-PUBLIC _rf_code_dchar
+PUBLIC _rf_code_dchar           ;D/CHAR
 
 _rf_code_dchar:
-  call discread                 ; read byte
-  pop hl                        ; get expected byte
-  cp l                          ; set flag if expected
-  ld hl, $0001
-  jr z, dchar2
-  dec l
-dchar2:
-  push hl                       ; push flag
-  ld l, a                       ; now push byte
+        CALL    discread        ; read byte
+        POP     HL              ; get expected byte
+        CP      L               ; set flag if expected
+        LD      HL,1
+        JR      Z,dchar2
+        DEC     L
+dchar2: PUSH    HL              ; push flag
+        LD      L,A             ; now push byte
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp _rf_z80_hpush
+        JP      _rf_z80_hpush
 ENDIF
 
-PUBLIC _rf_code_bread
+PUBLIC _rf_code_bread           ;BLOCK-READ
 
 _rf_code_bread:
-  pop hl
-  push bc
-  ld b, $80
-bread1:
-  push hl
-  call discread
-  pop hl
-  ld (hl), a
-  inc hl
-  djnz bread1
-  pop bc
-  jp (ix)
+        POP     HL
+        PUSH    BC
+        LD      B,80H
+bread1: PUSH    HL
+        CALL    discread
+        POP     HL
+        LD      (HL),A
+        INC     HL
+        DJNZ    bread1
+        POP     BC
+        JP      (IX)
 
 PUBLIC _rf_fin
 
 _rf_fin:
-  ld hl, $5C6B                  ; DF-SZ
-  ld (hl), $02                  ; restore lower screen area for BASIC
+        LD      HL,5C6BH        ; DF-SZ
+        LD      (HL),2          ; restore lower screen area for BASIC
 IFDEF USEIY
-  ei                            ; re-enable interrupts
+        EI                      ; re-enable interrupts
 ENDIF
-  ret                           ; return to C
+        RET                     ; return to C
 
 SECTION data_user
 
-key_cursor:
-  defb $43                      ; 'C'
+cursor: DEFB    43H             ; 'C'
