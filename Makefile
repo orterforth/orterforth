@@ -17,7 +17,6 @@ STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh d
 STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
 WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
 
-
 # local OS
 UNAME_S := $(shell uname -s)
 ifneq ($(filter CYGWIN%,$(UNAME_S)),)
@@ -87,7 +86,6 @@ $(DISC) : \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_pty.o \
 	$(SYSTEM)/orter_serial.o \
-	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/orter_tcp.o \
 	$(SYSTEM)/persci.o \
 	disc.c
