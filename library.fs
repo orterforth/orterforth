@@ -159,7 +159,7 @@ CR fac list CR
 
 ;S
 ( Reverse a string                                            )
-DECINAL 15 LOAD                ( load str vocabulary          )
+DECIMAL 15 LOAD                ( load str vocabulary          )
 FORTH DEFINITIONS VOCABULARY rev IMMEDIATE rev DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
