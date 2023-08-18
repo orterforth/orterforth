@@ -3,10 +3,6 @@
 
 /* C COMPILER SETTINGS */
 
-#ifndef __SCCZ80
-#define __FASTCALL__
-#endif
-
 /* Clang */
 
 #ifdef __clang__
@@ -119,6 +115,9 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/zx81/zx81.inc"
 #endif
 #endif
+#endif
+#ifndef __SCCZ80
+#define __FASTCALL__
 #endif
 
 /* C68 */
