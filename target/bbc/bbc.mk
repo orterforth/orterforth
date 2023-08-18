@@ -34,8 +34,8 @@ BBCROMS := \
 	roms/bbcb/phroma.bin \
 	roms/bbcb/saa5050
 
-# include file maps to option
-BBCINC := target/bbc/default.inc
+# include file for BBC
+BBCINC := target/bbc/bbc.inc
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
