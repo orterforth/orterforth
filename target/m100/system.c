@@ -2,11 +2,11 @@
 
 #include "rf.h"
 
-void rf_init()
+void rf_init(void)
 {
 }
 
-void rf_code_emit()
+void rf_code_emit(void)
 {
   RF_START;
   {
@@ -40,7 +40,7 @@ void rf_code_qterm(void)
   RF_JUMP_NEXT;
 }
 
-void rf_code_cr()
+void rf_code_cr(void)
 {
   RF_START;
   /* TODO output CR */
