@@ -1,3 +1,92 @@
+; Modified for orterforth integration in 2021
+
+SECTION code_user
+
+; orterforth interop with C code definitions
+
+DEFINE USEIY                    ; to hold HPUSH
+
+PUBLIC _rf_start
+_rf_start:                      ; C code calls this to switch from registers to C variables
+        POP     HL              ; C return address
+IFDEF USEIY
+IFDEF SPECTRUM
+        LD      IY,5C3AH        ; restore IY (ZX Spectrum)
+ENDIF
+ENDIF
+        LD      (_rf_sp),SP     ; SP to SP
+        LD      SP,(spsave)
+        DEC     DE              ; DE to W
+        LD      (_rf_w),DE
+        LD      (_rf_ip),BC     ; BC to IP
+        JP      (HL)            ; return to C
+
+PUBLIC _rf_trampoline
+_rf_trampoline:                 ; C code calls this to iterate over function pointers - assumes a switch into assembler
+        LD      HL,(_rf_fp)     ; returns if FP is null
+        LD      A,H
+        OR      L
+        RET     Z
+        LD      DE,_rf_trampoline ; fp will return to this address
+        PUSH    DE
+        LD      BC,(_rf_ip)     ; IP to BC
+        LD      DE,(_rf_w)      ; W to DE
+        INC     DE
+        LD      (spsave),SP     ; SP to SP
+        LD      SP,(_rf_sp)
+        LD      IX,NEXT         ; set IX
+IFDEF USEIY
+        LD      IY,HPUSH        ; set IY
+ENDIF
+        JP      (HL)            ; jump to FP, will return to start of trampoline
+
+PUBLIC _rf_code_cl              ;cl
+_rf_code_cl:
+        LD      HL,2
+IFDEF USEIY
+        JP      (IY)
+ELSE
+        JP      HPUSH
+ENDIF
+
+PUBLIC _rf_code_cs              ;cs
+_rf_code_cs:
+        POP     HL
+        ADD     HL,HL
+IFDEF USEIY
+        JP      (IY)
+ELSE
+        JP      HPUSH
+ENDIF
+
+PUBLIC _rf_code_ln              ;ln
+DEFC _rf_code_ln = _rf_next
+
+PUBLIC _rf_code_xt              ;xt
+_rf_code_xt:
+        LD      HL,0
+        LD      (_rf_fp),HL
+        CALL    _rf_start
+        RET
+
+SECTION data_user
+
+PUBLIC _rf_fp
+_rf_fp: DEFW    0
+
+PUBLIC _rf_ip
+_rf_ip: DEFW    0
+
+PUBLIC _rf_sp
+_rf_sp: DEFW    0
+
+PUBLIC _rf_w
+_rf_w:  DEFW    0
+
+spsave: DEFW    0
+
+SECTION code_user
+
 ; Modified frm FIG document keyed by Dennis L. Wilson 800907
 ; Converted frm "8080 FIG-FORTH VERSION A0 15SEP79"
 ;
@@ -8,7 +97,7 @@
 ; DISTRIBUTED BY THE INCLUSION OF THIS CREDIT NOTICE:
 ;
 ; This publication has been made available by the
-;	Forth Interest Group
+; Forth Interest Group
 ;	P.O.Box 1105
 ;	San Carlos, CA 94070
 ;	U.S.A.
@@ -42,9 +131,10 @@
 ;	2000 Hamburg 71
 ;	Fed. Rep. of Germany	840418
 ; ----------------------------------------------------------------------
-; Modified for orterforth integration in 2021
 
-SECTION code_user
+ORIG    EQU     RF_ORIGIN
+
+UPINIT  EQU     ORIG+10H
 
 ; REGISTERS
 ;
@@ -68,998 +158,852 @@ SECTION code_user
 ;           "HPUSH" called
 ;
 ;
+SECTION data_user
+PUBLIC _rf_up
+_rf_up:
+UP:     DEFW    0               ;/ USER AREA PTR
+PUBLIC _rf_rp
+_rf_rp:
+RPP:    DEFW    0               ;/ RETURN STACK PTR
+SECTION code_user
 ;
 ;
-; COMMENT CONVENTIONS:
+;       COMMENT CONVENTIONS:
 ;
-; =       MEANS "IS EQUAL TO"
-; <--     MEANS ASSIGNMENT
-; NAME    =     ADDR OF NAME
-; (NAME)  =     CONTENTS @ NAME
-; ((NAME))=     INDIRECT CONTENTS
-; CFA     =     CODE FIELD ADDR
-; LFA     =     LINK FIELD ADDR
-; NFA     =     NAME FIELD ADDR
-; PFA     =     PARAMETER FIELD ADDR
-; S1      =     ADDR OF 1st WORD OF PARAMETER STACK
-; S2      =     -"-  OF 2nd -"-  OF    -"-     -"-
-; R1      =     -"-  OF 1st -"-  OF RETURN STACK
-; R2      =     -"-  OF 2nd -"-  OF  -"-    -"-
+;       =       MEANS "IS EQUAL TO"
+;       <--     MEANS ASSIGNMENT
+;       NAME    =     ADDR OF NAME
+;       (NAME)  =     CONTENTS @ NAME
+;       ((NAME))=     INDIRECT CONTENTS
+;       CFA     =     CODE FIELD ADDR
+;       LFA     =     LINK FIELD ADDR
+;       NFA     =     NAME FIELD ADDR
+;       PFA     =     PARAMETER FIELD ADDR
+;       S1      =     ADDR OF 1st WORD OF PARAMETER STACK
+;       S2      =     -"-  OF 2nd -"-  OF    -"-     -"-
+;       R1      =     -"-  OF 1st -"-  OF RETURN STACK
+;       R2      =     -"-  OF 2nd -"-  OF  -"-    -"-
 ; ( above Stack posn. valid b4 & after execution of any word, not during)
 ;
-; LSB     =     LEAST SIGNIFICANT BIT
-; MSB     =     MOST  SIGNIFICANT BIT
-; LB      =     LOW  BYTE
-; HB      =     HIGH BYTE
-; LW      =     LOW  WORD
-; HW      =     HIGH WORD
+;       LSB     =     LEAST SIGNIFICANT BIT
+;       MSB     =     MOST  SIGNIFICANT BIT
+;       LB      =     LOW  BYTE
+;       HB      =     HIGH BYTE
+;       LW      =     LOW  WORD
+;       HW      =     HIGH WORD
 ; (May be used as suffix to above names)
-
-; orterforth interop with C code definitions
-
-DEFINE USEIY                    ; to hold HPUSH
-
-_rf_z80_sp:
-  defw $0000                    ; register SP saved here 
-
-PUBLIC _rf_start
-
-_rf_start:                      ; C code calls this to switch from registers to C variables
-  pop hl                        ; save C return address
-IFDEF USEIY
-IFDEF SPECTRUM
-  ld iy, $5C3A                  ; restore IY (ZX Spectrum)
-ENDIF
-ENDIF
-  ld (_rf_sp), sp               ; sp to SP
-  ld sp, (_rf_z80_sp)
-  dec de                        ; de to W
-  ld (_rf_w), de
-  ld (_rf_ip), bc               ; bc to IP
-  jp (hl)                       ; return to C
-
-PUBLIC _rf_trampoline
-
-_rf_trampoline:                 ; C code calls this to iterate over function pointers - assumes a switch into assembler
-  ld hl, (_rf_fp)               ; returns if fp is null
-  ld a, h
-  or l
-  ret z
-  ld de, _rf_trampoline         ; fp will return to this address
-  push de
-  ld bc, (_rf_ip)               ; IP to bc
-  ld de, (_rf_w)                ; W to de
-  inc de
-  ld (_rf_z80_sp), sp           ; SP to sp
-  ld sp, (_rf_sp)
-  ld ix, next                   ; set IX
-IFDEF USEIY
-  ld iy, hpush                  ; set IY
-ENDIF
-  jp (hl)                       ; jump to fp, will return to start of trampoline
-
-;	FORTH ADDRESS INTERPRETER
-;	POST INCREMENTING VERSION
+;       FORTH ADDRESS INTERPRETER
+;       POST INCREMENTING VERSION
 ;
-PUBLIC _rf_z80_dpush            ; external libs can use this
-PUBLIC _rf_z80_hpush            ; external libs can use this
-PUBLIC _rf_next
-
+PUBLIC _rf_z80_dpush
 _rf_z80_dpush:
-dpush:
-  push de
+DPUSH:  PUSH    DE
+PUBLIC _rf_z80_hpush
 _rf_z80_hpush:
-hpush:
-  push hl                       ;		IY points here
+HPUSH:  PUSH    HL              ;               IY points here
+PUBLIC _rf_next
 _rf_next:
-next:
-  ld a, (bc)                    ;(W)<--((IP))	IX points here
-  ld l, a
-  inc bc                        ;INC IP
-  ld a, (bc)
-  ld h, a                       ;(HL)<--CFA
-  inc bc
-next1:
-  ld e, (hl)                    ;(PC)<--((W))
-  inc hl
-  ld d, (hl)
-  ex de, hl
-  jp (hl)                       ;NOTE: (DE)=CFA+1
+NEXT:   LD      A,(BC)          ;(W)<--((IP))   IX points here
+        LD      L,A
+        INC     BC              ;INC IP
+        LD      A,(BC)
+        LD      H,A             ;(HL)<--CFA
+        INC     BC
+NEXT1:  LD      E,(HL)          ;(PC)<--((W))
+        INC     HL
+        LD      D,(HL)
+        EX      DE,HL
+        JP      (HL)            ;NOTE: (DE)=CFA+1
+;
 
-PUBLIC _rf_code_lit
-
+;       FORTH DICTIONARY
+;       DICTIONARY FORMAT:
+;
+;                               BYTE
+;       ADDRESS NAME            CONTENTS
+;       ------- ----            --------
+;                                               (MSB=1
+;                                               (P=PRECEDENCE BIT
+;                                               (S=SMUDGE BIT
+;       NFA     NAME FIELD      1PS<LEN>        <NAME LENGTH
+;                               0<1CHAR>        MSB=0, NAME'S 1st CHAR
+;                               0<2CHAR>
+;                                 ...
+;                               1<LCHAR>        MSB=1, NAME'S LAST CHAR
+;       LFA     LINK FIELD      <LINKLB>        =PREVIOUS WORD'S NFA
+;                               <LINKHB>
+;LABEL: CFA     CODE FIELD      <CODELB>        =ADDR CPU CODE
+;                               <CODEHB>
+;        PFA    PARAMETER       <1PARAM>        1st PARAMETER BYTE
+;               FIELD           <2PARAM>
+;                                 ...
+;
+;
+;
+PUBLIC _rf_code_lit             ;LIT
+                                ;(LFA)=0 MARKS END OF DICTIONARY
 _rf_code_lit:                   ;(S1)<--((IP))
-  ld a, (bc)                    ;(HL)<--((IP))=LITERAL
-  inc bc                        ;(IP)<--(IP)+2
-  ld l, a                       ;LB
-  ld a, (bc)                    ;HB
-  inc bc
-  ld h, a
+        LD      A,(BC)          ;(HL)<--((IP))=LITERAL
+        INC     BC              ;(IP)<--(IP)+2
+        LD      L,A             ;LB
+        LD      A,(BC)          ;HB
+        INC     BC
+        LD      H,A
 IFDEF USEIY
-  jp (iy)                       ;(S1)<--(HL)
+        JP      (IY)            ;(S1)<--(HL)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_exec
-
+;
+PUBLIC _rf_code_exec            ;EXECUTE
 _rf_code_exec:
-  pop hl                        ; jump to *CFA
-  jp next1
-
-PUBLIC _rf_code_bran
-
+        POP     HL
+        JP      NEXT1
+;
+PUBLIC _rf_code_bran            ;BRANCH
+                                ;(IP)<--(IP)+((IP))
 _rf_code_bran:
-bran1:                          ;(IP)<--(IP)+((IP))
-  ld h, b                       ;(HL)<--(IP)
-  ld l, c
-  ld e, (hl)                    ;(DE)<--((IP))=BRANCH OFFSET
-  inc hl
-  ld d, (hl)
-  dec hl
-  add hl, de                    ;(HL)<--(HL)+((IP))
-  ld c, l                       ;(IP)<--(HL)
-  ld b, h
-  jp (ix)
-
-PUBLIC _rf_code_zbran
-
+BRAN1:  LD      H,B             ;(HL)<--(IP)
+        LD      L,C
+        LD      E,(HL)          ;(DE)<--((IP))=BRANCH OFFSET
+        INC     HL
+        LD      D,(HL)
+        DEC     HL
+        ADD     HL,DE           ;(HL)<--(HL)+((IP))
+        LD      C,L             ;(IP)<--(HL)
+        LD      B,H
+        JP      (IX)
+;
+PUBLIC _rf_code_zbran           ;0BRANCH
 _rf_code_zbran:
-  pop hl
-  ld a, l
-  or h
-  jp z, bran1                   ;IF (S1)=0 THEN BRANCH
-  inc bc                        ;ELSE SKIP BRANCH OFFSET
-  inc bc
-  jp (ix)
-
-PUBLIC _rf_code_xloop
-
+        POP     HL
+        LD      A,L
+        OR      H
+        JR      Z,BRAN1         ;IF (S1)=0 THEN BRANCH
+        INC     BC              ;ELSE SKIP BRANCH OFFSET
+        INC     BC
+        JP      (IX)
+;
+PUBLIC _rf_code_xloop           ;(LOOP)
 _rf_code_xloop:
-  ld hl, (_rf_rp)               ;  ((HL))=INDEX=(R1)
-  inc (hl)                      ;/  index(lb) += 1
-  ld e, (hl)                    ;/
-  inc hl                        ;/ (hl)-->index(hb)
-  jp nz, xloop1                 ;/ jump if ((hl)) < 256
-  inc (hl)                      ;/ else index(hb) += 1
-xloop1:
-  ld d, (hl)                    ;/ (DE)<-- new INDEX
-  inc hl                        ;/ ((HL))=LIMIT
-  ld a, e
-  sub (hl)
-  ld a, d
-  inc hl
-  sbc a, (hl)                   ;  INDEX<LIMIT?
-  jp m, bran1                   ;  YES, LOOP AGAIN
-  inc hl                        ;  NO, DONE
-  ld (_rf_rp), hl               ;  DISCARD R1 & R2
-  inc bc
-  inc bc                        ;  SKIP BRANCH OFFSET
-  jp (ix)
-
-PUBLIC _rf_code_xploo
-
+        LD      HL,(RPP)        ;  ((HL))=INDEX=(R1)
+        inc     (hl)            ;/  index(lb) += 1
+        LD      E,(HL)          ;/
+        INC     HL              ;/ (hl)-->index(hb)
+        jr      nz,xloop1       ;/ jump if ((hl)) < 256
+        inc     (hl)            ;/ else index(hb) += 1
+xloop1: LD      D,(HL)          ;/ (DE)<-- new INDEX
+        INC     HL              ;/ ((HL))=LIMIT
+        LD      A,E
+        SUB     (HL)
+        LD      A,D
+        INC     HL
+        SBC     A,(HL)          ;  INDEX<LIMIT?
+        JP      M,BRAN1         ;  YES, LOOP AGAIN
+        INC     HL              ;  NO, DONE
+        LD      (RPP),HL        ;  DISCARD R1 & R2
+        INC     BC
+        INC     BC              ;  SKIP BRANCH OFFSET
+        JP      (IX)
+;
+PUBLIC _rf_code_xploo           ;(+LOOP)
 _rf_code_xploo:
-  pop de                        ;(DE)<--INCR
-  ld hl, (_rf_rp)               ;((HL))=INDEX
-  ld a, (hl)                    ;INDEX<--INDEX+INCR
-  add a, e
-  ld (hl), a
-  ld e, a
-  inc hl
-  ld a, (hl)
-  adc a, d
-  ld (hl), a
-  inc hl                        ;((HL))=LIMIT
-  inc d
-  dec d
-  ld d, a                       ;(DE)<--NEW INDEX
-  jp m, xloo2                   ;IF INCR>0
-  ld a, e
-  sub (hl)                      ;THEN (A)<--INDEX - LIMIT
-  ld a, d
-  inc hl
-  sbc a, (hl)
-  jp xloo3
-xloo2:
-  ld a, (hl)                    ;ELSE (A)<--LIMIT - INDEX
-  sub e
-  inc hl
-  ld a, (hl)
-  sbc a, d                      ;IF (A)<0
-xloo3:
-  jp m, bran1                   ;THEN LOOP AGN
-  inc hl                        ;ELSE DONE
-  ld (_rf_rp), hl               ;DISCARD R1 & R2
-  inc bc                        ;SKIP BRANCH OFFSET
-  inc bc
-  jp (ix)
-
-PUBLIC _rf_code_xdo
-
+        POP     DE              ;(DE)<--INCR
+        LD      HL,(RPP)        ;((HL))=INDEX
+        LD      A,(HL)          ;INDEX<--INDEX+INCR
+        ADD     A,E
+        LD      (HL),A
+        LD      E,A
+        INC     HL
+        LD      A,(HL)
+        ADC     A,D
+        LD      (HL),A
+        INC     HL              ;((HL))=LIMIT
+        INC     D
+        DEC     D
+        LD      D,A             ;(DE)<--NEW INDEX
+        JP      M,XLOO2         ;IF INCR>0
+        LD      A,E
+        SUB     (HL)            ;THEN (A)<--INDEX - LIMIT
+        LD      A,D
+        INC     HL
+        SBC     A,(HL)
+        JP      XLOO3
+XLOO2:  LD      A,(HL)          ;ELSE (A)<--LIMIT - INDEX
+        SUB     E
+        INC     HL
+        LD      A,(HL)
+        SBC     A,D
+;                               ;IF (A)<0
+XLOO3:  JP      M,BRAN1         ;THEN LOOP AGN
+        INC     HL              ;ELSE DONE
+        LD      (RPP),HL        ;DISCARD R1 & R2
+        INC     BC              ;SKIP BRANCH OFFSET
+        INC     BC
+        JP      (IX)
+;
+PUBLIC _rf_code_xdo             ;  (DO)
 _rf_code_xdo:
-  exx                           ;/ SAVE IP
-  pop de                        ;  (DE)<--INITIAL INDEX
-  pop bc                        ;/ (BC)<--LIMIT
-  ld hl, (_rf_rp)               ;  (HL)<--(RP)
-  dec hl
-  ld (hl), b
-  dec hl
-  ld (hl), c                    ;/ (R2)<--LIMIT
-  dec hl
-  ld (hl), d
-  dec hl
-  ld (hl), e                    ;  (R1)<--INITIAL INDEX
-  ld (_rf_rp), hl               ;  (RP)<--(RP)-4
-  exx                           ;/ RESTORE IP
-  jp (ix)
-
-PUBLIC _rf_code_rr
-
+        EXX                     ;/ SAVE IP
+        POP     DE              ;  (DE)<--INITIAL INDEX
+        POP     BC              ;/ (BC)<--LIMIT
+        LD      HL,(RPP)        ;  (HL)<--(RP)
+        DEC     HL
+        LD      (HL),B
+        DEC     HL
+        LD      (HL),C          ;/ (R2)<--LIMIT
+        DEC     HL
+        LD      (HL),D
+        DEC     HL
+        LD      (HL),E          ;  (R1)<--INITIAL INDEX
+        LD      (RPP),HL        ;  (RP)<--(RP)-4
+        EXX                     ;/ RESTORE IP
+        JP      (IX)
+;
+PUBLIC _rf_code_rr              ;I
 _rf_code_rr:                    ;(S1)<--(R1), (R1) UNCHANGED
-  ld hl, (_rf_rp)               ;(DE)<--(R1)
-  ld e, (hl)
-  inc hl
-  ld d, (hl)
-  push de                       ;(S1)<--(DE)
-  jp (ix)
-
-PUBLIC _rf_code_digit
-
+        LD      HL,(RPP)
+        LD      E,(HL)          ;(DE)<--(R1)
+        INC     HL
+        LD      D,(HL)
+        PUSH    DE              ;(S1)<--(DE)
+        JP      (IX)
+;
+PUBLIC _rf_code_digit           ;DIGIT
 _rf_code_digit:
-  pop hl                        ;(L)<--(S1)LB = BASE VALUE
-  pop de                        ;(E)<--(S2)LB = ASCII CHR TO BE CONVERTED
-  ld a, e                       ;ACCU<--CHR
-  sub $30                       ;>=0?
-  jp c, digi2                   ;/ <0 IS INVALID
-  cp $0A                        ;>9?
-  jp c, digi1                   ;/ NO, TEST BASE VALUE
-  sub $07                       ;GAP BETWEEN "9" & "A", NW "A"=0AH
-  cp $0A                        ;>="A"?
-  jp c, digi2                   ;/ CHRs BETWEEN "9" & "A" ARE INVALID
-digi1:
-  cp l                          ;<BASE VALUE?
-  jp nc, digi2                  ;/ NO, INVALID
-  ld e, a                       ;(S2)<--(DE) = CONVERTED DIGIT
-  ld hl, $0001                  ;(S1)<--TRUE
-  jp dpush
-digi2:
-  ld l, h                       ;(HL)<--FALSE
+        POP     HL              ;(L)<--(S1)LB = BASE VALUE
+        POP     DE              ;(E)<--(S2)LB = ASCII CHR TO BE CONVERTED
+        LD      A,E             ;ACCU<--CHR
+        SUB     '0'             ;>=0?
+        JR      C,DIGI2         ;/ <0 IS INVALID
+        CP      0AH             ;>9?
+        JR      C,DIGI1         ;/ NO, TEST BASE VALUE
+        SUB     07H             ;GAP BETWEEN "9" & "A", NW "A"=0AH
+        CP      0AH             ;>="A"?
+        JR      C,DIGI2         ;/ CHRs BETWEEN "9" & "A" ARE INVALID
+DIGI1:  CP      L               ;<BASE VALUE?
+        JR      NC,DIGI2        ;/ NO, INVALID
+        LD      E,A             ;(S2)<--(DE) = CONVERTED DIGIT
+        LD      HL,0001H        ;(S1)<--TRUE
+        JP      DPUSH
+DIGI2:  LD      L,H             ;(HL)<--FALSE
 IFDEF USEIY
-  jp (iy)                       ;(S1)<--FALSE
+        JP      (IY)            ;(S1)<--FALSE
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_pfind
-
-_rf_code_pfind:
-  pop de                        ;(DE)<--NFA
-pfin1: 
-  pop hl                        ;(HL)<--STRING ADDR
-  push hl                       ;SAVE FOR NEXT ITERATION
-  ld a, (de)
-  xor (hl)                      ;FILTER DEVIATIONS
-  and $3F                       ;MASK MSB & PRECEDENCE BIT
-  jp nz, pfin4                  ;LENGTHS DIFFER
-pfin2:
-  inc hl                        ;(HL)<--ADDR NEXT CHR IN STRING
-  inc de                        ;(DE)<--ADDR NEXT CHR IN NF
-  ld a, (de)
-  xor (hl)                      ;FILTER DEVIATIONS
-  add a, a
-  jp nz, pfin3                  ;NO MATCH
-  jp nc, pfin2                  ;MATCH SO FAR, LOOP AGN
-  ld hl, $0005                  ;STRING MATCHES
-  add hl, de                    ;((SP))<--PFA
-  ex (sp), hl
-pfin6:
-  dec de                        ;POSN DE ON NFA
-  ld a, (de)
-  or a                          ;MSB=1? =LENGTH BYTE
-  jp p, pfin6                   ;NO, TRY NEXT CHR
-  ld e, a                       ;(E)<--LENGTH BYTE
-  ld d, $00
-  ld hl, $0001                  ;(HL)<--TRUE
-  jp dpush                      ;NF FOUND, RETURN
+;
+PUBLIC _rf_code_pfind           ;(FIND) (2-1)FAILURE
+_rf_code_pfind:                 ;       (2-3)SUCCESS
+        POP     DE              ;(DE)<--NFA
+PFIN1:  POP     HL              ;(HL)<--STRING ADDR
+        PUSH    HL              ;SAVE FOR NEXT ITERATION
+        LD      A,(DE)
+        XOR     (HL)            ;FILTER DEVIATIONS
+        AND     3FH             ;MASK MSB & PRECEDENCE BIT
+        JR      NZ,PFIN4        ;LENGTHS DIFFER
+PFIN2:  INC     HL              ;(HL)<--ADDR NEXT CHR IN STRING
+        INC     DE              ;(DE)<--ADDR NEXT CHR IN NF
+        LD      A,(DE)
+        XOR     (HL)            ;FILTER DEVIATIONS
+        ADD     A,A
+        JR      NZ,PFIN3        ;NO MATCH
+        JR      NC,PFIN2        ;MATCH SO FAR, LOOP AGN
+        LD      HL,0005H        ;STRING MATCHES
+        ADD     HL,DE           ;((SP))<--PFA
+        EX      (SP),HL
+PFIN6:  DEC     DE              ;POSN DE ON NFA
+        LD      A,(DE)
+        OR      A               ;MSB=1? =LENGTH BYTE
+        JP      P,PFIN6         ;NO, TRY NEXT CHR
+        LD      E,A             ;(E)<--LENGTH BYTE
+        LD      D,00H
+        LD      HL,0001H        ;(HL)<--TRUE
+        JP      DPUSH           ;NF FOUND, RETURN
 ;
 ;ABOVE NF NOT A MATCH, TRY NEXT ONE
 ;
-pfin3:
-  jp c, pfin5                   ;CARRY=END OF NF
-pfin4:
-  inc de                        ;FIND END OF NF
-  ld a, (de)
-  or a                          ;MSB=1?
-  jp p, pfin4                   ;NO, LOOP
-pfin5:
-  inc de                        ;(DE)<--LFA
-  ex de, hl
-  ld e, (hl)
-  inc hl
-  ld d, (hl)                    ;(DE)<--(LFA)
-  ld a, d
-  or e                          ;END OF DICTIONARY? (LFA)=0
-  jp nz, pfin1                  ;NO, TRY PREVIOUS DEFINITION
-  pop hl                        ;DROP STRING ADDR
-  ld hl, $0000                  ;(HL)<--FALSE
+PFIN3:  JR      C,PFIN5         ;CARRY=END OF NF
+PFIN4:  INC     DE              ;FIND END OF NF
+        LD      A,(DE)
+        OR      A               ;MSB=1?
+        JP      P,PFIN4         ;NO, LOOP
+PFIN5:  INC     DE              ;(DE)<--LFA
+        EX      DE,HL
+        LD      E,(HL)
+        INC     HL
+        LD      D,(HL)          ;(DE)<--(LFA)
+        LD      A,D
+        OR      E               ;END OF DICTIONARY? (LFA)=0
+        JR      NZ,PFIN1        ;NO, TRY PREVIOUS DEFINITION
+        POP     HL              ;DROP STRING ADDR
+        LD      HL,0            ;(HL)<--FALSE
 IFDEF USEIY
-  jp (iy)                       ;NO MATCH FOUND, RETURN
+        JP      (IY)            ;NO MATCH FOUND, RETURN
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_encl
-
+;
+PUBLIC _rf_code_encl            ;ENCLOSE
 _rf_code_encl:
-  pop de                        ;(DE)<--(S1)=DELIMITER CHR
-  pop hl                        ;(HL)<--(S2)=ADDR OF TEXT TO SCAN
-  push hl                       ;(S4)<--ADDR
-  ld a, e
-  ld d, a                       ;(D)<--DELIM CHR
-  ld e, $FF                     ;INIT CHR OFFSET COUNTER
-  dec hl                        ;(HL)<--ADDR-1
-encl1:
-  inc hl                        ;SKIP OVER LEADING DELIM CHRs
-  inc e
-  cp (hl)                       ;DELIM CHR?
-  jp z, encl1                   ;YES, LOOP
-  ld d, $00
-  push de                       ;(S3)<--(E)=OFFSET TO 1st NON DELIM
-  ld d, a                       ;(D)<--DELIM CHR
-  ld a, (hl)
-  and a                         ;1st non-DELIM=NULL?
-  jp nz, encl2                  ;NO
-  ld d, $00                     ;YES
-  inc e
-  push de                       ;(S2)<--OFFSET TO BYTE FOLLOWING NULL
-  dec e
-  push de                       ;(S1)<--OFFSET TO NULL
-  jp (ix)
-encl2:
-  ld a, d                       ;(A)<--DELIM CHR
-  inc hl                        ;(HL)<--ADDR NEXT CHR
-  inc e                         ;(E)<--OFFSET TO NEXT CHR
-  cp (hl)                       ;DELIM CHR?
-  jp z, encl4                   ;YES
-  ld a, (hl)
-  and a                         ;NULL?
-  jp nz, encl2                  ;NO, CONT SCAN
-encl3:
-  ld d, $00
-  push de                       ;(S2)<--OFFSET TO NULL
-  push de                       ;(S1)<--OFFSET TO NULL
-  jp (ix)
-encl4:
-  ld d, $00
-  push de                       ;(S2)<--OFFSET TO BYTE FOLLOWING TEXT
-  inc e
-  push de                       ;(S1)<--OFFSET TO 2 BYTES AFTER END OF WORD
-  jp (ix)
-
-PUBLIC _rf_code_cmove
-
+        POP     DE              ;(DE)<--(S1)=DELIMITER CHR
+        POP     HL              ;(HL)<--(S2)=ADDR OF TEXT TO SCAN
+        PUSH    HL              ;(S4)<--ADDR
+        LD      A,E
+        LD      D,A             ;(D)<--DELIM CHR
+        LD      E,-1            ;INIT CHR OFFSET COUNTER
+        DEC     HL              ;(HL)<--ADDR-1
+ENCL1:  INC     HL              ;SKIP OVER LEADING DELIM CHRs
+        INC     E
+        CP      (HL)            ;DELIM CHR?
+        JR      Z,ENCL1         ;YES, LOOP
+        LD      D,0
+        PUSH    DE              ;(S3)<--(E)=OFFSET TO 1st NON DELIM
+        LD      D,A             ;(D)<--DELIM CHR
+        LD      A,(HL)
+        AND     A               ;1st non-DELIM=NULL?
+        JR      NZ,ENCL2        ;NO
+        LD      D,0             ;YES
+        INC     E
+        PUSH    DE              ;(S2)<--OFFSET TO BYTE FOLLOWING NULL
+        DEC     E
+        PUSH    DE              ;(S1)<--OFFSET TO NULL
+        JP      (IX)
+ENCL2:  LD      A,D             ;(A)<--DELIM CHR
+        INC     HL              ;(HL)<--ADDR NEXT CHR
+        INC     E               ;(E)<--OFFSET TO NEXT CHR
+        CP      (HL)            ;DELIM CHR?
+        JR      Z,ENCL4         ;YES
+        LD      A,(HL)
+        AND     A               ;NULL?
+        JR      NZ,ENCL2        ;NO, CONT SCAN
+ENCL3:  LD      D,0
+        PUSH    DE              ;(S2)<--OFFSET TO NULL
+        PUSH    DE              ;(S1)<--OFFSET TO NULL
+        JP      (IX)
+ENCL4:  LD      D,0
+        PUSH    DE              ;(S2)<--OFFSET TO BYTE FOLLOWING TEXT
+        INC     E
+        PUSH    DE              ;(S1)<--OFFSET TO 2 BYTES AFTER END OF WORD
+        JP      (IX)
+;
+PUBLIC _rf_code_cmove           ;CMOVE
 _rf_code_cmove:
-  exx                           ;/ SAVE IP
-  pop bc                        ;  (BC)<--(S1)= #CHRs
-  pop de                        ;  (DE)<--(S2)= DEST ADDR
-  pop hl                        ;/ (HL)<--(S3)= SOURCE ADDR
-  ld a, b
-  or c                          ;  BC=0?
-  jp z, excmov                  ;  YES, DON'T MOVE ANYTHING
-  ldir                          ;/ XFER STRING
-excmov:
-  exx                           ;/ RESTORE IP
-  jp (ix)
-
-PUBLIC _rf_code_ustar
-
-_rf_code_ustar:
-  pop de                        ;(DE)<--MPLIER
-  pop hl                        ;(HL)<--MPCAND
-  push bc                       ;SAVE IP
-  ld b, h
-  ld a, l                       ;(BA)<--MPCAND
-  call mpyx                     ;(AHL)1<--MPCAND.LB*MPLIER
+        EXX                     ;/ SAVE IP
+        POP     BC              ;  (BC)<--(S1)= #CHRs
+        POP     DE              ;  (DE)<--(S2)= DEST ADDR
+        POP     HL              ;/ (HL)<--(S3)= SOURCE ADDR
+        LD      A,B
+        OR      C               ;  BC=0?
+        JR      Z,EXCMOV        ;  YES, DON'T MOVE ANYTHING
+        LDIR                    ;/ XFER STRING
+EXCMOV: EXX                     ;/ RESTORE IP
+        JP      (IX)
+;
+PUBLIC _rf_code_ustar           ;U*   16*16 unsigned multiply
+_rf_code_ustar:                 ;994 T cycles average (8080)
+        POP     DE              ;(DE)<--MPLIER
+        POP     HL              ;(HL)<--MPCAND
+        PUSH    BC              ;SAVE IP
+        LD      B,H
+        LD      A,L             ;(BA)<--MPCAND
+        CALL    MPYX            ;(AHL)1<--MPCAND.LB*MPLIER
                                 ;       1st PARTIAL PRODUCT
-  push hl                       ;SAVE (HL)1
-  ld h, a
-  ld a, b
-  ld b, h                       ;SAVE (A)1
-  call mpyx                     ;(AHL)2<--MPCAND.HB*MPLIER
-                                ; 2nd PARTIAL PRODUCT
-  pop de                        ;(DE)<--(HL)1
-  ld c, d                       ;(BC)<--(AH)1
-; FORM SUM OF PARTIALS:
-;    ; (AHL)1
-;    ;+(AHL)2
-;    ;-------
-;    ; (AHLE)
-  add hl, bc                    ;(HL)<--(HL)2+(AH)1
-  adc a, $00                    ;(AHLE)<--(BA)*(DE)
-  ld d, l
-  ld l, h
-  ld h, a                       ;(HLDE)<--MPLIER*MPCAND
-  pop bc                        ;RESTORE IP
-  push de                       ;(S2)<--PRODUCT.LW
+        PUSH    HL              ;SAVE (HL)1
+        LD      H,A
+        LD      A,B
+        LD      B,H             ;SAVE (A)1
+        CALL    MPYX            ;(AHL)2<--MPCAND.HB*MPLIER
+                                ;       2nd PARTIAL PRODUCT
+        POP     DE              ;(DE)<--(HL)1
+        LD      C,D             ;(BC)<--(AH)1
+;       FORM SUM OF PARTIALS:
+;                               ; (AHL)1
+;                               ;+(AHL)2
+;                               ;-------
+;                               ; (AHLE)
+        ADD     HL,BC           ;(HL)<--(HL)2+(AH)1
+        ADC     A,00H           ;(AHLE)<--(BA)*(DE)
+        LD      D,L
+        LD      L,H
+        LD      H,A             ;(HLDE)<--MPLIER*MPCAND
+        POP     BC              ;RESTORE IP
+        PUSH    DE              ;(S2)<--PRODUCT.LW
 IFDEF USEIY
-  jp (iy)                       ;(S1)<--PRODUCT.HW
+        JP      (IY)            ;(S1)<--PRODUCT.HW
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
 ;
-; MULTIPLY PRIMITIVE
-;   (AHL)<--(A)*(DE)
-; #BITS:   24 8   16
+;       MULTIPLY PRIMITIVE
+;                (AHL)<--(A)*(DE)
+;       #BITS:    24    8   16
 ;
-mpyx:
-  ld hl, $0000                  ;(HL)<--0=PARTIAL PRODUCT.LW
-  ld c, $08                     ;LOOP COUNTER
-mpyx1:
-  add hl, hl                    ;LEFT SHIFT (AHL) 24 BITS
-  rla
-  jp nc, mpyx2                  ;IF NEXT MPLIER BIT = 1
-  add hl, de                    ;THEN ADD MPCAND
-  adc a, $00
-mpyx2:
-  dec c                         ;LAST MPLIER BIT?
-  jp nz, mpyx1                  ;NO, LOOP AGN
-  ret                           ;YES, DONE
-
-PUBLIC _rf_code_uslas
-
+MPYX:   LD      HL,0            ;(HL)<--0=PARTIAL PRODUCT.LW
+        LD      C,08H           ;LOOP COUNTER
+MPYX1:  ADD     HL,HL           ;LEFT SHIFT (AHL) 24 BITS
+        RLA
+        JR      NC,MPYX2        ;IF NEXT MPLIER BIT = 1
+        ADD     HL,DE           ;THEN ADD MPCAND
+        ADC     A,0
+MPYX2:  DEC     C               ;LAST MPLIER BIT?
+        JR      NZ,MPYX1        ;NO, LOOP AGN
+        RET                     ;YES, DONE
+;
+PUBLIC _rf_code_uslas           ;U/
 _rf_code_uslas:
-  ld hl, $0004
-  add hl, sp                    ;((HL))<--NUMERATOR.LW
-  ld e, (hl)                    ;(DE)<--NUMER.LW
-  ld (hl), c                    ;SAVE IP ON STACK
-  inc hl
-  ld d, (hl)
-  ld (hl), b
-  pop bc                        ;(BC)<--DENOMINATOR
-  pop hl                        ;(HL)<--NUMER.HW
-  ld a, l
-  sub c
-  ld a, h
-  sbc a, b                      ;NUMER >= DENOM?
-  jp c, usla1                   ;NO, GO AHEAD
-  ld hl, $FFFF                  ;YES, OVERFLOW
-  ld d, h
-  ld e, l                       ;/ SET REM & QUOT TO MAX
-  jp usla7
-usla1:
-  ld a, $10                     ;LOOP COUNTER
-usla2:
-  add hl, hl                    ;LEFT SHIFT (HLDE) THRU CARRY
-  rla                           ;ROT CARRY INTO ACCU BIT 0
-  ex de, hl
-  add hl, hl
-  jp nc, usla3
-  inc de                        ;ADD CARRY
-  and a                         ;RESET CARRY
-usla3:
-  ex de, hl                     ;SHIFT DONE
-  rra                           ;RESTORE 1st CARRY & COUNTER
-  jp nc, usla4                  ;IF CARRY=1
-  or a                          ;/ RESET CARRY
-  sbc hl, bc                    ;/ THEN (HL)<--(HL)-(BC)
-  jp usla5
-usla4:
-  sbc hl, bc                    ;/ (HL)<--PARTIAL REMAINDER
-  jp nc, usla5
-  add hl, bc                    ;UNDERFLOW, RESTORE
-  dec de
-usla5:
-  inc de                        ;INC QUOT
-  dec a                         ;COUNTER=0?
-  jp nz, usla2                  ;NO, LOOP AGN
-usla7:
-  pop bc                        ;RESTORE IP
-  push hl                       ;(S2)<--REMAINDER
-  push de                       ;(S1)<--QUOTIENT
-  jp (ix)
-
-PUBLIC _rf_code_andd
-
+        LD      HL,0004H
+        ADD     HL,SP           ;((HL))<--NUMERATOR.LW
+        LD      E,(HL)          ;(DE)<--NUMER.LW
+        LD      (HL),C          ;SAVE IP ON STACK
+        INC     HL
+        LD      D,(HL)
+        LD      (HL),B
+        POP     BC              ;(BC)<--DENOMINATOR
+        POP     HL              ;(HL)<--NUMER.HW
+        LD      A,L
+        SUB     C
+        LD      A,H
+        SBC     A,B             ;NUMER >= DENOM?
+        JR      C,USLA1         ;NO, GO AHEAD
+        LD      HL,0FFFFH       ;YES, OVERFLOW
+        LD      D,H
+        LD      E,L             ;/ SET REM & QUOT TO MAX
+        JP      USLA7
+USLA1:  LD      A,10H           ;LOOP COUNTER
+USLA2:  ADD     HL,HL           ;LEFT SHIFT (HLDE) THRU CARRY
+        RLA                     ;ROT CARRY INTO ACCU BIT 0
+        EX      DE,HL
+        ADD     HL,HL
+        JR      NC,USLA3
+        INC     DE              ;ADD CARRY
+        AND     A               ;RESET CARRY
+USLA3:  EX      DE,HL           ;SHIFT DONE
+        RRA                     ;RESTORE 1st CARRY & COUNTER
+        JR      NC,USLA4        ;IF CARRY=1
+        OR      A               ;/ RESET CARRY
+        SBC     HL,BC           ;/ THEN (HL)<--(HL)-(BC)
+        JP      USLA5
+USLA4:  SBC     HL,BC           ;/ (HL)<--PARTIAL REMAINDER
+        JR      NC,USLA5
+        ADD     HL,BC           ;UNDERFLOW, RESTORE
+        DEC     DE
+USLA5:  INC     DE              ;INC QUOT
+        DEC     A               ;COUNTER=0?
+        JP      NZ,USLA2        ;NO, LOOP AGN
+USLA7:  POP     BC              ;RESTORE IP
+        PUSH    HL              ;(S2)<--REMAINDER
+        PUSH    DE              ;(S1)<--QUOTIENT
+        JP      (IX)
+;
+PUBLIC _rf_code_andd            ;AND
 _rf_code_andd:                  ;(S1)<--(S1) AND (S2)
-  pop de
-  pop hl
-  ld a, e
-  and l
-  ld l, a
-  ld a, d
-  and h
-  ld h, a
+        POP     DE
+        POP     HL
+        LD      A,E
+        AND     L
+        LD      L,A
+        LD      A,D
+        AND     H
+        LD      H,A
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_orr
-
+;
+PUBLIC _rf_code_orr             ;OR
 _rf_code_orr:                   ;(S1)<--(S1) OR (S2)
-  pop de
-  pop hl
-  ld a, e
-  or l
-  ld l, a
-  ld a, d
-  or h
-  ld h, a
+        POP     DE
+        POP     HL
+        LD      A,E
+        OR      L
+        LD      L,A
+        LD      A,D
+        OR      H
+        LD      H,A
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_xorr
-
+;
+PUBLIC _rf_code_xorr            ;XOR
 _rf_code_xorr:                  ;(S1)<--(S1) XOR (S2)
-  pop de
-  pop hl
-  ld a, e
-  xor l
-  ld l, a
-  ld a, d
-  xor h
-  ld h, a
+        POP     DE
+        POP     HL
+        LD      A,E
+        XOR     L
+        LD      L,A
+        LD      A,D
+        XOR     H
+        LD      H,A
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_spat
-
+;
+PUBLIC _rf_code_spat            ;SP@
 _rf_code_spat:                  ;(S1)<--(SP)
-  ld hl, $0000
-  add hl, sp                    ;(HL)<--(SP)
+        LD      HL,0
+        ADD     HL,SP           ;(HL)<--(SP)
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_spsto
-
+;
+PUBLIC _rf_code_spsto           ;SP!
 _rf_code_spsto:                 ;(SP)<--(S0) (USER VARIABLE)
-  ld hl, (_rf_up)               ;(HL)<--USER VAR BASE ADDR
-  ld de, $0006
-  add hl, de                    ;(HL)<--S0
-  ld e, (hl)
-  inc hl
-  ld d, (hl)                    ;(DE)<--(S0)
-  ex de, hl
-  ld sp, hl                     ;(SP)<--(S0)
-  jp (ix)
+        LD      HL,(UP)         ;(HL)<--USER VAR BASE ADDR
+        LD      DE,0006H
+        ADD     HL,DE           ;(HL)<--S0
+        LD      E,(HL)
+        INC     HL
+        LD      D,(HL)          ;(DE)<--(S0)
+        EX      DE,HL
+        LD      SP,HL           ;(SP)<--(S0)
+        JP      (IX)
+;
 
-PUBLIC _rf_code_rpsto
-
+PUBLIC _rf_code_rpsto           ;RP!
 _rf_code_rpsto:                 ;(RP)<--(R0) (USER VARIABLE)
-  ld hl, (_rf_up)               ;(HL)<--USER VAR BASE ADDR
-  ld de, $0008
-  add hl, de                    ;(HL)<--R0
-  ld e, (hl)
-  inc hl
-  ld d, (hl)                    ;(DE)<--(R0)
-  ld (_rf_rp), de               ;/ (RP)<--(R0)
-  jp (ix)
-
-PUBLIC _rf_code_semis
-
+        LD      HL,(UP)         ;(HL)<--USER VAR BASE ADDR
+        LD      DE,0008H
+        ADD     HL,DE           ;(HL)<--R0
+        LD      E,(HL)
+        INC     HL
+        LD      D,(HL)          ;(DE)<--(R0)
+        LD      (RPP),DE        ;/ (RP)<--(R0)
+        JP      (IX)
+;
+PUBLIC _rf_code_semis           ; ;S
 _rf_code_semis:                 ;(IP)<--(R1)
-  ld hl, (_rf_rp)
-  ld c, (hl)
-  inc hl
-  ld b, (hl)                    ;(BC)<--(R1)
-  inc hl
-  ld (_rf_rp), hl               ;(RP)<--(RP)+2
-  jp (ix)
-
-PUBLIC _rf_code_leave
-
+        LD      HL,(RPP)
+        LD      C,(HL)
+        INC     HL
+        LD      B,(HL)          ;(BC)<--(R1)
+        INC     HL
+        LD      (RPP),HL        ;(RP)<--(RP)+2
+        JP      (IX)
+;
+PUBLIC _rf_code_leave           ;LEAVE
 _rf_code_leave:                 ;LIMIT<--INDEX
-  ld hl, (_rf_rp)
-  ld e, (hl)
-  inc hl
-  ld d, (hl)                    ;(DE)<--(R1)=INDEX
-  inc hl
-  ld (hl), e
-  inc hl
-  ld (hl), d                    ;(R2)<--(DE)=LIMIT
-  jp (ix)
-
-PUBLIC _rf_code_tor
-
+        LD      HL,(RPP)
+        LD      E,(HL)
+        INC     HL
+        LD      D,(HL)          ;(DE)<--(R1)=INDEX
+        INC     HL
+        LD      (HL),E
+        INC     HL
+        LD      (HL),D          ;(R2)<--(DE)=LIMIT
+        JP      (IX)
+;
+PUBLIC _rf_code_tor             ;>R
 _rf_code_tor:
-  pop de
-  ld hl, (_rf_rp)
-  dec hl
-  ld (hl), d  
-  dec hl
-  ld (hl), e                    ;/ (R1)<--(DE)
-  ld (_rf_rp), hl               ;  (RP)<--(RP)-2
-  jp (ix)
-
-PUBLIC _rf_code_fromr
-
+        POP     DE
+        LD      HL,(RPP)
+        DEC     HL
+        LD      (HL),D                
+        DEC     HL
+        LD      (HL),E          ;/ (R1)<--(DE)
+        LD      (RPP),HL        ;  (RP)<--(RP)-2
+        JP      (IX)
+;
+PUBLIC _rf_code_fromr           ;R>
 _rf_code_fromr:
-  ld hl, (_rf_rp)
-  ld e, (hl)
-  inc hl
-  ld d, (hl)
-  inc hl
-  ld (_rf_rp), hl
-  push de                       ;(S1)<--(R1)
-  jp (ix)
-
-PUBLIC _rf_code_zequ
-
+        LD      HL,(RPP)
+        LD      E,(HL)
+        INC     HL
+        LD      D,(HL)
+        INC     HL
+        LD      (RPP),HL
+        PUSH    DE              ;(S1)<--(R1)
+        JP      (IX)
+;
+PUBLIC _rf_code_zequ            ;0=
 _rf_code_zequ:
-  pop hl
-  ld a, l
-  or h
-  ld hl, $0000
-  jp nz, hpush
-  inc l                         ;(HL)<--TRUE
-zequ1:
+        POP     HL
+        LD      A,L
+        OR      H
+        LD      HL,0
+;       JR      NZ,ZEQU1
+        JP      NZ,HPUSH
+        INC     L               ;(HL)<--TRUE
 IFDEF USEIY
-  jp (iy)
+ZEQU1:  JP      (IY)
 ELSE
-  jp hpush
+ZEQU1:  JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_zless
-
+;
+PUBLIC _rf_code_zless           ;0<
 _rf_code_zless:
-  pop af                        ;/ (A)<--(S1)H
-  rla                           ;/ (CARRY)<--BIT 7
-  ld hl, $0000                  ;  (HL)<--FALSE
-  jp nc, hpush
-  inc l                         ;  (HL)<--TRUE
-zles1:
+        POP     AF              ;/ (A)<--(S1)H
+        RLA                     ;/ (CARRY)<--BIT 7
+        LD      HL,0            ;  (HL)<--FALSE
+;       JR      NC,ZLES1
+        JP      NC,HPUSH
+        INC     L               ;  (HL)<--TRUE
 IFDEF USEIY
-  jp (iy)
+ZLES1:  JP      (IY)
 ELSE
-  jp hpush
+ZLES1:  JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_plus
-
+;
+PUBLIC _rf_code_plus            ;+
 _rf_code_plus:
-  pop de
-  pop hl
-  add hl, de
+        POP     DE
+        POP     HL
+        ADD     HL,DE
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_dplus
-
+;
+PUBLIC _rf_code_dplus           ;D+ ( d1L d1H d2L d2h -- d3L d3H)
 _rf_code_dplus:
-  exx                           ;/ SAVE IP
-  pop bc                        ;  (BC)<--d2H
-  pop hl                        ;  (HL)<--d2L
-  pop af                        ;d (AF)<--d1H
-  pop de                        ;  (DE)<--d1L
-  push af                       ;/ (S1)<--d1H
-  add hl, de                    ;  (HL)<--d2L+d1L=d3L
-  ex de, hl                     ;  (DE)<--d3L
-  pop hl                        ;  (HL)<--d1H
-  adc hl, bc                    ;/ (HL)<--d1H+d2H+CARRY=d3H
-  push de                       ;  (S2)<--d3L
-  push hl                       ;/ (S1)<--d3H
-  exx                           ;/ RESTORE IP
-  jp (ix)
-
-PUBLIC _rf_code_minus
-
+        EXX                     ;/ SAVE IP
+        POP     BC              ;  (BC)<--d2H
+        POP     HL              ;  (HL)<--d2L
+        POP     AF              ;d (AF)<--d1H
+        POP     DE              ;  (DE)<--d1L
+        PUSH    AF              ;/ (S1)<--d1H
+        ADD     HL,DE           ;  (HL)<--d2L+d1L=d3L
+        EX      DE,HL           ;  (DE)<--d3L
+        POP     HL              ;  (HL)<--d1H
+        ADC     HL,BC           ;/ (HL)<--d1H+d2H+CARRY=d3H
+        PUSH    DE              ;  (S2)<--d3L
+        PUSH    HL              ;/ (S1)<--d3H
+        EXX                     ;/ RESTORE IP
+        JP      (IX)
+;
+PUBLIC _rf_code_minus           ;MINUS
 _rf_code_minus:
-; pop de                  ; 10t ;/
-; xor a                   ;  4t ;/ RESET CARRY, (A)<--0
-; ld h, a                 ;  4t ;/
-; ld l, a                 ;  4t ;/ LD HL,0
-; sbc hl, de              ; 15t ;/ (HL)<--(DE)2's COMPL.
-                          ; 37t total
-  pop hl                  ; 10t
-  xor a                   ;  4t
-  sub l                   ;  4t
-  ld l, a                 ;  4t
-  sbc a, a                ;  4t
-  sub h                   ;  4t
-  ld h, a                 ;  4t
-                          ; 34t total http://z80-heaven.wikidot.com/optimization#toc18
+;       POP     DE              ;/
+;       XOR     A               ;/ RESET CARRY, (A)<--0
+;       LD      H,A             ;/
+;       LD      L,A             ;/ LD HL,0
+;       SBC     HL,DE           ;/ (HL)<--(DE)2's COMPL.
+; see http://z80-heaven.wikidot.com/optimization#toc18
+; 34t vs 37t
+        POP     HL
+        XOR     A
+        SUB     L
+        LD      L,A
+        SBC     A,A
+        SUB     H
+        LD      H,A
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_dminu
-
+;
+PUBLIC _rf_code_dminu           ;DMINUS
 _rf_code_dminu:
-  pop hl                        ;(HL)<--d1H
-  pop de                        ;(DE)<--d1L
-  sub a                         ;(A)<--0
-  sub e
-  ld e, a                       ;(E)<--NEG(E)
-  ld a, $00
-  sbc a, d
-  ld d, a                       ;(D)<--NEG(D)
-  ld a, $00
-  sbc a, l
-  ld l, a                       ;(L)<--NEG(L)
-  ld a, $00
-  sbc a, h
-  ld h, a                       ;(H)<--NEG(H)
-  jp dpush                      ;(S2)<--d2L, (S1)<--d2H
-
-PUBLIC _rf_code_over
-
+        POP     HL              ;(HL)<--d1H
+        POP     DE              ;(DE)<--d1L
+        SUB     A               ;(A)<--0
+        SUB     E
+        LD      E,A             ;(E)<--NEG(E)
+        LD      A,00H
+        SBC     A,D
+        LD      D,A             ;(D)<--NEG(D)
+        LD      A,00H
+        SBC     A,L
+        LD      L,A             ;(L)<--NEG(L)
+        LD      A,00H
+        SBC     A,H
+        LD      H,A             ;(H)<--NEG(H)
+        JP      DPUSH           ;(S2)<--d2L, (S1)<--d2H
+;
+PUBLIC _rf_code_over            ;OVER
 _rf_code_over:
-  pop de
-  pop hl
-  push hl
-  jp dpush
-
-PUBLIC _rf_code_drop
-
+        POP     DE
+        POP     HL
+        PUSH    HL
+        JP      DPUSH
+;
+PUBLIC _rf_code_drop            ;DROP
 _rf_code_drop:
-  pop hl
-  jp (ix)
-
-PUBLIC _rf_code_swap
-
+        POP     HL
+        JP      (IX)
+;
+PUBLIC _rf_code_swap            ;SWAP
 _rf_code_swap:
-  pop hl
-  ex (sp), hl
+        POP     HL
+        EX      (SP),HL
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
-
-PUBLIC _rf_code_dup
-
+;
+PUBLIC _rf_code_dup             ;DUP
 _rf_code_dup:
-  pop hl
-  push hl
+        POP     HL
+        PUSH    HL
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
 
-PUBLIC _rf_code_pstor
-
+PUBLIC _rf_code_pstor           ;+!
 _rf_code_pstor:
-  pop hl                        ;(HL)<--VAR ADDR
-  pop de                        ;(DE)<--NUMBER
-  ld a, (hl)
-  add a, e
-  ld (hl), a
-  inc hl
-  ld a, (hl)
-  adc a, d
-  ld (hl), a                    ;((HL))<--((HL))+NUMBER
-  jp (ix)
-
-PUBLIC _rf_code_toggl
-
+        POP     HL              ;(HL)<--VAR ADDR
+        POP     DE              ;(DE)<--NUMBER
+        LD      A,(HL)
+        ADD     A,E
+        LD      (HL),A
+        INC     HL
+        LD      A,(HL)
+        ADC     A,D
+        LD      (HL),A          ;((HL))<--((HL))+NUMBER
+        JP      (IX)
+;
+PUBLIC _rf_code_toggl           ;TOGGLE
 _rf_code_toggl:
-  pop de                        ;(E)<--BIT PATTERN
-  pop hl                        ;(HL)<--ADDR
-  ld a, (hl)
-  xor e
-  ld (hl), a
-  jp (ix)
-
-PUBLIC _rf_code_at
-
+        POP     DE              ;(E)<--BIT PATTERN
+        POP     HL              ;(HL)<--ADDR
+        LD      A,(HL)
+        XOR     E
+        LD      (HL),A
+        JP      (IX)
+;
+PUBLIC _rf_code_at              ;@
 _rf_code_at:
-  pop hl
-  ld e, (hl)
-  inc hl
-  ld d, (hl)
-  push de
-  jp (ix)
-
-PUBLIC _rf_code_cat
-
+        POP     HL
+        LD      E,(HL)
+        INC     HL
+        LD      D,(HL)
+        PUSH    DE
+        JP      (IX)
+;
+PUBLIC _rf_code_cat             ;C@
 _rf_code_cat:
-  pop hl
-  ld l, (hl)
-  ld h, $00
+        POP     HL
+        LD      L,(HL)
+        LD      H,0
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
+;
 
-PUBLIC _rf_code_store
-
+PUBLIC _rf_code_store           ;!
 _rf_code_store:
-  pop hl
-  pop de
-  ld  (hl), e
-  inc  hl
-  ld  (hl), d
-  jp (ix)
-
-PUBLIC _rf_code_cstor
-
+        POP     HL
+        POP     DE
+        LD      (HL),E
+        INC     HL
+        LD      (HL),D
+        JP      (IX)
+;
+PUBLIC _rf_code_cstor           ;C!
 _rf_code_cstor:
-  pop hl
-  pop de
-  ld (hl), e
-  jp (ix)
+        POP     HL
+        POP     DE
+        LD      (HL),E
+        JP      (IX)
+;
 
-PUBLIC _rf_code_docol
-
+PUBLIC _rf_code_docol           ; :
 _rf_code_docol:
-  ld hl, (_rf_rp)
-  dec hl
-  ld (hl), b
-  dec hl
-  ld (hl), c
-  ld (_rf_rp), hl
-  inc de
-  ld c, e
-  ld b, d
-  jp (ix)
+DOCOL:  LD      HL,(RPP)
+        DEC     HL
+        LD      (HL),B
+        DEC     HL
+        LD      (HL),C
+        LD      (RPP),HL
+        INC     DE
+        LD      C,E
+        LD      B,D
+        JP      (IX)
+;
 
-PUBLIC _rf_code_docon
-
+PUBLIC _rf_code_docon           ;CONSTANT
 _rf_code_docon:
-  inc de
-  ex de, hl
-  ld e, (hl)
-  inc hl
-  ld d, (hl)
-  push de
-  jp (ix)
-
-PUBLIC _rf_code_dovar
-
+DOCON:  INC     DE
+        EX      DE,HL
+        LD      E,(HL)
+        INC     HL
+        LD      D,(HL)
+        PUSH    DE
+        JP      (IX)
+;
+PUBLIC _rf_code_dovar           ;VARIABLE
 _rf_code_dovar:
-  inc de
-  push de
-  jp (ix)
-
-PUBLIC _rf_code_douse
-
+DOVAR:  INC     DE
+        PUSH    DE
+        JP      (IX)
+;
+PUBLIC _rf_code_douse           ;USER
 _rf_code_douse:
-  inc de
-  ex de, hl
-  ld e, (hl)
-  ld d, $00
-  ld hl, (_rf_up)
-  add hl, de
+DOUSE:  INC     DE
+        EX      DE,HL
+        LD      E,(HL)
+        LD      D,00H
+        LD      HL,(UP)
+        ADD     HL,DE
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
+;
 
-PUBLIC _rf_code_stod
-
+PUBLIC _rf_code_stod            ;S->D
 _rf_code_stod:
-  pop de
-  ld hl, $0000
-  bit 7, d                      ;/ # NEGATIVE?
-  jp z, dpush                   ;  NO
-  dec hl                        ;  YES, EXTEND SIGN
-stod1:
-  jp dpush                      ;  ( n1--d1L d1H)
+        POP     DE
+        LD      HL,0
+        BIT     7,D             ;/ # NEGATIVE?
+        JR      Z,STOD1         ;  NO
+        DEC     HL              ;  YES, EXTEND SIGN
+STOD1:  JP      DPUSH           ;  ( n1--d1L d1H)
+;
 
-PUBLIC _rf_code_dodoe
-
+PUBLIC _rf_code_dodoe           ;DOES>
 _rf_code_dodoe:
-  ld hl, (_rf_rp)
-  dec hl
-  ld (hl), b
-  dec hl
-  ld (hl), c
-  ld (_rf_rp), hl
-  inc de
-  ex de, hl
-  ld c, (hl)
-  inc hl
-  ld b, (hl)
-  inc hl
+DODOE:  LD      HL,(RPP)
+        DEC     HL
+        LD      (HL),B
+        DEC     HL
+        LD      (HL),C
+        LD      (RPP),HL
+        INC     DE
+        EX      DE,HL
+        LD      C,(HL)
+        INC     HL
+        LD      B,(HL)
+        INC     HL
 IFDEF USEIY
-  jp (iy)
+        JP      (IY)
 ELSE
-  jp hpush
+        JP      HPUSH
 ENDIF
+;
 
-PUBLIC _rf_code_cold
-
+PUBLIC _rf_code_cold            ;COLD
 _rf_code_cold:
-
-  ld hl, _rf_code_cold          ; COLD vector init
-  ld (RF_ORIGIN+$0002), hl
-  ld hl, RF_ORIGIN+$000C        ; FORTH vocabulary init
-  ld de, (RF_ORIGIN+$0022)
-  ldi
-  ldi
-  ld hl, (RF_ORIGIN+$0010)      ; UP init
-  ld (_rf_up), hl
-  ex de, hl                     ; USER variables init
-  ld hl, RF_ORIGIN+$000C
-  ld bc, $0016
-  ldir
-  ld bc, (RF_ORIGIN+$0024)      ; IP init to ABORT
-  ld ix, next                   ; POINTER TO NEXT
+        LD      HL,_rf_code_cold ; COLD vector init
+        LD      (ORIG+02H),HL
+        LD      HL,ORIG+0CH     ; FORTH vocabulary init
+        LD      DE,(ORIG+22H)
+        LDI
+        LDI
+        LD      HL,(UPINIT)     ; UP init
+        LD      (UP),HL
+        EX      DE,HL           ; USER variables init
+        LD      HL,ORIG+0CH
+        LD      BC,16H
+        LDIR
+        LD      BC,(ORIG+24H)   ; IP init to ABORT
+        LD      IX,NEXT         ; POINTER TO NEXT
 IFDEF USEIY
-  ld iy, hpush                  ; POINTER TO HPUSH
+        LD      IY,HPUSH        ; POINTER TO HPUSH
 ENDIF
-  jp _rf_code_rpsto             ; jump to RP!
-
-PUBLIC _rf_code_cl
-
-_rf_code_cl:
-  ld hl, $0002                  ; push 2
-IFDEF USEIY
-  jp (iy)
-ELSE
-  jp hpush
-ENDIF
-
-PUBLIC _rf_code_cs
-
-_rf_code_cs:
-  pop hl                        ; push hl * 2
-  add hl, hl
-IFDEF USEIY
-  jp (iy)
-ELSE
-  jp hpush
-ENDIF
-
-PUBLIC _rf_code_ln
-
-DEFC _rf_code_ln = _rf_next
-
-PUBLIC _rf_code_xt
-
-_rf_code_xt:
-  ld hl, $0000
-  ld (_rf_fp), hl
-  call _rf_start
-  ret
-
-SECTION data_user
-
-PUBLIC _rf_fp
-
-_rf_fp:
-  defw $0000
-
-PUBLIC _rf_ip
-
-_rf_ip:
-  defw $0000
-
-PUBLIC _rf_rp
-
-_rf_rp:
-  defw $0000
-
-PUBLIC _rf_sp
-
-_rf_sp:
-  defw $0000
-
-PUBLIC _rf_up
-
-_rf_up:
-  defw $0000
-
-PUBLIC _rf_w
-
-_rf_w:
-  defw $0000
+        JP      _rf_code_rpsto  ; jump to RP!
