@@ -144,7 +144,7 @@ bbc-clean :
 	rm -f bbc/*
 
 .PHONY : bbc-run
-bbc-run : $(BBCMEDIA) $(BBCROMS) | $(DISC) $(DR0) $(DR1)
+bbc-run : $(BBCMEDIA) | $(BBCROMS) $(DISC) $(DR0) $(DR1)
 
 	@$(BBCSTARTDISC) $(DR0) $(DR1)
 
@@ -167,6 +167,11 @@ ifeq ($(BBCOPTION),tape)
 BBCCC65OPTS += -DRF_ASSEMBLY
 endif
 
+# disc inf
+bbc/%.inf : | bbc
+
+	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
+
 # general assemble rule
 bbc/%.o : bbc/%.s
 
@@ -178,6 +183,19 @@ bbc/%.ser : bbc/%
 	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" > $@.io
 	printf "20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" >> $@.io
 	cat -u $< >> $@.io
+	mv $@.io $@
+
+# disc image
+bbc/%.ssd : bbc/% bbc/%.inf bbc/boot bbc/boot.inf
+
+	rm -f $@
+	bbcim -a $@ bbc/boot
+	bbcim -a $@ $<
+
+# tape image
+bbc/%.uef : bbc/% | $(ORTER)
+
+	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
 	mv $@.io $@
 
 # tape WAV file
@@ -213,11 +231,6 @@ bbc/inst bbc/inst.map : $(BBCDEPS)
 
 	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/inst.map $^
 
-# inst disc inf
-bbc/inst.inf : | bbc
-
-	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
-
 # inst lib
 bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 
@@ -227,19 +240,6 @@ bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 		--data-name INST \
 		--rodata-name INST \
 		-o $@ $<
-
-# inst disc image
-bbc/inst.ssd : bbc/boot bbc/boot.inf bbc/inst bbc/inst.inf
-
-	rm -f $@
-	bbcim -a $@ bbc/boot
-	bbcim -a $@ bbc/inst
-
-# inst tape image
-bbc/inst.uef : bbc/inst $(ORTER)
-
-	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) <$< >$@.io
-	mv $@.io $@
 
 # main
 bbc/main.s : main.c inst.h rf.h $(BBCINC) | bbc
@@ -276,21 +276,6 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 	@$(STOPDISC)
 
 	@$(COMPLETEDR1FILE)
-
-bbc/orterforth.inf : | bbc
-
-	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
-
-bbc/orterforth.ssd : bbc/boot bbc/boot.inf bbc/orterforth bbc/orterforth.inf
-
-	rm -f $@
-	bbcim -a $@ bbc/boot
-	bbcim -a $@ bbc/orterforth
-
-bbc/orterforth.uef : bbc/orterforth | $(ORTER)
-
-	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
-	mv $@.io $@
 
 bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
 
