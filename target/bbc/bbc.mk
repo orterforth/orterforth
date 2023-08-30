@@ -3,6 +3,9 @@
 # common dependencies
 BBCDEPS := bbc/inst.o bbc/main.o
 
+# include file for BBC
+BBCINC := target/bbc/bbc.inc
+
 # loading method
 BBCLOADINGMETHOD := disk
 # BBCLOADINGMETHOD := serial
@@ -33,9 +36,6 @@ BBCROMS := \
 	roms/bbcb/os12.rom \
 	roms/bbcb/phroma.bin \
 	roms/bbcb/saa5050
-
-# include file for BBC
-BBCINC := target/bbc/bbc.inc
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
@@ -259,7 +259,7 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 # binary hex
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 
-	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$(shell echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
+	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
 
 	@$(EMPTYDR1FILE) $@.io
 
