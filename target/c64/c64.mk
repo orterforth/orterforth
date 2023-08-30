@@ -13,6 +13,12 @@ C64ORIGIN := 0x2300
 C64CC65OPTS := -O -t c64 \
 	-DRF_ORIGIN='$(C64ORIGIN)'
 
+C64VICEOPTS := \
+	-kernal roms/c64p/901227-02.u4 \
+	-basic roms/c64p/901226-01.u3 \
+	-chargen roms/c64p/901225-01.u5 \
+	+saveres +confirmonexit
+
 ifeq ($(C64OPTION),assembly)
 C64CC65OPTS += -DRF_ASSEMBLY
 C64DEPS += c64/rf_6502.o
@@ -33,31 +39,19 @@ c64-clean :
 .PHONY : vice
 vice :
 
-	x64 \
-		-kernal roms/c64p/901227-02.u4 \
-		-basic roms/c64p/901226-01.u3 \
-		-chargen roms/c64p/901225-01.u5 \
-		+warp +saveres +confirmonexit
+	x64 $(C64VICEOPTS) +warp
 
 .PHONY : c64-hw
 c64-hw : c64/hw.prg
 
-	x64 \
-		-kernal roms/c64p/901227-02.u4 \
-		-basic roms/c64p/901226-01.u3 \
-		-chargen roms/c64p/901225-01.u5 \
-		+warp +saveres +confirmonexit -autostartprgmode 1 -autostart $<
+	x64 $(C64VICEOPTS) +warp -autostartprgmode 1 -autostart $<
 
 .PHONY : c64-run
 c64-run : c64/orterforth.prg $(DR0) $(DR1)
 
 	@$(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
 
-	@x64 \
-		-kernal roms/c64p/901227-02.u4 \
-		-basic roms/c64p/901226-01.u3 \
-		-chargen roms/c64p/901225-01.u5 \
-		+warp +saveres +confirmonexit \
+	@x64 $(C64VICEOPTS) +warp \
 		-userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 \
 		-autostartprgmode 1 -autostart $<
 
@@ -109,11 +103,7 @@ c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 	@$(START) disc.pid $(DISC) tcp 25232 model.img $@.io
 
 	@printf '* \033[1;33mStarting Vice\033[0;0m\n'
-	@$(START) vice.pid x64 \
-		-kernal roms/c64p/901227-02.u4 \
-		-basic roms/c64p/901226-01.u3 \
-		-chargen roms/c64p/901225-01.u5 \
-		-warp +saveres +confirmonexit \
+	@$(START) vice.pid x64 $(C64VICEOPTS) -warp \
 		-userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 \
 		-autostartprgmode 1 -autostart $<
 
