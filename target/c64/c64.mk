@@ -1,5 +1,7 @@
 # === Commodore 64 ===
 
+C64CC65OPTS := -O -t c64
+
 C64DEPS := c64/main.o c64/rf.o c64/inst.o c64/system.o c64/c64-up2400.o
 # C64OPTION := assembly
 C64OPTION := default
@@ -10,9 +12,6 @@ endif
 endif
 C64ORIGIN := 0x2300
 
-C64CC65OPTS := -O -t c64 \
-	-DRF_ORIGIN='$(C64ORIGIN)'
-
 C64VICEOPTS := \
 	-kernal roms/c64p/901227-02.u4 \
 	-basic roms/c64p/901226-01.u3 \
@@ -22,7 +21,10 @@ C64VICEOPTS := \
 ifeq ($(C64OPTION),assembly)
 C64CC65OPTS += -DRF_ASSEMBLY
 C64DEPS += c64/rf_6502.o
+C64ORIGIN := 0x1700
 endif
+
+C64CC65OPTS += -DRF_ORIGIN='$(C64ORIGIN)'
 
 c64 :
 
