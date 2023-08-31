@@ -1,30 +1,35 @@
 #include "inst.h"
 #include "rf.h"
+
 #ifdef RF_INST_LOCAL_DISC
+
 /* disc controller runs in process */
 #include "persci.h"
+
 /* fig-Forth source compiled into C array */
 /* const to compile to flash on e.g. Pico */
 const
 #include "model.inc"
+
 #endif
 
+/* delay start of inst to allow disc server to start */
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
 #include <z80.h>
 #endif
 #endif
 
-/* INST TIME STACK OPERATIONS */
+/* STACK OPERATIONS */
 
 /* we don't rely on macros from rf.h because 
    functions defined in rf.c may not be present */
 #define RF_INST_SP_POP (*(rf_sp++))
 #define RF_INST_SP_PUSH(a) { *(--rf_sp) = (a); }
 
-/* INST TIME DISC OPERATIONS */
+/* DISC OPERATIONS */
 
-/* inst time disc command buffer */
+/* disc command buffer */
 static uint8_t cmd[11] = {
   'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '\x04'
 };
@@ -513,7 +518,7 @@ void rf_inst(void)
 
 #ifdef RF_INST_LOCAL_DISC
   /* "insert" the inst disc */
-  rf_persci_insert_bytes(0, model_disc);
+  rf_persci_insert_bytes(0, model_img);
 #endif
 
   /* LOAD all Forth model source from disc */

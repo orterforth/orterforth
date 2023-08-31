@@ -239,8 +239,8 @@ install : $(ORTER) $(ORTERFORTH)
 # disc image to C include
 model.inc : model.img | $(ORTER)
 
-	# xxd -i $< > $@.io
-	$(ORTER) hex include model_disc < $< > $@.io
+	xxd -i $< > $@.io
+	# $(ORTER) hex include model_img < $< > $@.io
 	mv $@.io $@
 
 # ROM file dir
