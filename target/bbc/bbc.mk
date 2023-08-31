@@ -1,11 +1,5 @@
 # === BBC Micro ===
 
-# common dependencies
-BBCDEPS := bbc/inst.o bbc/main.o
-
-# include file for BBC
-BBCINC := target/bbc/bbc.inc
-
 # loading method
 BBCLOADINGMETHOD := disk
 # BBCLOADINGMETHOD := serial
@@ -25,7 +19,28 @@ BBCOPTION := $(OPTION)
 endif
 endif
 
-# C ORG and Forth ORIGIN
+# cc65
+BBCCC65OPTS := -O -t none -D__BBC__
+
+# object dependencies
+BBCDEPS := bbc/inst.o bbc/main.o
+
+# load via serial
+BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033[0;0m\n' ; \
+	read -p "  then on this machine press enter" LINE ; \
+	printf '* \033[1;33mLoading via serial\033[0;0m\n' ; \
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
+
+# MAME command line
+BBCMAME := bbcb $(MAMEOPTS) -rs423 null_modem -bitb socket.127.0.0.1:5705
+
+# MAME command line for fast inst, no video and timeout
+BBCMAMEFAST := bbcb -rompath roms -video none -sound none \
+	-skip_gameinfo -nomax -window \
+	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
+	-rs423 null_modem -bitb socket.127.0.0.1:5705
+
+# default C ORG and Forth ORIGIN
 BBCORG := 1720
 BBCORIGIN := 2F00
 
@@ -39,6 +54,7 @@ BBCROMS := \
 
 # assembly code
 ifeq ($(BBCOPTION),assembly)
+	BBCCC65OPTS += -DRF_ASSEMBLY
 	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
 	BBCORIGIN := 2100
 endif
@@ -50,6 +66,7 @@ endif
 
 # assembly code, tape only
 ifeq ($(BBCOPTION),tape)
+	BBCCC65OPTS += -DRF_ASSEMBLY
 	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
 	BBCLOADINGMETHOD := tape
 # starts FIRST at 0x0E00, ORG at 0x1220
@@ -60,6 +77,9 @@ ifeq ($(BBCOPTION),tape)
 	# BBCORG := 0F20
 	# BBCORIGIN := 1900
 endif
+
+# cc65 pass org and origin
+BBCCC65OPTS += -DRF_ORG='0x$(BBCORG)' -DRF_ORIGIN='0x$(BBCORIGIN)'
 
 # apparently bbc.lib must be the last dep
 BBCDEPS += bbc/bbc.lib
@@ -94,21 +114,6 @@ ifeq ($(BBCLOADINGMETHOD),tape)
 endif
 BBCMAMEINST := -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
 BBCMAMERUN := -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
-
-# MAME command line
-BBCMAME := bbcb $(MAMEOPTS) -rs423 null_modem -bitb socket.127.0.0.1:5705
-
-# MAME command line for fast inst, no video and timeout
-BBCMAMEFAST := bbcb -rompath roms -video none -sound none \
-	-skip_gameinfo -nomax -window \
-	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
-	-rs423 null_modem -bitb socket.127.0.0.1:5705
-
-# Prompt to load via serial
-BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033[0;0m\n' ; \
-	read -p "  then on this machine press enter" LINE ; \
-	printf '* \033[1;33mLoading via serial\033[0;0m\n' ; \
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
 
 # notes: real disc runs after serial load
 # MAME needs disc tcp running before it starts
@@ -154,19 +159,6 @@ bbc-run : $(BBCMEDIA) | $(BBCROMS) $(DISC) $(DR0) $(DR1)
 
 	@$(STOPDISC)
 
-BBCCC65OPTS := -O -t none \
-	-D__BBC__ \
-	-DRF_ORG='0x$(BBCORG)' \
-	-DRF_ORIGIN='0x$(BBCORIGIN)' \
-	-DRF_TARGET_INC='"$(BBCINC)"'
-
-ifeq ($(BBCOPTION),assembly)
-BBCCC65OPTS += -DRF_ASSEMBLY
-endif
-ifeq ($(BBCOPTION),tape)
-BBCCC65OPTS += -DRF_ASSEMBLY
-endif
-
 # disc inf
 bbc/%.inf : | bbc
 
@@ -175,7 +167,7 @@ bbc/%.inf : | bbc
 # general assemble rule
 bbc/%.o : bbc/%.s
 
-	ca65 -DRF_ORIGIN='$$$(BBCORIGIN)' -o $@ $<
+	ca65 -o $@ $<
 
 # serial load file
 bbc/%.ser : bbc/%
@@ -222,7 +214,7 @@ bbc/boot.inf : | bbc
 	echo "$$.!BOOT     0000   0000  CRC=0" > $@
 
 # custom target crt
-bbc/crt0.o : target/bbc/crt0.s
+bbc/crt0.o : target/bbc/crt0.s | bbc
 
 	ca65 -o $@ $<
 
@@ -232,7 +224,7 @@ bbc/inst bbc/inst.map : $(BBCDEPS)
 	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/inst.map $^
 
 # inst lib
-bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
+bbc/inst.s : inst.c rf.h target/bbc/bbc.inc | bbc
 
 	cc65 $(BBCCC65OPTS) \
 		--bss-name INST \
@@ -242,7 +234,7 @@ bbc/inst.s : inst.c rf.h $(BBCINC) | bbc
 		-o $@ $<
 
 # main
-bbc/main.s : main.c inst.h rf.h $(BBCINC) | bbc
+bbc/main.s : main.c inst.h rf.h target/bbc/bbc.inc | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 
@@ -257,7 +249,7 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # binary hex
-bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
+bbc/orterforth.hex : $(BBCINSTMEDIA) model.img | $(BBCROMS) $(DISC)
 
 	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
 
@@ -277,7 +269,7 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) model.img $(BBCROMS) | $(DISC)
 
 	@$(COMPLETEDR1FILE)
 
-bbc/rf.s : rf.c rf.h $(BBCINC) | bbc
+bbc/rf.s : rf.c rf.h target/bbc/bbc.inc | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 
