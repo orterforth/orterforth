@@ -131,8 +131,8 @@ ifeq ($(BBCMACHINE),real)
 BBCSTARTDISC := :
 BBCSTARTMACHINE := :
 BBCRUNMACHINE := :
-BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser ; printf '* \033[1;33mRunning disc\033[0;0m\n' ; $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
-BBCLOADINST := $(BBCLOADSERIAL) $(BBCINSTMEDIA) ; $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
+BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser && printf '* \033[1;33mRunning disc\033[0;0m\n' ; $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 BBCSTOPMACHINE := :
 endif
 
@@ -281,7 +281,7 @@ bbc/system_asm.o : target/bbc/system.s | bbc
 
 	ca65 -o $@ $<
 
-bbc/system_c.s : target/bbc/system.c | bbc
+bbc/system_c.s : target/bbc/system.c rf.h target/bbc/bbc.inc | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 
