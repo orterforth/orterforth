@@ -26,9 +26,8 @@ BBCCC65OPTS := -O -t none -D__BBC__
 BBCDEPS := bbc/inst.o bbc/main.o
 
 # load via serial
-BBCLOADSERIAL := printf '* \033[1;35mConnect serial and type: *FX2,1 <enter>\033[0;0m\n' ; \
-	read -p "  then on this machine press enter" LINE ; \
-	printf '* \033[1;33mLoading via serial\033[0;0m\n' ; \
+BBCLOADSERIAL := $(PROMPT) "Connect serial and on BBC Micro type: *FX2,1 <RETURN>" && \
+	printf '* \033[1;33mLoading via serial\033[0;0m\n' && \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
 
 # MAME command line
@@ -131,7 +130,7 @@ ifeq ($(BBCMACHINE),real)
 BBCSTARTDISC := :
 BBCSTARTMACHINE := :
 BBCRUNMACHINE := :
-BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser && printf '* \033[1;33mRunning disc\033[0;0m\n' ; $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser && printf '* \033[1;33mRunning disc\033[0;0m\n' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 BBCSTOPMACHINE := :
 endif
@@ -173,7 +172,7 @@ bbc/%.o : bbc/%.s
 bbc/%.ser : bbc/%
 
 	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$(shell $(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" > $@.io
-	printf "20*FX3,7\r30VDU 6\r40CALL &$(BBCORG)\rRUN\r" >> $@.io
+	printf "20*FX3,7\r30VDU 6\r40FOR J%%=1 TO 10000:NEXT J%%:CALL &$(BBCORG)\rRUN\r" >> $@.io
 	cat -u $< >> $@.io
 	mv $@.io $@
 

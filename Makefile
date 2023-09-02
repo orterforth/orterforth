@@ -9,6 +9,7 @@ DR1=data.img
 COMPLETEDR1FILE = mv $@.io $@ ; printf '* \033[1;33mDone\033[0;0m\n'
 EMPTYDR1FILE := printf '* \033[1;33mClearing DR1\033[0;0m\n' ; printf '' >
 MAMEOPTS := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
+PROMPT := sh scripts/prompt.sh
 SERIALBAUD := 9600
 START := sh scripts/start.sh /dev/stdin /dev/stdout
 STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; $(START) mame.pid mame
@@ -67,7 +68,7 @@ ORTER := $(SYSTEM)/orter
 ORTERFORTH := $(SYSTEM)/orterforth
 
 # scripts for disc
-STARTDISC := $(STARTDISCMSG) ; $(START) disc.pid $(DISC)
+STARTDISC := $(STARTDISCMSG) && $(START) disc.pid $(DISC)
 STARTDISCTCP := $(STARTDISC) tcp 5705
 
 # local system object files
@@ -139,7 +140,7 @@ $(SYSTEM)-clean :
 .PHONY : $(SYSTEM)-run
 $(SYSTEM)-run : $(ORTERFORTH) $(DR0) $(DR1)
 
-	@$< $(DR0) $(DR1)
+	@$^
 
 $(SYSTEM)/inst.o : inst.c model.inc rf.h system.inc persci.h | $(SYSTEM)
 
@@ -239,8 +240,8 @@ install : $(ORTER) $(ORTERFORTH)
 # disc image to C include
 model.inc : model.img | $(ORTER)
 
-	xxd -i $< > $@.io
-	# $(ORTER) hex include model_img < $< > $@.io
+	# xxd -i $< > $@.io
+	$(ORTER) hex include model_img < $< > $@.io
 	mv $@.io $@
 
 # ROM file dir
