@@ -110,22 +110,21 @@ ifeq ($(DRAGONMACHINE),xroar)
 	@printf '* \033[1;33mRunning XRoar\033[0;0m\n'
 	@printf '* \033[1;35mNB XRoar must be modified to implement serial\033[0;0m\n'
 	@xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM:EXEC\r"
-
 endif
 
 	@$(STOPDISC)
 
+dragon/%.cas : dragon/%.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D $<
+
+dragon/%.wav : dragon/%.bin | tools/bin2cas.pl
+
+	tools/bin2cas.pl --output $@ -D $<
+
 dragon/hw.bin : hw.c
 
 	cmoc --dragon -o $@ $^
-
-dragon/hw.cas : dragon/hw.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D $<
-
-dragon/hw.wav : dragon/hw.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D $<
 
 dragon/inst.bin : $(DRAGONDEPS) main.c
 
@@ -135,17 +134,9 @@ else
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 endif
 
-dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D $<
-
 dragon/inst.o : inst.c rf.h target/dragon/dragon.inc | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
-
-dragon/inst.wav : dragon/inst.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D $<
 
 dragon/installed : dragon/installed.hex | $(ORTER)
 
@@ -198,14 +189,6 @@ dragon/orterforth.bin : dragon/orterforth
 
 	$(ORTER) dragon bin header 2 $(DRAGONORG) $(shell $(STAT) $<) $(DRAGONORG) > $@
 	cat $< >> $@
-
-dragon/orterforth.cas : dragon/orterforth.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D $<
-
-dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
-
-	tools/bin2cas.pl --output $@ -D $<
 
 dragon/rf.o : rf.c rf.h target/dragon/dragon.inc | dragon
 
