@@ -37,24 +37,23 @@ endif
 
 # ensure RC2014 is reset before starting
 RC2014RESET := \
-	printf '* \033[1;35mOn the RC2014: connect serial and press reset\033[0;0m\n' && \
-	read -p "Then press enter to start: " LINE && \
+	$(PROMPT) "On the RC2014: connect serial and press reset" && \
 	printf '* \033[1;33mResetting\033[0;0m\n' && \
 	sh target/rc2014/reset.sh | $(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200
 
 # load modified hexload.bas
 RC2014LOADLOADER := \
-	printf '* \033[1;33mLoading $(RC2014HEXLOAD)\033[0;0m\n' ; \
-	$(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200 < $(RC2014HEXLOAD)
+	printf '* \033[1;33mLoading $(RC2014HEXLOAD)\033[0;0m\n' && \
+	$(ORTER) serial -a $(RC2014SERIALPORT) 115200 < $(RC2014HEXLOAD)
 
 # load an IHEX file
 RC2014LOADIHEX := \
-	printf '* \033[1;33mLoading IHEX\033[0;0m\n' ; \
-	$(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200 <
+	printf '* \033[1;33mLoading IHEX\033[0;0m\n' && \
+	$(ORTER) serial -a $(RC2014SERIALPORT) 115200 <
 
-RC2014LOAD := $(RC2014RESET) ; $(RC2014LOADLOADER) ; sleep 5 ; $(RC2014LOADIHEX)
+RC2014LOAD := $(RC2014RESET) && $(RC2014LOADLOADER) && sleep 5 && $(RC2014LOADIHEX)
 
-RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' ; \
+RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' && \
 	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 ifeq ($(RC2014OPTION),assembly)
@@ -64,7 +63,7 @@ RC2014ORIGIN := 0x9CC0
 endif
 ifeq ($(RC2014OPTION),default)
 RC2014DEPS += rc2014/mux.lib rc2014/rf.lib rc2014/system.lib
-RC2014LIBS += -lrc2014/mux.lib -lrc2014/rf -lrc2014/system
+RC2014LIBS += -lrc2014/mux -lrc2014/rf -lrc2014/system
 RC2014ORIGIN := 0xAB00
 endif
 
