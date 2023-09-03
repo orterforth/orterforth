@@ -53,6 +53,9 @@ static char           wai = 0;
 static int            wai_wait = 1;
 static time_t         wai_timer = 0;
 
+/* EOF flag */
+static char           eof = 0;
+
 /* buffers */
 static orter_io_pipe_t in;
 static orter_io_pipe_t out;
@@ -96,7 +99,7 @@ static void set_attr(struct termios *attr)
   }
 
   /* timing */
-  /* TODO 0, 0 */
+  /* TODO 0, 0 ? */
   attr->c_cc[VTIME] = 5;
   attr->c_cc[VMIN]  = 1;
 }
@@ -217,6 +220,12 @@ static size_t in_rd(char *off, size_t len)
   char c;
   size_t n;
   size_t size = orter_io_fd_rd(0, off, len);
+
+  /* start EOF timer */
+  if (!eof && orter_io_eof) {
+    eof = 1;
+    wai_timer = time(0) + wai_wait;
+  }
 
   /* no changes */
   if (!onlcrx && !odelbs) {
@@ -345,9 +354,6 @@ int orter_serial(int argc, char **argv)
   /* exit code */
   int exit = 0;
 
-  /* EOF flag */
-  int eof = 0;
-
   /* command line options */
   optind = 2;
   opts(argc, argv);
@@ -386,7 +392,7 @@ int orter_serial(int argc, char **argv)
     orter_io_select_zero();
 
     /* add to fd sets */
-    if (!orter_io_eof) {
+    if (!eof) {
       orter_io_pipe_fdset(&in);
     }
     orter_io_pipe_fdset(&out);
@@ -423,14 +429,6 @@ int orter_serial(int argc, char **argv)
     orter_io_pipe_move(&in);
     /* serial to stdout */
     orter_io_pipe_move(&out);
-
-    /* TODO handle eof timer in a general way */
-
-    /* start EOF timer */
-    if (!eof && orter_io_eof) {
-      eof = 1;
-      wai_timer = time(0) + wai_wait;
-    }
 
     /* terminate after EOF */
     /* immediately or after timer */
