@@ -14,7 +14,10 @@ FUSEOPTS := \
 SPECTRUMINSTMACHINE := fuse
 # locates inst code at 0xC800
 SPECTRUMINSTOFFSET := 18432
-# TODO SPECTRUMDEPS
+# library files as dependencies
+SPECTRUMDEPS := \
+	spectrum/inst.lib \
+	spectrum/system.lib
 # command line linked libraries
 SPECTRUMLIBS := \
 	-lmzx_tiny \
@@ -29,6 +32,13 @@ SPECTRUMROMS := \
 	roms/spectrum/spectrum.rom
 # C impl of system dependent code uses z88dk libs
 SPECTRUMSYSTEM := target/spectrum/system.c
+
+SPECTRUMZCCOPTS := +zx \
+		-DRF_TARGET_INC='\"target/spectrum/spectrum.inc\"' \
+		-Ca-DSPECTRUM \
+		-Ca-DRF_INST_OFFSET=$(SPECTRUMINSTOFFSET) \
+		-Ca-DRF_ORG=$(SPECTRUMORG) \
+		-DRF_ORG=$(SPECTRUMORG)
 
 # emulator to build fast
 $(SYSTEM)/emulate_spectrum : \
@@ -97,6 +107,7 @@ endif
 # minimal ROM-based
 ifeq ($(SPECTRUMOPTION),assembly)
 # uses Interface 1 ROM for RS232
+SPECTRUMDEPS += spectrum/rf_z80.lib
 # TODO pragma not in libs
 SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 # ORIGIN
@@ -106,23 +117,33 @@ SPECTRUMSYSTEM := target/spectrum/system.asm
 # superzazu emulator is minimal and launches no GUI
 # it can only be used if RS232 ROM calls are used
 SPECTRUMINSTMACHINE := superzazu
+# omit C code definitions
+SPECTRUMZCCOPTS += -DRF_ASSEMBLY
 endif
 
 # z88dk library based
 ifeq ($(SPECTRUMOPTION),assembly-z88dk)
+SPECTRUMDEPS += spectrum/rf_z80.lib
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs
 SPECTRUMORIGIN := 0x9080
+# omit C code definitions
+SPECTRUMZCCOPTS += -DRF_ASSEMBLY -DRF_ASSEMBLY_Z88DK
 endif
 
 # z88dk / pure C based
 ifeq ($(SPECTRUMOPTION),default)
+SPECTRUMDEPS += spectrum/rf.lib
 # requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf -lrs232if1
 # ORIGIN higher, C code is larger as uses z88dk libs and pure C impl
 SPECTRUMORIGIN := 0x9C00
 endif
+
+SPECTRUMZCCOPTS += \
+	-Ca-DRF_ORIGIN=$(SPECTRUMORIGIN) \
+	-DRF_ORIGIN=$(SPECTRUMORIGIN)
 
 # superzazu fast partial emulator can't be used for run time
 SPECTRUMMACHINE := $(SPECTRUMINSTMACHINE)
@@ -164,7 +185,7 @@ endif
 # start disc
 ifeq ($(SPECTRUMMACHINE),fuse)
 SPECTRUMSTARTDISC := \
-	$(STARTDISCMSG) ; \
+	$(STARTDISCMSG) && \
 	sh scripts/start.sh tx rx disc.pid $(DISC)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
@@ -173,7 +194,7 @@ endif
 ifeq ($(SPECTRUMMACHINE),real)
 # run and wait rather than start
 SPECTRUMSTARTDISC := \
-	$(STARTDISCMSG) ; \
+	$(STARTDISCMSG) && \
 	$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
 endif
 
@@ -234,32 +255,13 @@ spectrum/fuse-rs232-tx : | spectrum
 
 	mkfifo $@
 
-SPECTRUMZCCOPTS := +zx \
-		-Ca-DRF_INST_OFFSET=$(SPECTRUMINSTOFFSET) \
-		-Ca-DRF_ORG=$(SPECTRUMORG) \
-		-Ca-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-Ca-DSPECTRUM \
-		-DRF_ORG=$(SPECTRUMORG) \
-		-DRF_ORIGIN=$(SPECTRUMORIGIN) \
-		-DRF_TARGET_INC='\"target/spectrum/spectrum.inc\"'
-
-ifeq ($(SPECTRUMOPTION),assembly)
-SPECTRUMZCCOPTS += -DRF_ASSEMBLY
-endif
-ifeq ($(SPECTRUMOPTION),assembly-z88dk)
-SPECTRUMZCCOPTS += -DRF_ASSEMBLY -DRF_ASSEMBLY_Z88DK
-endif
-
 spectrum/hw.tap : hw.c
 
 	zcc +zx -lndos -create-app -o spectrum/hw.bin $<
 
 # inst executable
 spectrum/inst.bin : \
-	spectrum/inst.lib \
-	spectrum/rf.lib \
-	spectrum/rf_z80.lib \
-	spectrum/system.lib \
+	$(SPECTRUMDEPS) \
 	z80_memory.asm \
 	main.c
 
