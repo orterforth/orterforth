@@ -139,7 +139,7 @@ dragon/inst.cas : dragon/inst.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/inst.o : inst.c rf.h target/dragon/system.inc | dragon
+dragon/inst.o : inst.c rf.h target/dragon/dragon.inc | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
@@ -182,7 +182,7 @@ dragon/link.bin : $(DRAGONLINKDEPS) main.c
 
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 
-dragon/link.o : link.c rf.h target/dragon/system.inc | dragon
+dragon/link.o : link.c rf.h target/dragon/dragon.inc | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
@@ -207,7 +207,7 @@ dragon/orterforth.wav : dragon/orterforth.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/rf.o : rf.c rf.h target/dragon/system.inc | dragon
+dragon/rf.o : rf.c rf.h target/dragon/dragon.inc | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
@@ -223,7 +223,7 @@ dragon/spacer : dragon/link
 
 	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $(shell $(STAT) dragon/link) )) > $@
 
-dragon/system.o : target/dragon/system.c rf.h target/dragon/system.inc | dragon
+dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
