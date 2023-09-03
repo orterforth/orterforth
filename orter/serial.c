@@ -55,17 +55,9 @@ static time_t         wai_timer = 0;
 
 /* buffers */
 static orter_io_pipe_t in;
-
-static char           omap_buf[256];
-static size_t         omap_pending = 0;
-static char *         omap_offset = omap_buf;
-
-static orter_io_pipe_t swr;
-
 static orter_io_pipe_t out;
 
-/* TODO compare with std_open stuff */
-static void serial_makeraw(struct termios *attr)
+static void set_attr(struct termios *attr)
 {
   /* raw mode, read, no echo */
   cfmakeraw(attr);
@@ -104,6 +96,7 @@ static void serial_makeraw(struct termios *attr)
   }
 
   /* timing */
+  /* TODO 0, 0 */
   attr->c_cc[VTIME] = 5;
   attr->c_cc[VMIN]  = 1;
 }
@@ -127,14 +120,14 @@ int orter_serial_open(char *name, int baud)
     perror("serial flock failed");
     return errno;
   }
-  /* get attr */
+  /* get and save attr */
   if (tcgetattr(orter_serial_fd, &serial_attr_save) < 0) {
     perror("serial tcgetattr failed");
     return errno;
   }
   serial_attr_saved = 1;
-  /* raw mode */
-  serial_makeraw(&serial_attr);
+  /* raw mode, 8N1, RTSCTS, options */
+  set_attr(&serial_attr);
   /* baud */
   switch (baud) {
     case 50: br = B50; break;
@@ -219,47 +212,35 @@ int orter_serial_close(void)
   return 0;
 }
 
-static size_t omap_rd(char *off, size_t len)
+static size_t in_rd(char *off, size_t len)
 {
   char c;
-  int n = 0;
+  size_t n;
+  size_t size = orter_io_fd_rd(0, off, len);
 
-  /* no op if empty buffer */
-  if (!omap_pending) {
-    return 0;
+  /* no changes */
+  if (!onlcrx && !odelbs) {
+    return size;
   }
 
-  /* copy into buffer */
-  while (omap_pending && len) {
+  /* apply changes */
+  for (n = 0; n < size; n++) {
 
     /* read char */
-    c = *(omap_offset++);
+    c = off[n];
 
     /* onlcrx */
     if (c == 10 && onlcrx) {
-      c = 13;
+      off[n] = 13;
     }
 
     /* odelbs */
-    if (odelbs && c == 127) {
-      c = 8;
+    if (c == 127 && odelbs) {
+      off[n] = 8;
     }
-
-    /* write char */
-    *(off++) = c;
-
-    /* advance counters */
-    omap_pending--;
-    len--;
-    n++;
   }
 
-  return n;
-}
-
-static size_t omap_wr(char *off, size_t len)
-{
-  return orter_io_buf_wr(off, len, omap_buf, &omap_offset, &omap_pending);
+  return size;
 }
 
 static void restore(void)
@@ -280,9 +261,6 @@ static size_t orter_serial_rd(char *off, size_t len)
   size_t size = orter_io_fd_rd(orter_serial_fd, off, len);
 
   /* test for ACK */
-  /* TODO cannot adapt move operation to use a FD directly */
-  /* TODO until this behaviour is factored into its own pipe */
-  /* TODO where other postprocessing can live */
   if (ack) {
     size_t i;
     for (i = 0; i < size; i++) {
@@ -399,8 +377,7 @@ int orter_serial(int argc, char **argv)
   }
 
   /* set up pipes */
-  orter_io_pipe_init(&in, 0, 0, omap_wr, -1);
-  orter_io_pipe_init(&swr, -1, omap_rd, 0, orter_serial_fd);
+  orter_io_pipe_init(&in, 0, in_rd, 0, orter_serial_fd);
   orter_io_pipe_init(&out, orter_serial_fd, orter_serial_rd, 0, 1);
 
   while (!orter_io_finished) {
@@ -412,7 +389,6 @@ int orter_serial(int argc, char **argv)
     if (!orter_io_eof) {
       orter_io_pipe_fdset(&in);
     }
-    orter_io_pipe_fdset(&swr);
     orter_io_pipe_fdset(&out);
 
     /* select */
@@ -443,10 +419,8 @@ int orter_serial(int argc, char **argv)
       return exit;
     }
 
-    /* stdin to mapped */
+    /* stdin to serial */
     orter_io_pipe_move(&in);
-    /* mapped to serial */
-    orter_io_pipe_move(&swr);
     /* serial to stdout */
     orter_io_pipe_move(&out);
 
