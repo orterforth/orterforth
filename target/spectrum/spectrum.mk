@@ -245,13 +245,18 @@ ifneq ($(SPECTRUMMACHINE),real)
 	@$(STOPDISC)
 endif
 
-# Fuse serial named pipe
-spectrum/fuse-rs232-rx : | spectrum
+# serial load file from binary
+spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
-	mkfifo $@
+	$(ORTER) spectrum header $< 3 32768 0 > $@
+
+# tap file from binary
+spectrum/%.tap : spectrum/%.bin
+
+	z88dk-appmake +zx -b $< --org $(SPECTRUMORG) -o $@
 
 # Fuse serial named pipe
-spectrum/fuse-rs232-tx : | spectrum
+spectrum/fuse-rs232-% : | spectrum
 
 	mkfifo $@
 
@@ -260,7 +265,7 @@ spectrum/hw.tap : hw.c
 	zcc +zx -lndos -create-app -o spectrum/hw.bin $<
 
 # inst executable
-spectrum/inst.bin : \
+spectrum/inst.bin spectrum/inst_INST.bin : \
 	$(SPECTRUMDEPS) \
 	z80_memory.asm \
 	main.c
@@ -278,55 +283,20 @@ spectrum/inst.lib : inst.c rf.h | spectrum
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $< \
 		--codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
 
-# start with an empty bin file to build the multi segment bin
+# 1. start with an empty bin file to build the multi segment bin
 spectrum/inst-0.bin : | spectrum
 
-	z88dk-appmake +rom \
-		-s $(SPECTRUMORG) \
-		-f 0 \
-		-o $@
+	z88dk-appmake +rom -s $(SPECTRUMORG) -f 0 -o $@
 
-# add main code at start
-spectrum/inst-1.bin : \
-	spectrum/inst-0.bin \
-	spectrum/inst.bin
+# 2. add main code at start
+spectrum/inst-1.bin : spectrum/inst-0.bin spectrum/inst.bin
 
-	z88dk-appmake +inject \
-		-b spectrum/inst-0.bin \
-		-i spectrum/inst.bin \
-		-s 0 \
-		-o $@
+	z88dk-appmake +inject -b $< -i spectrum/inst.bin -s 0 -o $@
 
-# add inst code at offset, safely beyond dictionary
-spectrum/inst-2.bin : \
-	spectrum/inst-1.bin \
-	spectrum/inst_INST.bin
+# 3. add inst code at offset, safely beyond dictionary
+spectrum/inst-2.bin : spectrum/inst-1.bin spectrum/inst_INST.bin
 
-	z88dk-appmake +inject \
-		-b spectrum/inst-1.bin \
-		-i spectrum/inst_INST.bin \
-		-s $(SPECTRUMINSTOFFSET) \
-		-o $@
-	# cat $< > $@.io
-	# head -c 32768 /dev/null >> $@.io
-	# head -c $(SPECTRUMINSTOFFSET) $@.io > $@
-	# cat spectrum/inst_INST.bin >> $@
-
-# make inst serial load file from inst bin
-spectrum/inst-2.ser : spectrum/inst-2.bin | $(ORTER)
-
-	$(ORTER) spectrum header $< 3 32768 0 > $@
-
-# make inst tap from inst bin
-spectrum/inst-2.tap : spectrum/inst-2.bin
-
-	z88dk-appmake +zx \
-		-b $< \
-		--org $(SPECTRUMORG) \
-		-o $@
-
-# both main and INST bin files are built by same command
-spectrum/inst_INST.bin : spectrum/inst.bin
+	z88dk-appmake +inject -b $< -i spectrum/inst_INST.bin -s $(SPECTRUMINSTOFFSET) -o $@
 
 # final bin from the hex output by inst
 spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
@@ -380,7 +350,7 @@ endif
 
 spectrum/orterforth.bin.hex : model.img $(SPECTRUMINSTDEPS)
 
-	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $(shell $(STAT) spectrum/inst.bin)
+	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $$($(STAT) spectrum/inst.bin)
 
 	@$(EMPTYDR1FILE) $@.io
 
@@ -397,19 +367,6 @@ ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 endif
 
 	@$(COMPLETEDR1FILE)
-
-# make serial load file from bin
-spectrum/orterforth.ser : spectrum/orterforth.bin | $(ORTER)
-
-	$(ORTER) spectrum header $< 3 32768 0 > $@
-
-# final tap from bin
-spectrum/orterforth.tap : spectrum/orterforth.bin
-
-	z88dk-appmake +zx \
-		-b spectrum/orterforth.bin \
-		--org $(SPECTRUMORG) \
-		-o spectrum/orterforth.tap
 
 # base orterforth code
 spectrum/rf.lib : rf.c rf.h | spectrum
