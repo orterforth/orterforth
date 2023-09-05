@@ -1,9 +1,10 @@
 # === RC2014 ===
 
-RC2014DEPS := rc2014/inst.lib
+RC2014DEPS := rc2014/inst.lib rc2014/system.lib
 RC2014HEXLOAD := rc2014/hexload-ack.bas
+RC2014INC := target/rc2014/rc2014.inc
 RC2014INSTOFFSET := 0x5000
-RC2014LIBS := -lrc2014/inst
+RC2014LIBS := -lrc2014/inst -lrc2014/system
 RC2014MACHINE := real
 RC2014ORG := 0x9000
 
@@ -56,30 +57,31 @@ RC2014LOAD := $(RC2014RESET) && $(RC2014LOADLOADER) && $(RC2014LOADIHEX)
 RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' && \
 	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
-ifeq ($(RC2014OPTION),assembly)
-RC2014DEPS += rc2014/rf_z80.lib rc2014/system_asm.lib
-RC2014LIBS += -lrc2014/rf_z80 -lrc2014/system_asm
-RC2014ORIGIN := 0x9CC0
-endif
-ifeq ($(RC2014OPTION),default)
-RC2014DEPS += rc2014/mux.lib rc2014/rf.lib rc2014/system.lib
-RC2014LIBS += -lrc2014/mux -lrc2014/rf -lrc2014/system
-RC2014ORIGIN := 0xAB00
-endif
-
 RC2014ZCCOPTS := \
 	+rc2014 -subtype=basic -clib=new -m \
 	-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
-	-DRF_ORIGIN=$(RC2014ORIGIN) \
 	-DRF_ORG=$(RC2014ORG) \
 	-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
-	-Ca-DRF_ORIGIN=$(RC2014ORIGIN) \
 	-Ca-DRF_ORG=$(RC2014ORG)
 
 ifeq ($(RC2014OPTION),assembly)
+RC2014DEPS += rc2014/rf_z80.lib
+RC2014LIBS += -lrc2014/rf_z80
+RC2014ORIGIN := 0x9CC0
+RC2014SYSTEMDEPS := target/rc2014/system.asm
 RC2014ZCCOPTS += -DRF_ASSEMBLY
 endif
+ifeq ($(RC2014OPTION),default)
+RC2014DEPS += rc2014/mux.lib rc2014/rf.lib
+RC2014LIBS += -lrc2014/mux -lrc2014/rf
+RC2014ORIGIN := 0xAB00
+RC2014SYSTEMDEPS := target/rc2014/system.c mux.h rf.h $(RC2014INC)
+endif
+
+RC2014ZCCOPTS += \
+	-DRF_ORIGIN=$(RC2014ORIGIN) \
+	-Ca-DRF_ORIGIN=$(RC2014ORIGIN)
 
 rc2014 :
 
@@ -102,7 +104,7 @@ rc2014-connect : | $(DISC)
 rc2014-hw : rc2014/hw.ihx | $(RC2014HEXLOAD) $(ORTER)
 
 	@$(RC2014LOAD) $<
-	@$(ORTER) serial -o onlcrx $(RC2014SERIALPORT) 115200
+	@$(ORTER) serial -o onlcrx -o odelbs $(RC2014SERIALPORT) 115200
 
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC)
@@ -170,9 +172,9 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) tx $(DISC) $(ORTER)
 
 	@# NB this does not allow for BSS
-	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $(shell $(STAT) rc2014/inst_CODE.bin)
+	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $$($(STAT) rc2014/inst_CODE.bin)
 	@$(RC2014STARTMACHINE)
-	@$(RC2014LOAD) rc2014/inst.ihx
+	@$(RC2014LOAD) $<
 	@$(EMPTYDR1FILE) $@.io
 # Linux (though not Darwin) reads EOF from stdin if run in background
 # so pipe no bytes into stdin to keep disc from detecting EOF and terminating
@@ -192,11 +194,7 @@ rc2014/rf_z80.lib : rf_z80.asm | rc2014
 
 	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
-rc2014/system.lib : target/rc2014/system.c mux.h rf.h $(RC2014INC) | rc2014
-
-	zcc $(RC2014ZCCOPTS) -x -o $@ $<
-
-rc2014/system_asm.lib : target/rc2014/system.asm | rc2014
+rc2014/system.lib : $(RC2014SYSTEMDEPS) | rc2014
 
 	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
