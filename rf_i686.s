@@ -15,19 +15,14 @@ _rf_trampoline:
         MOV     EBP,ESP
         PUSH    EBX     # callee save ebx
         PUSH    ESI     # callee save esi
-#	call __x86.get_pc_thunk.bx
-#	addl $_GLOBAL_OFFSET_TABLE_, %ebx
-#	pushl %ebx
-trampoline1:
-#	popl %ebx
-#	pushl %ebx
         CALL    __x86.get_pc_thunk.bx
         ADD     EBX,OFFSET _GLOBAL_OFFSET_TABLE_
+        PUSH    EBX
+trampoline1:
+        POP     EBX
+        PUSH    EBX
         MOV     EAX,rf_fp@GOTOFF[EBX] # if FP is null skip to exit
         TEST    EAX,EAX
-# TODO standardise
-#	cmpl $0, %eax
-        # CMP     DWORD PTR _rf_fp[RIP],0 # if FP is null skip to exit
         JE      trampoline2
         MOV     ESI,_rf_ip@GOTOFF[EBX] # IP to esi
         MOV     EDX,_rf_w@GOTOFF[EBX] # W to edx
@@ -36,12 +31,11 @@ trampoline1:
         MOV     ebpsave@GOTOFF[EBX],EBP # save esp and ebp
         MOV     espsave@GOTOFF[EBX],ESP
         MOV     EBP,_rf_rp@GOTOFF[EBX] # put SP and RP into esp and ebp
-# ####
         MOV     ESP,_rf_sp@GOTOFF[EBX]
         JMP     EAX     # jump to FP
                         # will return to trampoline1
 trampoline2:
-#	popl %ebx
+        POP     EBX
         POP     ESI
         POP     EBX
         LEAVE           # leave stack frame
@@ -62,7 +56,6 @@ _rf_start:
         MOV     ESP,EBP # ebp to esp, empty the stack frame
         POP     EBP     # RP to ebp (pushed by prolog)
         MOV     _rf_rp@GOTOFF[EAX],EBP # ebp to RP
-# ####
         MOV     _rf_sp@GOTOFF[EAX],ESP # esp to SP
         MOV     EBP,ebpsave@GOTOFF[EAX] # ebp restored
         MOV     ESP,espsave@GOTOFF[EAX] # esp restored
