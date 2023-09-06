@@ -3,42 +3,6 @@
 ; orterforth integration requirements. Some of the information
 ; in the comments no longer applies.
 
-;
-;       Through the courtesy of
-;
-;        FORTH INTEREST GROUP
-;           P. O. Box 1105
-;      San Carlos, CA   94070
-;
-;             Release 1.1
-;       With compiler security
-;               and
-;       variable length names
-;
-; Further distribution must include the above notice
-; The FIG Installation Manual is required as it 
-; contains the model of FORTH and glossary of the system.
-; Available from FIG at the above address for $10.00 postpai
-;
-; Translated from the FIG Model by W. F. Ragsdale
-; with input-output given for the Rockewell System-65.
-; Transportation to other systems only requires
-; alteration of:  XEMIT, XKEY, XQTER, XCR, and RSLW.
-;
-;
-;   Equates giving memory assigments, machine
-;   registers, and disk parameters.
-;
-;
-;TOS   =        ; top of data stack, in z-page.
-N      =TOS+8   ; xXxxxxxxx    scratch workspace
-IP     =N+8     ;  Xx          interpretive pointer
-W      =IP+3    ; xXx          code field pointer
-UP     =W+2     ;  Xx          user area pointer
-XSAVE  =UP+2    ;  X           temporary for X register
-;
-;ORIG  =        ; origin of FORTH's dictionary.
-
 .exportzp N
 .exportzp UP
 .exportzp XSAVE
@@ -94,6 +58,85 @@ _rf_start:
        TYA
        PHA
        RTS                      ; return to C
+
+.export _rf_code_cl
+
+_rf_code_cl:
+       LDA #2
+       PHA
+       TYA
+       JMP PUSH
+
+.export _rf_code_cs
+
+_rf_code_cs:
+       ASL 0,X
+       ROL 1,X
+       JMP NEXT
+
+.export _rf_code_ln
+
+_rf_code_ln := _rf_next
+
+.export _rf_code_xt
+
+_rf_code_xt:
+       STY _rf_fp
+       STY _rf_fp+1
+       JSR _rf_start
+       RTS
+
+.bss
+
+.export _rf_fp
+
+_rf_fp: .res 2
+
+.export _rf_rp
+
+_rf_rp: .res 2
+
+.export _rf_sp
+
+_rf_sp: .res 2
+
+.code
+
+;
+;       Through the courtesy of
+;
+;        FORTH INTEREST GROUP
+;           P. O. Box 1105
+;      San Carlos, CA   94070
+;
+;             Release 1.1
+;       With compiler security
+;               and
+;       variable length names
+;
+; Further distribution must include the above notice
+; The FIG Installation Manual is required as it 
+; contains the model of FORTH and glossary of the system.
+; Available from FIG at the above address for $10.00 postpai
+;
+; Translated from the FIG Model by W. F. Ragsdale
+; with input-output given for the Rockewell System-65.
+; Transportation to other systems only requires
+; alteration of:  XEMIT, XKEY, XQTER, XCR, and RSLW.
+;
+;
+;   Equates giving memory assigments, machine
+;   registers, and disk parameters.
+;
+;
+;TOS   =        ; top of data stack, in z-page.
+N      =TOS+8   ; xXxxxxxxx    scratch workspace
+IP     =N+8     ;  Xx          interpretive pointer
+W      =IP+3    ; xXx          code field pointer
+UP     =W+2     ;  Xx          user area pointer
+XSAVE  =UP+2    ;  X           temporary for X register
+;
+;ORIG  =        ; origin of FORTH's dictionary.
 
 .export _rf_code_lit
 
@@ -1019,24 +1062,24 @@ _rf_code_cold:
 ; model source compiled these values inline using the 
 ; Forth 6502 assembler, which we cannot do. The rest of
 ; the code is close to the original.
-cold1: LDA ORIG+$22             ; move FORTH field to cold3 and cold4
+cold1: LDA ORIG+$22 ; move FORTH field to cold3 and cold4
        STA cold3+1
        STA cold4+1
        LDA ORIG+$23
        STA cold3+2
        STA cold4+2
-       INC cold4+1              ; increment cold4 by 1
+       INC cold4+1  ; increment cold4 by 1
        BNE cold2
        INC cold4+2
-cold2: LDA ORIG+$25             ; move ABORT PFA to cold7, cold8
+cold2: LDA ORIG+$25 ; move ABORT PFA to cold7, cold8
        STA cold7+1
        LDA ORIG+$24
        STA cold8+1
 
-       LDA ORIG+$0C    ; from cold start area
-cold3: STA $FFFF                ; self modified
+       LDA ORIG+$0C ; from cold start area
+cold3: STA $FFFF    ; self modified
        LDA ORIG+$0D
-cold4: STA $FFFF                ; self modified
+cold4: STA $FFFF    ; self modified
        LDY #$15
        BNE L2433
 WARM:  LDY #$0F
@@ -1048,9 +1091,9 @@ L2437: LDA ORIG+$0C,Y
        STA (UP),Y
        DEY
        BPL L2437
-cold7: LDA #$FF                 ; self modified
+cold7: LDA #$FF     ; self modified
        STA IP+1
-cold8: LDA #$FF                 ; self modified
+cold8: LDA #$FF     ; self modified
        STA IP
        CLD
        LDA #$6C
@@ -1070,44 +1113,3 @@ stod1:
        TYA
        PHA
        JMP PUSH
-
-.export _rf_code_cl
-
-_rf_code_cl:
-       LDA #2
-       PHA
-       TYA
-       JMP PUSH
-
-.export _rf_code_cs
-
-_rf_code_cs:
-       ASL 0,X
-       ROL 1,X
-       JMP NEXT
-
-.export _rf_code_ln
-
-_rf_code_ln := _rf_next
-
-.export _rf_code_xt
-
-_rf_code_xt:
-       STY _rf_fp
-       STY _rf_fp+1
-       JSR _rf_start
-       RTS
-
-.bss
-
-.export _rf_fp
-
-_rf_fp: .res 2
-
-.export _rf_rp
-
-_rf_rp: .res 2
-
-.export _rf_sp
-
-_rf_sp: .res 2
