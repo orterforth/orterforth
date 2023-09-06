@@ -65,8 +65,7 @@ static uint8_t **rf_inst_dp = 0;
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 {
-  *((uintptr_t *) *rf_inst_dp) = word;
-  *rf_inst_dp += RF_WORD_SIZE;
+  *(*((uintptr_t **) rf_inst_dp))++ = word;
 }
 
 /* CURRENT and CONTEXT vocabulary during inst */
@@ -421,7 +420,7 @@ static void rf_inst_load(void)
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
-  /* cold start */
+  /* cold start UP DP */
   rf_inst_vocabulary = 0;
   rf_up = (uintptr_t *) RF_USER;
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
@@ -499,6 +498,8 @@ static void rf_inst_load(void)
   origin[15] = (uintptr_t) *rf_inst_dp;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
   origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("inst", 4)) + 1);
+  /* trampoline may require SP init (e.g., i686 stack frame copy) */
+  rf_sp = (uintptr_t *) RF_S0;
   rf_fp = rf_code_cold;
   rf_trampoline();
 }

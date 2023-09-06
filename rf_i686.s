@@ -1,3 +1,169 @@
+# Modified for orterforth integration and i686
+# in 2022. Some info in the comments no longer 
+# applies (CP/M, 8086 register names, 
+# segmentation, byte offsets).
+
+        .intel_syntax noprefix
+
+        .text
+
+        .globl rf_trampoline
+        .globl _rf_trampoline
+rf_trampoline:
+_rf_trampoline:
+        PUSH    EBP     # enter stack frame
+        MOV     EBP,ESP
+        PUSH    EBX     # callee save ebx
+        PUSH    ESI     # callee save esi
+#	call __x86.get_pc_thunk.bx
+#	addl $_GLOBAL_OFFSET_TABLE_, %ebx
+#	pushl %ebx
+trampoline1:
+#	popl %ebx
+#	pushl %ebx
+        CALL    __x86.get_pc_thunk.bx
+        ADD     EBX,OFFSET _GLOBAL_OFFSET_TABLE_
+        MOV     EAX,rf_fp@GOTOFF[EBX] # if FP is null skip to exit
+        TEST    EAX,EAX
+# TODO standardise
+#	cmpl $0, %eax
+        # CMP     DWORD PTR _rf_fp[RIP],0 # if FP is null skip to exit
+        JE      trampoline2
+        MOV     ESI,_rf_ip@GOTOFF[EBX] # IP to esi
+        MOV     EDX,_rf_w@GOTOFF[EBX] # W to edx
+        LEA     ECX,trampoline1@GOTOFF[EBX] # push the return address
+        PUSH    ECX
+        MOV     ebpsave@GOTOFF[EBX],EBP # save esp and ebp
+        MOV     espsave@GOTOFF[EBX],ESP
+        MOV     EBP,_rf_rp@GOTOFF[EBX] # put SP and RP into esp and ebp
+# ####
+        MOV     ESP,_rf_sp@GOTOFF[EBX]
+        JMP     EAX     # jump to FP
+                        # will return to trampoline1
+trampoline2:
+#	popl %ebx
+        POP     ESI
+        POP     EBX
+        LEAVE           # leave stack frame
+        RET             # bye
+
+	.globl	rf_start
+	.globl	_rf_start
+rf_start:
+_rf_start:
+        CALL    __x86.get_pc_thunk.ax
+        ADD     EAX,OFFSET _GLOBAL_OFFSET_TABLE_
+        MOV     _rf_w@GOTOFF[EAX],EDX # edx to W
+        MOV     _rf_ip@GOTOFF[EAX],ESI # esi to IP
+        POP     EDX     # rf_start return address to edx
+        MOV     ECX,EBP # stack frame size to ecx
+        SUB     ECX,ESP
+        MOV     ESI,ESP # SP (with stack frame) to esi
+        MOV     ESP,EBP # ebp to esp, empty the stack frame
+        POP     EBP     # RP to ebp (pushed by prolog)
+        MOV     _rf_rp@GOTOFF[EAX],EBP # ebp to RP
+# ####
+        MOV     _rf_sp@GOTOFF[EAX],ESP # esp to SP
+        MOV     EBP,ebpsave@GOTOFF[EAX] # ebp restored
+        MOV     ESP,espsave@GOTOFF[EAX] # esp restored
+	# (these are not the same as return addr has been pushed)
+        PUSH    EBP     # push ebp (stack frame)
+        MOV     EBP,ESP # esp to ebp (stack frame)
+        SUB     ESP,ECX # allocate space with esp
+	# copy old stack frame here
+	# stack spills make this necessary as even if RF_START
+	# is the first thing in C code, stack spills happen before
+	# _rf_start is called. If a stack value is a reference 
+	# to the address of another this will not work.
+        MOV     EDI,ESP # copy stack frame
+        CLD
+        REP     MOVSB
+        JMP     EDX     # carry on in C
+
+        .globl rf_code_cl
+        .globl _rf_code_cl
+rf_code_cl:
+_rf_code_cl:
+        MOV     EAX,4
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
+
+        .globl rf_code_cs
+        .globl _rf_code_cs
+rf_code_cs:
+_rf_code_cs:
+        SHL     DWORD PTR [ESP],2
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
+
+        .globl rf_code_ln
+        .globl _rf_code_ln
+rf_code_ln:
+_rf_code_ln:
+        POP     EAX
+        TEST    EAX,3
+        JZ      LN1
+        AND     EAX,-4
+        ADD     EAX,4
+LN1:    # JMP   APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
+
+        .globl rf_code_xt
+        .globl _rf_code_xt
+rf_code_xt:
+_rf_code_xt:
+        PUSH    EBP
+        MOV     EBP, ESP
+        MOV     EAX,0
+        CALL    __x86.get_pc_thunk.bx
+        ADD     EBX,OFFSET _GLOBAL_OFFSET_TABLE_
+        MOV     _rf_fp@GOTOFF[EBX],EAX
+        CALL    _rf_start
+        POP     EBP
+        RET
+
+        .globl rf_code_cold
+        .globl _rf_code_cold
+rf_code_cold:
+_rf_code_cold:
+        CALL    __x86.get_pc_thunk.cx
+        ADD     ECX,OFFSET _GLOBAL_OFFSET_TABLE_
+        MOV     EDX,_rf_origin@GOTOFF[ECX]
+        MOV     EAX,_rf_code_cold@GOTOFF[ECX] # COLD vector init
+        MOV     4[EDX],EAX
+        MOV     EAX,0x18[EDX]   # FORTH vocabulary init
+        MOV     EBX,0x44[EDX]
+        MOV     [EBX],EAX
+        MOV     EDI,0x20[EDX]   # UP init
+        MOV     UP@GOTOFF[ECX],EDI
+        CLD                     # USER variables init
+        MOV     ECX,11
+        LEA     ESI,0x18[EDX]
+        REP     MOVSD
+        MOV     ESI,0x48[EDX]   # IP init to ABORT
+        JMP     rf_code_rpsto   # jump to RP!
+
+        .section __DATA.__data,""
+        .data
+
+        .p2align 2
+ebpsave:
+        .long	0
+
+        .p2align 2
+espsave:
+        .long	0
+
+        .text
+
 # ***************************************
 # ***                                 ***
 # ***    FIG-FORTH for the 8086/88    ***
@@ -41,803 +207,1058 @@
 #       George Flammer
 #       Robt. D. Villwock
 #-----------------------------------------------
+
+UP      =       _rf_up
+
+#-----------------------------------------------
 #
-# Modified for orterforth integration and i686
-# in 2022. Some info in the comments no longer 
-# applies (CP/M, 8086 register names, 
-# segmentation, byte offsets).
+# FORTH REGISTERS
+#
+# FORTH 8086    FORTH PRESERVATION RULES
+# ----- ----    ------------------------
+#
+# IP    SI      INTERPRETER POINTER.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+# W     DX      WORKING REGISTER.
+#               JUMP TO 'DPUSH' WILL
+#               PUSH CONTENTS ONTO THE
+#               PARAMETER STACK BEFORE
+#               EXECUTING 'APUSH'.
+#
+# SP    SP      PARAMETER STACK POINTER.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+# RP    BP      RETURN STACK.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+#       AX      GENERAL REGISTER.
+#               JUMP TO 'APUSH' WILL PUSH
+#               CONTENTS ONTO THE PARAMETER
+#               STACK BEFORE EXECUTING 'NEXT'.
+#
+#       BX      GENERAL PURPOSE REGISTER.
+#
+#       CX      GENERAL PURPOSE REGISTER.
+#
+#       DI      GENERAL PURPOSE REGISTER.
+#
+#       CS      SEGMENT REGISTER.  MUST BE
+#               PRESERVED ACROSS FORTH WORDS.
+#
+#       DS         "    "       "
+#
+#       SS         "    "       "
+#
+#       ES      TEMPORARY SEGMENT REGISTER
+#               ONLY USED BY A FEW WORDS.
+#
+################################################
 
-	.text
-	.globl rf_trampoline
-	.globl _rf_trampoline
-rf_trampoline:
-_rf_trampoline:
-
-	pushl	%ebp                    # enter stack frame
-	movl %esp, %ebp
-
-	pushl %ebx                    # callee save ebx
-	pushl %esi                    # callee save esi
-
-	call __x86.get_pc_thunk.bx
-	addl $_GLOBAL_OFFSET_TABLE_, %ebx
-	pushl %ebx
-
-trampoline1:
-
-	popl %ebx
-	pushl %ebx
-
-	movl rf_fp@GOTOFF(%ebx), %eax # if FP is null skip to exit
-	# testl %eax, %eax
-	cmpl $0, %eax
-	je trampoline2
-
-  movl _rf_ip@GOTOFF(%ebx), %esi # IP to esi
-  movl _rf_w@GOTOFF(%ebx), %edx  # W to edx
-	leal trampoline1@GOTOFF(%ebx), %ecx # push the return address
-	push %ecx
-
-	movl %ebp, _rf_i686_ebp_save@GOTOFF(%ebx) # save esp and ebp
-	movl %esp, _rf_i686_esp_save@GOTOFF(%ebx)
-  movl _rf_rp@GOTOFF(%ebx), %ebp # put SP and RP into rsp and rbp
-  movl _rf_sp@GOTOFF(%ebx), %esp
-
-	jmp *%eax                     # jump to FP
-                                # will return to trampoline1
-
-trampoline2:
-
-	popl %ebx
-	popl %esi
-	popl %ebx
-	leave                         # leave stack frame
-	ret                           # bye
-
-	.globl	rf_start
-	.globl	_rf_start
-rf_start:
-_rf_start:
-
-	call	__x86.get_pc_thunk.ax
-	addl	$_GLOBAL_OFFSET_TABLE_, %eax
-
-  movl %edx, _rf_w@GOTOFF(%eax)  # edx to W
-  movl %esi, _rf_ip@GOTOFF(%eax) # esi to IP
-
-	popl %edx                     # unwind rf_start return address
-
-	movl %ebp, %ecx               # get difference between esp and ebp
-	subl %esp, %ecx
-
-	movl %esp, %esi               # old SP now in esi
-
-	movl %ebp, %esp               # empty the stack frame, i.e., make esp = ebp
-
-	popl %ebp                     # get the pushed ebp (this is RP)
-  movl %ebp, _rf_rp@GOTOFF(%eax)
-
-  movl %esp, _rf_sp@GOTOFF(%eax) # now esp is SP
-
-	movl _rf_i686_ebp_save@GOTOFF(%eax), %ebp # get the saved esp and ebp from _rf_trampoline
-	movl _rf_i686_esp_save@GOTOFF(%eax), %esp # (these are not the same as return addr has been pushed)
-
-	pushl %ebp                    # push ebp as it would have been
-
-	movl %esp, %ebp               # and mov esp into ebp
-
-	subl %ecx, %esp               # sub the difference from esp
-
-	movl %esp, %edi               # this is the new stack frame
-
-	# copy old stack frame here
-	# stack spills make this necessary as even if RF_START
-	# is the first thing in C code, stack spills happen before
-	# _rf_start is called. If a stack value is a reference 
-	# to the address of another this will not work.
-	cld
-  rep movsb
-
-	jmp *%edx                       # carry on in C
-
-dpush:
-	pushl %edx
-apush:
-	pushl %eax
-
-	.globl rf_next
-	.globl _rf_next
+# *************
+# *           *
+# *   NEXT    *
+# *           *
+# *   DPUSH   *
+# *           *
+# *   APUSH   *
+# *           *
+# *************
+#
+#
+DPUSH:  PUSH    EDX
+APUSH:  PUSH    EAX
+#
+# -----------------------------------------
+#
+# PATCH THE NEXT 3 LOCATIONS
+# (USING A DEBUG MONITOR; I.E. DDT86)
+# WITH  (JMP TNEXT)  FOR TRACING THROUGH
+# HIGH LEVEL FORTH WORDS.
+#
+        .globl rf_next
+        .globl _rf_next
 rf_next:
 _rf_next:
-next:
+NEXT:   LODSD           # AX<- (IP)
+        MOV     EDX,EAX # (W) <- (IP)
+#
+# -----------------------------------------
+#
+NEXT1:  JMP     DWORD PTR [EDX] # TO 'CFA'
 
-	lodsl                         # AX<- (IP)
-	movl %eax, %edx               # (W) <- (IP)
-next1:
-	jmp *(%edx)                   # TO 'CFA'
-
-	.globl	rf_code_lit
-	.globl	_rf_code_lit
+#
+# *********************************************
+# ******   DICTIONARY WORDS START HERE   ******
+# *********************************************
+#
+#
+# ***********
+# *   LIT   *
+# ***********
+#
+        .globl rf_code_lit
+        .globl _rf_code_lit
 rf_code_lit:
 _rf_code_lit:
+        LODSD           # AX <- LITERAL
+#       JMP     APUSH   # TO TOP OF STACK
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	lodsl                         # AX <- LITERAL
-	jmp apush                     # TO TOP OF STACK
 
-	.globl	rf_code_exec
-	.globl	_rf_code_exec
+# ***************
+# *   EXECUTE   *
+# ***************
+#
+        .globl rf_code_exec
+        .globl _rf_code_exec
 rf_code_exec:
 _rf_code_exec:
+        POP     EDX     # GET CFA
+#       JMP     NEXT1   # EXECUTE NEXT
+        JMP     DWORD PTR [EDX]
 
-	popl %edx                     # GET CFA
-	jmp next1                     # EXECUTE NEXT
-	# jmp *(%edx)
 
-	.globl	rf_code_bran
-	.globl	_rf_code_bran
+# **************
+# *   BRANCH   *
+# **************
+#
+        .globl rf_code_bran
+        .globl _rf_code_bran
 rf_code_bran:
 _rf_code_bran:
+BRAN1:  ADD     ESI,[ESI] # (IP) <- (IP) + ((IP))
+#       JMP     NEXT    # JUMP TO OFFSET
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-bran1:
-	addl (%esi), %esi             # (IP) <- (IP) + ((IP))
-	jmp next                      # JUMP TO OFFSET
 
-	.globl	rf_code_zbran
-	.globl	_rf_code_zbran
+# ***************
+# *   0BRANCH   *
+# ***************
+#
+        .globl rf_code_zbran
+        .globl _rf_code_zbran
 rf_code_zbran:
 _rf_code_zbran:
+        POP     EAX     # GET STACK VALUE
+        OR      EAX,EAX # ZERO?
+        JZ      BRAN1   # YES, BRANCH
+        ADD     ESI,4   # NO, CONTINUE...
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax                     # GET STACK VALUE
-	orl %eax, %eax                # ZERO?
-	jz bran1                      # YES, BRANCH
-	addl $4, %esi                 # NO, CONTINUE...
-	jmp next
 
-	.globl	rf_code_xloop
-	.globl	_rf_code_xloop
+# **************
+# *   (LOOP)   *
+# **************
+#
+        .globl rf_code_xloop
+        .globl _rf_code_xloop
 rf_code_xloop:
 _rf_code_xloop:
+        MOV     EBX,1   # INCREMENT
+XLOO1:  ADD     [EBP],EBX # INDEX=INDEX+INCR
+        MOV     EAX,[EBP] # GET NEW INDEX
+        SUB     EAX,4[EBP] # COMPARE WITH LIMIT
+        XOR     EAX,EBX # TEST SIGN (BIT-16)
+        JS      BRAN1   # KEEP LOOPING...
 
-	movl $1, %ebx                 # INCREMENT
-xloo1:
-	addl %ebx, (%ebp)             # INDEX=INDEX+INCR
-	movl (%ebp), %eax             # GET NEW INDEX
-	subl 4(%ebp), %eax            # COMPARE WITH LIMIT
-	xorl %ebx, %eax               # TEST SIGN (BIT-16)
-	js bran1                      # KEEP LOOPING...
+# END OF 'DO' LOOP.
+        ADD     EBP,8   # ADJ. RETURN STK
+        ADD     ESI,4   # BYPASS BRANCH OFFSET
+#       JMP     NEXT    # CONTINUE...
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-# END OF 'DO' LOOP
-	addl $8, %ebp                 # ADJ. RETURN STK
-	addl $4, %esi                 # BYPASS BRANCH OFFSET
-	jmp next                      # CONTINUE...
 
-	.globl	rf_code_xploo
-	.globl	_rf_code_xploo
+# ***************
+# *   (+LOOP)   *
+# ***************
+#
+        .globl rf_code_xploo
+        .globl _rf_code_xploo
 rf_code_xploo:
 _rf_code_xploo:
+        POP     EBX     # GET LOOP VALUE
+        JMP     XLOO1
 
-	popl %ebx                     # GET LOOP VALUE
-	jmp xloo1
 
-	.globl	rf_code_xdo
-	.globl	_rf_code_xdo
+# ************
+# *   (DO)   *
+# ************
+#
+        .globl rf_code_xdo
+        .globl _rf_code_xdo
 rf_code_xdo:
 _rf_code_xdo:
+        POP     EDX     # INITIAL INDEX VALUE
+        POP     EAX     # LIMIT VALUE
+        XCHG    EBP,ESP # GET RETURN STACK
+        PUSH    EAX
+        PUSH    EDX
+        XCHG    EBP,ESP # GET PARAMETER STACK
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %edx                     # INITIAL INDEX VALUE
-	popl %eax                     # LIMIT VALUE
-	xchgl %esp, %ebp              # GET RETURN STACK
-	pushl %eax
-	pushl %edx
-	xchgl %esp, %ebp              # GET PARAMETER STACK
-	jmp next
 
-	.globl	rf_code_rr
-	.globl	_rf_code_rr
+# *********
+# *   I   *
+# *********
+#
+        .globl rf_code_rr
+        .globl _rf_code_rr
 rf_code_rr:
 _rf_code_rr:
+        MOV     EAX,[EBP] # GET INDEX VALUE
+#       JMP     APUSH   # TO PARAMETER STACK
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	movl (%ebp), %eax             # GET INDEX VALUE
-	jmp apush                     # TO PARAMETER STACK
 
-	.globl	rf_code_digit
-	.globl	_rf_code_digit
+# *************
+# *   DIGIT   *
+# *************
+#
+        .globl rf_code_digit
+        .globl _rf_code_digit
 rf_code_digit:
 _rf_code_digit:
-
-	popl %edx                     # NUMBER BASE
-	popl %eax                     # ASCII DIGIT
-	sub $48, %al
-	jb digi2                      # NUMBER ERROR
-	cmp $9, %al
-	jbe digi1                     # NUMBER = 0 THRU 9
-	sub $7, %al
-	cmp $10, %al                  # NUMBER 'A' THRU 'Z' ?
-	jb digi2                      # NO
+        POP     EDX     # NUMBER BASE
+        POP     EAX     # ASCII DIGIT
+        SUB     AL,'0'
+        JB      DIGI2   # NUMBER ERROR
+        CMP     AL,9
+        JBE     DIGI1   # NUMBER = 0 THRU 9
+        SUB     AL,7
+        CMP     AL,10   # NUMBER 'A' THRU 'Z' ?
+        JB      DIGI2   # NO
 #
-digi1:
-	cmp %dl, %al                  # COMPARE NUMBER TO BASE
-	jae digi2                     # NUMBER ERROR
-	subl %edx, %edx               # ZERO
-	mov %al, %dl                  # NEW BINARY NUMBER
-	mov $1, %al                   # TRUE FLAG
-	jmp dpush                     # ADD TO STACK
+DIGI1:  CMP     AL,DL   # COMPARE NUMBER TO BASE
+        JAE     DIGI2   # NUMBER ERROR
+        SUB     EDX,EDX # ZERO
+        MOV     DL,AL   # NEW BINARY NUMBER
+        MOV     AL,1    # TRUE FLAG
+#       JMP     DPUSH   # ADD TO STACK
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
 # NUMBER ERROR
 #
-digi2:
-	subl %eax, %eax               # FALSE FLAG
-	jmp apush                     # BYE
+DIGI2:  SUB     EAX,EAX # FALSE FLAG
+#       JMP     APUSH   # BYE
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	.globl	rf_code_pfind
-	.globl	_rf_code_pfind
+
+# *************
+# *   PFIND   *
+# *************
+#
+        .globl rf_code_pfind
+        .globl _rf_code_pfind
 rf_code_pfind:
 _rf_code_pfind:
-
-  # mov %ds, %ax
-  # mov %ax, %es                  # ES = DS
-	popl %ebx                     # NFA
-	popl %ecx                     # STRING ADDR
+#       MOV     AX,DS
+#       MOV     ES,AX   # ES = DS
+        POP     EBX     # NFA
+        POP     ECX     # STRING ADDR
 #
 # SEARCH LOOP
-pfin1:
-	movl %ecx, %edi               # GET ADDR
-	movb (%ebx), %al              # GET WORD LENGTH
-	movb %al, %dl                 # SAVE LENGTH
-	xorb (%edi), %al
-	andb $0x3F, %al               # CHECK LENGTHS
-	jnz pfin5                     # LENGTHS DIFFER
+PFIN1:  MOV     EDI,ECX # GET ADDR
+        MOV     AL,[EBX] # GET WORD LENGTH
+        MOV     DL,AL   # SAVE LENGTH
+        XOR     AL,[EDI]
+        AND     AL,0x3F # CHECK LENGTHS
+        JNZ     PFIN5   # LENGTHS DIFFER
 #
 # LENGTH MATCH, CHECK EACH CHARACTER IN NAME
-pfin2:
-	incl %ebx
-	incl %edi                     # NEXT CHAR OF NAME
-	movb (%ebx), %al
-	xorb (%edi), %al              # COMPARE NAMES
-	addb %al, %al                 # THIS WILL TEST BIT-8
-	jnz pfin5                     # NO MATCH
-	jnb pfin2                     # MATCH SO FAR, LOOP
+PFIN2:  INC     EBX
+        INC     EDI     # NEXT CHAR OF NAME
+        MOV     AL,[EBX]
+        XOR     AL,[EDI] # COMPARE NAMES
+        ADD     AL,AL   # THIS WILL TEST BIT-8
+        JNZ     PFIN5   # NO MATCH
+        JNB     PFIN2   # MATCH SO FAR, LOOP
 
 # FOUND END OF NAME (BIT-8 SET); A MATCH
-	addl $9, %ebx                 # BX = PFA
-	pushl %ebx                    # (S3) <- PFA
-	movl $1, %eax                 # TRUE VALUE
-	andl $0xFF, %edx              # CLEAR HIGH LENGTH
-	jmp dpush
+        ADD     EBX,9   # BX = PFA
+        PUSH    EBX     # (S3) <- PFA
+        MOV     EAX,1   # TRUE VALUE
+#       SUB     DH,DH   # CLEAR HIGH LENGTH
+        AND     EDX,0xFF
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
 # NO NAME FIELD MATCH, TRY ANOTHER
 #
 # GET NEXT LINK FIELD ADDR (LFA)
 # (ZERO = FIRST WORD OF DICTIONARY)
 #
-pfin5:
-	incl %ebx                     # NEXT ADDR
-	jb pfin6                      # END OF NAME
-	movb (%ebx), %al              # GET NEXT CHAR
-	addb %al, %al                 # SET/RESET CARRY
-	jmp pfin5                     # LOOP UNTIL FOUND
+PFIN5:  INC     EBX     # NEXT ADDR
+        JB      PFIN6   # END OF NAME
+        MOV     AL,[EBX] # GET NEXT CHAR
+        ADD     AL,AL   # SET/RESET CARRY
+        JMP     PFIN5   # LOOP UNTIL FOUND
 #
-pfin6:
-	movl (%ebx), %ebx             # GET LINK FIELD ADDR
-	orl %ebx, %ebx                # START OF DICT. (0)?
-	jnz pfin1                     # NO, LOOK SOME MORE
-	movl $0, %eax                 # FALSE FLAG
-	jmp apush                     # DONE (NO MATCH FOUND)
+PFIN6:  MOV     EBX,[EBX] # GET LINK FIELD ADDR
+        OR      EBX,EBX # START OF DICT. (0)?
+        JNZ     PFIN1   # NO, LOOK SOME MORE
+        MOV     EAX,0   # FALSE FLAG
+#       JMP     APUSH   # DONE (NO MATCH FOUND)
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	.globl	rf_code_encl
-	.globl	_rf_code_encl
+
+# ***************
+# *   ENCLOSE   *
+# ***************
+#
+        .globl rf_code_encl
+        .globl _rf_code_encl
 rf_code_encl:
 _rf_code_encl:
-
-	popl %eax                     # S1 - TERMINATOR CHAR.
-	popl %ebx                     # S2 - TEXT ADDR
-	pushl %ebx                    # ADDR BACK TO STACK
-	andl $0xFF, %eax              # ZERO
-	movl $-1, %edx                # CHAR OFFSET COUNTER
-	decl %ebx                     # ADDR -1
+        POP     EAX     # S1 - TERMINATOR CHAR.
+        POP     EBX     # S2 - TEXT ADDR
+        PUSH    EBX     # ADDR BACK TO STACK
+#       MOV     AH,0    # ZERO
+        AND     EAX,0xFF
+        MOV     EDX,-1  # CHAR OFFSET COUNTER
+        DEC     EBX     # ADDR -1
 
 # SCAN TO FIRST NON-TERMINATOR CHAR
 #
-encl1:
-	incl %ebx                     # ADDR +1
-	incl %edx                     # COUNT +1
-	cmpb (%ebx), %al
-	jz encl1                      # WAIT FOR NON-TERMINATOR
-	pushl %edx                    # OFFSET TO 1ST TEXT CHR
-	cmpb (%ebx), %ah              # NULL CHAR?
-	jnz encl2                     # NO
+ENCL1:  INC     EBX     # ADDR +1
+        INC     EDX     # COUNT +1
+        CMP     AL,[EBX]
+        JZ      ENCL1   # WAIT FOR NON-TERMINATOR
+        PUSH    EDX     # OFFSET TO 1ST TEXT CHR
+        CMP     AH,[EBX] # NULL CHAR?
+        JNZ     ENCL2   # NO
 
 # FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
-	movl %edx, %eax               # COPY COUNTER
-	incl %edx                     # +1
-	jmp dpush
+        MOV     EAX,EDX # COPY COUNTER
+        INC     EDX     # +1
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
 # FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
 #
-encl2:
-	incl %ebx                     # ADDR+1
-	incl %edx                     # COUNT +1
-	cmpb (%ebx), %al              # TERMINATOR CHAR?
-	jz encl4                      # YES
-	cmpb (%ebx), %ah              # NULL CHAR
-	jnz encl2                     # NO, LOOP AGAIN
+ENCL2:  INC     EBX     # ADDR+1
+        INC     EDX     # COUNT +1
+        CMP     AL,[EBX] # TERMINATOR CHAR?
+        JZ      ENCL4   # YES
+        CMP     AH,[EBX] # NULL CHAR
+        JNZ     ENCL2   # NO, LOOP AGAIN
 
 # FOUND NULL AT END OF TEXT
 #
-encl3:
-	movl %edx, %eax               # COUNTERS ARE EQUAL
-	jmp dpush
+ENCL3:  MOV     EAX,EDX # COUNTERS ARE EQUAL
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
 # FOUND TERINATOR CHARACTER
-encl4:
-	movl %edx, %eax
-	incl %eax                     # COUNT +1
-	jmp dpush
+ENCL4:  MOV     EAX,EDX
+        INC     EAX     # COUNT +1
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	.globl	rf_code_cmove
-	.globl	_rf_code_cmove
+
+# *************
+# *   CMOVE   *
+# *************
+#
+        .globl rf_code_cmove
+        .globl _rf_code_cmove
 rf_code_cmove:
 _rf_code_cmove:
+        CLD             # INC DIRECTION
+        MOV     EBX,ESI # SAVE IP
+        POP     ECX     # COUNT
+        POP     EDI     # DEST.
+        POP     ESI     # SOURCE
+#       MOV     AX,DS
+#       MOV     ES,AX   # ES <- DS
+        REP     MOVSB   # THATS THE MOVE
+        MOV     ESI,EBX # GET BACK IP
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	cld                           # INC DIRECTION
-	movl %esi, %ebx               # SAVE IP
-	popl %ecx                     # COUNT
-	popl %edi                     # DEST.
-	popl %esi                     # SOURCE
-	# mov %ds, %ax
-	# mov %ax, %es                  # ES <- DS
-	rep movsb                     # THATS THE MOVE
- 	movl %ebx, %esi               # GET BACK IP
- 	jmp next
 
-	.globl	rf_code_ustar
-	.globl	_rf_code_ustar
+# **********
+# *   U*   *
+# **********
+#
+        .globl rf_code_ustar
+        .globl _rf_code_ustar
 rf_code_ustar:
 _rf_code_ustar:
+        POP     EAX
+        POP     EBX
+        MUL     EBX     # UNSIGNED
+#       XCHG    EAX,EDX # AX NOW = MSW
+#       JMP     DPUSH   # STORE DOUBLE WORD
+        PUSH    EAX
+        PUSH    EDX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	popl %ebx
-	mull %ebx                     # UNSIGNED
-	xchgl %edx, %eax              # AX NOW = MSW
-	jmp dpush                     # STORE DOUBLE WORD
 
-	.globl rf_code_uslas
-	.globl _rf_code_uslas
+# **********
+# *   U/   *
+# **********
+#
+        .globl rf_code_uslas
+        .globl _rf_code_uslas
 rf_code_uslas:
 _rf_code_uslas:
-
-	popl %ebx                     # DIVISOR
-	popl %edx                     # MSW OF DIVIDEND
-	popl %eax                     # LSW OF DIVIDEND
-	cmpl %ebx, %edx               # DIVIDE BY ZERO?
-	jnb dzero                     # ZERO DIVIDE, NO WAY
-	divl %ebx                     # 16 BIT DIVIDE
-	jmp dpush                     # STORE QUOT/REM
+        POP     EBX     # DIVISOR
+        POP     EDX     # MSW OF DIVIDEND
+        POP     EAX     # LSW OF DIVIDEND
+        CMP     EDX,EBX # DIVIDE BY ZERO?
+        JNB     DZERO   # ZERO DIVIDE, NO WAY
+        DIV     EBX     # 16 BIT DIVIDE
+#       JMP     DPUSH   # STORE QUOT/REM
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
 # DIVIDE BY ZERO ERROR (SHOW MAX NUMBERS)
 #
-dzero:
-	movl $-1, %eax
-	movl %eax, %edx
-	jmp dpush                     # STORE QUOT/REM
+DZERO:  MOV     EAX,-1
+        MOV     EDX,EAX
+#       JMP     DPUSH   # STORE QUOT/REM
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	.globl	rf_code_andd
-	.globl	_rf_code_andd
-rf_code_andd:
+
+# ***********
+# *   AND   *
+# ***********
+#
+        .globl rf_code_andd
+        .globl _rf_code_andd
+rf_code_andd:           # (S1) <- (S1) AND (S2)
 _rf_code_andd:
+        POP     EAX
+        POP     EBX
+        AND     EAX,EBX
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	popl %ebx
-	andl %ebx, %eax
-	jmp apush
 
-	.globl	rf_code_orr
-	.globl	_rf_code_orr
-rf_code_orr:
+# **********
+# *   OR   *
+# **********
+#
+        .globl rf_code_orr
+        .globl _rf_code_orr
+rf_code_orr:            # (S1) <- (S1) OR (S2)
 _rf_code_orr:
+        POP     EAX
+        POP     EBX
+        OR      EAX,EBX
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	popl %ebx
-	orl %ebx, %eax
-	jmp apush
 
-	.globl	rf_code_xorr
-	.globl	_rf_code_xorr
-rf_code_xorr:
+# ***********
+# *   XOR   *
+# ***********
+#
+        .globl rf_code_xorr
+        .globl _rf_code_xorr
+rf_code_xorr:           # (S1) <- (S1) XOR (S2)
 _rf_code_xorr:
+        POP     EAX
+        POP     EBX
+        XOR     EAX,EBX
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	popl %ebx
-	xorl %ebx, %eax
-	jmp apush
 
-	.globl	rf_code_spat
-	.globl	_rf_code_spat
-rf_code_spat:
+# ***********
+# *   SP@   *
+# ***********
+#
+        .globl rf_code_spat
+        .globl _rf_code_spat
+rf_code_spat:           # (S1) <- (SP)
 _rf_code_spat:
+        MOV     EAX,ESP
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	movl %esp, %eax
-	jmp apush
 
-	.globl	rf_code_spsto
-	.globl	_rf_code_spsto
+# ***********
+# *   SP!   *
+# ***********
+#
+        .globl rf_code_spsto
+        .globl _rf_code_spsto
 rf_code_spsto:
 _rf_code_spsto:
+        CALL    __x86.get_pc_thunk.ax
+        ADD     EAX,OFFSET _GLOBAL_OFFSET_TABLE_
+        MOV     EBX,UP@GOTOFF[EAX] # USER VAR BASE ADDR
+        MOV     ESP,12[EBX] # RESET PARAM. STACK PT.
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	call __x86.get_pc_thunk.ax
-	addl $_GLOBAL_OFFSET_TABLE_, %eax
-	movl _rf_up@GOTOFF(%eax), %ebx # USER VAR BASE ADDR
-	movl 12(%ebx), %esp           # RESET PARAM. STACK PT.
-	jmp next
 
-	.globl	rf_code_rpsto
-	.globl	_rf_code_rpsto
+# ***********
+# *   RP!   *
+# ***********
+#
+        .globl rf_code_rpsto
+        .globl _rf_code_rpsto
 rf_code_rpsto:
 _rf_code_rpsto:
+        CALL    __x86.get_pc_thunk.ax
+        ADD     EAX,OFFSET _GLOBAL_OFFSET_TABLE_
+        MOV     EBX,UP@GOTOFF[EAX] # (AX) <- USR VAR. BASE
+        MOV     EBP,16[EBX] # RESET RETURN STACK PT.
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	call __x86.get_pc_thunk.ax
-	addl $_GLOBAL_OFFSET_TABLE_, %eax
-	movl _rf_up@GOTOFF(%eax), %ebx # (AX) <- USR VAR. BASE
-	movl 16(%ebx), %ebp           # RESET RETURN STACK PT.
-	jmp next
 
-	.globl	rf_code_semis
-	.globl	_rf_code_semis
+# **********
+# *   ;S   *
+# **********
+#
+        .globl rf_code_semis
+        .globl _rf_code_semis
 rf_code_semis:
 _rf_code_semis:
+        MOV     ESI,[EBP] # (IP) <- (R1)
+        ADD     EBP,4   # ADJUST STACK
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	movl (%ebp), %esi             # (IP) <- (R1)
-	addl $4, %ebp                 # ADJUST STACK
-	jmp next
 
-	.globl	rf_code_leave
-	.globl	_rf_code_leave
-rf_code_leave:
+# *************
+# *   LEAVE   *
+# *************
+#
+        .globl rf_code_leave
+        .globl _rf_code_leave
+rf_code_leave:          # LIMIT <- INDEX
 _rf_code_leave:
+        MOV     EAX,[EBP] # GET INDEX
+        MOV     4[EBP],EAX # STORE IT AT LIMIT
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	movl (%ebp), %eax             # GET INDEX
-	movl %eax, 4(%ebp)            # STORE IT AT LIMIT
-	jmp next
 
-	.globl	rf_code_tor
-	.globl	_rf_code_tor
-rf_code_tor:
+# **********
+# *   >R   *
+# **********
+#
+        .globl rf_code_tor
+        .globl _rf_code_tor
+rf_code_tor:            # (R1) <- (S1)
 _rf_code_tor:
+        POP     EBX     # GET STACK PARAMETER
+        SUB     EBP,4   # MOVE RETURN STACK DOWN
+        MOV     [EBP],EBX # ADD TO RETURN STACK
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %ebx                     # GET STACK PARAMETER
-	subl $4, %ebp                 # MOVE RETURN STACK DOWN
-	movl %ebx, (%ebp)             # ADD TO RETURN STACK
-	jmp next
 
-	.globl	rf_code_fromr
-	.globl	_rf_code_fromr
-rf_code_fromr:
+# **********
+# *   R>   *
+# **********
+#
+        .globl rf_code_fromr
+        .globl _rf_code_fromr
+rf_code_fromr:          # (S1) <- (R1)
 _rf_code_fromr:
+        MOV     EAX,[EBP] # GET RETURN STACK VALUE
+        ADD     EBP,4   # DELETE FROM STACK
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	movl (%ebp), %eax             # GET RETURN STACK VALUE
-	addl $4, %ebp                 # DELETE FROM STACK
-	jmp apush
 
-	.globl	rf_code_zequ
-	.globl	_rf_code_zequ
+# **********
+# *   0=   *
+# **********
+#
+        .globl rf_code_zequ
+        .globl _rf_code_zequ
 rf_code_zequ:
 _rf_code_zequ:
+        POP     EAX
+        OR      EAX,EAX # DO TEST
+        MOV     EAX,1   # TRUE
+        JZ      ZEQU1   # ITS ZERO
+        DEC     EAX     # FALSE
+ZEQU1:  # JMP   APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	orl %eax, %eax                # DO TEST
-	movl $1, %eax                 # TRUE
-	jz zequ1                      # ITS ZERO
-	decl %eax                     # FALSE
-zequ1:
-	jmp apush
 
-	.globl	rf_code_zless
-	.globl	_rf_code_zless
+# **********
+# *   0<   *
+# **********
+#
+        .globl rf_code_zless
+        .globl _rf_code_zless
 rf_code_zless:
 _rf_code_zless:
+        POP     EAX
+        OR      EAX,EAX # SET FLAGS
+        MOV     EAX,1   # TRUE
+        JS      ZLESS1
+        DEC     EAX     # FLASE
+ZLESS1: # JMP   APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	orl %eax, %eax                # SET FLAGS
-	movl $1, %eax                 # TRUE
-	js zless1
-	decl %eax                     # FLASE
-zless1:
-	jmp apush
 
-	.globl	rf_code_plus
-	.globl	_rf_code_plus
-rf_code_plus:
+# *********
+# *   +   *
+# *********
+#
+        .globl rf_code_plus
+        .globl _rf_code_plus
+rf_code_plus:           # (S1) <- (S1) + (S2)
 _rf_code_plus:
+        POP     EAX
+        POP     EBX
+        ADD     EAX,EBX
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	popl %ebx
-	addl %ebx, %eax
-	jmp apush
 
-	.globl	rf_code_dplus
-	.globl	_rf_code_dplus
+# **********
+# *   D+   *
+# **********
+#
+# XLW XHW  YLW YHW --> SLW SHW
+# S4  S3   S2  S1      S2  S1
+#
+        .globl rf_code_dplus
+        .globl _rf_code_dplus
 rf_code_dplus:
 _rf_code_dplus:
+        POP     EAX     # YHW
+        POP     EDX     # YLW
+        POP     EBX     # XHW
+        POP     ECX     # XLW
+        ADD     EDX,ECX # SLW
+        ADC     EAX,EBX # SHW
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax                     # YHW
-	popl %edx                     # YLW
-	popl %ebx                     # XHW
-	popl %ecx                     # XLW
-	addl %ecx, %edx               # SLW
-	adcl %ebx, %eax               # SHW
-	jmp dpush
 
-	.globl	rf_code_minus
-	.globl	_rf_code_minus
+# *************
+# *   MINUS   *
+# *************
+#
+        .globl rf_code_minus
+        .globl _rf_code_minus
 rf_code_minus:
 _rf_code_minus:
+        POP     EAX
+        NEG     EAX
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	negl %eax
-	jmp apush
 
-	.globl	rf_code_dminu
-	.globl	_rf_code_dminu
+# **************
+# *   DMINUS   *
+# **************
+#
+        .globl rf_code_dminu
+        .globl _rf_code_dminu
 rf_code_dminu:
 _rf_code_dminu:
+        POP     EBX
+        POP     ECX
+        SUB     EAX,EAX # ZERO
+        MOV     EDX,EAX
+        SUB     EDX,ECX # MAKE 2'S COMPLEMENT
+        SBB     EAX,EBX # HIGH WORD
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %ebx
-	popl %ecx
-	subl %eax, %eax               # ZERO
-	movl %eax, %edx
-	subl %ecx, %edx               # MAKE 2'S COMPLEMENT
-	sbbl %ebx, %eax               # HIGH WORD
-	jmp dpush
 
-	.globl	rf_code_over
-	.globl	_rf_code_over
+# ************
+# *   OVER   *
+# ************
+#
+        .globl rf_code_over
+        .globl _rf_code_over
 rf_code_over:
 _rf_code_over:
+        POP     EDX
+        POP     EAX
+        PUSH    EAX
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %edx
-	popl %eax
-	pushl %eax
-	jmp dpush
 
-	.globl	rf_code_drop
-	.globl	_rf_code_drop
+# ************
+# *   DROP   *
+# ************
+#
+        .globl rf_code_drop
+        .globl _rf_code_drop
 rf_code_drop:
 _rf_code_drop:
+        POP     EAX
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	jmp next
 
-	.globl	rf_code_swap
-	.globl	_rf_code_swap
+# ************
+# *   SWAP   *
+# ************
+#
+        .globl rf_code_swap
+        .globl _rf_code_swap
 rf_code_swap:
 _rf_code_swap:
+        POP     EDX
+        POP     EAX
+#       JMP     DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %edx
-	popl %eax
-	jmp dpush
 
-	.globl	rf_code_dup
-	.globl	_rf_code_dup
+# ***********
+# *   DUP   *
+# ***********
+#
+        .globl rf_code_dup
+        .globl _rf_code_dup
 rf_code_dup:
 _rf_code_dup:
+        POP     EAX
+        PUSH    EAX
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax
-	pushl %eax
-	jmp apush
 
-	.globl	rf_code_pstor
-	.globl	_rf_code_pstor
-rf_code_pstor:
+# **********
+# *   +!   *
+# **********
+#
+        .globl rf_code_pstor
+        .globl _rf_code_pstor
+rf_code_pstor:          # ((S1)) <- ((S1)) + (S2)
 _rf_code_pstor:
+        POP     EBX     # ADDRESS
+        POP     EAX     # INCREMENT
+        ADD     [EBX],EAX
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %ebx                     # ADDRESS
-	popl %eax                     # INCREMENT
-	addl %eax, (%ebx)
-	jmp next
 
-	.globl	rf_code_toggl
-	.globl	_rf_code_toggl
+# **************
+# *   TOGGLE   *
+# **************
+#
+        .globl rf_code_toggl
+        .globl _rf_code_toggl
 rf_code_toggl:
 _rf_code_toggl:
+        POP     EAX     # BIT PATTERN
+        POP     EBX     # ADDR
+        XOR     [EBX],AL
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %eax                     # BIT PATTERN
-	popl %ebx                     # ADDR
-	xorb %al, (%ebx)
-	jmp next
 
-	.globl	rf_code_at
-	.globl	_rf_code_at
-rf_code_at:
+# *********
+# *   @   *
+# *********
+#
+        .globl rf_code_at
+        .globl _rf_code_at
+rf_code_at:             # (S1) <- ((S1))
 _rf_code_at:
+        POP     EBX
+        MOV     EAX,[EBX]
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %ebx
-	movl (%ebx), %eax
-	jmp apush
 
-	.globl	rf_code_cat
-	.globl	_rf_code_cat
+# **********
+# *   C@   *
+# **********
+#
+        .globl rf_code_cat
+        .globl _rf_code_cat
 rf_code_cat:
 _rf_code_cat:
+        POP     EBX
+#       MOV     AL,[EBX]
+#       AND     EAX,0xFF
+        MOVZX   EAX, BYTE PTR [EBX]
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %ebx
-	movb (%ebx), %al
-	andl $0xFF, %eax
-	jmp apush
 
-	.globl	rf_code_store
-	.globl	_rf_code_store
-rf_code_store:
+# *********
+# *   !   *
+# *********
+#
+        .globl rf_code_store
+        .globl _rf_code_store
+rf_code_store:          # ((S1)) <- (S2)
 _rf_code_store:
+        POP     EBX     # ADDR
+        POP     EAX     # DATA
+        MOV     [EBX],EAX
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %ebx                     # ADDR
-	popl %eax                     # DATA
-	movl %eax, (%ebx)
-	jmp next
 
-	.globl	rf_code_cstor
-	.globl	_rf_code_cstor
+# **********
+# *   C!   *
+# **********
+#
+        .globl rf_code_cstor
+        .globl _rf_code_cstor
 rf_code_cstor:
 _rf_code_cstor:
+        POP     EBX     # ADDR
+        POP     EAX     # DATA
+        MOV     [EBX],AL
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	popl %ebx                     # ADDR
-	popl %eax                     # DATA
-	movb %al, (%ebx)
-	jmp next
 
-	.globl	rf_code_docol
-	.globl	_rf_code_docol
+# *********
+# *   :   *
+# *********
+#
+        .globl rf_code_docol
+        .globl _rf_code_docol
 rf_code_docol:
 _rf_code_docol:
+DOCOL:  ADD     EDX,4   # W=W+1
+        SUB     EBP,4   # (RP) <- (RP)-2
+        MOV     [EBP],ESI # R1 <- (RP)
+        MOV     ESI,EDX # (IP) <- (W)
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	addl $4, %edx                 # W=W+1
-	subl $4, %ebp                 # (RP) <- (RP)-2
-	movl %esi, (%ebp)             # R1 <- (RP)
-	movl %edx, %esi               # (IP) <- (W)
-	jmp next
 
-	.globl	rf_code_docon
-	.globl	_rf_code_docon
+# ****************
+# *   CONSTANT   *
+# ****************
+#
+        .globl rf_code_docon
+        .globl _rf_code_docon
 rf_code_docon:
 _rf_code_docon:
+DOCON:  # ADD   EDX,4   # PFA
+#       MOV     EBX,EDX
+#       MOV     EAX,[EBX] # GET DATA
+        MOV     EAX,4[EDX]
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	addl $4, %edx                 # PFA
-	movl %edx, %ebx
-	movl (%ebx), %eax             # GET DATA
-	jmp apush
-
-	.globl	rf_code_dovar
-	.globl	_rf_code_dovar
+# ****************
+# *   VARIABLE   *
+# ****************
+#
+        .globl rf_code_dovar
+        .globl _rf_code_dovar
 rf_code_dovar:
 _rf_code_dovar:
+DOVAR:  ADD     EDX,4   # (DE) <- PFA
+        PUSH    EDX     # (S1) <- PFA
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	addl $4, %edx                 # (DE) <- PFA
-	pushl %edx                    # (S1) <- PFA
-	jmp next
-
-	.globl	rf_code_douse
-	.globl	_rf_code_douse
+# ************
+# *   USER   *
+# ************
+#
+        .globl rf_code_douse
+        .globl _rf_code_douse
 rf_code_douse:
 _rf_code_douse:
+DOUSE:  # ADD   EDX,4   # PFA
+#       MOV     EBX,EDX
+#       MOV     BL,[EBX]
+#       AND     EBX,0xFF
+        MOVZX   EBX, BYTE PTR 4[EDX]
+        CALL    __x86.get_pc_thunk.ax
+        ADD     EAX,OFFSET _GLOBAL_OFFSET_TABLE_
+        MOV     EDI,UP@GOTOFF[EAX] # USER VARIABLE ADDR
+        LEA     EAX,[EBX+EDI] # ADDR OF VARIABLE
+#       JMP     APUSH
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	addl $4, %edx                 # PFA
-	movl %edx, %ebx
-	movb (%ebx), %bl
-	andl $0xFF, %ebx
-	call __x86.get_pc_thunk.ax
-	addl $_GLOBAL_OFFSET_TABLE_, %eax
-	movl _rf_up@GOTOFF(%eax), %edi # USER VARIABLE ADDR
-	leal (%ebx, %edi), %eax       # ADDR OF VARIABLE
-	jmp apush
 
-	.globl	rf_code_dodoe
-	.globl	_rf_code_dodoe
+# *************
+# *   DOES>   *
+# *************
+#
+        .globl rf_code_dodoe
+        .globl _rf_code_dodoe
 rf_code_dodoe:
 _rf_code_dodoe:
+DODOE:  XCHG    EBP,ESP # GET RETURN STACK
+        PUSH    ESI     # (RP) <- (IP)
+        XCHG    EBP,ESP
+#       ADD     EDX,4   # PFA
+#       MOV     EBX,EDX
+#       MOV     ESI,[EBX] # NEW CFA
+#       ADD     EDX,4
+        MOV     ESI,4[EDX]
+        ADD     EDX,8
+        PUSH    EDX     # PFA
+#       JMP     NEXT
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
 
-	xchgl %esp, %ebp              # GET RETURN STACK
-	pushl %esi                    # (RP) <- (IP)
-	xchgl %esp, %ebp
-	addl $4, %edx                 # PFA
-	movl %edx, %ebx
-	movl (%ebx), %esi             # NEW CFA
-	addl $4, %edx
-	pushl %edx                    # PFA
-	jmp next
 
-	.globl	rf_code_stod
-	.globl	_rf_code_stod
+# ************
+# *   S->D   *
+# ************
+#
+        .globl rf_code_stod
+        .globl _rf_code_stod
 rf_code_stod:
 _rf_code_stod:
-
-	popl %edx                     # S1
-	subl %eax, %eax               # AX = 0
-	orl %edx, %edx                # SET FLAGS
-	jns stod1                     # POSITIVE NUMBER
-	decl %eax                     # NEGITIVE NUMBER
-stod1:
-	jmp dpush
-
-	.globl rf_code_cold
-	.globl _rf_code_cold
-rf_code_cold:
-_rf_code_cold:
-
-	call __x86.get_pc_thunk.cx
-	addl $_GLOBAL_OFFSET_TABLE_, %ecx
-	movl _rf_origin@GOTOFF(%ecx), %edx
-	movl _rf_code_cold@GOTOFF(%ecx), %eax # COLD vector init
-	movl %eax, 0x04(%edx)
-	movl 0x18(%edx), %eax         # FORTH vocabulary init
-	movl 0x44(%edx), %ebx
-	movl %eax, (%ebx)
-	movl 0x20(%edx), %edi         # UP init
-	movl %edi, _rf_up@GOTOFF(%ecx)
-	cld                           # USER variables init
-	movl $11, %ecx
-	leal 0x18(%edx), %esi
-	rep movsl
-	movl 0x48(%edx), %esi         # IP init to ABORT
-	jmp rf_code_rpsto             # jump to RP!
-
-	.globl	rf_code_cl
-	.globl	_rf_code_cl
-rf_code_cl:
-_rf_code_cl:
-
-	movl $4, %eax
-	jmp apush
-
-	.globl	rf_code_cs
-	.globl	_rf_code_cs
-rf_code_cs:
-_rf_code_cs:
-
-	popl %eax
-	shll $2, %eax
-	jmp apush
-
-	.globl rf_code_ln
-	.globl _rf_code_ln
-rf_code_ln:
-_rf_code_ln:
-
-	popl %eax
-	testl $3, %eax
-	jz ln1
-	andl $-4, %eax
-	addl $4, %eax
-ln1:
-	jmp apush
-
-	.globl rf_code_xt
-	.globl _rf_code_xt
-rf_code_xt:
-_rf_code_xt:
-
-  pushl %ebp
-  movl %esp, %ebp
-	movl $0, %eax
-	call __x86.get_pc_thunk.bx
-	addl $_GLOBAL_OFFSET_TABLE_, %ebx
-	movl %eax, _rf_fp@GOTOFF(%ebx)
-	call _rf_start
-	popl %ebp
-	ret
-
-	.section __DATA.__data,""
-
-	.data
-	.globl rf_i686_ebp_save
-	.globl _rf_i686_ebp_save
-	.p2align 2
-_rf_i686_ebp_save:
-
-	.long	0
-
-	.data
-	.globl rf_i686_esp_save
-	.globl _rf_i686_esp_save
-	.p2align 2
-_rf_i686_esp_save:
-
-	.long	0
+        POP     EDX     # S1
+        SUB     EAX,EAX # AX = 0
+        OR      EDX,EDX # SET FLAGS
+        JNS     STOD1   # POSITIVE NUMBER
+        DEC     EAX     # NEGITIVE NUMBER
+STOD1:  # JMP   DPUSH
+        PUSH    EDX
+        PUSH    EAX
+        LODSD
+        MOV     EDX,EAX
+        JMP     DWORD PTR [EDX]
