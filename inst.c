@@ -152,12 +152,6 @@ static uint8_t *rf_inst_find(const char *t, uint8_t length)
   return 0;
 }
 
-/* compile a colon definition */
-static void __FASTCALL__ rf_inst_colon(char *name)
-{
-  rf_inst_code(name, rf_code_docol);
-}
-
 /* compile a constant */
 static void rf_inst_constant(const char *name, uintptr_t value)
 {
@@ -214,15 +208,12 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
     for (p = name; *p > ' '; ++p) { }
 
     /* interpret what we have */
-    if (*name == ':') {
+    if (*name == '%') {
+      /* make immediate */
+      *rf_inst_vocabulary ^= 0x40;
+    } else if (*name == ':') {
       /* create colon definition */
-      /* two colons means immediate */
-      if (*(++name) == ':') {
-        rf_inst_colon(++name);
-        *rf_inst_vocabulary ^= 0x40;
-      } else {
-        rf_inst_colon(name);
-      }
+      rf_inst_code(++name, rf_code_docol);
     } else {
       /* find in dictionary */
       nfa = rf_inst_find(name, (uint8_t) (p - name));

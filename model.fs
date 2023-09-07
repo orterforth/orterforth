@@ -1310,7 +1310,7 @@ C@ LIT 253 - 0= DP +! HERE ln DP ! DUP LIT 160 TOGGLE HERE LIT
 :LOAD BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET
 R> IN ! R> BLK ! ;S
 
-::[ LIT 0 STATE ! ;S
+:[ % LIT 0 STATE ! ;S
 
 :EMPTY-BUFFERS FIRST LIMIT OVER - LIT 0 FILL ;S
 
@@ -1318,7 +1318,7 @@ R> IN ! R> BLK ! ;S
        LIT 83 LOAD xt
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 17 cs origin + @
        DUP CONTEXT ! CURRENT ! QUIT
-::X    LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
+:X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
        R> DROP ;S
 ( ORTERFORTH INST - FORTH                                     )
 ( Code to load the fig-Forth Model source follows. Some words )
