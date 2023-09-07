@@ -981,8 +981,6 @@ stod1:
 rf_code_cold:
   ldr   r3, =rf_origin
   ldr   r3, [r3]
-  ldr   r0, =rf_code_cold       @ COLD vector init
-  str   r0, [r3, #4]
   ldr   r0, [r3, #24]           @ FORTH vocabulary init
   ldr   r1, [r3, #68]
   str   r0, [r1]

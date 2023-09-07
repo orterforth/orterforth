@@ -21,17 +21,17 @@ _rf_trampoline:
 trampoline1:
         POP     EBX
         PUSH    EBX
-        MOV     EAX,rf_fp@GOTOFF[EBX] # if FP is null skip to exit
+        MOV     EAX,rf_fp@GOTOFF[EBX]   # if FP is null skip to exit
         TEST    EAX,EAX
         JE      trampoline2
-        MOV     ESI,_rf_ip@GOTOFF[EBX] # IP to esi
-        MOV     EDX,_rf_w@GOTOFF[EBX] # W to edx
+        MOV     ESI,_rf_ip@GOTOFF[EBX]  # IP to esi
+        MOV     EDX,_rf_w@GOTOFF[EBX]   # W to edx
         LEA     ECX,trampoline1@GOTOFF[EBX] # push the return address
         PUSH    ECX
-        MOV     ebpsave@GOTOFF[EBX],EBP # save esp and ebp
-        MOV     espsave@GOTOFF[EBX],ESP
-        MOV     EBP,_rf_rp@GOTOFF[EBX] # put SP and RP into esp and ebp
-        MOV     ESP,_rf_sp@GOTOFF[EBX]
+        MOV     ebpsave@GOTOFF[EBX],EBP # save EBP
+        MOV     EBP,_rf_rp@GOTOFF[EBX]  # RP to EBP
+        MOV     espsave@GOTOFF[EBX],ESP # save ESP
+        MOV     ESP,_rf_sp@GOTOFF[EBX]  # SP to ESP
         JMP     EAX     # jump to FP
                         # will return to trampoline1
 trampoline2:
@@ -47,27 +47,21 @@ rf_start:
 _rf_start:
         CALL    __x86.get_pc_thunk.ax
         ADD     EAX,OFFSET _GLOBAL_OFFSET_TABLE_
-        MOV     _rf_w@GOTOFF[EAX],EDX # edx to W
-        MOV     _rf_ip@GOTOFF[EAX],ESI # esi to IP
+        MOV     _rf_w@GOTOFF[EAX],EDX   # edx to W
+        MOV     _rf_ip@GOTOFF[EAX],ESI  # esi to IP
         POP     EDX     # rf_start return address to edx
-        MOV     ECX,EBP # stack frame size to ecx
+        MOV     ECX,EBP # stack frame size to ECX
         SUB     ECX,ESP
         MOV     ESI,ESP # SP (with stack frame) to esi
         MOV     ESP,EBP # ebp to esp, empty the stack frame
         POP     EBP     # RP to ebp (pushed by prolog)
-        MOV     _rf_rp@GOTOFF[EAX],EBP # ebp to RP
-        MOV     _rf_sp@GOTOFF[EAX],ESP # esp to SP
-        MOV     EBP,ebpsave@GOTOFF[EAX] # ebp restored
-        MOV     ESP,espsave@GOTOFF[EAX] # esp restored
-	# (these are not the same as return addr has been pushed)
-        PUSH    EBP     # push ebp (stack frame)
-        MOV     EBP,ESP # esp to ebp (stack frame)
-        SUB     ESP,ECX # allocate space with esp
-	# copy old stack frame here
-	# stack spills make this necessary as even if RF_START
-	# is the first thing in C code, stack spills happen before
-	# _rf_start is called. If a stack value is a reference 
-	# to the address of another this will not work.
+        MOV     _rf_rp@GOTOFF[EAX],EBP  # EBP to RP
+        MOV     EBP,ebpsave@GOTOFF[EAX] # restore EBP
+        MOV     _rf_sp@GOTOFF[EAX],ESP  # ESP to SP
+        MOV     ESP,espsave@GOTOFF[EAX] # restore ESP
+        PUSH    EBP     # stack frame: push EBP
+        MOV     EBP,ESP #              ESP to EBP
+        SUB     ESP,ECX #              allocate stack space
         MOV     EDI,ESP # copy stack frame
         CLD
         REP     MOVSB
@@ -130,8 +124,6 @@ _rf_code_cold:
         CALL    __x86.get_pc_thunk.cx
         ADD     ECX,OFFSET _GLOBAL_OFFSET_TABLE_
         MOV     EDX,_rf_origin@GOTOFF[ECX]
-        MOV     EAX,_rf_code_cold@GOTOFF[ECX] # COLD vector init
-        MOV     4[EDX],EAX
         MOV     EAX,0x18[EDX]   # FORTH vocabulary init
         MOV     EBX,0x44[EDX]
         MOV     [EBX],EAX

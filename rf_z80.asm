@@ -989,8 +989,6 @@ ENDIF
 
 PUBLIC _rf_code_cold            ;COLD
 _rf_code_cold:
-        LD      HL,_rf_code_cold ; COLD vector init
-        LD      (ORIG+02H),HL
         LD      HL,ORIG+0CH     ; FORTH vocabulary init
         LD      DE,(ORIG+22H)
         LDI

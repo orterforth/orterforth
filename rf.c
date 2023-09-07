@@ -1173,10 +1173,6 @@ static void rf_cold(void)
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
-  /* cold start vector */
-  /* HERE 02 +ORIGIN ! ( POINT COLD ENTRY TO HERE ) */
-  origin[1] = (uintptr_t) rf_code_cold;
-
   /* FORTH vocabulary - parameter field set at inst time */
   /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
@@ -1184,13 +1180,8 @@ static void rf_cold(void)
 
   /* 15 # LDY, ( INDEX TO VOC-LINK ) 0= IF, ( FORCED ) */
   i = 10;
-  /* warm start vector */
-  /* HERE 06 +ORIGIN ! ( POINT RE-ENTRY TO HERE ) */
   /* 0F # LDY,  ( INDEX TO WARNING )   THEN, ( FROM IF, ) */
-  /*
-  origin[3] = rf_code_warm;
-  i = 7;
-  */
+  /* i = 7; */
 
   /* UP */
   /* 10 +ORIGIN LDA, UP STA, ( LOAD UP ) */

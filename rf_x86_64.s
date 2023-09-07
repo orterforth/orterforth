@@ -114,8 +114,6 @@ _rf_code_xt:
 rf_code_cold:
 _rf_code_cold:
         MOV     RDX,_rf_origin[RIP]
-        MOV     RAX,_rf_code_cold[RIP] # COLD vector init
-        MOV     8[RDX],RAX
         MOV     RAX,0x30[RDX]   # FORTH vocabulary init
         MOV     RBX,0x88[RDX]
         MOV     [RBX],RAX

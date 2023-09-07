@@ -881,9 +881,9 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
 38 cd HERE cl - !
+38 cd cl +ORIGIN !
 2 cs BYTE.IN FORTH 11 cs +ORIGIN !
 0 BYTE.IN ABORT 12 cs +ORIGIN !
-
 
 
 

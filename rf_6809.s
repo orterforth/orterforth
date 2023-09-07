@@ -254,8 +254,6 @@ _rf_code_exec
 _rf_code_cold EXPORT
 _rf_code_cold
         LDX    #RF_ORIGIN
-        LEAY   _rf_code_cold+0,PCR  COLD vector init
-        STY    2,X
         LDD    12,X                 FORTH vocabulary init
         LDY    34,X
         STD    ,Y

@@ -1,257 +1,417 @@
-  .arch armv6
-  .eabi_attribute 28, 1
-  .eabi_attribute 20, 1
-  .eabi_attribute 21, 1
-  .eabi_attribute 23, 3
-  .eabi_attribute 24, 1
-  .eabi_attribute 25, 1
-  .eabi_attribute 26, 2
-  .eabi_attribute 30, 6
-  .eabi_attribute 34, 1
-  .eabi_attribute 18, 4
-  .text
+# Modified for orterforth integration and armv6l
+# in 2022. Some info in the comments no longer 
+# applies (CP/M, 8086 register names, 
+# segmentation, byte offsets).
 
-  .text
-  .p2align 2
-  .global rf_trampoline
-  .global _rf_trampoline
+        .arch armv6
+        .eabi_attribute 28, 1
+        .eabi_attribute 20, 1
+        .eabi_attribute 21, 1
+        .eabi_attribute 23, 3
+        .eabi_attribute 24, 1
+        .eabi_attribute 25, 1
+        .eabi_attribute 26, 2
+        .eabi_attribute 30, 6
+        .eabi_attribute 34, 1
+        .eabi_attribute 18, 4
+        .text
+
+        .p2align 2
+        .global rf_trampoline
 rf_trampoline:
-_rf_trampoline:
-  push  {r7, r8, r10, fp, lr}
+        PUSH    {R7, R8, R10, FP, LR}
 trampoline1:
-  ldr   r0, =rf_fp
-  ldr   r0, [r0]
-  cmp   r0, #0
-  beq   trampoline2
-  ldr   r10, =rf_ip             @ IP into r10
-  ldr   r10, [r10]
-  ldr   r3, =rf_w               @ W into r3
-  ldr   r3, [r3]
-  ldr   r8, =rf_sp              @ SP into r8
-  ldr   r8, [r8]
-  ldr   r7, =rf_rp              @ RP into r7
-  ldr   r7, [r7]
-  ldr   lr, =trampoline1        @ tail call
-  bx    r0
+        LDR   R0, =rf_fp
+        LDR   R0, [R0]
+        CMP   R0, #0
+        BEQ   trampoline2
+        LDR   R10, =rf_ip       @ IP to R10
+        LDR   R10, [R10]
+        LDR   R3, =rf_w         @ W to R3
+        LDR   R3, [R3]
+        LDR   R8, =rf_sp        @ SP to R8
+        LDR   R8, [R8]
+        LDR   R7, =rf_rp        @ RP to R7
+        LDR   R7, [R7]
+        LDR   LR, =trampoline1  @ return addr
+        BX    R0
 trampoline2:
-  pop   {r7, r8, r10, fp, pc}
+        POP   {R7, R8, R10, FP, PC}
 
-  .p2align 2
-  .global rf_start
-  .global _rf_start
+        .p2align 2
+        .global rf_start
 rf_start:
-_rf_start:
-  ldr   r0, =rf_ip              @ r10 into IP
-  str   r10, [r0]
-  ldr   r0, =rf_w               @ r3 into W
-  str   r3, [r0]
-  ldr   r0, =rf_sp              @ r8 into SP
-  str   r8, [r0]
-  ldr   r0, =rf_rp              @ r7 into RP
-  str   r7, [r0]
-  bx    lr                      @ carry on in C
+        LDR   R0, =rf_ip        @ R10 to IP
+        STR   R10, [R0]
+        LDR   R0, =rf_w         @ R3 to W
+        STR   R3, [R0]
+        LDR   R0, =rf_sp        @ R8 to SP
+        STR   R8, [R0]
+        LDR   R0, =rf_rp        @ R7 to RP
+        STR   R7, [R0]
+        BX    LR                @ carry on in C
 
-  .p2align 2
-dpush:
-  str   r3, [r8, #-4]!
-apush:
-  str   r0, [r8, #-4]!
+# ***************************************
+# ***                                 ***
+# ***    FIG-FORTH for the 8086/88    ***
+# ***                                 ***
+# ***           Version 1.0           ***
+# ***            2/18/81              ***
+# ***                                 ***
+# ***     Contains interface for      ***
+# ***      CP/M-86 (version 1.0)      ***
+# ***                                 ***
+# ***                                 ***
+# ***     Implementation by           ***
+# ***           Thomas Newman         ***
+# ***           27444 Berenda Way     ***
+# ***           Hayward, Ca. 94544    ***
+# ***                                 ***
+# ***************************************
+#
+#
+#
+# NOTE: This version only supports one
+#       memory segment of the 8086 (64k bytes).
+#
+#
+# -----------------------------------------------
+#
+# All publications of the Forth Interest Group
+# are public domain.  They may be further
+# distributed by the inclusion of this credit
+# notice:
+#
+# This publication has been made available by the
+# FORTH INTEREST GROUP (fig)
+# P.O. Box 8231
+# San Jose, CA 95155
+# -----------------------------------------------
+#
+# Acknowledgements:
+#       John Cassady
+#       Kim Harris
+#       George Flammer
+#       Robt. D. Villwock
+#-----------------------------------------------
 
-  .p2align 2
-  .global rf_next
+UP      =       _rf_up
+
+#-----------------------------------------------
+#
+# FORTH REGISTERS
+#
+# FORTH 8086    FORTH PRESERVATION RULES
+# ----- ----    ------------------------
+#
+# IP    SI      INTERPRETER POINTER.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+# W     DX      WORKING REGISTER.
+#               JUMP TO 'DPUSH' WILL
+#               PUSH CONTENTS ONTO THE
+#               PARAMETER STACK BEFORE
+#               EXECUTING 'APUSH'.
+#
+# SP    SP      PARAMETER STACK POINTER.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+# RP    BP      RETURN STACK.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+#       AX      GENERAL REGISTER.
+#               JUMP TO 'APUSH' WILL PUSH
+#               CONTENTS ONTO THE PARAMETER
+#               STACK BEFORE EXECUTING 'NEXT'.
+#
+#       BX      GENERAL PURPOSE REGISTER.
+#
+#       CX      GENERAL PURPOSE REGISTER.
+#
+#       DI      GENERAL PURPOSE REGISTER.
+#
+#       CS      SEGMENT REGISTER.  MUST BE
+#               PRESERVED ACROSS FORTH WORDS.
+#
+#       DS         "    "       "
+#
+#       SS         "    "       "
+#
+#       ES      TEMPORARY SEGMENT REGISTER
+#               ONLY USED BY A FEW WORDS.
+#
+################################################
+
+# *************
+# *           *
+# *   NEXT    *
+# *           *
+# *   DPUSH   *
+# *           *
+# *   APUSH   *
+# *           *
+# *************
+#
+#
+        .p2align 2
+DPUSH:  STR     R3, [R8, #-4]!
+APUSH:  STR     R0, [R8, #-4]!
+#
+# -----------------------------------------
+#
+# PATCH THE NEXT 3 LOCATIONS
+# (USING A DEBUG MONITOR; I.E. DDT86)
+# WITH  (JMP TNEXT)  FOR TRACING THROUGH
+# HIGH LEVEL FORTH WORDS.
+#
+        .p2align 2
+        .global rf_next
 rf_next:
-next:
-  ldr   r3, [r10], #4           @ (W) <- (IP)
-next1:
-  ldr   r0, [r3]                @ TO 'CFA'
-  bx    r0
+NEXT:   LDR     R3, [R10], #4   @ AX<- (IP)
+                                @ (W) <- (IP)
+#
+# -----------------------------------------
+#
+NEXT1:  LDR     R0, [R3]        @ TO 'CFA'
+        BX      R0
 
-  .p2align 2
-  .global rf_code_lit
+#
+# *********************************************
+# ******   DICTIONARY WORDS START HERE   ******
+# *********************************************
+#
+#
+# ***********
+# *   LIT   *
+# ***********
+#
+        .p2align 2
+        .global rf_code_lit
 rf_code_lit:
-  ldr   r0, [r10], #4           @ AX <- LITERAL
-@ b    apush                    @ TO TOP OF STACK
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R10], #4   @ AX <- LITERAL
+#       B       APUSH           @ TO TOP OF STACK
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_exec
+
+# ***************
+# *   EXECUTE   *
+# ***************
+#
+        .p2align 2
+        .global rf_code_exec
 rf_code_exec:
-  ldr   r3, [r8], #4            @ GET CFA
-@ b     next1                   @ EXECUTE NEXT
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R3, [R8], #4    @ GET CFA
+#       B       NEXT1           @ EXECUTE NEXT
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_bran
+
+# **************
+# *   BRANCH   *
+# **************
+#
+        .p2align 2
+        .global rf_code_bran
 rf_code_bran:
-bran1:
-  ldr   r0, [r10]
-  add   r10, r10, r0            @ (IP) <- (IP) + ((IP))
-@ b     next                    @ JUMP TO OFFSET
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+BRAN1:  LDR     R0, [R10]       @ (IP) <- (IP) + ((IP))
+        ADD     R10, R10, R0
+#       B       NEXT            @ JUMP TO OFFSET
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_zbran
+
+# ***************
+# *   0BRANCH   *
+# ***************
+#
+        .p2align 2
+        .global rf_code_zbran
 rf_code_zbran:
-  ldr   r0, [r8], #4            @ GET STACK VALUE
-  orrs  r0, r0                  @ ZERO?
-  beq   bran1                   @ YES, BRANCH
-  add   r10, r10, #4            @ NO, CONTINUE...
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R8], #4   @ GET STACK VALUE
+        ORRS    R0, R0         @ ZERO?
+        BEQ     BRAN1          @ YES, BRANCH
+        ADD     R10, R10, #4   @ NO, CONTINUE...
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_xloop
+
+# **************
+# *   (LOOP)   *
+# **************
+#
+        .p2align 2
+        .global rf_code_xloop
 rf_code_xloop:
-  mov   r1, #1                  @ INCREMENT
-xloo1:
-  ldr   r0, [r7]                @ INDEX=INDEX+INCR
-  add   r0, r0, r1
-  str   r0, [r7]                @ GET NEW INDEX
-  ldr   r2, [r7, #4]            @ COMPARE WITH LIMIT
-  sub   r0, r0, r2
-  eors  r0, r1                  @ TEST SIGN (BIT-16)
-  bmi   bran1                   @ KEEP LOOPING...
+        MOV     R1, #1          @ INCREMENT
+XLOO1:  LDR     R0, [R7]        @ INDEX=INDEX+INCR
+        ADD     R0, R0, R1
+        STR     R0, [R7]        @ GET NEW INDEX
+        LDR     R2, [R7, #4]    @ COMPARE WITH LIMIT
+        SUB     R0, R0, R2
+        EORS    R0, R1          @ TEST SIGN (BIT-16)
+        BMI     BRAN1           @ KEEP LOOPING...
 
-@ END OF 'DO' LOOP
-  add   r7, r7, #8              @ ADJ. RETURN STK
-  add   r10, r10, #4            @ BYPASS BRANCH OFFSET
-@ b     next                    @ CONTINUE...
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# END OF 'DO' LOOP.
+        ADD     R7, R7, #8      @ ADJ. RETURN STK
+        ADD     R10, R10, #4    @ BYPASS BRANCH OFFSET
+#       B       NEXT            @ CONTINUE...
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_xploo
+
+# ***************
+# *   (+LOOP)   *
+# ***************
+#
+        .p2align 2
+        .global rf_code_xploo
 rf_code_xploo:
-  ldr   r1, [r8], #4            @ GET LOOP VALUE
-  b     xloo1
+        LDR     R1, [R8], #4    @ GET LOOP VALUE
+        B       XLOO1
 
-  .p2align 2
-  .global rf_code_xdo
+
+# ************
+# *   (DO)   *
+# ************
+#
+        .p2align 2
+        .globl rf_code_xdo
 rf_code_xdo:
-  ldm   r8!, {r0, r3}           @ INITIAL INDEX VALUE
+        LDM     R8!, {R0, R3}   @ INITIAL INDEX VALUE
                                 @ LIMIT VALUE
-  stmdb r7!, {r0, r3}
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+                                @ GET RETURN STACK
+        STMDB   R7!, {R0, R3}
+                                @ GET PARAMETER STACK
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_rr
+
+# *********
+# *   I   *
+# *********
+#
+        .p2align 2
+        .globl rf_code_rr
 rf_code_rr:
-  ldr   r0, [r7]                @ GET INDEX VALUE
-@ b     apush                   @ TO PARAMETER STACK
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R7]        @ GET INDEX VALUE
+#       B       APUSH           @ TO PARAMETER STACK
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_digit
+
+# *************
+# *   DIGIT   *
+# *************
+#
+        .p2align 2
+        .globl rf_code_digit
 rf_code_digit:
-  ldrb  r3, [r8], #4            @ NUMBER BASE
-  ldrb  r0, [r8], #4            @ ASCII DIGIT
-  subs  r0, r0, #48
-  blt   digi2                   @ NUMBER ERROR
-  cmp   r0, #9
-  ble   digi1                   @ NUMBER = 0 THRU 9
-  sub   r0, r0, #7
-  cmp   r0, #10                 @ NUMBER 'A' THRU 'Z' ?
-  blt   digi2                   @ NO
-@
-digi1:
-  cmp   r0, r3                  @ COMPARE NUMBER TO BASE
-  bge   digi2                   @ NUMBER ERROR
-  mov   r3, r0                  @ NEW BINARY NUMBER
-  mov   r0, #1                  @ TRUE FLAG
-@ b     dpush                   @ ADD TO STACK
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDRB    R3, [R8], #4    @ NUMBER BASE
+        LDRB    R0, [R8], #4    @ ASCII DIGIT
+        SUBS    R0, R0, #'0'
+        BLT     DIGI2           @ NUMBER ERROR
+        CMP     R0, #9
+        BLE     DIGI1           @ NUMBER = 0 THRU 9
+        SUB     R0, R0, #7
+        CMP     R0, #10         @ NUMBER 'A' THRU 'Z' ?
+        BLT     DIGI2           @ NO
+#
+DIGI1:  CMP     R0, R3          @ COMPARE NUMBER TO BASE
+        BGE     DIGI2           @ NUMBER ERROR
+#       SUB     R3, R3, R3      @ ZERO
+        MOV     R3, R0          @ NEW BINARY NUMBER
+        MOV     R0, #1          @ TRUE FLAG
+#       B       DPUSH           @ ADD TO STACK
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-@ NUMBER ERROR
-@
-digi2:
-  mov   r0, #0                  @ FALSE FLAG
-@ b     apush                   @ BYE
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# NUMBER ERROR
+#
+DIGI2:  SUB     R0, R0, R0      @ FALSE FLAG
+#       B       APUSH           @ BYE
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_pfind
+
+# *************
+# *   PFIND   *
+# *************
+#
+        .p2align 2
+        .global rf_code_pfind
 rf_code_pfind:
-  ldm   r8!, {r1, r2}           @ NFA
+        LDM     R8!, {R1, R2}   @ NFA
                                 @ STRING ADDR
-@
-@ SEARCH LOOP
-pfin1:
-  mov   r4, r2                  @ GET ADDR
-  ldrb  r0, [r1]                @ GET WORD LENGTH
-  mov   r3, r0                  @ SAVE LENGTH
-  ldrb  r5, [r4]
-  eor   r0, r5
-  ands  r0, #63                 @ CHECK LENGTHS
-  bne   pfin5                   @ LENGTHS DIFFER
-@
-@ LENGTH MATCH, CHECK EACH CHARACTER IN NAME
-pfin2:
-  add   r1, r1, #1
-  add   r4, r4, #1              @ NEXT CHAR OF NAME
-  ldrb  r0, [r1]
-  ldrb  r5, [r4]                @ COMPARE NAMES
-  eor   r0, r5
-  tst   r0, #127
-  bne   pfin5                   @ NO MATCH
-  tst   r0, #128                @ THIS WILL TEST BIT-8
-  beq   pfin2                   @ MATCH SO FAR, LOOP
+#
+# SEARCH LOOP
+PFIN1:  MOV     R4, R2          @ GET ADDR
+        LDRB    R0, [R1]        @ GET WORD LENGTH
+        MOV     R3, R0          @ SAVE LENGTH
+        LDRB    R5, [R4]
+        EOR     R0, R5
+        ANDS    R0, #63         @ CHECK LENGTHS
+        BNE     PFIN5           @ LENGTHS DIFFER
+#
+# LENGTH MATCH, CHECK EACH CHARACTER IN NAME
+PFIN2:  ADD     R1, R1, #1
+        ADD     R4, R4, #1      @ NEXT CHAR OF NAME
+        LDRB    R0, [R1]
+        LDRB    R5, [R4]        @ COMPARE NAMES
+        EOR     R0, R5
+        TST     R0, #127
+        BNE     PFIN5           @ NO MATCH
+        TST     R0, #128        @ THIS WILL TEST BIT-8
+        BEQ     PFIN2           @ MATCH SO FAR, LOOP
 
-@ FOUND END OF NAME (BIT-8 SET); A MATCH
-  add   r1, r1, #9              @ BX = PFA
-  str   r1, [r8, #-4]!          @ (S3) <- PFA
-  mov   r0, #1                  @ TRUE VALUE
-  and   r3, #255                @ CLEAR HIGH LENGTH
+# FOUND END OF NAME (BIT-8 SET); A MATCH
+        ADD     R1, R1, #9      @ BX = PFA
+        STR     R1, [R8, #-4]!  @ (S3) <- PFA
+        MOV     R0, #1          @ TRUE VALUE
+        AND     R3, #255        @ CLEAR HIGH LENGTH
+#       B       DPUSH
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
-
-@ NO NAME FIELD MATCH, TRY ANOTHER
-@
-@ GET NEXT LINK FIELD ADDR (LFA)
-@ (ZERO = FIRST WORD OF DICTIONARY)
-@
-pfin5:
-  add   r1, r1, #1              @ NEXT ADDR
-  tst   r0, #128                @ END OF NAME
-  bne   pfin6
-  ldrb  r0, [r1]                @ GET NEXT CHAR
-  b     pfin5                   @ LOOP UNTIL FOUND
-@
-pfin6:
-  ldr   r1, [r1]                @ GET LINK FIELD ADDR
-  orrs  r1, r1                  @ START OF DICT. (0)?
-  bne   pfin1                   @ NO, LOOK SOME MORE
-  mov   r0, #0                  @ FALSE FLAG
-
-@ b     apush                   @ DONE (NO MATCH FOUND)
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# NO NAME FIELD MATCH, TRY ANOTHER
+#
+# GET NEXT LINK FIELD ADDR (LFA)
+# (ZERO = FIRST WORD OF DICTIONARY)
+#
+PFIN5:  ADD     R1, R1, #1      @ NEXT ADDR
+        TST     R0, #128        @ END OF NAME
+        BNE     PFIN6
+        LDRB    R0, [R1]        @ GET NEXT CHAR
+        B       PFIN5           @ LOOP UNTIL FOUND
+#
+PFIN6:  LDR     R1, [R1]        @ GET LINK FIELD ADDR
+        ORRS    R1, R1          @ START OF DICT. (0)?
+        BNE     PFIN1           @ NO, LOOK SOME MORE
+        MOV     R0, #0          @ FALSE FLAG
+#       B       APUSH           @ DONE (NO MATCH FOUND)
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
   .p2align 2
   .global rf_code_encl
@@ -268,7 +428,7 @@ encl1:
   add   r1, r1, #1              @ ADDR +1
   add   r3, r3, #1              @ COUNT +1
   ldrb  r2, [r1]
-  cmp   r0, r2
+  CMP   r0, r2
   beq   encl1                   @ WAIT FOR NON-TERMINATOR
   str   r3, [r8, #-4]!          @ OFFSET TO 1ST TEXT CHR
   cmp   r2, #0                  @ NULL CHAR?
@@ -497,7 +657,7 @@ rf_code_zequ:
   ldr   r0, [r8], #4
   orrs  r0, r0                  @ DO TEST
   mov   r0, #1                  @ TRUE
-  beq   apush
+  beq   APUSH
   @beq  zequ1                   @ ITS ZERO
   sub   r0, r0, #1              @ FALSE
 zequ1:
@@ -513,7 +673,7 @@ rf_code_zless:
   ldr   r0, [r8], #4
   orrs  r0, r0                  @ SET FLAGS
   mov   r0, #1                  @ TRUE
-  bmi   apush
+  bmi   APUSH
   @bmi  zless1
   sub   r0, r0, #1              @ FLASE
 zless1:
@@ -760,8 +920,6 @@ stod1:
 rf_code_cold:
   ldr   r3, =rf_origin
   ldr   r3, [r3]
-  ldr   r0, =rf_code_cold       @ COLD vector init
-  str   r0, [r3, #4]
   ldr   r0, [r3, #24]           @ FORTH vocabulary init
   ldr   r1, [r3, #68]
   str   r0, [r1]

@@ -76,6 +76,9 @@ void rf_inst(void)
   rf_code_t *here = *((rf_code_t **) ((uintptr_t *) (RF_ORIGIN) + 15));
   int i;
 
+  /* cold start vector */
+  *((uintptr_t *) (RF_ORIGIN) + 1) = (uintptr_t) rf_code_cold;
+
   while (p) {
     uint8_t *nfa = p;
     rf_code_t *cfa;
