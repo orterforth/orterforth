@@ -1403,12 +1403,12 @@ CODE R/W
 15 cd ' EMIT CFA !
 ( installed flag = 1                                          )
 1 installed C!
-
-
--->
-( SAVE TO DR1                                                 )
 HERE 66 cs ALLOT                ( make room for link table    )
 FIRST cl + CONSTANT buf         ( use first disc buffer       )
+buf VARIABLE ptr -->
+: hd DUP 10 < IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
+: hb 16 /MOD hd hd ;
+: hbl buf ptr ! DUP 64 + SWAP DO I C@ hb LOOP ;
 2000 VARIABLE blk               ( first block of DR1          )
 : link                          ( --                          )
   link? IF 
@@ -1428,7 +1428,7 @@ FIRST cl + CONSTANT buf         ( use first disc buffer       )
   save? IF
     link                        ( write link table            )
     end start DO                ( write blocks of hex         )
-      I buf sb buf blk @ 0 R/W
+      I hbl buf blk @ 0 R/W
       1 blk +!
     64 +LOOP
     buf 128 90 FILL             ( write a block of 'Z's       )
