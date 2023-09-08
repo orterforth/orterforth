@@ -3,6 +3,7 @@
 *.io
 *.pid
 *.rom
+/apple2/
 /bbc/
 /c64/
 /cfg/

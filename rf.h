@@ -53,6 +53,11 @@ typedef __uint128_t rf_double_t;
 #define RF_DOUBLE_ARITH
 typedef uint32_t rf_double_t;
 #define RF_LE
+#ifdef __APPLE2__
+#ifndef RF_TARGET_INC
+#define RF_TARGET_INC "target/apple2/apple2.inc"
+#endif
+#endif
 #ifdef __BBC__
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/bbc/bbc.inc"
