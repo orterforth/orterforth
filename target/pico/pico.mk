@@ -15,11 +15,6 @@ pico :
 .PHONY : pico-build
 pico-build : pico/orterforth.uf2
 
-.PHONY : pico-clean
-pico-clean :
-
-	rm -rf pico/*
-
 # Pico serial port name
 ifeq ($(OPER),cygwin)
 PICOSERIALPORT := /dev/ttyS2

@@ -74,11 +74,6 @@ dragon :
 .PHONY : dragon-build
 dragon-build : dragon/inst.bin
 
-.PHONY : dragon-clean
-dragon-clean :
-
-	rm -f dragon/*
-
 .PHONY : dragon-hw
 dragon-hw : dragon/hw.cas | $(DRAGONROMS)
 

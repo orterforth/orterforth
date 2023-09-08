@@ -16,11 +16,6 @@ zx81 :
 
 	mkdir $@
 
-.PHONY : zx81-clean
-zx81-clean :
-
-	rm -f zx81/*
-
 ZX81ORG := 0x4082
 ZX81ORIGIN := 0x6000
 

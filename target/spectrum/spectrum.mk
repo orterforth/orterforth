@@ -6,6 +6,7 @@ FUSEOPTS := \
 	--graphics-filter 2x \
 	--interface1 \
 	--machine 48 \
+	--no-autosave-settings \
 	--no-confirm-actions \
 	--phantom-typist-mode keyword \
 	--rs232-rx spectrum/fuse-rs232-rx \
@@ -81,11 +82,6 @@ spectrum :
 
 .PHONY : spectrum-build
 spectrum-build : spectrum/orterforth.ser spectrum/orterforth.tap
-
-.PHONY : spectrum-clean
-spectrum-clean :
-
-	rm -rf spectrum/*
 
 # locate Fuse Emulator
 ifeq ($(OPER),cygwin)

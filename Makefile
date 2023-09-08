@@ -129,10 +129,10 @@ $(SYSTEM)-build : \
 	$(ORTERFORTH)
 
 # clean
-.PHONY : $(SYSTEM)-clean
-$(SYSTEM)-clean :
+.PHONY : $(TARGET)-clean
+$(TARGET)-clean :
 
-	rm -f $(SYSTEM)/*
+	rm -rf $(TARGET)/*
 	rm -f model.img
 	rm -f model.inc
 
@@ -227,8 +227,8 @@ include target/zx81/zx81.mk
 .PHONY : link
 link : $(ORTER) $(ORTERFORTH)
 
-	ln -fs "$(shell pwd)/$(ORTER)" /usr/local/bin/orter
-	ln -fs "$(shell pwd)/$(ORTERFORTH)" /usr/local/bin/orterforth
+	ln -fs "$$(pwd)/$(ORTER)" /usr/local/bin/orter
+	ln -fs "$$(pwd)/$(ORTERFORTH)" /usr/local/bin/orterforth
 
 # install to local
 .PHONY : install
@@ -259,10 +259,13 @@ rx :
 
 # run working script
 .PHONY : script
-script :
+script : scripts/script.sh
 
-	@[ -f scripts/script.sh ] || (echo "Create the file scripts/script.sh for your working script and run it using: make script" && exit 1)
-	sh scripts/script.sh
+	@[ -f $< ] && sh $<
+
+scripts/script.sh :
+
+	@echo "Create the file $@ for your working script and run it using: make script"
 
 # basic test
 .PHONY : test

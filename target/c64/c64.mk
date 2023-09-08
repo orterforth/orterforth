@@ -33,11 +33,6 @@ c64 :
 .PHONY : c64-build
 c64-build : c64/inst
 
-.PHONY : c64-clean
-c64-clean :
-
-	rm -rf c64/*
-
 .PHONY : vice
 vice :
 

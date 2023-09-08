@@ -142,11 +142,6 @@ bbc :
 .PHONY : bbc-build
 bbc-build : $(BBCMEDIA)
 
-.PHONY : bbc-clean
-bbc-clean : 
-
-	rm -f bbc/*
-
 .PHONY : bbc-run
 bbc-run : $(BBCMEDIA) | $(BBCROMS) $(DISC) $(DR0) $(DR1)
 
