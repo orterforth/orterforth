@@ -1407,7 +1407,7 @@ HERE 66 cs ALLOT                ( make room for link table    )
 ( SAVE HEX TO DR1                                             )
 FIRST cl + CONSTANT buf -->     ( use first disc buffer       )
 buf VARIABLE ptr
-: hd DUP 10 < IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
+: hd DUP 10 - 0< IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
 : hbl buf ptr ! DUP 64 + SWAP DO I C@ 0 16 U/ hd hd LOOP ;
 2000 VARIABLE blk               ( first block of DR1          )
 : link                          ( --                          )
