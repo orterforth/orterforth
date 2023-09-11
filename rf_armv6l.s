@@ -21,35 +21,101 @@
 rf_trampoline:
         PUSH    {R7, R8, R10, FP, LR}
 trampoline1:
-        LDR   R0, =rf_fp
-        LDR   R0, [R0]
-        CMP   R0, #0
-        BEQ   trampoline2
-        LDR   R10, =rf_ip       @ IP to R10
-        LDR   R10, [R10]
-        LDR   R3, =rf_w         @ W to R3
-        LDR   R3, [R3]
-        LDR   R8, =rf_sp        @ SP to R8
-        LDR   R8, [R8]
-        LDR   R7, =rf_rp        @ RP to R7
-        LDR   R7, [R7]
-        LDR   LR, =trampoline1  @ return addr
-        BX    R0
+        LDR     R0, =rf_fp
+        LDR     R0, [R0]
+        CMP     R0, #0
+        BEQ     trampoline2
+        LDR     R10, =rf_ip     @ IP to R10
+        LDR     R10, [R10]
+        LDR     R3, =rf_w       @ W to R3
+        LDR     R3, [R3]
+        LDR     R8, =rf_sp      @ SP to R8
+        LDR     R8, [R8]
+        LDR     R7, =rf_rp      @ RP to R7
+        LDR     R7, [R7]
+        LDR     LR, =trampoline1 @ return addr
+        BX      R0
 trampoline2:
-        POP   {R7, R8, R10, FP, PC}
+        POP     {R7, R8, R10, FP, PC}
 
         .p2align 2
         .global rf_start
 rf_start:
-        LDR   R0, =rf_ip        @ R10 to IP
-        STR   R10, [R0]
-        LDR   R0, =rf_w         @ R3 to W
-        STR   R3, [R0]
-        LDR   R0, =rf_sp        @ R8 to SP
-        STR   R8, [R0]
-        LDR   R0, =rf_rp        @ R7 to RP
-        STR   R7, [R0]
-        BX    LR                @ carry on in C
+        LDR     R0, =rf_ip      @ R10 to IP
+        STR     R10, [R0]
+        LDR     R0, =rf_w       @ R3 to W
+        STR     R3, [R0]
+        LDR     R0, =rf_sp      @ R8 to SP
+        STR     R8, [R0]
+        LDR     R0, =rf_rp      @ R7 to RP
+        STR     R7, [R0]
+        BX      LR              @ carry on in C
+
+        .p2align 2
+        .global rf_code_cl
+rf_code_cl:
+        MOV     R0, #4
+#       B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+        .p2align 2
+        .global rf_code_cs
+rf_code_cs:
+        LDR     R0, [R8]
+        LSL     R0, #2
+        STR     R0, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+        .p2align 2
+        .global rf_code_ln
+rf_code_ln:
+        LDR     R0, [R8]
+        TST     R0, #3
+        BEQ     ln1
+        AND     R0, R0, #-4
+        ADD     R0, R0, #4
+ln1:    STR     R0, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+        .p2align 2
+        .global rf_code_xt
+rf_code_xt:
+        PUSH    {FP, LR}
+        BL      rf_start
+        LDR     R1, =rf_fp
+        MOV     R0, #0
+        STR     R0, [R1]
+        POP     {FP, PC}
+
+        .p2align 2
+        .global rf_code_cold
+rf_code_cold:
+        LDR     R3, =rf_origin
+        LDR     R3, [R3]
+        LDR     R0, [R3, #24]   @ FORTH vocabulary init
+        LDR     R1, [R3, #68]
+        STR     R0, [R1]
+        LDR     R1, [R3, #32]   @ UP init
+        LDR     R0, =rf_up
+        STR     R1, [R0]
+        MOV     R2, #11         @ USER variables init
+        ADD     R3, R3, #24
+cold1:
+        LDR   R0, [R3], #4
+        STR   R0, [R1], #4
+        SUBS  R2, R2, #1
+        BNE   cold1
+        LDR   R10, [R3, #4]     @ IP init to ABORT
+        B     rf_code_rpsto     @ jump to RP!
 
 # ***************************************
 # ***                                 ***
@@ -285,7 +351,7 @@ rf_code_xploo:
 # ************
 #
         .p2align 2
-        .globl rf_code_xdo
+        .global rf_code_xdo
 rf_code_xdo:
         LDM     R8!, {R0, R3}   @ INITIAL INDEX VALUE
                                 @ LIMIT VALUE
@@ -303,7 +369,7 @@ rf_code_xdo:
 # *********
 #
         .p2align 2
-        .globl rf_code_rr
+        .global rf_code_rr
 rf_code_rr:
         LDR     R0, [R7]        @ GET INDEX VALUE
 #       B       APUSH           @ TO PARAMETER STACK
@@ -318,7 +384,7 @@ rf_code_rr:
 # *************
 #
         .p2align 2
-        .globl rf_code_digit
+        .global rf_code_digit
 rf_code_digit:
         LDRB    R3, [R8], #4    @ NUMBER BASE
         LDRB    R0, [R8], #4    @ ASCII DIGIT
@@ -413,571 +479,671 @@ PFIN6:  LDR     R1, [R1]        @ GET LINK FIELD ADDR
         LDR     R0, [R3]
         BX      R0
 
-  .p2align 2
-  .global rf_code_encl
+
+# ***************
+# *   ENCLOSE   *
+# ***************
+#
+        .p2align 2
+        .global rf_code_encl
 rf_code_encl:
-  ldr   r0, [r8], #4            @ S1 - TERMINATOR CHAR.
-  ldr   r1, [r8]                @ S2 - TEXT ADDR
-  and   r0, #255                @ ZERO
-  mov   r3, #-1                 @ CHAR OFFSET COUNTER
-  sub   r1, r1, #1              @ ADDR -1
+        LDR     R0, [R8], #4    @ S1 - TERMINATOR CHAR.
+        LDR     R1, [R8]        @ S2 - TEXT ADDR
+                                @ ADDR BACK TO STACK
+        AND     R0, #255        @ ZERO
+        MOV     R3, #-1         @ CHAR OFFSET COUNTER
+        SUB     R1, R1, #1      @ ADDR -1
 
-@ SCAN TO FIRST NON-TERMINATOR CHAR
-@
-encl1:
-  add   r1, r1, #1              @ ADDR +1
-  add   r3, r3, #1              @ COUNT +1
-  ldrb  r2, [r1]
-  CMP   r0, r2
-  beq   encl1                   @ WAIT FOR NON-TERMINATOR
-  str   r3, [r8, #-4]!          @ OFFSET TO 1ST TEXT CHR
-  cmp   r2, #0                  @ NULL CHAR?
-  bne   encl2                   @ NO
-@
-@ FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
-  mov   r0, r3                  @ COPY COUNTER
-  add   r3, r3, #1              @ +1
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
-@
-@ FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
-@
-encl2:
-  add   r1, r1, #1              @ ADDR+1
-  add   r3, r3, #1              @ COUNT +1
-  ldrb  r2, [r1]                @ TERMINATOR CHAR?
-  cmp   r0, r2
-  beq   encl4                   @ YES
-  cmp   r2, #0                  @ NULL CHAR
-  bne   encl2                   @ NO, LOOP AGAIN
-@
-@ FOUND NULL AT END OF TEXT
-@
-encl3:
-  mov   r0, r3                  @ COUNTERS ARE EQUAL
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# SCAN TO FIRST NON-TERMINATOR CHAR
+#
+ENCL1:  ADD     R1, R1, #1      @ ADDR +1
+        ADD     R3, R3, #1      @ COUNT +1
+        LDRB    R2, [R1]
+        CMP     R0, R2
+        BEQ     ENCL1           @ WAIT FOR NON-TERMINATOR
+        STR     R3, [R8, #-4]!  @ OFFSET TO 1ST TEXT CHR
+        CMP     R2, #0          @ NULL CHAR?
+        BNE     ENCL2           @ NO
 
-@ FOUND TERINATOR CHARACTER
-encl4:
-  mov   r0, r3
-  add   r0, r0, #1              @ COUNT +1
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
+        MOV     R0, R3          @ COPY COUNTER
+        ADD     R3, R3, #1      @ +1
+@       B       DPUSH
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_cmove
+# FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
+#
+ENCL2:  ADD     R1, R1, #1      @ ADDR+1
+        ADD     R3, R3, #1      @ COUNT +1
+        LDRB    R2, [R1]        @ TERMINATOR CHAR?
+        CMP     R0, R2
+        BEQ     ENCL4           @ YES
+        CMP     R2, #0          @ NULL CHAR
+        BNE     ENCL2           @ NO, LOOP AGAIN
+
+# FOUND NULL AT END OF TEXT
+#
+ENCL3:  MOV     R0, R3          @ COUNTERS ARE EQUAL
+@       B       DPUSH
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+# FOUND TERINATOR CHARACTER
+ENCL4:  MOV     R0, R3
+        ADD     R0, R0, #1      @ COUNT +1
+@       B       DPUSH
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+
+# *************
+# *   CMOVE   *
+# *************
+#
+        .p2align 2
+        .global rf_code_cmove
 rf_code_cmove:
-  ldm   r8!, {r1, r2, r3}       @ COUNT
+                                @ INC DIRECTION
+                                @ SAVE IP
+        LDM     R8!, {R1, R2, R3} @ COUNT
                                 @ DEST.
                                 @ SOURCE
-  cmp   r1, #0
-  beq   cmov2
-cmov1:
-  ldrb  r0, [r3], #1            @ THATS THE MOVE
-  strb  r0, [r2], #1
-  subs  r1, r1, #1
-  bne   cmov1
-cmov2:
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        CMP     R1, #0          @ THATS THE MOVE
+        BEQ     CMOV2
+CMOV1:  LDRB    R0, [R3], #1
+        STRB    R0, [R2], #1
+        SUBS    R1, R1, #1
+        BNE     CMOV1
+CMOV2:                          @ GET BACK IP
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_ustar
+
+# **********
+# *   U*   *
+# **********
+#
+        .p2align 2
+        .global rf_code_ustar
 rf_code_ustar:
-  ldm   r8!, {r1, r2}
-  umull r3, r0, r1, r2
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDM     R8!, {R1, R2}
+        UMULL   R3, R0, R1, R2  @ UNSIGNED
+@       B       DPUSH           @ STORE DOUBLE WORD
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_uslas
+
+# **********
+# *   U/   *
+# **********
+#
+        .p2align 2
+        .global rf_code_uslas
 rf_code_uslas:
-  ldm   r8!, {r0, r1, r2}       @ DIVISOR
+        LDM     R8!, {R0, R1, R2} @ DIVISOR
                                 @ MSW OF DIVIDEND
                                 @ LSW OF DIVIDEND
-@  bl   umdiv
-@umdiv:
-  mov   r3, #1
-  lsl   r3, r3, #31             @ init mask with highest bit set
-  mov   r4, #0                  @ init quot
-  cmp   r1, r0                  @ test modh - div
-  blo   umdiv1                  @ modh < div
-  @ overflow condition ( divide by zero ) - show max numbers
-  asr   r4, r3, #31
-  mov   r1, r4
+        MOV     R3, #1
+        LSL     R3, R3, #31     @ init mask with highest bit set
+        MOV     R4, #0          @ init quot
+        CMP     R1, R0          @ test modh - div
+        BLO     umdiv1          @ modh < div
+        @ overflow condition ( divide by zero ) - show max numbers
+        ASR     R4, R3, #31
+        MOV     R1, R4
+        BAL     umdiv3          @ return
+umdiv1: ADDS    R2, R2, R2      @ double precision shift (modh, modl)
+        ADCS    R1, R1, R1      @ ADD with carry and set flags again !
+        BCS     umdiv4
+        CMP     R0, R1          @ test div - modh
+        BHI     umdiv2          @ div >  modh ?
+umdiv4: ADD     R4, R4, R3      @ add single pecision mask
+        SUB     R1, R1, R0      @ subtract single precision div
+umdiv2: LSR     R3, R3, #1      @ shift mask one bit to the right
+        ANDS    R3, R3, R3
+        BNE     umdiv1
+umdiv3: STR     R1, [r8, #-4]!  @ remainder
+        STR     R4, [r8, #-4]!  @ quotient
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  bal   umdiv3                  @ return
 
-umdiv1:
-  adds  r2, r2, r2              @ double precision shift (modh, modl)
-  adcs  r1, r1, r1              @ ADD with carry and set flags again !
-  bcs   umdiv4
-  cmp   r0, r1                  @ test div - modh
-  bhi   umdiv2                  @ div >  modh ?
-umdiv4:
-  add   r4, r4, r3              @ add single pecision mask
-  sub   r1, r1, r0              @ subtract single precision div
-umdiv2:
-  lsr   r3, r3, #1              @ shift mask one bit to the right
-  ands  r3, r3, r3
-  bne   umdiv1
-umdiv3:
-  str   r1, [r8, #-4]!          @ remainder
-  str   r4, [r8, #-4]!          @ quotient
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# ***********
+# *   AND   *
+# ***********
+#
+        .p2align 2
+        .global rf_code_andd
+rf_code_andd:                   @ (S1) <- (S1) AND (S2)
+        LDR   R0, [R8], #4
+        LDR   R1, [R8]
+        AND   R0, R0, R1
+        STR   R0, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_andd
-rf_code_andd:
-  ldr   r0, [r8], #4
-  ldr   r1, [r8]
-  and   r0, r0, r1
-  str   r0, [r8]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
 
-  .p2align 2
-  .global rf_code_orr
-rf_code_orr:
-  ldr   r0, [r8], #4
-  ldr   r1, [r8]
-  orr   r0, r0, r1
-  str   r0, [r8]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# **********
+# *   OR   *
+# **********
+#
+        .p2align 2
+        .global rf_code_orr
+rf_code_orr:                    @ (S1) <- (S1) OR (S2)
+        LDR   R0, [R8], #4
+        LDR   R1, [R8]
+        ORR   R0, R0, R1
+        STR   R0, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_xorr
-rf_code_xorr:
-  ldr   r0, [r8], #4
-  ldr   r1, [r8]
-  eor   r0, r0, r1
-  str   r0, [r8]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
 
-  .p2align 2
-  .global rf_code_spat
-rf_code_spat:
-  mov   r0, r8
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# ***********
+# *   XOR   *
+# ***********
+#
+        .p2align 2
+        .global rf_code_xorr
+rf_code_xorr:                   @ (S1) <- (S1) XOR (S2)
+        LDR   R0, [R8], #4
+        LDR   R1, [R8]
+        EOR   R0, R0, R1
+        STR   R0, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_spsto
+
+# ***********
+# *   SP@   *
+# ***********
+#
+        .p2align 2
+        .global rf_code_spat
+rf_code_spat:                   @ (S1) <- (SP)
+        MOV     R0, R8
+#       B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+
+# ***********
+# *   SP!   *
+# ***********
+#
+        .p2align 2
+        .global rf_code_spsto
 rf_code_spsto:
-  ldr   r1, =rf_up              @ USER VAR BASE ADDR
-  ldr   r1, [r1]
-  ldr   r8, [r1, #12]           @ RESET PARAM. STACK PT.
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R1, =rf_up      @ USER VAR BASE ADDR
+        LDR     R1, [R1]
+        LDR     R8, [R1, #12]   @ RESET PARAM. STACK PT.
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
   .p2align 2
   .global rf_code_rpsto
 rf_code_rpsto:
-  ldr   r1, =rf_up              @ (AX) <- USR VAR. BASE
-  ldr   r1, [r1]
-  ldr   r7, [r1, #16]           @ RESET RETURN STACK PT.
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R1, =rf_up      @ (AX) <- USR VAR. BASE
+        LDR     R1, [R1]
+        LDR     R7, [R1, #16]   @ RESET RETURN STACK PT.
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_semis
+
+# **********
+# *   ;S   *
+# **********
+#
+        .p2align 2
+        .global rf_code_semis
 rf_code_semis:
-  ldr   r10, [r7], #4           @ (IP) <- (R1)
-@ b     next                    @ ADJUST STACK
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R10, [R7], #4   @ (IP) <- (R1)
+                                @ ADJUST STACK
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_leave
-rf_code_leave:
-  ldr   r0, [r7]                @ GET INDEX
-  str   r0, [r7, #4]            @ STORE IT AT LIMIT
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
 
-  .p2align 2
-  .global rf_code_tor
-rf_code_tor:
-  ldr   r1, [r8], #4            @ GET STACK PARAMETER
-  str   r1, [r7, #-4]!          @ ADD TO RETURN STACK
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+# *************
+# *   LEAVE   *
+# *************
+#
+        .p2align 2
+        .global rf_code_leave
+rf_code_leave:                  @ LIMIT <- INDEX
+        LDR   R0, [R7]          @ GET INDEX
+        STR   R0, [R7, #4]      @ STORE IT AT LIMIT
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_fromr
-rf_code_fromr:
-  ldr   r1, [r7], #4            @ GET RETURN STACK VALUE
-  str   r1, [r8, #-4]!          @ DELETE FROM STACK
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
 
-  .p2align 2
-  .global rf_code_zequ
+# **********
+# *   >R   *
+# **********
+#
+        .p2align 2
+        .global rf_code_tor
+rf_code_tor:                    @ (R1) <- (S1)
+        LDR     R1, [R8], #4    @ GET STACK PARAMETER
+        STR     R1, [R7, #-4]!  @ MOVE RETURN STACK DOWN
+                                @ ADD TO RETURN STACK
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+
+# **********
+# *   R>   *
+# **********
+#
+        .p2align 2
+        .global rf_code_fromr
+rf_code_fromr:                  @ (S1) <- (R1)
+        LDR     R0, [R7], #4    @ GET RETURN STACK VALUE
+        STR     R0, [R8, #-4]!  @ DELETE FROM STACK
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+
+# **********
+# *   0=   *
+# **********
+#
+        .p2align 2
+        .global rf_code_zequ
 rf_code_zequ:
-  ldr   r0, [r8], #4
-  orrs  r0, r0                  @ DO TEST
-  mov   r0, #1                  @ TRUE
-  beq   APUSH
-  @beq  zequ1                   @ ITS ZERO
-  sub   r0, r0, #1              @ FALSE
-zequ1:
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R8], #4
+        ORRS    R0, R0          @ DO TEST
+        MOV     R0, #1          @ TRUE
+        BEQ     ZEQU1           @ ITS ZERO
+        SUB     R0, R0, #1      @ FALSE
+ZEQU1:  # B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_zless
+
+# **********
+# *   0<   *
+# **********
+#
+        .p2align 2
+        .global rf_code_zless
 rf_code_zless:
-  ldr   r0, [r8], #4
-  orrs  r0, r0                  @ SET FLAGS
-  mov   r0, #1                  @ TRUE
-  bmi   APUSH
-  @bmi  zless1
-  sub   r0, r0, #1              @ FLASE
-zless1:
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R8], #4
+        ORRS    R0, R0          @ SET FLAGS
+        MOV     R0, #1          @ TRUE
+        BMI     ZLESS1
+        SUB     R0, R0, #1      @ FLASE
+ZLESS1: # B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_plus
-rf_code_plus:
-  ldm   r8!, {r0, r1}
-  add   r0, r0, r1
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
 
-  .p2align 2
-  .global rf_code_dplus
+# *********
+# *   +   *
+# *********
+#
+        .p2align 2
+        .global rf_code_plus
+rf_code_plus:                   @ (S1) <- (S1) + (S2)
+        LDM     R8!, {R0, R1}
+        ADD     R0, R0, R1
+#       B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+
+# **********
+# *   D+   *
+# **********
+#
+# XLW XHW  YLW YHW --> SLW SHW
+# S4  S3   S2  S1      S2  S1
+#
+        .p2align 2
+        .global rf_code_dplus
 rf_code_dplus:
-  ldm   r8!, {r0, r1, r2, r3}   @ YHW
+        LDM     R8!, {R0, R1, R2, R3} @ YHW
                                 @ YLW
                                 @ XHW
                                 @ XLW
-  adds  r1, r1, r3              @ SLW
-  adc   r0, r0, r2              @ SHW
-@ b     dpush
-  stmdb r8!, {r0, r1}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        ADDS    R1, R1, R3      @ SLW
+        ADC     R0, R0, R2      @ SHW
+#       B       DPUSH
+#       STMDB   R8!, {R0, R3}
+        STMDB   R8!, {R0, R1}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_minus
+
+# *************
+# *   MINUS   *
+# *************
+#
+        .p2align 2
+        .global rf_code_minus
 rf_code_minus:
-  ldr   r0, [r8]
-  neg   r0, r0
-@ b     apush
-  str   r0, [r8]
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R8]
+        NEG     R0, R0
+#       B       APUSH
+        STR     R0, [R8]
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_dminu
+
+# **************
+# *   DMINUS   *
+# **************
+#
+        .p2align 2
+        .global rf_code_dminu
 rf_code_dminu:
-  ldm   r8!, {r1, r2}
-  sub   r0, r0, r0              @ ZERO
-  mov   r3, r0
-  subs  r3, r3, r2              @ MAKE 2'S COMPLEMENT
-  sbc   r0, r0, r1              @ HIGH WORD
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDM     R8!, {R1, R2}
+        SUB     R0, R0, R0      @ ZERO
+        MOV     R3, R0
+        SUBS    R3, R3, R2      @ MAKE 2'S COMPLEMENT
+        SBC     R0, R0, R1      @ HIGH WORD
+#       B       DPUSH
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_over
+
+# ************
+# *   OVER   *
+# ************
+#
+        .p2align 2
+        .global rf_code_over
 rf_code_over:
-  ldr   r0, [r8, #4]
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R8, #4]
+#       B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_drop
+
+# ************
+# *   DROP   *
+# ************
+#
+        .p2align 2
+        .global rf_code_drop
 rf_code_drop:
-  add   r8, r8, #4
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        ADD     R8, R8, #4
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_swap
+
+# ************
+# *   SWAP   *
+# ************
+#
+        .p2align 2
+        .global rf_code_swap
 rf_code_swap:
-  ldm   r8, {r0, r3}
-  str   r0, [r8, #4]
-  str   r3, [r8]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDM     R8, {R0, R3}
+        STR     R0, [R8, #4]
+        STR     R3, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_dup
+
+# ***********
+# *   DUP   *
+# ***********
+#
+        .p2align 2
+        .global rf_code_dup
 rf_code_dup:
-  ldr   r0, [r8]
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R0, [R8]
+#       B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_pstor
-rf_code_pstor:
-  ldm   r8!, {r0, r1}           @ ADDRESS
+
+# **********
+# *   +!   *
+# **********
+#
+        .p2align 2
+        .global rf_code_pstor
+rf_code_pstor:                  @ ((S1)) <- ((S1)) + (S2)
+        LDM     R8!, {R0, R1}   @ ADDRESS
                                 @ INCREMENT
-  ldr   r2, [r0]
-  add   r2, r2, r1
-  str   r2, [r0]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R2, [R0]
+        ADD     R2, R2, R1
+        STR     R2, [R0]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_toggl
+
+# **************
+# *   TOGGLE   *
+# **************
+#
+        .p2align 2
+        .global rf_code_toggl
 rf_code_toggl:
-  ldm   r8!, {r0, r1}           @ BIT PATTERN
+        LDM     R8!, {R0, R1}   @ BIT PATTERN
                                 @ ADDR
-  ldrb  r2, [r1]
-  eor   r2, r2, r0
-  strb  r2, [r1]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDRB    R2, [R1]
+        EOR     R2, R2, R0
+        STRB    R2, [R1]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_at
-rf_code_at:
-  ldr   r1, [r8]
-  ldr   r0, [r1]
-  str   r0, [r8]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
 
-  .p2align 2
-  .global rf_code_cat
+# *********
+# *   @   *
+# *********
+#
+        .p2align 2
+        .global rf_code_at
+rf_code_at:                     @ (S1) <- ((S1))
+        LDR     R1, [R8]
+        LDR     R0, [R1]
+        STR     R0, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
+
+
+# **********
+# *   C@   *
+# **********
+#
+        .p2align 2
+        .global rf_code_cat
 rf_code_cat:
-  ldr   r1, [r8]
-  ldrb  r0, [r1]
-  str   r0, [r8]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        LDR     R1, [R8]
+        LDRB    R0, [R1]
+        STR     R0, [R8]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_store
-rf_code_store:
-  ldm   r8!, {r0, r1}           @ ADDR
+
+# *********
+# *   !   *
+# *********
+#
+        .p2align 2
+        .global rf_code_store
+rf_code_store:                  @ ((S1)) <- (S2)
+        LDM     R8!, {R0, R1}   @ ADDR
                                 @ DATA
-  str   r1, [r0]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        STR     R1, [R0]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_cstor
+
+# **********
+# *   C!   *
+# **********
+#
+        .p2align 2
+        .global rf_code_cstor
 rf_code_cstor:
-  ldm   r8!, {r0, r1}           @ ADDR
+        LDM     R8!, {R0, R1}   @ ADDR
                                 @ DATA
-  strb  r1, [r0]
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+        STRB    R1, [R0]
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_docol
+
+# *********
+# *   :   *
+# *********
+#
+        .p2align 2
+        .global rf_code_docol
 rf_code_docol:
-  add   r3, r3, #4              @ W=W+1
-  str   r10, [r7, #-4]!         @ R1 <- (RP)
-  mov   r10, r3                 @ (IP) <- (W)
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+DOCOL:  ADD     R3, R3, #4      @ W=W+1
+        STR     R10, [R7, #-4]! @ (RP) <- (RP)-2
+                                @ R1 <- (RP)
+        MOV     R10, R3         @ (IP) <- (W)
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_docon
+
+# ****************
+# *   CONSTANT   *
+# ****************
+#
+        .p2align 2
+        .global rf_code_docon
 rf_code_docon:
-  ldr   r0, [r3, #4]            @ PFA @ GET DATA
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+DOCON:  LDR     R0, [R3, #4]    @ PFA
+                                @ GET DATA
+#       B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_dovar
+# ****************
+# *   VARIABLE   *
+# ****************
+#
+        .p2align 2
+        .global rf_code_dovar
 rf_code_dovar:
-  add   r3, r3, #4              @ (DE) <- PFA
-  str   r3, [r8, #-4]!          @ (S1) <- PFA
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+DOVAR:  ADD     R3, R3, #4      @ (DE) <- PFA
+        STR     R3, [R8, #-4]!  @ (S1) <- PFA
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_douse
+# ************
+# *   USER   *
+# ************
+#
+        .p2align 2
+        .global rf_code_douse
 rf_code_douse:
-  ldrb  r1, [r3, #4]            @ PFA
-  ldr   r0, =rf_up              @ USER VARIABLE ADDR
-  ldr   r0, [r0]
-  add   r0, r0, r1
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+DOUSE:  LDRB    R1, [R3, #4]    @ PFA
+        LDR     R0, =rf_up      @ USER VARIABLE ADDR
+        LDR     R0, [R0]
+        ADD     R0, R0, R1      @ ADDR OF VARIABLE
+#       B       APUSH
+        STR     R0, [R8, #-4]!
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_dodoe
+
+# *************
+# *   DOES>   *
+# *************
+#
+        .p2align 2
+        .global rf_code_dodoe
 rf_code_dodoe:
-  str   r10, [r7, #-4]!         @ (RP) <- (IP)
-  add   r3, r3, #4              @ PFA
-  ldr   r10, [r3], #4           @ NEW CFA
-  str   r3, [r8, #-4]!          @ PFA
-@ b     next
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
+DODOE:                          @ GET RETURN STACK
+        STR     R10, [R7, #-4]! @ (RP) <- (IP)
+        ADD     R3, R3, #4      @ PFA
+        LDR     R10, [R3], #4   @ NEW CFA
+        STR     R3, [R8, #-4]!  @ PFA
+#       B       NEXT
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
 
-  .p2align 2
-  .global rf_code_stod
+
+# ************
+# *   S->D   *
+# ************
+#
+        .p2align 2
+        .global rf_code_stod
 rf_code_stod:
-  ldr   r3, [r8], #4            @ S1
-  sub   r0, r0, r0              @ AX = 0
-  orrs  r3, r3                  @ SET FLAGS
-  bpl   stod1                   @ POSITIVE NUMBER
-  sub   r0, r0, #1              @ NEGITIVE NUMBER
-stod1:
-@ b     dpush
-  stmdb r8!, {r0, r3}
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
-
-  .p2align 2
-  .global rf_code_cold
-rf_code_cold:
-  ldr   r3, =rf_origin
-  ldr   r3, [r3]
-  ldr   r0, [r3, #24]           @ FORTH vocabulary init
-  ldr   r1, [r3, #68]
-  str   r0, [r1]
-  ldr   r1, [r3, #32]           @ UP init
-  ldr   r0, =rf_up
-  str   r1, [r0]
-  mov   r2, #11                 @ USER variables init
-  add   r3, r3, #24
-cold1:
-  ldr   r0, [r3], #4
-  str   r0, [r1], #4
-  subs  r2, r2, #1
-  bne   cold1
-  ldr   r10, [r3, #4]           @ IP init to ABORT
-  b     rf_code_rpsto           @ jump to RP!
-
-  .p2align 2
-  .global rf_code_cl
-rf_code_cl:
-  mov   r0, #4
-@ b     apush
-  str   r0, [r8, #-4]!
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
-
-  .p2align 2
-  .global rf_code_cs
-rf_code_cs:
-  ldr   r0, [r8]
-  lsl   r0, #2
-@ b     apush
-  str   r0, [r8]
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
-
-  .p2align 2
-  .global rf_code_ln
-rf_code_ln:
-  ldr   r0, [r8]
-  tst   r0, #3
-  beq   ln1
-  and   r0, r0, #-4
-  add   r0, r0, #4
-ln1:
-@ b     apush
-  str   r0, [r8]
-  ldr   r3, [r10], #4
-  ldr   r0, [r3]
-  bx    r0
-
-  .p2align 2
-  .global rf_code_xt
-rf_code_xt:
-  push  {fp, lr}
-  bl    rf_start
-  ldr   r1, =rf_fp
-  mov   r0, #0
-  str   r0, [r1]
-  pop   {fp, pc}
+        LDR     R3, [R8], #4    @ S1
+        SUB     R0, R0, R0      @ AX = 0
+        ORRS    R3, R3          @ SET FLAGS
+        BPL     STOD1           @ POSITIVE NUMBER
+        SUB     R0, R0, #1      @ NEGITIVE NUMBER
+STOD1:  # B       DPUSH
+        STMDB   R8!, {R0, R3}
+        LDR     R3, [R10], #4
+        LDR     R0, [R3]
+        BX      R0
