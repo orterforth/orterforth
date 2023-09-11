@@ -21,7 +21,6 @@ WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scrip
 # local OS
 UNAME_S := $(shell uname -s)
 ifneq ($(filter CYGWIN%,$(UNAME_S)),)
-	LDFLAGS += -t gcc.ld
 	OPER := cygwin
 	SERIALPORT := /dev/ttyS2
 	STAT := stat -c %s
@@ -114,7 +113,7 @@ endif
 # local system executable
 $(ORTERFORTH) : $(SYSTEMDEPS) main.c
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 # local system build dir
 $(SYSTEM) :
