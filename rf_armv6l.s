@@ -109,13 +109,12 @@ rf_code_cold:
         STR     R1, [R0]
         MOV     R2, #11         @ USER variables init
         ADD     R3, R3, #24
-cold1:
-        LDR   R0, [R3], #4
-        STR   R0, [R1], #4
-        SUBS  R2, R2, #1
-        BNE   cold1
-        LDR   R10, [R3, #4]     @ IP init to ABORT
-        B     rf_code_rpsto     @ jump to RP!
+cold1:  LDR     R0, [R3], #4
+        STR     R0, [R1], #4
+        SUBS    R2, R2, #1
+        BNE     cold1
+        LDR     R10, [R3, #4]   @ IP init to ABORT
+        B       rf_code_rpsto   @ jump to RP!
 
 # ***************************************
 # ***                                 ***
