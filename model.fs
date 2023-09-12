@@ -880,8 +880,8 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
+   38 cd cl  +ORIGIN  !  ( POINT COLD ENTRY TO HERE )
 38 cd HERE cl - !
-38 cd cl +ORIGIN !
 2 cs BYTE.IN FORTH 11 cs +ORIGIN !
 0 BYTE.IN ABORT 12 cs +ORIGIN !
 
@@ -1278,8 +1278,8 @@ HERE 14 cs      +ORIGIN  !   ( COLD START FENCE )
 HERE 15 cs      +ORIGIN  !   ( COLD START DP )
 LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 3 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
-( ORTERFORTH INST - PROTO INTERPRETER                         )
-( proto-interpreter source to bootstrap the outer interpreter )
+( START - PROTO INTERPRETER SOURCE                 orterforth )
+( a simple proto-interpreter bootstraps the outer interpreter )
 :u cs user + R> DROP ;S :DP     LIT  9 u :BLK     LIT 11 u
 :IN      LIT 12 u       :OFFSET LIT 15 u :CONTEXT LIT 16 u
 :CURRENT LIT 17 u       :STATE  LIT 18 u :BASE    LIT 19 u
@@ -1320,7 +1320,7 @@ R> IN ! R> BLK ! ;S
        DUP CONTEXT ! CURRENT ! QUIT
 :X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
        R> DROP ;S
-( ORTERFORTH INST - FORTH                                     )
+( FORTH SOURCE STARTS HERE - DEFINING WORDS        orterforth )
 ( Code to load the fig-Forth Model source follows. Some words )
 ( are forward defined as they are used in the fig source.     )
 ( Some contain forward references which are resolved once the )
@@ -1342,6 +1342,7 @@ CREATE : 51 cd HERE cl - ! 192 STATE !
 
 
 
+( FORWARD REFERENCES AND INST TIME EXECUTED WORDS  orterforth )
 ( forward reference words - not executed so definitions empty )
 CODE ABORT CODE DR0 CODE ERROR CODE MESSAGE CODE MIN CODE QUIT
 CODE R/W
@@ -1357,8 +1358,7 @@ CODE R/W
 -->
 
 
-
-( control words - some containing forward references as 0 ,   )
+( CONTROL WORDS - WITH SOME FORWARD REFERENCES     orterforth )
 : BACK   HERE - , ;
 : BEGIN  HERE 1 ; IMMEDIATE
 : ENDIF  DROP HERE OVER - SWAP ! ; IMMEDIATE
@@ -1374,10 +1374,10 @@ CODE R/W
 : WHILE  [COMPILE] IF 2 + ; IMMEDIATE
 -->
 
-( move DP back to origin                                      )
-0 +ORIGIN DP !
-( load boot-up parameters and machine code definitions        )
-12 LOAD
+( LOAD BOOT-UP PARAMS AND MACHINE CODE DEFINITIONS orterforth )
+0 +ORIGIN DP !                  ( move DP back to origin      )
+12 LOAD                         ( load params and code        )
+
 ( now resolve forward references in control words & LITERAL   )
 ( NB we could wait until now to define these but that would   )
 ( be inauthentic - they would be pre-existing in Forth        )
@@ -1390,26 +1390,23 @@ CODE R/W
 02 cs BYTE.IN ELSE      REPLACED.BY BRANCH
 26 cs BYTE.IN INTERPRET REPLACED.BY LIT
 -->
-( load high level utility definitions                         )
-33 LOAD
+( LOAD HIGH LEVEL DEFINITIONS                      orterforth )
+33 LOAD                         ( high level utility defs     )
 ( some forward references to HERE needed by our novel defns   )
 10 cs BYTE.IN :        REPLACED.BY HERE
 05 cs BYTE.IN CONSTANT REPLACED.BY HERE
 03 cs BYTE.IN VARIABLE REPLACED.BY HERE
 03 cs BYTE.IN USER     REPLACED.BY HERE
-( load high level definitions                                 )
-72 LOAD
-( set EMIT CFA after silent install                           )
-15 cd ' EMIT CFA !
-( installed flag = 1                                          )
-1 installed C!
+
+72 LOAD                         ( load high level definitions )
+
+15 cd ' EMIT CFA !              ( set EMIT CFA from silent    )
+
+1 installed C!                  ( installed flag = 1          )
+
 HERE 66 cs ALLOT                ( make room for link table    )
-( SAVE HEX TO DR1                                             )
-FIRST cl + CONSTANT buf -->     ( use first disc buffer       )
-buf VARIABLE ptr
-: hd DUP 10 - 0< IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
-: hbl buf ptr ! DUP 64 + SWAP DO I C@ 0 16 U/ hd hd LOOP ;
-2000 VARIABLE blk               ( first block of DR1          )
+-->
+( CREATE LINK TABLE                                orterforth )
 : link                          ( --                          )
   link? IF 
     61 0 DO I cd , LOOP         ( table of code addresses     )
@@ -1420,8 +1417,12 @@ buf VARIABLE ptr
     ' DOES> 5 cs + ,
     -66 cs ALLOT                ( move DP back before table   )
   ENDIF ;
-
+FIRST cl + CONSTANT buf buf VARIABLE ptr
+: hd DUP 10 - 0< IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
+: hbl buf ptr ! DUP 64 + SWAP DO I C@ 0 16 U/ hd hd LOOP ;
+2000 VARIABLE blk               ( first block of DR1          )
 -->
+( SAVE INSTALLATION TO DR1 AS HEX                  orterforth )
 : start link? IF origin ELSE org ENDIF ;
 : end HERE link? IF 66 cs + ENDIF ;
 : save                          ( --                          )
@@ -1436,21 +1437,16 @@ buf VARIABLE ptr
   ENDIF ;
 DP !                            ( move DP back                )
 0 ' cl LFA !                    ( break inst dictionary link  )
-save                            ( now save                    )
-;S
-( COMPILED AFTER BOOT-UP LITERALS                             )
-( extra boot-up literals for COLD                             )
-0 , 0 ,
-( extra boot-up literals for target platform                  )
-th , tl ,
+save ;S                         ( now save                    )
+( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
+
+( additional boot-up literals                                 )
+0 , 0 ,                         ( extra boot-up lits for COLD )
+th , tl ,                       ( extra boot-up lits for trgt )
+
 ( additional words                                            )
-CODE cl 0 cd HERE SMUDGE cl SMUDGE - !
-CODE cs 1 cd HERE cl - !
-CODE ln 2 cd HERE cl - !
-CODE xt 4 cd HERE cl - !
-
-
-
-
-
+CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)
+CODE cs 1 cd HERE cl - !        ( multiply by cell size      *)
+CODE ln 2 cd HERE cl - !        ( align to cell size         *)
+CODE xt 4 cd HERE cl - !        ( exit                       *)
 ;S
