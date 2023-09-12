@@ -48,6 +48,7 @@ void rf_persci_insert(int drive, char *filename)
   files[drive] = ptr = fopen(filename, "r+b");
   if (!ptr) {
     perror("fopen failed");
+    fprintf(stderr, "filename=%s\n", filename);
     exit(1);
   }
 
