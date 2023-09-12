@@ -94,13 +94,13 @@ DECLARE VOCABULARY
 
 
 
-( examples index                                              )
+( examples index                                      example )
 FORTH DEFINITIONS VOCABULARY example IMMEDIATE
 example DEFINITIONS
 : hw 7 LOAD ;
 : fib 8 LOAD ;
 : fac 9 LOAD ;
-: reverse 10 LOAD ;
+: rev 10 LOAD ;
 : roman 11 LOAD ;
 : mandelbrot 13 LOAD ;
 FORTH DEFINITIONS
@@ -110,7 +110,7 @@ FORTH DEFINITIONS
 
 
 ;S
-( Hello World                                                 )
+( Hello World                                              hw )
 ." Hello World" CR
 
 
@@ -126,7 +126,7 @@ FORTH DEFINITIONS
 
 
 ;S
-( Fibonacci sequence                                          )
+( Fibonacci sequence                                      fib )
 FORTH DEFINITIONS VOCABULARY fib IMMEDIATE fib DEFINITIONS
 DECIMAL
 : length                        ( Overflows after this point  )
@@ -142,7 +142,7 @@ DECIMAL
 CR fib list CR
 
 ;S
-( Factorial                                                   )
+( Factorial sequence                                      fac )
 FORTH DEFINITIONS VOCABULARY fac IMMEDIATE fac DEFINITIONS
 DECIMAL
 : length                        ( Overflows after this point  )
@@ -158,7 +158,7 @@ CR fac list CR
 
 
 ;S
-( Reverse a string                                            )
+( Reverse a string                                        rev )
 DECIMAL 15 LOAD                ( load str vocabulary          )
 FORTH DEFINITIONS VOCABULARY rev IMMEDIATE rev DEFINITIONS
 : s1 str " Hello World, this is a string." ;
@@ -174,7 +174,7 @@ s1 s2 reverse CR               ( reverse s1 into s2           )
 ." s1: " s1 COUNT TYPE CR      ( print them both              )
 ." s2: " s2 COUNT TYPE CR
 ;S
-( Roman numerals                                              )
+( Roman numerals                                        roman )
 FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
 : place <BUILDS , DOES>         ( n --                        )
   OVER OVER @ < IF              ( less than place value?      )
@@ -190,7 +190,7 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
   10 place X   9 place IX   5 place V   4 place IV
    1 place I
 -->
-( Roman numerals                                              )
+(                                                             )
 : step M CM D CD C XC L XL X IX V IV I ; ( handle places      )
 : number BEGIN -DUP WHILE step REPEAT SPACE ; ( until zero    )
 : list
@@ -206,7 +206,7 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
 
 
 ;S
-( Mandelbrot - derived from fract.fs in openbios              )
+( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
 19 LOAD ( sys vocabulary ) HEX
 FORTH DEFINITIONS
 : mandelbrot
@@ -222,7 +222,7 @@ FORTH DEFINITIONS
                 R> R> R SWAP >R SWAP >R ( J                   )
                 +
 -->
-( Mandelbrot - derived from fract.fs in openbios              )
+(                                                             )
                 DUP DUP 400 */ ROT
                 DUP DUP 400 */ ROT
                 SWAP OVER OVER + 1000 > IF ( if diverging     )
@@ -238,7 +238,7 @@ FORTH DEFINITIONS
     [ 466 2+ 2 * sys rows / ] LITERAL +LOOP ;
 
 mandelbrot DECIMAL ;S
-( str: Forth/Pascal string handling                           )
+( string handling: ", copy                                str )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
 : "                             ( --                          )
@@ -254,7 +254,7 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 
 
 -->
-( str: Forth/Pascal string handling                           )
+( append                                                      )
 : append                        ( a b --                      )
   OVER C@ OVER C@               ( get the two lengths         )
   255 SWAP - MIN >R             ( limit append to max length  )
@@ -270,7 +270,7 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 
 
 -->
-( str: Forth/Pascal string handling                           )
+( take, drop                                                  )
 : take                          ( a n --                      )
   OVER C@ MIN                   ( limit to the string length  )
   SWAP C!                       ( write new length )
@@ -286,7 +286,7 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
   DUP C@ R> - SWAP C!           ( update the length           )
 ;
 -->
-( str: Forth/Pascal string handling                           )
+( alloc, new                                                  )
 
 : alloc HERE SWAP ALLOT ;       ( size -- addr                )
 : new 1+ ln alloc ;             ( length -- addr              )
@@ -302,7 +302,7 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 
 
 ;S
-( sys: system dependent operations - BBC                      )
+( system dependent operations: BBC                        sys )
 FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : D= SWAP >R = SWAP R> = AND ;  ( compare double numbers      )
 : tg 20 cs +ORIGIN @ 19 cs +ORIGIN @ ;
@@ -318,7 +318,7 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 
 
 ;S
-( sys: Commodore 64                                           )
+( Commodore 64                                                )
 36 BASE ! C64. DECIMAL only
 40 CONSTANT columns 25 CONSTANT rows
 ;S
@@ -334,7 +334,7 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 
 
 ;S
-( sys: Dragon                                                 )
+( Dragon                                                      )
 36 BASE ! DRAGON. DECIMAL only
 32 CONSTANT columns 16 CONSTANT rows
 ;S
@@ -350,7 +350,7 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 
 
 ;S
-( sys: Spectrum                                               )
+( Spectrum                                                    )
 36 BASE ! SPECTR. DECIMAL only
 32 CONSTANT columns 24 CONSTANT rows
 ;S
@@ -366,7 +366,7 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 
 
 ;S
-( sys: defaults                                               )
+( default                                                     )
 DECIMAL
 80 CONSTANT columns 24 CONSTANT rows
 ;S
