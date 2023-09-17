@@ -208,18 +208,21 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
     for (p = name; *p > ' '; ++p) { }
 
     /* interpret what we have */
-    /* TODO switch */
-    if (*name == '%') {
+    switch (*name) {
+      case '%':
       /* make immediate */
       *rf_inst_vocabulary ^= 0x40;
-    } else if (*name == ':') {
+      break;
+      case ':':
       /* create colon definition */
       rf_inst_code(++name, rf_code_docol);
-    } else {
+      break;
+      default:
       /* find in dictionary */
       nfa = rf_inst_find(name, (uint8_t) (p - name));
       /* compile word if found, or number (to prefix with LIT, BRANCH or 0BRANCH) */
       rf_inst_comma(nfa ? (uintptr_t) rf_inst_cfa(nfa) : (uintptr_t) rf_inst_number(name));
+      break;
     }
 
     /* trailing spaces */
