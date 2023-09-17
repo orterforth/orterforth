@@ -224,3 +224,4 @@ roms/dragon64/% :
 tools/bin2cas.pl : | tools
 
 	curl --output $@ https://www.6809.org.uk/dragon/bin2cas.pl
+	chmod +x $@
