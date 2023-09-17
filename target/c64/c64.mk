@@ -92,7 +92,7 @@ c64/orterforth : c64/orterforth.hex | $(ORTER)
 
 c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 
-	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $$(( 0x$(shell echo "$$(grep '^BSS' c64/inst.map)" | cut -c '33-36') - 0x801 ))
+	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' c64/inst.map)" | cut -c '33-36') - 0x801 ))
 
 	@$(EMPTYDR1FILE) $@.io
 
