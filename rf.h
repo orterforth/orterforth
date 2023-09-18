@@ -3,29 +3,10 @@
 
 /* C COMPILER SETTINGS */
 
-/* Clang */
-
-#ifdef __clang__
-#include <stdint.h>
-#if (__WORDSIZE == 32)
-#define RF_WORD_SIZE 4
-typedef uint64_t rf_double_t;
-#elif (__WORDSIZE == 64)
-#define RF_WORD_SIZE 8
-typedef __uint128_t rf_double_t;
-#endif
-
-#define RF_DOUBLE_ARITH
-#define RF_ALIGN RF_WORD_SIZE
-
-#else
-
-/* gcc */
+/* clang, gcc */
 
 #ifdef __GNUC__
-
 #ifndef QDOS
-
 #include <stdint.h>
 #if __SIZEOF_POINTER__ == 4
 typedef uint64_t rf_double_t;
@@ -36,11 +17,7 @@ typedef __uint128_t rf_double_t;
 #define RF_WORD_SIZE __SIZEOF_POINTER__
 #define RF_DOUBLE_ARITH
 #define RF_ALIGN RF_WORD_SIZE
-
 #endif
-
-#endif
-
 #endif
 
 /* TARGET ARCHITECTURE */
