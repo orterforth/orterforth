@@ -103,8 +103,8 @@ example DEFINITIONS
 : rev 10 LOAD ;
 : roman 11 LOAD ;
 : mandelbrot 13 LOAD ;
+: pascal 15 LOAD ;
 FORTH DEFINITIONS
-
 
 
 
@@ -159,7 +159,7 @@ CR fac list CR
 
 ;S
 ( Reverse a string                                        rev )
-DECIMAL 15 LOAD                ( load str vocabulary          )
+DECIMAL 16 LOAD                ( load str vocabulary          )
 FORTH DEFINITIONS VOCABULARY rev IMMEDIATE rev DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
@@ -207,7 +207,7 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
-19 LOAD ( sys vocabulary ) HEX
+20 LOAD ( sys vocabulary ) HEX
 FORTH DEFINITIONS
 : mandelbrot
     CR
@@ -238,6 +238,22 @@ FORTH DEFINITIONS
     [ 466 2+ 2 * sys rows / ] LITERAL +LOOP ;
 
 mandelbrot DECIMAL ;S
+( Pascal's Triangle                                    pascal )
+DECIMAL
+HERE 100 cs ALLOT CONSTANT buf
+: init buf SWAP cs ERASE 1 buf ! ;
+: .line CR buf SWAP 0 DO DUP @ . cl + LOOP DROP ;
+: next
+  buf SWAP 1 - cs buf + DO
+    I @ I cl + +!
+  -1 cs +LOOP ;
+: pascal
+  DUP init
+  1 .line
+  1 DO
+    I next I 1+ .line
+  LOOP ;
+18 pascal ;S
 ( string handling: ", copy                                str )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
