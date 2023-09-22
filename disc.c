@@ -371,11 +371,11 @@ int main(int argc, char *argv[])
   }
 
   /* Usage */
-  /* TODO add pty when appropriate */
   fputs("Usage: disc create                           Convert text file (stdin) into Forth block format (stdout)\n"
         "       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
+  fputs("       disc pty <link> <dr0> <dr1>           Run disc controller over pty and create symlink\n", stderr);
   fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n"
-        "       disc standard <dr0> <dr1>             Run disc controller over stdin/stdout\n"
         "       disc tcp <port> <dr0> <dr1>           Run disc controller over tcp port\n", stderr);
+  fputs("       disc <dr0> <dr1>                      Run disc controller over stdin/stdout\n", stderr);
   return 1;
 }
