@@ -29,10 +29,10 @@ int main(void)
 #ifdef RF_ARGS
   /* insert discs */
   if (argc >= 2) {
-    rf_persci_insert(0, argv[1]);
+    if (rf_persci_insert(0, argv[1])) return 1;
   }
   if (argc >= 3) {
-    rf_persci_insert(1, argv[2]);
+    if (rf_persci_insert(1, argv[2])) return 1;
   }
 #endif
 #endif

@@ -11,7 +11,7 @@
 #define RF_ASCII_ACK 6
 #define RF_ASCII_NAK 21
 
-void rf_persci_insert(int drive, char *filename);
+int rf_persci_insert(int drive, char *filename);
 
 void rf_persci_insert_bytes(int drive, const uint8_t *bytes);
 

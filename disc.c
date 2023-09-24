@@ -222,10 +222,10 @@ static int serve(char *dr0, char *dr1)
 {
   /* insert DR0 and DR1 if present */
   if (dr0) {
-    rf_persci_insert(0, dr0);
+    if (rf_persci_insert(0, dr0)) return 1;
   }
   if (dr1) {
-    rf_persci_insert(1, dr1);
+    if (rf_persci_insert(1, dr1)) return 1;
   }
 
   return orter_io_pipe_loop(pipes, pipe_count);

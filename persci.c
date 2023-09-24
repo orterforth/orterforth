@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,18 +31,20 @@ static void validate_drive_no(int drive)
   }
 }
 
-void rf_persci_insert(int drive, char *filename)
+/* TODO return an exit code */
+int rf_persci_insert(int drive, char *filename)
 {
   FILE *ptr;
 
   /* 0-3 only */
+  /* TODO exit code */
   validate_drive_no(drive);
 
   /* disc must be not already inserted */
   ptr = files[drive];
   if (ptr) {
     fprintf(stderr, "file already open: drive %d\n", drive);
-    exit(1);
+    return 1;
   }
 
   /* open disc file */
@@ -49,19 +52,25 @@ void rf_persci_insert(int drive, char *filename)
   if (!ptr) {
     perror("fopen failed");
     fprintf(stderr, "filename=%s\n", filename);
-    exit(1);
+    return 1;
   }
 
   /* read contents into memory */
   if (!(discs[drive] = malloc(256256))) {
     fprintf(stderr, "malloc failed: drive %d\n", drive);
-    exit(1);
+    fclose(ptr);
+    files[drive] = 0;
+    return 1;
   }
   fread(discs[drive], 1, 256256, ptr);
   if (ferror(ptr)) {
     fprintf(stderr, "fread failed: drive %d\n", drive);
-    exit(1);
+    fclose(ptr);
+    files[drive] = 0;
+    return 1;
   }
+
+  return 0;
 }
 
 void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
