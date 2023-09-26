@@ -7,4 +7,4 @@
 
 #define RF_ORIGIN 0xE000
 
-#define RF_LIMIT 0x0000
+#define RF_LIMIT 0xF500

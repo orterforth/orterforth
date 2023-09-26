@@ -1,5 +1,7 @@
 /* SYSTEM BINDINGS */
 
+#include <stdio.h>
+
 #include "rf.h"
 
 void rf_init(void)
@@ -58,6 +60,7 @@ void rf_disc_write(char *p, unsigned char len)
 {
   for (; len; len--) {
     /* TODO write serial */
+    putchar(*(p++));
   }
 }
 
