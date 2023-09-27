@@ -1,27 +1,16 @@
-#ifdef __MACH__
-#define ORTER_PLATFORM_UNIX
-#endif
-#ifdef __unix__
 /* to get CRTSCTS */
 #define _DEFAULT_SOURCE
-#define ORTER_PLATFORM_UNIX
-#endif
 
 #include <errno.h>
-#include <signal.h>
+#include <fcntl.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#ifdef __linux__
 #include <sys/file.h>
-#endif
-#include <fcntl.h>
-#include <getopt.h>
-#include <sys/ioctl.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "io.h"
@@ -47,6 +36,9 @@ static int            serial_attr_saved = 0;
 
 /* exit after ACK */
 static char           ack = 0;
+
+/* delay */
+static useconds_t     delay = 0;
 
 /* exit after EOF timer */
 static char           wai = 0;
@@ -163,6 +155,7 @@ int orter_serial_open(char *name, int baud)
 #endif
     case 115200: br = B115200; break;
     case 230400: br = B230400; break;
+    /* TODO don't use perror, report baud rate */
     default: perror("invalid baud rate"); return -1; break;
   }
   if (cfsetispeed(&serial_attr, br)) {
@@ -219,15 +212,25 @@ static size_t in_rd(char *off, size_t len)
 {
   char c;
   size_t n;
-  size_t size = orter_io_fd_rd(0, off, len);
+  size_t size;
+
+  /* read from stdin */  
+  if (delay) {
+    size = orter_io_fd_rd(0, off, 1);
+    usleep(delay);
+  } else {
+    size = orter_io_fd_rd(0, off, len);
+  }
 
   /* start EOF timer */
+  /* TODO eof flag should be local to pipe struct */
   if (!eof && orter_io_eof) {
     eof = 1;
     wai_timer = time(0) + wai_wait;
   }
 
   /* no changes */
+  /* TODO is this worth it */
   if (!onlcrx && !odelbs) {
     return size;
   }
@@ -289,11 +292,12 @@ static int usage(void)
 {
   fprintf(stderr, "Usage: orter serial <options> <name> <baud>\n\n"
                   "                    -a        : terminate after 0x06 (ACK) read\n"
-                  "                    -e <wait> : wait <wait> s after EOF\n"
+                  "                    -d <wait> : write wait <wait> s after each byte\n"
+                  "                    -e <wait> : read  wait <wait> s after EOF\n"
                   "                    -o echo   : enable echoing\n"
                   "                    -o icrnl  : read  0x0d->0x0a\n"
-                  "                    -o ixoff  : enable XON/XOFF on input\n"
-                  "                    -o ixon   : enable XON/XOFF on output\n");
+                  "                    -o ixoff  : write XON/XOFF\n"
+                  "                    -o ixon   : read  XON/XOFF\n");
   fprintf(stderr, "                    -o ocrnl  : write 0x0d->0x0a\n"
                   "                    -o odelbs : write 0x7f->0x08\n"
                   "                    -o onlcr  : write 0x0a->0x0d 0x0a\n"
@@ -306,10 +310,13 @@ static void opts(int argc, char **argv)
   int c;
 
   /* getopt */
-  while ((c = getopt(argc, argv, "ae:ho:")) != -1) {
+  while ((c = getopt(argc, argv, "ad:e:ho:")) != -1) {
     switch (c) {
       case 'a':
         ack = 1;
+        break;
+      case 'd':
+        delay = (1000000.0F * strtof(optarg, 0));
         break;
       case 'e':
         wai = 1;
