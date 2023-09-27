@@ -1,6 +1,6 @@
 # === TRS-80 Model 100 ===
 
-M100ORG := 50000
+M100ORG := 45000
 M100PROMPT := $(PROMPT) 'On the target type RUN "COM:78N1E" <enter>'
 M100SERIAL := $(ORTER) serial -o ixon -o ixoff -o onlcrx -e 2 $(SERIALPORT) 4800
 M100SLOWSEND := (while read -r l; do echo "$$l"; sleep 1; done && printf '\032' && sleep 1)
@@ -8,7 +8,8 @@ M100LOADLOADER := printf '* \033[1;33mLoading loader\033[0;0m\n' ; $(M100SLOWSEN
 M100ZCCOPTS := \
 	+m100 -subtype=default -m \
 	-pragma-define:CLIB_EXIT_STACK_SIZE=0 \
-	-pragma-define:CRT_ORG_CODE=$(M100ORG)
+	-pragma-define:CRT_ORG_CODE=$(M100ORG) \
+	-DRF_ORG=$(M100ORG)
 
 m100 :
 
