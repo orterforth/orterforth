@@ -44,12 +44,14 @@ endif
 # local processor architecture
 UNAME_M := $(shell uname -m)
 PROC := $(UNAME_M)
+# 32 bit kernel on 64 bit host (e.g., container)
 ifeq (${OPER},linux)
 ifeq (${PROC},x86_64)
 ifeq ($(shell getconf LONG_BIT),32)
 	PROC := i686
 endif
 endif
+# Raspberry Pi 2 onwards
 ifeq (${PROC},armv7l)
 	PROC := armv6l
 endif
@@ -272,7 +274,7 @@ scripts/script.sh :
 .PHONY : test
 test : $(ORTERFORTH) $(DR0)
 
-	echo 'VLIST 3 22 INDEX CR MON' | $(ORTERFORTH) $(DR0)
+	echo 'VLIST 3 24 INDEX CR MON' | $(ORTERFORTH) $(DR0)
 
 tx :
 
