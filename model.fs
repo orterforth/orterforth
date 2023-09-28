@@ -1273,11 +1273,11 @@ CREATE  MON         ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
 
 
 DECIMAL
-HERE              FENCE  !
-HERE 14 cs      +ORIGIN  !   ( COLD START FENCE )
-HERE 15 cs      +ORIGIN  !   ( COLD START DP )
-LATEST 6 cs     +ORIGIN  !   ( TOPMOST WORD )
-' FORTH 3 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
+HERE             FENCE  !
+HERE    14 cs  +ORIGIN  !   ( COLD START FENCE )
+HERE    15 cs  +ORIGIN  !   ( COLD START DP )
+LATEST   6 cs  +ORIGIN  !   ( TOPMOST WORD )
+' FORTH 3 cs + 16 cs +ORIGIN !  ( COLD VOC-LINK )  ;S
 ( START - PROTO INTERPRETER SOURCE                 orterforth )
 ( a simple proto-interpreter bootstraps the outer interpreter )
 :u cs user + R> DROP ;S :DP     LIT  9 u :BLK     LIT 11 u
