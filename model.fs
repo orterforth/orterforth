@@ -1265,8 +1265,8 @@ HEX
 (  TOOLS                                          WFR-79MAY03 )
 HEX
 
-CREATE MON          ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
-       SMUDGE ' xt CFA @ LATEST PFA CFA !
+CREATE  MON         ( CALL MONITOR, SAVING RE-ENTRY TO FORTH *)
+        4 cd HERE cl - !                 SMUDGE
 
 
 
