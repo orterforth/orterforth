@@ -221,7 +221,8 @@ _rf_code_ustar:
         move.w  d4,d5
         clr.w   d4      ; d5:d4 is 0x0000:Nh:Nl:0x0000, where N is Ah*Bl
 
-        add.l   d4,d3
+        add.l   d4,d3        ; TODO jmp faster?
+
         addx.l  d5,d2   ;add Ah*Bl*0x10000 to the partial result
 
         ;d2:d3 is now the result
@@ -511,7 +512,7 @@ _rf_code_stod:
         bmi     stod1
         move.l  #0, -(a3)
         bra     stod2
-stod1:  move.l  #$FFFFFFFF, -(a3)
+stod1:  move.l  #-1, -(a3)
 stod2: ;bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
@@ -538,5 +539,37 @@ _rf_code_cs:
         move.l  (a5)+, a0
         jmp     (a0)
 
-; TODO _rf_code_ln
-; TODO _rf_code_cold
+        .align 2
+        .extern _rf_code_ln
+_rf_code_ln:
+        btst    #0, (a3)
+        beq     ln1
+        add.l   #1, (a3)
+ln1: ;  bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+
+        .align 2
+        .extern _rf_code_xt
+_rf_code_xt:
+        jsr     _rf_start
+        move.l  #0, _rf_fp
+        rts
+
+        .align 2
+        .extern _rf_code_cold
+_rf_code_cold:
+        move.l  #196608, a0
+        move.l  0x18(a0), d0
+        move.l  0x44(a0), a2
+        move.l  d0, (a2)
+        move.l  0x20(a0), a2
+        move.l  a2, _rf_up
+        move.l  #44, d0
+        lea.l   0x18(a0), a0
+        bra     cold2
+cold1:  move.b  (a0)+, (a2)+
+cold2:  dbf     d0, cold1
+        move.l  0x04(a0), a4
+        bra     _rf_code_rpsto

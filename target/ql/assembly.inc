@@ -69,6 +69,6 @@
 #define RF_TARGET_CODE_STOD
 #define RF_TARGET_CODE_CL
 #define RF_TARGET_CODE_CS
-/* there is no dpush so we define this */
-#define RF_TARGET_CODE_TG
-
+#define RF_TARGET_CODE_LN
+#define RF_TARGET_CODE_XT
+#define RF_TARGET_CODE_COLD
