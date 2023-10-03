@@ -114,7 +114,7 @@ typedef long intptr_t;
 typedef unsigned long uintptr_t;
 #ifdef QDOS
 #ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/ql/default.inc"
+#define RF_TARGET_INC "target/ql/ql.inc"
 #endif
 #endif
 #endif

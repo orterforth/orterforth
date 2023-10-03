@@ -8,6 +8,7 @@
 /* links code fields to the loaded job on startup */
 #define RF_INST_LINK
 
+/* default C impl code is larger and no room to reserve from 188416 */
 /* assembly code small enough to reserve 72 KB */
 /*#define RF_ORIGIN 188416*/
 #define RF_ORIGIN 196608
@@ -22,6 +23,7 @@
 #define RF_RETURN_STACK_SIZE 64
 
 /* assembly code definitions */
+#ifdef RF_ASSEMBLY
 #define RF_TARGET_TRAMPOLINE
 #define RF_TARGET_CODE_LIT
 #define RF_TARGET_NEXT
@@ -72,3 +74,4 @@
 #define RF_TARGET_CODE_LN
 #define RF_TARGET_CODE_XT
 #define RF_TARGET_CODE_COLD
+#endif

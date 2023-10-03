@@ -6,14 +6,15 @@ export PATH := $(HOME)/xtc68/bin:$(PATH)
 # QLOPTION := assembly
 QLOPTION := default
 
+QLQCCOPTS =
+
 ifeq ($(QLOPTION),assembly)
 QLDEPS := ql/rf.o ql/rf_m68k.o ql/system.o ql/main.o
-QLINC := target/ql/assembly.inc
+QLQCCOPTS += -D RF_ASSEMBLY
 endif
 
 ifeq ($(QLOPTION),default)
 QLDEPS := ql/rf.o ql/system.o ql/main.o
-QLINC := target/ql/default.inc
 endif
 
 ql :
@@ -90,7 +91,7 @@ ql/inst : ql/inst.o $(QLDEPS)
 # installer
 ql/inst.o : inst.c rf.h $(QLINC) | ql
 
-	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
+	qcc $(QLQCCOPTS) -o $@ -c $<
 
 # inst executable with serial header
 ql/inst.ser : ql/inst | $(ORTER)
@@ -100,7 +101,7 @@ ql/inst.ser : ql/inst | $(ORTER)
 # relinker
 ql/link.o : link.c rf.h $(QLINC) | ql
 
-	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
+	qcc $(QLQCCOPTS) -o $@ -c $<
 
 # loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader-inst.ser : target/ql/loader-inst.bas
@@ -183,11 +184,11 @@ ql/orterforth.ser : ql/orterforth | $(ORTER)
 # machine and code
 ql/rf.o : rf.c rf.h $(QLINC) | ql
 
-	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
+	qcc $(QLQCCOPTS) -o $@ -c $<
 
 ql/rf.s : rf.c rf.h $(QLINC) | ql
 
-	qcc -D RF_TARGET_INC='"$(QLINC)"' -S -c $<
+	qcc $(QLQCCOPTS) -S -c $<
 
 # assembly code
 ql/rf_m68k.o : rf_m68k.s | ql
@@ -197,4 +198,4 @@ ql/rf_m68k.o : rf_m68k.s | ql
 # system support
 ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
 
-	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
+	qcc $(QLQCCOPTS) -o $@ -c $<
