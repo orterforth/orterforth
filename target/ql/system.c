@@ -3,7 +3,7 @@
 #include "rf.h"
 
 /* stack can be smaller */
-long _stack = 512L;
+long _stack = 256L;
 
 /* no channel redirection */
 long (*_cmdchannels)() = 0;
@@ -30,15 +30,18 @@ void rf_init(void)
 {
   short mode = 4;
   short type = 1;
-  uint8_t p = 6; /* ACK */
-
+/*
+  uint8_t p = 6;
+*/
   /* MODE 4, TV */
   mt_dmode(&mode, &type);
   /* open serial */
   mt_baud(4800);
   ser = io_open("SER2", 0);
   /* send ACK to close serial load */
+/*
   io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);
+*/
   /* 80 columns, 25 rows, white on black */
   con = io_open("CON_480X256A16X0", 0);
   sd_setpa(con, TIMEOUT_FOREVER, 0);
@@ -71,7 +74,7 @@ void rf_code_key(void)
 
     /* get key */
     sd_cure(con, TIMEOUT_FOREVER);
-    io_fbyte(con, TIMEOUT_FOREVER, (char *) &k);
+    while (io_fbyte(con, TIMEOUT_FOREVER, (char *) &k)) {}
     sd_curs(con, TIMEOUT_FOREVER);
 
     /* LF -> CR */
@@ -79,10 +82,10 @@ void rf_code_key(void)
     /* 0xC2 -> DEL */
     if (k == 0xC2) k = 0x7F;
     /* low 7 bits only */
-    k &= 0x7f;
+    k &= 0x7F;
 
     /* return key */
-    RF_SP_PUSH(k);
+    RF_SP_PUSH((uintptr_t) k);
   }
   RF_JUMP_NEXT;
 }

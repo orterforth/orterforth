@@ -23,23 +23,13 @@ ql :
 .PHONY : ql-build
 ql-build : ql/orterforth
 
-.PHONY : ql-clean
-ql-clean :
-
-	rm -rf ql/*
-
 QLMACHINE := sqlux
+QLROM := ah.rom
 
 .PHONY : ql-hw
-ql-hw : ql/hw.ser
+ql-hw : ql/hw
 
-	(sleep 10 && cat ql/hw.ser && sleep 50) | $(ORTER) pty ql/pty &
-#	(sleep 5 && cat ql/hw.ser && sleep 50) | socat - pty,rawer,link=ql/pty &
-
-ifeq ($(QLMACHINE),sqlux)
-#	sqlux --ramsize 128 --romdir ../sQLux/roms --win_size 2x --ser2 ql/pty --boot_cmd 'LRUN SER2Z'
-	sqlux --ramsize 128 --romdir ../sQLux/roms --win_size 2x --ser2 ql/pty # --boot_cmd 'EXEC_W SER2Z'
-endif
+	@sqlux --ramsize 128 --romdir roms/ql --sysrom $(QLROM) --device mdv1,ql --speed 1.0 --win_size 2x --boot_cmd 'EXEC_W "mdv1_hw"'
 
 QLSERIALBAUD := 4800
 
@@ -69,11 +59,16 @@ ql-load-serial : ql/orterforth.bin.ser ql/orterforth.ser ql/loader.ser | $(DISC)
 	@touch data.img
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.img data.img
 
-#ql/hw.ser : target/ql/hw.bas
+STARTDISCPTY := rm -f pty && $(STARTDISC) pty pty
 
-#	cat $< > $@.io
-#	printf '\032' >> $@.io
-#	mv $@.io $@
+.PHONY : ql-run
+ql-run : ql/orterforth.bin ql/orterforth | roms/ql/$(QLROM) $(DR0) $(DR1)
+
+	@$(STARTDISCPTY) $(DR0) $(DR1)
+
+	@sqlux --ramsize 128 --romdir roms/ql --sysrom $(QLROM) --device mdv1,ql --ser2 $$(readlink -n pty && rm pty) --speed 1.0 --win_size 2x --boot_cmd 'PRINT RESPR(RESPR(0)-196608):LBYTES "mdv1_orterforth.bin",196608:EXEC_W "mdv1_orterforth"'
+
+	@$(STOPDISC)
 
 ql/hw.ser : ql/hw
 
@@ -101,6 +96,11 @@ ql/inst.o : inst.c rf.h $(QLINC) | ql
 ql/inst.ser : ql/inst | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
+
+# relinker
+ql/link.o : link.c rf.h $(QLINC) | ql
+
+	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
 # loader terminated with Ctrl+Z, to load via SER2Z
 ql/loader-inst.ser : target/ql/loader-inst.bas
@@ -132,7 +132,9 @@ ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@
 
 # saved binary as hex
-ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser | $(DISC) $(ORTER)
+ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser model.img | roms/ql/$(QLROM) $(DISC) $(ORTER)
+
+	@$(EMPTYDR1FILE) $@.io
 
 ifeq ($(QLMACHINE),real)
 	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
@@ -152,48 +154,21 @@ ifeq ($(QLMACHINE),real)
 		scripts/wait-until-saved.sh $@.io ; \
 		kill -9 $$pid
 
-	@$(COMPLETEDR1FILE)
-	@sleep 1
 endif
 ifeq ($(QLMACHINE),sqlux)
-# pty test for QL emulator
-# socat -d -d -v pty,rawer,link=pty EXEC:cat,pty,rawer &
-# socat -d -d -v - pty,rawer,link=pty
-# sleep 1
-	# sleep 1
-	# ls -l /dev/pts
-	# sleep 5
-	# TODO link will be read by IDE file watching
-	socat - pty,rawer,link=ql/pty < rx &
-	(sleep 15 && cat ql/hw.ser && sleep 1000) > rx &
-	sleep 1
-	ps
-	sqlux --ser2 ql/pty --ramsize 128 --romdir ../sQLux/roms --win_size 2x &
-	sleep 60
-	exit 1
+	@$(STARTDISCPTY) model.img $@.io
 
-	@echo "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
-	@read -p "Then press enter to start: " LINE
+	@$(START) sqlux.pid sqlux --ramsize 128 --romdir roms/ql --sysrom $(QLROM) --device mdv1,ql --ser2 $$(readlink -n pty && rm pty) --speed 0.0 --win_size 2x --boot_cmd 'PRINT RESPR(RESPR(0)-196608):EXEC_W "mdv1_inst"'
 
-	@echo "* Loading loader..."
-	(cat ql/loader-inst.ser && sleep 1000) > rx
+	@$(WAITUNTILSAVED) $@.io
 
-	@echo "* Loading installer..."
-	sleep 10
-	cat ql/inst.ser > rx
+	@sh scripts/stop.sh sqlux.pid
+	
+	@$(STOPDISC)
 
-	# TODO use disc start/stop script
-	@echo "* Starting disc and waiting for completion..."
-	@touch $@.io
-	sh scripts/start.sh tx rx disc.pid $(DISC)
-
-	$(WAITUNTILSAVED)
-
-	$(STOPDISC)
+endif
 
 	@$(COMPLETEDR1FILE)
-	@sleep 1
-endif
 
 # saved binary with serial header
 ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
@@ -204,11 +179,6 @@ ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
 ql/orterforth.ser : ql/orterforth | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
-
-# relinker
-ql/link.o : link.c rf.h $(QLINC) | ql
-
-	qcc -D RF_TARGET_INC='"$(QLINC)"' -o $@ -c $<
 
 # machine and code
 ql/rf.o : rf.c rf.h $(QLINC) | ql

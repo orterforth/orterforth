@@ -96,6 +96,7 @@ void rf_inst(void)
       if (*cfa == here[i]) {
         /* update with code from this job */
         *cfa = codes[i];
+        break;
       }
     }
 
