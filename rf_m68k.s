@@ -566,10 +566,10 @@ _rf_code_cold:
         move.l  d0, (a2)
         move.l  0x20(a0), a2
         move.l  a2, _rf_up
-        move.l  #44, d0
+        move.l  #11, d0
         lea.l   0x18(a0), a0
         bra     cold2
-cold1:  move.b  (a0)+, (a2)+
+cold1:  move.l  (a0)+, (a2)+
 cold2:  dbf     d0, cold1
         move.l  0x04(a0), a4
         bra     _rf_code_rpsto
