@@ -3,22 +3,21 @@
         .sect .data
         .sect .bss
         .sect .data
-
         .sect .text
         .align  2
         .extern _rf_trampoline
 _rf_trampoline:
         link    a6, #0
 trampoline1:
-        move.l  _rf_fp, d0
-        tst.l   d0
+        move.l  _rf_fp, a0
+        cmp.l   #0, a0
         beq     trampoline2
         move.l  _rf_rp, a1
         move.l  _rf_sp, a3
         move.l  _rf_ip, a4
+        move.l  _rf_up, a6
         move.l  _rf_w, a5
         addq.l  #4, a5
-        move.l  d0, a0
         jsr     (a0)
         bra     trampoline1
 trampoline2:
@@ -153,8 +152,7 @@ _rf_code_spat:
         .align 2
         .extern _rf_code_spsto
 _rf_code_spsto:
-        move.l  _rf_up, a0
-        move.l  12(a0), a3
+        move.l  12(a6), a3
 ;       bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
@@ -163,8 +161,7 @@ _rf_code_spsto:
         .align 2
         .extern _rf_code_rpsto
 _rf_code_rpsto:
-        move.l  _rf_up, a0
-        move.l  16(a0), a1
+        move.l  16(a6), a1
 ;       bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
@@ -486,8 +483,7 @@ _rf_code_dovar:
         .extern _rf_code_douse
 _rf_code_douse:
         move.l  (a5), d0
-;       ADD.W   A6,D0
-        add.l   _rf_up, d0
+        add.l   a6, d0
         move.l  d0, -(a3)
 ;       bra     _rf_next
         move.l  (a4)+, a5
@@ -566,6 +562,7 @@ _rf_code_cold:
         move.l  d0, (a2)
         move.l  0x20(a0), a2
         move.l  a2, _rf_up
+        move.l  a2, a6
         move.l  #11, d0
         lea.l   0x18(a0), a0
         bra     cold2
