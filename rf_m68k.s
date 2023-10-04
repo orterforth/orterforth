@@ -7,7 +7,7 @@
         .align  2
         .extern _rf_trampoline
 _rf_trampoline:
-        link    a6, #0
+        move.l  a6, -(sp)
 trampoline1:
         move.l  _rf_fp, a0
         cmp.l   #0, a0
@@ -21,7 +21,7 @@ trampoline1:
         jsr     (a0)
         bra     trampoline1
 trampoline2:
-        unlk    a6
+        move.l  (sp)+, a6
         rts
 
         .align 2
@@ -557,16 +557,16 @@ _rf_code_xt:
         .extern _rf_code_cold
 _rf_code_cold:
         move.l  #196608, a0
-        move.l  0x18(a0), d0
+        move.l  0x18(a0), d0    ; FORTH
         move.l  0x44(a0), a2
         move.l  d0, (a2)
-        move.l  0x20(a0), a2
-        move.l  a2, _rf_up
-        move.l  a2, a6
+        move.l  0x20(a0), a6    ; UP
+        move.l  a6, _rf_up
+        move.l  a6, a2          ; USER
         move.l  #11, d0
         lea.l   0x18(a0), a0
         bra     cold2
 cold1:  move.l  (a0)+, (a2)+
 cold2:  dbf     d0, cold1
-        move.l  0x04(a0), a4
-        bra     _rf_code_rpsto
+        move.l  0x04(a0), a4    ; ABORT
+        bra     _rf_code_rpsto  ; RP!
