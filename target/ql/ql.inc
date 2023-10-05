@@ -8,11 +8,6 @@
 /* links code fields to the loaded job on startup */
 #define RF_INST_LINK
 
-/* default C impl code is larger and no room to reserve from 188416 */
-/* assembly code small enough to reserve 72 KB */
-/*#define RF_ORIGIN 188416*/
-#define RF_ORIGIN 196608
-
 /* memory limit on unexpanded QL */
 #define RF_LIMIT 262144
 

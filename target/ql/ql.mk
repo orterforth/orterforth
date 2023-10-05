@@ -4,7 +4,7 @@
 export PATH := $(HOME)/xtc68/bin:$(PATH)
 
 QLMACHINE := sqlux
-QLQCCOPTS =
+QLQCCOPTS = -ansi
 QLROM := ah.rom
 QLSERIALBAUD := 4800
 QLSQLUXOPTS := --ramsize 128 --romdir roms/ql --sysrom $(QLROM) --device mdv1,ql --win_size 2x
@@ -23,12 +23,16 @@ endif
 
 ifeq ($(QLOPTION),assembly)
 QLDEPS := ql/rf.o ql/rf_m68k.o ql/system.o ql/main.o
+QLORIGIN := 184320 # 0x2D000
 QLQCCOPTS += -D RF_ASSEMBLY
 endif
 
 ifeq ($(QLOPTION),default)
 QLDEPS := ql/rf.o ql/system.o ql/main.o
+QLORIGIN := 188416 # 0x2E000
 endif
+
+QLQCCOPTS += -D RF_ORIGIN=$(QLORIGIN)
 
 ql :
 
@@ -70,7 +74,7 @@ ql-run : ql/orterforth.bin ql/orterforth | roms/ql/$(QLROM) $(DR0) $(DR1)
 
 	@$(STARTDISCPTY) $(DR0) $(DR1)
 
-	@sqlux $(QLSQLUXOPTS) --speed 1.0 --ser2 $(SERIALPTY) --boot_cmd 'PRINT RESPR(RESPR(0)-196608):LBYTES "mdv1_orterforth.bin",196608:EXEC_W "mdv1_orterforth"'
+	@sqlux $(QLSQLUXOPTS) --speed 1.0 --ser2 $(SERIALPTY) --boot_cmd 'PRINT RESPR(RESPR(0)-$(QLORIGIN)):LBYTES "mdv1_orterforth.bin",$(QLORIGIN):EXEC_W "mdv1_orterforth"'
 
 	@$(STOPDISC)
 
@@ -84,7 +88,7 @@ ql/hw : ql/hw.o
 
 ql/hw.o : hw.c | ql
 
-	qcc -o $@ -c $<
+	qcc $(QLQCCOPTS) -o $@ -c $<
 
 ql/inst : ql/inst.o $(QLDEPS)
 
@@ -102,13 +106,7 @@ ql/link.o : link.c rf.h $(QLINC) | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
-ql/loader-inst.ser : target/ql/loader-inst.bas
-
-	cp $< $@.io
-	printf '\032' >> $@.io
-	mv $@.io $@
-
-ql/loader.ser : target/ql/loader.bas
+ql/%.bas.ser : target/ql/%.bas
 
 	cp $< $@.io
 	printf '\032' >> $@.io
@@ -116,7 +114,7 @@ ql/loader.ser : target/ql/loader.bas
 
 ql/main.o : main.c rf.h $(QLINC) inst.h | ql
 
-	qcc -o $@ -c $<
+	qcc $(QLQCCOPTS) -o $@ -c $<
 
 ql/orterforth : ql/link.o $(QLDEPS)
 
@@ -126,7 +124,7 @@ ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.ser model.img | roms/ql/$(QLROM) $(DISC) $(ORTER)
+ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.bas.ser model.img | roms/ql/$(QLROM) $(DISC) $(ORTER)
 
 	@$(EMPTYDR1FILE) $@.io
 
@@ -135,7 +133,7 @@ ifeq ($(QLMACHINE),real)
 	@$(PROMPT) "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader-inst.ser
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader-inst.bas.ser
 
 	@echo "* Loading installer..."
 	@sleep 1
@@ -151,7 +149,7 @@ endif
 ifeq ($(QLMACHINE),sqlux)
 	@$(STARTDISCPTY) model.img $@.io
 
-	@$(START) sqlux.pid sqlux $(QLSQLUXOPTS) --speed 0.0 --ser2 $(SERIALPTY) --boot_cmd 'PRINT RESPR(RESPR(0)-196608):EXEC_W "mdv1_inst"'
+	@$(START) sqlux.pid sqlux $(QLSQLUXOPTS) --speed 0.0 --ser2 $(SERIALPTY) --boot_cmd 'PRINT RESPR(RESPR(0)-$(QLORIGIN)):EXEC_W "mdv1_inst"'
 
 	@$(WAITUNTILSAVED) $@.io
 
@@ -177,7 +175,7 @@ ql/rf.o : rf.c rf.h $(QLINC) | ql
 
 ql/rf_m68k.o : rf_m68k.s | ql
 
-	qcc -o $@ -c $<
+	qcc $(QLQCCOPTS) -o $@ -c $<
 
 ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
 
