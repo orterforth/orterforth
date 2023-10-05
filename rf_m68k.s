@@ -556,7 +556,7 @@ _rf_code_xt:
         .align 2
         .extern _rf_code_cold
 _rf_code_cold:
-        move.l  #196608, a0
+        move.l  _rf_origin, a0
         move.l  0x18(a0), d0    ; FORTH
         move.l  0x44(a0), a2
         move.l  d0, (a2)
