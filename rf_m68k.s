@@ -1,10 +1,9 @@
+* Modified for orterforth integration and 68000 in 2022. Cell
+* width is now 32 bits. Some info in the comments no longer
+* applies (e.g. RP is A1 not A7)
+
         .sect .text
-        .sect .rom
-        .sect .data
-        .sect .bss
-        .sect .data
-        .sect .text
-        .align  2
+        .align 2
         .extern _rf_trampoline
 _rf_trampoline:
         move.l  a6, -(sp)
@@ -33,6 +32,170 @@ _rf_start:
         subq.l  #4, a5
         move.l  a5, _rf_w
         rts
+
+        .align 2
+        .extern _rf_code_cl
+_rf_code_cl:
+        move.l  #4, -(a3)
+;       bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+
+        .align 2
+        .extern _rf_code_cs
+_rf_code_cs:
+        move.l  (a3), d0
+        lsl.l   #2, d0
+        move.l  d0, (a3)
+;       bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+
+        .align 2
+        .extern _rf_code_ln
+_rf_code_ln:
+        btst    #0, (a3)
+        beq     ln1
+        add.l   #1, (a3)
+ln1: ;  bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+
+*  OPT <OPTIONS> 
+* NAM  "68000 FIG-FORTH 1.0 DECEMBER 1982"
+*
+* FIG-FORTH  RELEASE 1.0  FOR THE 68000 PROCESSOR
+*
+* ALL PUBLICATIONS OF THE FORTH INTEREST GROUP
+* ARE PUBLIC DOMAIN. THEY MAY BE FURTHER
+* DISTRIBUTED BY THE INCLUSION OF THIS CREDIT
+* NOTICE:
+*
+* THIS PUBLICATION HAS BEEN MADE AVAILABLE BY THE
+*  FORTH INTEREST GROUP
+*  P.O. BOX 1105
+*  SAN CARLOS, CA 94070
+*
+* IMPLEMENTATION BY:
+*  KENNETH MANTEI
+*  DEPARTMENT OF CHEMISTRY
+*  CALIFORNIA STATE COLLEGE
+*  SAN BERNARDINO, CALIFORNIA 92407
+*
+***********************************************
+*
+* ADAPTED FOR THE MOTOROLA ASSEMBLER BY:
+*  ALBERT VAN DER HORST
+*  ARIE KATTENBERG
+*  FIG CHAPTER HOLLAND, WHICH IS
+*  A USER GROUP OF
+*  HCCH ( HOBBY COMPUTER CLUB HOLLAND)
+*  PETER NOY
+*  68000 USER GROUP OF HCCH
+*
+* >> WARNING :
+* THIS IS INTENDED TO BE A BYTE FOR BYTE RENDITION
+*  OF THE FORTH AS IMPLEMENTED BY KENNETH MANTEI
+*  THAT CONTAINS A FEW SUBSTANTIAL DEVIATIONS FROM THE
+*  FIG MODEL AS MENTIONED IN THE ACCOMPANYING NOTE
+*
+* SOME LINES ARE PRECEEDED WITH *F
+* THIS IS FOR THOSE WHO WANT TO FOLLOW THE
+*       FIG MODEL MORE CLOSELY THAN IN THE ORIGINAL
+*       68000 FIG FORTH 1.0
+*
+******************************************************
+
+*--------------------------------------------------------
+*
+* FORTH REGISTERS
+*
+* FORTH 68000 FORTH PRESERVATION RULES
+* ----- ---- ------------------------
+*  SP    A3   SHOULD BE USED ONLY AS DATA STACK
+*              ACROSS FORTH WORDS
+*              GROWS TOWARDS LOW MEMORY
+*  IP    A4   SHOULD BE PRESERVED ACROSS
+*              FORTH WORDS
+*  W     A5   WORD POINTER, LOADED VIA IP
+*  UP    A6   POINTS TO THE USER BLOCK
+*  RP    A7   RETURN STACK POINTER
+*              GROWS TOWARDS LOW MEMORY
+*
+* ALL FORTH REGISTERS SHOULD BE PRESERVED
+*       ACROSS CODE WORDS.
+*
+*--------------------------------------------------------
+*
+*	COMMENT CONVENTIONS:
+*
+*       =       MEANS   "IS EQUAL TO"
+*       <-      MEANS ASSIGNMENT
+*
+*       NAME    =       ADDRESS OF NAME
+*       (NAME)	=       CONTENTS AT NAME
+*       ((NAME))=       INDIRECT CONTENTS
+*
+*       CFA     =       ADDRESS OF CODE FIELD
+*       LFA     =       ADDRESS         OF LINK FIELD
+*       NFA     =       ADDRESS OF START OF NAME FIELD
+*       PFA     =       ADDRESS OF START OF PARAMETER FIELD
+*
+*       S1      =       ADDR OF 1ST WORD OF PARAMETER STACK
+*       S2      =       ADDR OF 2VD WORD OF PARAMETER STACK
+*       R1      =       ADDR OF 1ST WORD OF RETURN STACK
+*       R2      =       ADDR OF 2ND WORD OF RETURN STACK
+*       ( ABOVE STACK POSITIONS VALID BEFORE & AFTER EXECUTION
+*       OF ANY WORD, NOT DURING.)
+*
+*       LSB     =       LEAST SIGNIFICANT BIT
+*       MSB     =       MOST SIGNIFICANT BIT
+*       LB      =       LOW BYTE
+*       HB      =       HIGH BYTE
+*       LW      =       LOW WORD
+*       HW      =       HIGH WORD
+*       (MAY BE USED AS SUFFIX TO ABOVE NAMES)
+* PAGE
+*
+*--------------------------------------------------------
+*
+* NEXT, THE FORTH ADDRESS INTERPRETER
+* IS APPENDED TO EACH LOW LEVEL WORD
+*
+* PAGE
+*
+*  FORTH DICTIONARY
+*
+*
+* DICTIONARY FORMAT:
+*
+*	                              BYTE
+*       ADDRESS	NAME            CONTENTS
+*       ------- ----            --------
+*                               OPTIONAL 0 BYTE
+*                               WHEN LENGTH OF NAME FIELD WOULD
+*                               BE ODD
+*                                       ( MSB=1
+*                                       ( P=PRECEDENCE BIT
+*                                       ( S=SMUDGE BIT
+*       NFA     NAME FIELD      1PS<LEN> < NAME LENGTH
+*                               0<1CHAR> MSB=0, NAME'S 1ST CHAR
+*                               0<2CHAR>
+*                               ...
+*                               1<LCHAR> MSB=1, NAME'S LAST CHR
+*       LFA     LINK FIELD      <LINKHB> = PREVIOUS WORD'S NFA
+*                               <LINKLB>
+*LABEL: CFA     CODE FIELD      <CODEHB> = ADDR CPU CODE
+*                               <CODELB>
+*       PFA     PARAMETER       <1PARAM> 1ST PARAMETER BYTE
+*               FIELD           <2PARAM>
+*                                 ...
+*
+*
+*-------------------------------------------------------------
 
         .align 2
         .extern _rf_code_lit
@@ -540,38 +703,6 @@ _rf_code_stod:
         bra     stod2
 stod1:  move.l  #-1, -(a3)
 stod2: ;bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_cl
-_rf_code_cl:
-        moveq.l #4, d0
-        move.l  d0, -(a3)
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_cs
-_rf_code_cs:
-        move.l  (a3), d0
-        lsl.l   #2, d0
-        move.l  d0, (a3)
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_ln
-_rf_code_ln:
-        btst    #0, (a3)
-        beq     ln1
-        add.l   #1, (a3)
-ln1: ;  bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
