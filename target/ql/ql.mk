@@ -4,7 +4,7 @@
 export PATH := $(HOME)/xtc68/bin:$(PATH)
 
 QLMACHINE := sqlux
-QLQCCOPTS = -ansi
+QLQCCOPTS =
 QLROM := ah.rom
 QLSERIALBAUD := 4800
 QLSQLUXOPTS := --ramsize 128 --romdir roms/ql --sysrom $(QLROM) --device mdv1,ql --win_size 2x
@@ -94,7 +94,7 @@ ql/inst : ql/inst.o $(QLDEPS)
 
 	qld -ms -o $@ $^
 
-ql/inst.o : inst.c rf.h $(QLINC) | ql
+ql/inst.o : inst.c rf.h target/ql/ql.inc | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
@@ -102,7 +102,7 @@ ql/inst.ser : ql/inst | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
-ql/link.o : link.c rf.h $(QLINC) | ql
+ql/link.o : link.c rf.h target/ql/ql.inc | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
@@ -112,7 +112,7 @@ ql/%.bas.ser : target/ql/%.bas
 	printf '\032' >> $@.io
 	mv $@.io $@
 
-ql/main.o : main.c rf.h $(QLINC) inst.h | ql
+ql/main.o : main.c rf.h target/ql/ql.inc inst.h | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
@@ -169,7 +169,7 @@ ql/orterforth.ser : ql/orterforth | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
-ql/rf.o : rf.c rf.h $(QLINC) | ql
+ql/rf.o : rf.c rf.h target/ql/ql.inc | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
@@ -177,6 +177,6 @@ ql/rf_m68k.o : rf_m68k.s | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
-ql/system.o : target/ql/system.c rf.h $(QLINC) | ql
+ql/system.o : target/ql/system.c rf.h target/ql/ql.inc | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
