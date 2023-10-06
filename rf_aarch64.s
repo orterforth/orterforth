@@ -801,8 +801,8 @@ ln1:
   br    x0
 
   .align 2
-  .global rf_code_xt
-rf_code_xt:
+  .global rf_code_mon
+rf_code_mon:
   stp   x29, x30, [sp, -16]!
   bl    rf_start
   ldr   x1, =rf_fp

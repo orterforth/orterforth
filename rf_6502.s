@@ -78,9 +78,9 @@ _rf_code_cs:
 
 _rf_code_ln := _rf_next
 
-.export _rf_code_xt
+.export _rf_code_mon
 
-_rf_code_xt:
+_rf_code_mon:
        STY _rf_fp
        STY _rf_fp+1
        JSR _rf_start

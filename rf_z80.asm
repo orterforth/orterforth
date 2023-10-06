@@ -62,8 +62,8 @@ ENDIF
 PUBLIC _rf_code_ln              ;ln
 DEFC _rf_code_ln = _rf_next
 
-PUBLIC _rf_code_xt              ;xt
-_rf_code_xt:
+PUBLIC _rf_code_mon             ;MON
+_rf_code_mon:
         LD      HL,0
         LD      (_rf_fp),HL
         CALL    _rf_start

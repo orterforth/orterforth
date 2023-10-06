@@ -1046,11 +1046,11 @@ ln1:
   bx    r0
 
   .align 1
-  .global rf_code_xt
+  .global rf_code_mon
   .syntax unified
   .thumb_func
   .code 16
-rf_code_xt:
+rf_code_mon:
   push  {lr}
   bl    rf_start
   ldr   r1, =rf_fp

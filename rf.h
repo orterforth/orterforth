@@ -449,6 +449,6 @@ void rf_code_cs(void);
 
 void rf_code_ln(void);
 
-void rf_code_xt(void);
+void rf_code_mon(void);
 
 #endif /* RF_H_ */

@@ -95,11 +95,11 @@ LN1:    # JMP   APUSH
         MOV     RDX,RAX
         JMP     QWORD PTR [RDX]
 
-        .globl rf_code_xt
-        .globl _rf_code_xt
+        .globl rf_code_mon
+        .globl _rf_code_mon
         .p2align 4, 0x90
-rf_code_xt:
-_rf_code_xt:
+rf_code_mon:
+_rf_code_mon:
         PUSH    RBP
         MOV     RBP, RSP
         MOV     RAX,0

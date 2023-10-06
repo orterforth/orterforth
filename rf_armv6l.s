@@ -87,8 +87,8 @@ ln1:    STR     R0, [R8]
         BX      R0
 
         .p2align 2
-        .global rf_code_xt
-rf_code_xt:
+        .global rf_code_mon
+rf_code_mon:
         PUSH    {FP, LR}
         BL      rf_start
         LDR     R1, =rf_fp

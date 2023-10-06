@@ -677,8 +677,8 @@ _rf_code_douse
 DOUSER  LDD    2,X       gets offset to user's table
         ADDD   UP,PCR    add to users base address
         LBRA   PUSHD
-_rf_code_xt EXPORT
-_rf_code_xt
+_rf_code_mon EXPORT
+_rf_code_mon
         LDD    #0
         STD    _rf_fp+0,PCR
         LBSR   _rf_start

@@ -7,7 +7,7 @@ static rf_code_t codes[] = {
   rf_code_cs,
   rf_code_ln,
   0,
-  rf_code_xt,
+  rf_code_mon,
   rf_code_lit,
   rf_code_exec,
   rf_code_bran,

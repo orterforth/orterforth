@@ -577,8 +577,8 @@ ln1: ;  bra     _rf_next
         jmp     (a0)
 
         .align 2
-        .extern _rf_code_xt
-_rf_code_xt:
+        .extern _rf_code_mon
+_rf_code_mon:
         jsr     _rf_start
         move.l  #0, _rf_fp
         rts

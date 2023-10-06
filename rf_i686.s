@@ -103,10 +103,10 @@ LN1:    # JMP   APUSH
         MOV     EDX,EAX
         JMP     DWORD PTR [EDX]
 
-        .globl rf_code_xt
-        .globl _rf_code_xt
-rf_code_xt:
-_rf_code_xt:
+        .globl rf_code_mon
+        .globl _rf_code_mon
+rf_code_mon:
+_rf_code_mon:
         PUSH    EBP
         MOV     EBP, ESP
         MOV     EAX,0

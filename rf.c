@@ -1257,7 +1257,7 @@ void rf_code_bwrit(void)
 #endif
 
 #ifndef RF_TARGET_CODE_XT
-void rf_code_xt(void)
+void rf_code_mon(void)
 {
   RF_START;
   rf_fp = 0;
