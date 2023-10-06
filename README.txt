@@ -193,10 +193,6 @@ system-independent:
                          (ALIGNED is not part of this version
                          of fig-Forth.)
 
- xt ( -- )               Exits orterforth (and returns to the
-                         shell, BASIC prompt or equivalent).
-                         Used to exit the install process.
-
 
 BACKGROUND
 

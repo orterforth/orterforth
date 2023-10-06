@@ -293,7 +293,7 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cs", rf_code_cs },
   { "ln", rf_code_ln },
   { 0, 0 }, /* TODO remove this row */
-  { "xt", rf_code_xt },
+  { "MON", rf_code_xt },
   { "LIT", rf_code_lit },
   { "EXECUTE", rf_code_exec },
   { "BRANCH", rf_code_bran },

@@ -1315,7 +1315,7 @@ R> IN ! R> BLK ! ;S
 :EMPTY-BUFFERS FIRST LIMIT OVER - LIT 0 FILL ;S
 
 :QUIT  [ CURRENT @ @ 1+ LIT 88 TOGGLE EMPTY-BUFFERS
-       LIT 83 LOAD xt
+       LIT 83 LOAD MON
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 17 cs origin + @
        DUP CONTEXT ! CURRENT ! QUIT
 :X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
@@ -1448,5 +1448,4 @@ th , tl ,                       ( extra boot-up lits for trgt )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)
 CODE cs 1 cd HERE cl - !        ( multiply by cell size      *)
 CODE ln 2 cd HERE cl - !        ( align to cell size         *)
-CODE xt 4 cd HERE cl - !        ( exit                       *)
 ;S
