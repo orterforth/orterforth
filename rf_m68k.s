@@ -229,7 +229,37 @@ _rf_code_ustar:
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
+        .align 2
+        .extern _rf_code_uslas
+_rf_code_uslas:
+        move.l  (a3)+, d0
+        move.l  (a3)+, d1
+        move.l  (a3)+, d2
+        move.l  #0x80000000, d3
+        move.l  #0, d4
+        cmp.l   d0, d1
+        blo     umdiv1
+        move.l  #-1, d4
+        move.l  d4, d1
+        bra     umdiv3
+umdiv1: add.l   d2, d2
+        addx.l  d1, d1
+        bcs     umdiv4
+        cmp.l   d1, d0
+        bhi     umdiv2
+umdiv4: add.l   d3, d4
+        sub.l   d0, d1
+umdiv2: lsr.l   #1, d3
+        and.l   d3, d3
+        bne     umdiv1
+umdiv3: move.l  d1, -(a3)
+        move.l  d4, -(a3)
+;       bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+*
         .align 2
         .extern _rf_code_semis
 _rf_code_semis:
