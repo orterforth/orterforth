@@ -8,7 +8,13 @@ You will need:
         http://www.dilwyn.me.uk/c/index.html
 * There is no emulator build so you need a Sinclair QL
   (unexpanded)
-* and a SER2 serial cable to connect to the host system.
+* sQLux emulator https://github.com/SinclairQL/sQLux
+* a SER2 serial cable to connect to the host system.
+
+To install and run on sQLux, call:
+
+ make run TARGET=ql OPTION=assembly (for m68k assembly version)
+ make run TARGET=ql OPTION=default  (for C)
 
 To install and run on a physical machine, connect to your host
 system via RS-232 and call:
