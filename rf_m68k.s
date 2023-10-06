@@ -386,8 +386,7 @@ _rf_code_ustar:
         addx.l  d5, d2  ; add Ah*Bl*0x10000 to the partial result
 
         ;d2:d3 is now the result
-        move.l  d3, -(a3)
-        move.l  d2, -(a3)
+        movem.l d2-d3, -(a3)
 ;       bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
@@ -396,11 +395,9 @@ _rf_code_ustar:
         .align 2
         .extern _rf_code_uslas
 _rf_code_uslas:
-        move.l  (a3)+, d0
-        move.l  (a3)+, d1
-        move.l  (a3)+, d2
+        movem.l (a3)+, d0-d2
         move.l  #0x80000000, d3
-        move.l  #0, d4
+        moveq.l #0, d4
         cmp.l   d0, d1
         blo     umdiv1
         move.l  #-1, d4
@@ -724,7 +721,7 @@ _rf_code_cold:
         move.l  0x20(a0), a6    ; UP
         move.l  a6, _rf_up
         move.l  a6, a2          ; USER
-        move.l  #11, d0
+        moveq.l #11, d0
         lea.l   0x18(a0), a0
         bra     cold2
 cold1:  move.l  (a0)+, (a2)+
