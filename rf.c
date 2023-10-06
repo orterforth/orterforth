@@ -105,26 +105,6 @@ void rf_next(void)
 {
   RF_START;
   rf_w = (rf_code_t *) *(RF_IP_GET);
-#ifdef RF_TRACE
-  {
-    char *i = (char *) rf_w - RF_WORD_SIZE;
-    int rr = (RF_R0) - (char *) rf_rp;
-
-    while (rr--) {
-      putchar(32);
-    }
-
-    putchar(*(--i) & 0x7F);
-    while (!(*(--i) & 0x80)) {
-      /*putchar(*i)*/;
-    }
-    while (!(*(++i) & 0x80)) {
-      putchar(*i);
-    }
-    putchar(10);
-  }
-#endif
-
   RF_IP_INC;
   RF_JUMP(*rf_w);
 }
