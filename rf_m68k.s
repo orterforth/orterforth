@@ -172,8 +172,8 @@ ln1: ;  bra     _rf_next
 *
 * DICTIONARY FORMAT:
 *
-*	                              BYTE
-*       ADDRESS	NAME            CONTENTS
+*                               BYTE
+*       ADDRESS NAME            CONTENTS
 *       ------- ----            --------
 *                               OPTIONAL 0 BYTE
 *                               WHEN LENGTH OF NAME FIELD WOULD
@@ -199,7 +199,7 @@ ln1: ;  bra     _rf_next
 
         .align 2
         .extern _rf_code_lit
-_rf_code_lit:
+_rf_code_lit:           ; (S1) <- ((IP))
         move.l  (a4)+, -(a3)
 
         .align 2
@@ -208,24 +208,24 @@ _rf_next:
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
         .align 2
         .extern _rf_code_exec
 _rf_code_exec:
         move.l  (a3)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
         .align 2
         .extern _rf_code_bran
-_rf_code_bran:
+_rf_code_bran:          ; (IP) <- (IP) + ((IP))
         move.l  (a4), d0
         add.l   d0, a4
 ;       bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
         .align 2
         .extern _rf_code_zbran
 _rf_code_zbran:
@@ -236,15 +236,15 @@ _rf_code_zbran:
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
         .align 2
         .extern _rf_code_xloop
 _rf_code_xloop:
-        addq.l  #1, (a1)
-xloo2:  move.l  4(a1), d0
-        cmp.l   (a1), d0
-        bhi     xloo3
-        add.l   #4, a4
+        addq.l  #1, (a1) ; Increment current count
+xloo2:  move.l  4(a1), d0 ; Limit = current?
+        cmp.l   (a1), d0 ; Is better way?
+        bhi     xloo3   ; Branch if limit>current
+        add.l   #4, a4  ; Clean up and leave
         add.l   #8, a1
         bra     xloo4
 xloo3:  move.l  (a4), d0
@@ -253,7 +253,7 @@ xloo4: ;bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
         .align 2
         .extern _rf_code_xploo
 _rf_code_xploo:
@@ -271,7 +271,31 @@ _rf_code_xdo:
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
+        .align 2
+        .extern _rf_code_digit
+_rf_code_digit:
+        move.l  (a3)+, d1 ; Load base into D1
+        move.l  (a3), d0 ; Load ASCII into D2
+        sub.l   #$30, d0 ; '0'
+        bcs     BADDIG
+        cmp.l   #9, d0
+        ble     BASECK
+        cmp.l   #17, d0
+        blt     BADDIG
+	sub.l   #$07, d0
+*       DC.W    $0440   ; TO FORCE NON QUICK SUB
+*       DC.W    $0007   ;   FOLLOWING MANTEI CLOSELY 
+BASECK: cmp.l   d1, d0
+        bge     BADDIG
+        move.l  d0, (a3) ; Return binary on stack
+        move.l  #1, -(a3) ; & gooddigit flag
+        bra     DIGIT1
+BADDIG: move.l  #0, (a3)
+DIGIT1: move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+*
         .align 2
         .extern _rf_code_andd
 _rf_code_andd:
