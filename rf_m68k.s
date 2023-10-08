@@ -341,6 +341,37 @@ PFIN4:  move.l  (sp)+,a1
         jmp     (a0)
 *
         .align 2
+        .extern _rf_code_encl
+_rf_code_encl:
+        move.l  (a3)+,d0 ; Delimiter
+        move.l  (a3),a0 ; Text address
+        clr.w   d1
+        bra     ENCL2
+ENCL1:  add.l   #1,d1
+ENCL2:  cmp.b   0(a0,d1.l),d0
+        beq     ENCL1   ; Loop till nondelimit
+        move.l  d1,-(a3) ; Save N1
+ENCL3:  cmp.b   0(a0,d1.l),d0
+        beq     ENCL6
+        cmp.b   #0,0(a0,d1.l)
+	beq     ENCL4   ; ASCII 00
+        add.l   #1,d1
+        bra     ENCL3
+ENCL4:  cmp.l   (a3),d1 ; Just 00 ?
+        bne     ENCL5   ; Branch if not
+        add.l   #1,d1   ; Enclose 00
+        move.l  d1,-(a3) ; Save N2
+        bra     ENCL8
+ENCL5:  move.l  d1,-(a3) ; Save N2
+        bra     ENCL8
+ENCL6:  move.l  d1,-(a3) ; Save N2
+        add.l   #1,d1   ; Skip delimiter
+ENCL8:  move.l  d1,-(a3) ; Save N3
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
+        jmp     (a0)
+*
+        .align 2
         .extern _rf_code_andd
 _rf_code_andd:
         move.l  (a3)+, d0
