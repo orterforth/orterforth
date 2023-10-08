@@ -851,10 +851,10 @@ HERE 1+
          LATEST  40  TOGGLE  ;
 
 : VOCABULARY  ( CREATE VOCAB WITH 'V-HEAD' AT VOC INTERSECT. *) 
-       <BUILDS HERE cl BLANKS 81 C, cl 2 - ALLOT A0 C,
-       CURRENT  @  cl -  ,
+       <BUILDS 81 C, 20 C, HERE ln DP ! A0 HERE 1 - C!
+       CURRENT  @  2 ln -  ,
        HERE  VOC-LINK  @  ,  VOC-LINK  !
-       DOES>  cl +  CONTEXT  !  ;
+       DOES>  2 ln +  CONTEXT  !  ;
 VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *) 
 
 : DEFINITIONS        ( SET THE CONTEXT ALSO AS CURRENT VOCAB *)
@@ -882,7 +882,7 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
    38 cd cl  +ORIGIN  !  ( POINT COLD ENTRY TO HERE )
 38 cd HERE cl - !
-2 cs BYTE.IN FORTH 11 cs +ORIGIN !
+2 ln cl + BYTE.IN FORTH 11 cs +ORIGIN !
 0 BYTE.IN ABORT 12 cs +ORIGIN !
 
 
@@ -1277,7 +1277,7 @@ HERE             FENCE  !
 HERE    14 cs  +ORIGIN  !   ( COLD START FENCE )
 HERE    15 cs  +ORIGIN  !   ( COLD START DP )
 LATEST   6 cs  +ORIGIN  !   ( TOPMOST WORD )
-' FORTH 3 cs + 16 cs +ORIGIN !  ( COLD VOC-LINK )  ;S
+' FORTH 2 ln + 2 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
 ( START - PROTO INTERPRETER SOURCE                 orterforth )
 ( a simple proto-interpreter bootstraps the outer interpreter )
 :u cs user + R> DROP ;S :DP     LIT  9 u :BLK     LIT 11 u
