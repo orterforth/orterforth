@@ -372,6 +372,84 @@ ENCL8:  move.l  d1,-(a3) ; Save N3
         jmp     (a0)
 *
         .align 2
+        .extern _rf_code_cmove
+_rf_code_cmove:
+        move.l  (a3)+,d0
+        move.l  (a3)+,a2
+        move.l  (a3)+,a0
+        bra     MOVFW1
+MOVFWD: move.b  (a0)+,(a2)+
+MOVFW1: dbf     d0,MOVFWD
+;       bra     _rf_next
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
+        jmp     (a0)
+*
+        .align 2
+        .extern _rf_code_ustar
+_rf_code_ustar:
+        move.l  (a3)+,d0
+        move.l  (a3)+,d1
+        move.w  d0,d3
+        mulu.w  d1,d3
+        swap    d0
+        swap    d1
+        move.w  d0,d2
+        mulu.w  d1,d2
+        swap    d0
+        move.w  d0,d4
+        mulu.w  d1,d4
+        swap    d4
+        moveq   #0,d5
+        move.w  d4,d5
+        clr.w   d4
+        add.l   d4,d3
+        addx.l  d5,d2
+        swap    d0
+        swap    d1
+        move.w  d0,d4
+        mulu.w  d1,d4
+        swap    d4
+        moveq   #0,d5
+        move.w  d4,d5
+        clr.w   d4
+        add.l   d4,d3
+        addx.l  d5,d2
+        movem.l d2-d3,-(a3)
+;       bra     _rf_next
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
+        jmp     (a0)
+*
+        .align 2
+        .extern _rf_code_uslas
+_rf_code_uslas:
+        movem.l (a3)+,d0-d2
+        move.l  #0x80000000, d3
+        moveq.l #0,d4
+        cmp.l   d0,d1
+        blo     umdiv1
+        move.l  #-1,d4
+        move.l  d4,d1
+        bra     umdiv3
+umdiv1: add.l   d2,d2
+        addx.l  d1,d1
+        bcs     umdiv4
+        cmp.l   d1,d0
+        bhi     umdiv2
+umdiv4: add.l   d3,d4
+        sub.l   d0,d1
+umdiv2: lsr.l   #1,d3
+        and.l   d3,d3
+        bne     umdiv1
+umdiv3: move.l  d1,-(a3)
+        move.l  d4,-(a3)
+;       bra     _rf_next
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
+        jmp     (a0)
+*
+        .align 2
         .extern _rf_code_andd
 _rf_code_andd:
         move.l  (a3)+, d0
@@ -424,96 +502,6 @@ _rf_code_spsto:
         .extern _rf_code_rpsto
 _rf_code_rpsto:
         move.l  16(a6), a1
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_cmove
-_rf_code_cmove:
-        move.l  (a3)+, d0
-        move.l  (a3)+, a2
-        move.l  (a3)+, a0
-        bra     movfw1
-movfwd: move.b  (a0)+, (a2)+
-movfw1: dbf     d0, movfwd
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_ustar
-_rf_code_ustar:
-        move.l  (a3)+, d0
-        move.l  (a3)+, d1
-
-        move.w  d0, d3
-        mulu.w  d1, d3  ; d3.l is Al*Bl now
-
-        swap    d0
-        swap    d1
-        move.w  d0, d2
-        mulu.w  d1, d2  ; d2.l is Ah*Bh now
-
-        swap    d0
-        move.w  d0, d4
-        mulu.w  d1, d4  ; d4 is Al*Bh
-
-        swap    d4
-        moveq   #0, d5
-        move.w  d4, d5
-        clr.w   d4      ; d5:d4 is 0x0000:Nh:Nl:0x0000, where N is Al*Bh
-
-        add.l   d4, d3
-        addx.l  d5, d2  ; add Al*Bh*0x10000 to the partial result in d2:d3
-
-        swap    d0
-        swap    d1
-
-        move.w  d0, d4
-        mulu.w  d1, d4  ; d4 is Ah*Bl
-
-        swap    d4
-        moveq   #0, d5
-        move.w  d4, d5
-        clr.w   d4      ; d5:d4 is 0x0000:Nh:Nl:0x0000, where N is Ah*Bl
-
-        add.l   d4 ,d3
-
-        addx.l  d5, d2  ; add Ah*Bl*0x10000 to the partial result
-
-        ;d2:d3 is now the result
-        movem.l d2-d3, -(a3)
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-*
-        .align 2
-        .extern _rf_code_uslas
-_rf_code_uslas:
-        movem.l (a3)+, d0-d2
-        move.l  #0x80000000, d3
-        moveq.l #0, d4
-        cmp.l   d0, d1
-        blo     umdiv1
-        move.l  #-1, d4
-        move.l  d4, d1
-        bra     umdiv3
-umdiv1: add.l   d2, d2
-        addx.l  d1, d1
-        bcs     umdiv4
-        cmp.l   d1, d0
-        bhi     umdiv2
-umdiv4: add.l   d3, d4
-        sub.l   d0, d1
-umdiv2: lsr.l   #1, d3
-        and.l   d3, d3
-        bne     umdiv1
-umdiv3: move.l  d1, -(a3)
-        move.l  d4, -(a3)
 ;       bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
