@@ -56,7 +56,8 @@ _rf_code_cs:
         .align 2
         .extern _rf_code_ln
 _rf_code_ln:
-        btst    #0, (a3)
+        move.l  (a3), d0
+        btst    #0, d0
         beq     ln1
         add.l   #1, (a3)
 ln1: ;  bra     _rf_next
@@ -294,6 +295,49 @@ BASECK: cmp.l   d1, d0
 BADDIG: move.l  #0, (a3)
 DIGIT1: move.l  (a4)+, a5
         move.l  (a5)+, a0
+        jmp     (a0)
+*
+        .align 2
+        .extern _rf_code_pfind
+_rf_code_pfind:
+        move.l  a1,-(sp)
+        moveq   #1,d0   ; Shift count
+        moveq   #7,d5   ; Bit pointer
+        move.l  (a3)+,a1 ; Load trial NFA
+        move.l  (a3),a0 ; Fixed test ptr
+PFIN1:  move.l  a0,a2   ; Make work copy test ptr
+        move.b  (a1)+,d1 ; Read NFA lengthbyte
+        move.b  d1,d4   ; Make copy of NFA length
+        move.l  d4,d3   ; Make another copy
+        and.l   #31,d3  ; Mask to get count
+        add.l   a1,d3   ; Add count to NFA+1
+        add.l   #1,d3   ;  and find next even..	
+        and.l   #$FFFFFFFE,d3 ; Address is LFA
+        move.b  (a2)+,d6
+        eor.b   d6,d4   ; Compare length bytes
+        and.b   #63,d4  ; 6 lowest bits
+        bne     PFIN3   ; Branch if lengths differ
+PFIN2:  move.b  (a2)+,d2 ; Get ASCII text char
+        bclr    d5,d2   ; Ignore bit 7...
+        move.b  (a1)+,d6
+        eor.b   d6,d2   ; Compare NFA char
+        asl.b   d0,d2   ; Shift out bit 7 ...
+        bne     PFIN3   ; And branch if no match
+        bcc     PFIN2   ; or loop till last char
+        add.l   #8,d3   ; Calculate PFA of found word
+        move.l  d3,(a3) ; & leave on stack
+        and.l   #255,d1
+        move.l  d1,-(a3) ; Leave lengthbyte on stack
+        move.l  #1,-(a3) ; Leave found NFA flag
+        bra     PFIN4
+PFIN3:  move.l  d3,a2   ; Put LFA into address reg
+        move.l  (a2),a1 ; Load linked PFA
+        move.l  a1,d6   ; So can see if zeros
+        bne     PFIN1   ;  till exhaust dictionary
+        move.l  #0,(a3) ; Leave fail flag
+PFIN4:  move.l  (sp)+,a1
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
