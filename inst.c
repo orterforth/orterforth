@@ -273,7 +273,7 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 65
+#define RF_INST_CODE_LIT_LIST_SIZE 62
 
 /* run proto interpreter */
 static void rf_inst_code_compile(void)
@@ -292,8 +292,6 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cl", rf_code_cl },
   { "cs", rf_code_cs },
   { "ln", rf_code_ln },
-  { 0, 0 }, /* TODO remove this row */
-  { "MON", rf_code_mon },
   { "LIT", rf_code_lit },
   { "EXECUTE", rf_code_exec },
   { "BRANCH", rf_code_bran },
@@ -313,7 +311,6 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { 0, rf_code_key },
   { 0, rf_code_qterm },
   { 0, rf_code_cr },
-  { 0, rf_code_cr }, /* TODO remove this row */
   { "CMOVE", rf_code_cmove },
   { "U*", rf_code_ustar },
   { 0, rf_code_uslas },
@@ -354,12 +351,9 @@ static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "D/CHAR", rf_code_dchar },
   { "BLOCK-WRITE", rf_code_bwrit },
   { "BLOCK-READ", rf_code_bread },
+  { "MON", rf_code_mon },
   { "hld", rf_inst_code_hld },
-  /* TODO remove */
-  { 0, 0 },
-  /* proto interpreter */
   { "compile", rf_inst_code_compile },
-  /* code address lookup */
   { "cd", rf_inst_code_cd }
 };
 

@@ -1,13 +1,9 @@
 #include "rf.h"
 
-#define SIZE 61
-
 static rf_code_t codes[] = {
   rf_code_cl,
   rf_code_cs,
   rf_code_ln,
-  0,
-  rf_code_mon,
   rf_code_lit,
   rf_code_exec,
   rf_code_bran,
@@ -22,7 +18,6 @@ static rf_code_t codes[] = {
   rf_code_emit,
   rf_code_key,
   rf_code_qterm,
-  rf_code_cr,
   rf_code_cr,
   rf_code_cmove,
   rf_code_ustar,
@@ -63,7 +58,8 @@ static rf_code_t codes[] = {
   rf_code_stod,
   rf_code_dchar,
   rf_code_bwrit,
-  rf_code_bread
+  rf_code_bread,
+  rf_code_mon,
 };
 
 extern char rf_installed;
@@ -92,7 +88,7 @@ void rf_inst(void)
     cfa = (((rf_code_t *) p) + 1);
 
     /* find CFA code address in table */
-    for (i = 0; i < SIZE; i++) {
+    for (i = 0; i < 59; i++) {
       if (*cfa == here[i]) {
         /* update with code from this job */
         *cfa = codes[i];
@@ -105,11 +101,11 @@ void rf_inst(void)
   }
 
   /* code addresses in body */
-  *((rf_code_t *) (here[61])) = rf_code_docol;
-  *((rf_code_t *) (here[62])) = rf_code_docon;
-  *((rf_code_t *) (here[63])) = rf_code_dovar;
-  *((rf_code_t *) (here[64])) = rf_code_douse;
-  *((rf_code_t *) (here[65])) = rf_code_dodoe;
+  *((rf_code_t *) (here[59])) = rf_code_docol;
+  *((rf_code_t *) (here[60])) = rf_code_docon;
+  *((rf_code_t *) (here[61])) = rf_code_dovar;
+  *((rf_code_t *) (here[62])) = rf_code_douse;
+  *((rf_code_t *) (here[63])) = rf_code_dodoe;
 
   /* now flag as installed */
   rf_installed = 1;
