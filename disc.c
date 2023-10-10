@@ -93,18 +93,31 @@ static int pipe_count = 2;
 
 /* determines whether to log disc I/O to stderr */
 static char log = 1;
+static char log_io = 0;
+
+static void disc_log_input(char c)
+{
+  if (log_io) {
+    fputs("\033[0;33m", stderr);
+    log_io = 0;
+  }
+  fputc(c == RF_ASCII_EOT ? '\n' : c, stderr);
+}
+
+static void disc_log_output(char c)
+{
+  if (!log_io) {
+    fputs("\033[0m", stderr);
+    log_io = 1;
+  }
+  fputc(c == RF_ASCII_EOT ? '\n' : c, stderr);
+}
 
 /* write data to disc */
 static size_t disc_wr(char *off, size_t len)
 {
   char c;
   size_t i;
-
-  /* start/continue log line */
-  if (log) {
-    fputs("\033[0;33m", stderr);
-    fwrite(off, 1, len, stderr);
-  }
 
   for (i = 0; i < len; i++) {
     /* write byte */
@@ -113,12 +126,11 @@ static size_t disc_wr(char *off, size_t len)
       return i;
     }
 
-    if (c == RF_ASCII_EOT) {
-      /* finish log line */
-      if (log) {
-        fputs("\033[0m\n", stderr);
-      }
+    if (log) {
+      disc_log_input(c);
+    }
 
+    if (c == RF_ASCII_EOT) {
       /* for correct length */
       i++;
       break;
@@ -143,15 +155,14 @@ static size_t disc_rd(char *off, size_t len)
     }
     *(off++) = c;
 
+    if (log) {
+      disc_log_output(c);
+    }
+
     /* stop read once EOT read */
     if (c == RF_ASCII_EOT) {
       /* return correct length */
       i++;
-      /* log line */
-      if (log) {
-        fwrite(off - i, 1, i, stderr);
-        fputc('\n', stderr);
-      }
       break;
     }
   }
@@ -192,16 +203,18 @@ static size_t mux_wr(char *off, size_t len)
   for (i = 0; i < len; i++) {
     char c = off[i];
     if (c & 0x80) {
+      /* disc */
       c &= 0x7F;
       if (rf_persci_putc(c) == -1) {
         break;
       }
       j++;
-      /* TODO consistent log mechanism */
+
       if (log) {
-        fputc(c == RF_ASCII_EOT ? 0x0A : c, stderr);
+        disc_log_input(c);
       }
     } else {
+      /* console */
       mux_out_off[k++] = c;
     }
   }
@@ -228,6 +241,7 @@ static int serve(char *dr0, char *dr1)
     if (rf_persci_insert(1, dr1)) return 1;
   }
 
+  /* abstracted synchronous nonblocking I/O loop */
   return orter_io_pipe_loop(pipes, pipe_count);
 }
 
