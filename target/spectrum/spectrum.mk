@@ -100,40 +100,31 @@ SPECTRUMOPTION := $(OPTION)
 endif
 endif
 
-# minimal ROM-based
+# minimal ROM-based:
+# use ROM routines including Interface 1 ROM for RS232
 ifeq ($(SPECTRUMOPTION),assembly)
-# uses Interface 1 ROM for RS232
 SPECTRUMDEPS += spectrum/rf_z80.lib
-# TODO pragma not in libs
-SPECTRUMLIBS += -lspectrum/rf_z80 -pragma-redirect:fputc_cons=fputc_cons_rom_rst
-# ORIGIN
+SPECTRUMLIBS += -lspectrum/rf_z80
 SPECTRUMORIGIN := 0x8700
-# assembly system dependent code uses ROM routines
 SPECTRUMSYSTEM := target/spectrum/system.asm
 # superzazu emulator is minimal and launches no GUI
 # it can only be used if RS232 ROM calls are used
 SPECTRUMINSTMACHINE := superzazu
-# omit C code definitions
-SPECTRUMZCCOPTS += -DRF_ASSEMBLY
+SPECTRUMZCCOPTS += -DRF_ASSEMBLY -pragma-redirect:fputc_cons=fputc_cons_rom_rst
 endif
 
 # z88dk library based
 ifeq ($(SPECTRUMOPTION),assembly-z88dk)
 SPECTRUMDEPS += spectrum/rf_z80.lib
-# requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
-# ORIGIN higher, C code is larger as uses z88dk libs
 SPECTRUMORIGIN := 0x9080
-# omit C code definitions
 SPECTRUMZCCOPTS += -DRF_ASSEMBLY -DRF_ASSEMBLY_Z88DK
 endif
 
 # z88dk / pure C based
 ifeq ($(SPECTRUMOPTION),default)
 SPECTRUMDEPS += spectrum/rf.lib
-# requires z88dk RS232 library
 SPECTRUMLIBS += -lspectrum/rf -lrs232if1
-# ORIGIN higher, C code is larger as uses z88dk libs and pure C impl
 SPECTRUMORIGIN := 0x9C00
 endif
 
