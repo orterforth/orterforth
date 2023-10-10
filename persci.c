@@ -23,22 +23,24 @@ static FILE *files[4] = { 0, 0, 0, 0 };
 
 static uint8_t *discs[4] = { 0, 0, 0, 0 };
 
-static void validate_drive_no(int drive)
+static int validate_drive_no(int drive)
 {
   if (drive < 0 || drive > 3) {
     fprintf(stderr, "invalid drive number %d\n", drive);
-    exit(1);
+    return 1;
   }
+
+  return 0;
 }
 
-/* TODO return an exit code */
 int rf_persci_insert(int drive, char *filename)
 {
   FILE *ptr;
 
   /* 0-3 only */
-  /* TODO exit code */
-  validate_drive_no(drive);
+  if (validate_drive_no(drive)) {
+    return 1;
+  }
 
   /* disc must be not already inserted */
   ptr = files[drive];
