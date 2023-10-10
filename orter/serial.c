@@ -155,8 +155,10 @@ int orter_serial_open(char *name, int baud)
 #endif
     case 115200: br = B115200; break;
     case 230400: br = B230400; break;
-    /* TODO don't use perror, report baud rate */
-    default: perror("invalid baud rate"); return -1; break;
+    default:
+    fprintf(stderr, "invalid baud rate: %d\n", baud);
+    return -1;
+    break;
   }
   if (cfsetispeed(&serial_attr, br)) {
     perror("serial cfsetispeed failed");
