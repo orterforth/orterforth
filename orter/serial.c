@@ -231,12 +231,6 @@ static size_t in_rd(char *off, size_t len)
     wai_timer = time(0) + wai_wait;
   }
 
-  /* no changes */
-  /* TODO is this worth it */
-  if (!onlcrx && !odelbs) {
-    return size;
-  }
-
   /* apply changes */
   for (n = 0; n < size; n++) {
 
