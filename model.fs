@@ -531,7 +531,7 @@ DECIMAL     ;S
 : :                  ( CREATE NEW COLON-DEFINITION UNTIL ';' *)
                     ?EXEC !CSP CURRENT   @         CONTEXT    !
                 CREATE  ]
-[ 48 cd ] LITERAL HERE cl MINUS + ! ; IMMEDIATE
+[ 48 cd ] LITERAL HERE [ -1 cs ] LITERAL + ! ; IMMEDIATE
 
 
 
@@ -545,15 +545,15 @@ DECIMAL     ;S
 (  CONSTANT,  VARIABLE, USER                      WFR-79MAR30 )
 : CONSTANT              ( WORD WHICH LATER CREATES CONSTANTS *)
                       CREATE  SMUDGE  ,
-[ 49 cd ] LITERAL HERE cl DUP + MINUS + ! ;
+[ 49 cd ] LITERAL HERE [ -2 cs ] LITERAL + ! ;
 
 : VARIABLE              ( WORD WHICH LATER CREATES VARIABLES *)
      CONSTANT
-[ 50 cd ] LITERAL HERE cl DUP + MINUS + ! ;
+[ 50 cd ] LITERAL HERE [ -2 cs ] LITERAL + ! ;
 
 : USER                                ( CREATE USER VARIABLE *)
      CONSTANT
-[ 51 cd ] LITERAL HERE cl DUP + MINUS + ! ;
+[ 51 cd ] LITERAL HERE [ -2 cs ] LITERAL + ! ;
 
 
 
