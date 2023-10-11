@@ -1271,15 +1271,16 @@ STOD1:  @B      DPUSH
         LDM     R6!, {R3}
         LDR     R0, [R3]
         BX      R0
-  .align 1
-  .global rf_code_mon
-  .syntax unified
-  .thumb_func
-  .code 16
+
+        .align 1
+        .global rf_code_mon
+        .syntax unified
+        .thumb_func
+        .code 16
 rf_code_mon:
-  PUSH  {lr}
-  bl    rf_start
-  LDR   R1, =rf_fp
-  MOVS  R0, #0
-  STR   R0, [R1]
-  POP   {pc}
+        PUSH    {LR}
+        BL      rf_start
+        LDR     R1, =rf_fp
+        MOVS    R0, #0
+        STR     R0, [R1]
+        POP     {PC}
