@@ -52,7 +52,7 @@ _rf_code_key
 
 _rf_code_qterm EXPORT
 _rf_code_qterm
-        CLRD
+        LDD    #0
         PSHU   D
         JSR    $8006
         CMPA   #$03
