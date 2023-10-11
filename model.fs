@@ -1404,7 +1404,7 @@ CODE R/W
 
 1 installed C!                  ( installed flag = 1          )
 
-HERE 66 cs ALLOT                ( make room for link table    )
+HERE 64 cs ALLOT                ( make room for link table    )
 -->
 ( CREATE LINK TABLE                                orterforth )
 : link                          ( --                          )
@@ -1447,5 +1447,5 @@ th , tl ,                       ( extra boot-up lits for trgt )
 ( additional words                                            )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)
 CODE cs 1 cd HERE cl - !        ( multiply by cell size      *)
-CODE ln 2 cd HERE cl - !        ( align to cell size         *)
+CODE ln 2 cd HERE cl - !        ( align as CPU requires      *)
 ;S
