@@ -458,7 +458,7 @@ static void rf_inst_load(void)
   origin[13] = 0;
   origin[15] = (uintptr_t) *rf_inst_dp;
   origin[17] = (uintptr_t) &rf_inst_vocabulary;
-  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_find("inst", 4)) + 1);
+  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
   /* trampoline may require SP init (e.g., i686 stack frame copy) */
   rf_sp = (uintptr_t *) RF_S0;
   rf_fp = rf_code_cold;
