@@ -1,14 +1,13 @@
 Building for the Sinclair QL
 ============================
 
-You will need:
+You will need some of:
 
 * xtc68 https://github.com/stronnag/xtc68
 * C68 runtime binary distribution
         http://www.dilwyn.me.uk/c/index.html
-* There is no emulator build so you need a Sinclair QL
-  (unexpanded)
 * sQLux emulator https://github.com/SinclairQL/sQLux
+* Sinclair QL (unexpanded)
 * a SER2 serial cable to connect to the host system.
 
 To install and run on sQLux, call:
