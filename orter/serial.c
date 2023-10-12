@@ -50,7 +50,9 @@ static char           eof = 0;
 
 /* buffers */
 static orter_io_pipe_t in;
+static orter_io_pipe_t in2;
 static orter_io_pipe_t out;
+static orter_io_pipe_t out2;
 
 static void set_attr(struct termios *attr)
 {
@@ -210,47 +212,6 @@ int orter_serial_close(void)
   return 0;
 }
 
-static size_t in_rd(char *off, size_t len)
-{
-  char c;
-  size_t n;
-  size_t size;
-
-  /* read from stdin */  
-  if (delay) {
-    size = orter_io_fd_rd(0, off, 1);
-    usleep(delay);
-  } else {
-    size = orter_io_fd_rd(0, off, len);
-  }
-
-  /* start EOF timer */
-  /* TODO eof flag should be local to pipe struct */
-  if (!eof && orter_io_eof) {
-    eof = 1;
-    wai_timer = time(0) + wai_wait;
-  }
-
-  /* apply changes */
-  for (n = 0; n < size; n++) {
-
-    /* read char */
-    c = off[n];
-
-    /* onlcrx */
-    if (c == 10 && onlcrx) {
-      off[n] = 13;
-    }
-
-    /* odelbs */
-    if (c == 127 && odelbs) {
-      off[n] = 8;
-    }
-  }
-
-  return size;
-}
-
 static void restore(void)
 {
   /* serial port */
@@ -262,25 +223,6 @@ static void restore(void)
   if (orter_io_std_close()) {
     perror("stdin/stdout close failed");
   }
-}
-
-static size_t orter_serial_rd(char *off, size_t len)
-{
-  size_t size = orter_io_fd_rd(orter_serial_fd, off, len);
-
-  /* test for ACK */
-  if (ack) {
-    size_t i;
-    for (i = 0; i < size; i++) {
-      if (off[i] == 0x06) {
-        orter_io_finished = 1;
-        orter_io_exit = 0;
-        break;
-      }
-    }
-  }
-
-  return size;
 }
 
 /* usage message */
@@ -352,6 +294,79 @@ static void opts(int argc, char **argv)
   }
 }
 
+void process(void)
+{
+  size_t n;
+  char c;
+
+  /* move data */
+  if (in.len && !in2.len) {
+    if (delay) {
+      memcpy(in2.off, in.off, 1);
+      in2.len = 1;
+      in.off++;
+      in.len--;
+      usleep(delay);
+    } else {
+      memcpy(in2.off, in.off, in.len);
+      in2.len = in.len;
+      in.off = in.buf;
+      in.len = 0;
+    }
+  }
+  if (out.len && !out2.len) {
+    memcpy(out2.off, out.off, out.len);
+    out2.len = out.len;
+    out.off = out.buf;
+    out.len = 0;
+  }
+
+  /* start EOF timer */
+  /* TODO eof flag should be local to pipe struct */
+  if (!eof && orter_io_eof) {
+    eof = 1;
+    wai_timer = time(0) + wai_wait;
+  }
+
+  /* apply changes */
+  for (n = 0; n < in2.len; n++) {
+
+    /* read char */
+    c = in2.off[n];
+
+    /* onlcrx */
+    if (c == 10 && onlcrx) {
+      in2.off[n] = 13;
+    }
+
+    /* odelbs */
+    if (c == 127 && odelbs) {
+      in2.off[n] = 8;
+    }
+  }
+
+  /* test for ACK */
+  if (ack) {
+    size_t i;
+    for (i = 0; i < out2.len; i++) {
+      if (out2.off[i] == 0x06) {
+        orter_io_finished = 1;
+        orter_io_exit = 0;
+        break;
+      }
+    }
+  }
+
+  /* terminate after EOF */
+  /* immediately or after timer */
+  if (eof && !ack) {
+    if (!wai || time(0) >= wai_timer) {
+      orter_io_finished = 1;
+      orter_io_exit = 0;
+    }
+  }
+}
+
 int orter_serial(int argc, char **argv)
 {
   /* exit code */
@@ -386,8 +401,10 @@ int orter_serial(int argc, char **argv)
   }
 
   /* set up pipes */
-  orter_io_pipe_init(&in, 0, in_rd, 0, orter_serial_fd);
-  orter_io_pipe_init(&out, orter_serial_fd, orter_serial_rd, 0, 1);
+  orter_io_pipe_init(&in, 0, 0, 0, -1);
+  orter_io_pipe_init(&in2, -1, 0, 0, orter_serial_fd);
+  orter_io_pipe_init(&out, orter_serial_fd, 0, 0, -1);
+  orter_io_pipe_init(&out2, -1, 0, 0, 1);
 
   while (!orter_io_finished) {
 
@@ -398,7 +415,9 @@ int orter_serial(int argc, char **argv)
     if (!eof) {
       orter_io_pipe_fdset(&in);
     }
+    orter_io_pipe_fdset(&in2);
     orter_io_pipe_fdset(&out);
+    orter_io_pipe_fdset(&out2);
 
     /* select */
     if (orter_io_select() < 0) {
@@ -428,21 +447,21 @@ int orter_serial(int argc, char **argv)
       return exit;
     }
 
-    /* stdin to serial */
+    /* stdin */
     orter_io_pipe_move(&in);
-    /* serial to stdout */
+    /* serial out */
+    orter_io_pipe_move(&in2);
+    /* serial in */
     orter_io_pipe_move(&out);
+    /* stdout */
+    orter_io_pipe_move(&out2);
 
-    /* terminate after EOF */
-    /* immediately or after timer */
-    if (eof && !ack) {
-      if (!wai || time(0) >= wai_timer) {
-        break;
-      }
-    }
+    /* all postprocessing happens after reads/writes */
+    process();
   }
 
   /* done */
   restore();
   return orter_io_exit;
 }
+
