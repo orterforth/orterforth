@@ -19,7 +19,7 @@ To install and run on sQLux, call:
 To install and run on a physical machine, connect to your host
 system via RS-232 and call:
 
- make ql-load-serial
+ make run TARGET=ql QLMACHINE=real
 
 Follow the instructions to load the installer. When install is
 complete, you will need to reset the QL and follow further

@@ -46,37 +46,40 @@ ql-hw : ql/hw
 
 	@sqlux $(QLSQLUXOPTS) --speed 1.0 --boot_cmd 'EXEC_W "mdv1_hw"'
 
-.PHONY : ql-load-serial
-ql-load-serial : ql/loader.ser ql/orterforth.bin.ser ql/orterforth.ser | $(DISC) $(ORTER)
+ifeq ($(QLMACHINE),real)
+QLRUNDEPS := ql/loader.bas.ser ql/orterforth.bin.ser ql/orterforth.ser
+endif
+ifeq ($(QLMACHINE),sqlux)
+QLRUNDEPS := ql/orterforth.bin ql/orterforth
+endif
 
+.PHONY : ql-run
+ql-run : $(QLRUNDEPS) | $(DISC) roms/ql/$(QLROM) $(DR0) $(DR1)
+
+ifeq ($(QLMACHINE),real)
 	@$(PROMPT) "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
 
 	@echo "* Loading loader..."
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.ser
+	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.bas.ser
 	@sleep 3
 
 	@echo "* Loading install..."
-	@sleep 1
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.bin.ser
 	@sleep 3
 
 	@echo "* Loading job..."
-	@sleep 1
 	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.ser
 	@sleep 3
 
 	@echo "* Starting disc..."
-	@touch data.img
-	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.img data.img
+	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) $(DR0) $(DR1)
+endif
 
-.PHONY : ql-run
-ql-run : ql/orterforth.bin ql/orterforth | roms/ql/$(QLROM) $(DR0) $(DR1)
-
+ifeq ($(QLMACHINE),sqlux)
 	@$(STARTDISCPTY) $(DR0) $(DR1)
-
 	@sqlux $(QLSQLUXOPTS) --speed 1.0 --ser2 $(SERIALPTY) --boot_cmd 'PRINT RESPR(RESPR(0)-$(QLORIGIN)):LBYTES "mdv1_orterforth.bin",$(QLORIGIN):EXEC_W "mdv1_orterforth"'
-
 	@$(STOPDISC)
+endif
 
 ql/hw.ser : ql/hw
 
