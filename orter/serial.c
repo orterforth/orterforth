@@ -53,6 +53,12 @@ static orter_io_pipe_t in;
 static orter_io_pipe_t in2;
 static orter_io_pipe_t out;
 static orter_io_pipe_t out2;
+orter_io_pipe_t *pipes[4] = {
+    &in,
+    &in2,
+    &out,
+    &out2
+};
 
 static void set_attr(struct termios *attr)
 {
@@ -294,31 +300,79 @@ static void opts(int argc, char **argv)
   }
 }
 
+/* space left in buffer */
+size_t buf_left(orter_io_pipe_t *buf)
+{
+  return 256L - (buf->off - buf->buf) - buf->len;
+}
+
+int buf_get(orter_io_pipe_t *buf)
+{
+  int b;
+
+  /* empty */
+  if (!buf->len) {
+    return -1;
+  }
+
+  /* read byte */
+  b = *(buf->off);
+  buf->off++;
+  buf->len--;
+
+  /* reset ptr */
+  if (!buf->len) {
+    buf->off = buf->buf;
+  }
+
+  return b;
+}
+
+int buf_put(orter_io_pipe_t *buf, char b)
+{
+  /* full */
+  if (!buf_left(buf)) {
+    return -1;
+  }
+
+  /* write byte */
+  *(buf->off + buf->len) = b;
+  buf->len++;
+
+  return b;
+}
+
 void process(void)
 {
-  size_t n;
-  char c;
+  int c;
 
-  /* move data */
-  if (in.len && !in2.len) {
+  /* stdin to serial */
+  while (in.len && buf_left(&in2)) {
+    c = buf_get(&in);
+    /* -o onlcrx */
+    if (c == 10 && onlcrx) {
+      c = 13;
+    }
+    /* -o odelbs */
+    if (c == 127 && odelbs) {
+      c = 8;
+    }
+    buf_put(&in2, c);
     if (delay) {
-      memcpy(in2.off, in.off, 1);
-      in2.len = 1;
-      in.off++;
-      in.len--;
       usleep(delay);
-    } else {
-      memcpy(in2.off, in.off, in.len);
-      in2.len = in.len;
-      in.off = in.buf;
-      in.len = 0;
+      break;
     }
   }
-  if (out.len && !out2.len) {
-    memcpy(out2.off, out.off, out.len);
-    out2.len = out.len;
-    out.off = out.buf;
-    out.len = 0;
+
+  /* serial to stdout */
+  while (out.len && buf_left(&out2)) {
+    c = buf_get(&out);
+    /* -a */
+    if (c == 6 && ack) {
+      orter_io_finished = 1;
+      orter_io_exit = 0;
+    }
+    buf_put(&out2, c);
   }
 
   /* start EOF timer */
@@ -326,35 +380,6 @@ void process(void)
   if (!eof && orter_io_eof) {
     eof = 1;
     wai_timer = time(0) + wai_wait;
-  }
-
-  /* apply changes */
-  for (n = 0; n < in2.len; n++) {
-
-    /* read char */
-    c = in2.off[n];
-
-    /* onlcrx */
-    if (c == 10 && onlcrx) {
-      in2.off[n] = 13;
-    }
-
-    /* odelbs */
-    if (c == 127 && odelbs) {
-      in2.off[n] = 8;
-    }
-  }
-
-  /* test for ACK */
-  if (ack) {
-    size_t i;
-    for (i = 0; i < out2.len; i++) {
-      if (out2.off[i] == 0x06) {
-        orter_io_finished = 1;
-        orter_io_exit = 0;
-        break;
-      }
-    }
   }
 
   /* terminate after EOF */
@@ -401,11 +426,13 @@ int orter_serial(int argc, char **argv)
   }
 
   /* set up pipes */
-  orter_io_pipe_init(&in, 0, 0, 0, -1);
-  orter_io_pipe_init(&in2, -1, 0, 0, orter_serial_fd);
-  orter_io_pipe_init(&out, orter_serial_fd, 0, 0, -1);
-  orter_io_pipe_init(&out2, -1, 0, 0, 1);
+  orter_io_pipe_read_init(&in, 0);
+  orter_io_pipe_write_init(&in2, orter_serial_fd);
+  orter_io_pipe_read_init(&out, orter_serial_fd);
+  orter_io_pipe_write_init(&out2, 1);
 
+  /* TODO fix orter_io_eof issue, replace with orter_io_pipe_loop */
+  /* also need to allow for wait - process() should control orter_io_finished */
   while (!orter_io_finished) {
 
     /* init fd sets */

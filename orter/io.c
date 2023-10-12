@@ -94,6 +94,7 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
   }
 
   /* mark EOF */
+  /* TODO make this a flag on pipe; use ssize_t with reversed semantics for -1 */
   if (n == 0 && !orter_io_eof) {
     orter_io_eof = 1;
   }
@@ -203,9 +204,11 @@ static void bufread(int in, orter_io_rdwr_t rd, char *buf, char **offset, size_t
   /* read bytes and initialise buffer */
   if (rd) {
     n = rd(buf, 256);
-  } else {
+  } else if (in != -1) {
     /* no fp provided, use fd */
     n = orter_io_fd_rd(in, buf, 256);
+  } else {
+    return;
   }
   *offset = buf;
   *pending = n;
@@ -223,9 +226,11 @@ static void bufwrite(int out, orter_io_rdwr_t wr, char *buf, char **offset, size
   /* write bytes and advance pointers */
   if (wr) {
     n = wr(*offset, *pending);
-  } else {
+  } else if (out != -1) {
     /* no fp provided, use fd */
     n = orter_io_fd_wr(out, *offset, *pending);
+  } else {
+    return;
   }
   *offset += n;
   *pending -= n;
@@ -278,6 +283,16 @@ void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter
   pipe->len = 0;
   pipe->wr = wr;
   pipe->out = out;
+}
+
+void orter_io_pipe_read_init(orter_io_pipe_t *pipe, int in)
+{
+  orter_io_pipe_init(pipe, in, 0, 0, -1);
+}
+
+void orter_io_pipe_write_init(orter_io_pipe_t *pipe, int out)
+{
+  orter_io_pipe_init(pipe, -1, 0, 0, out);
 }
 
 void orter_io_pipe_move(orter_io_pipe_t *pipe)
@@ -353,7 +368,7 @@ int orter_io_select(void)
 }
 
 /* loop to operate pipes */
-int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num)
+int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
 {
   int i;
 
@@ -362,6 +377,8 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num)
 
   /* main loop */
   orter_io_finished = 0;
+  /* TODO don't terminate on orter_io_eof */
+  /* TODO put eof flags on source/bufs instead */
   while (!orter_io_finished && !orter_io_eof) {
 
     /* init fd sets */
@@ -380,6 +397,11 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num)
     /* move data along pipes */
     for (i = 0; i < num; i++) {
       orter_io_pipe_move(pipes[i]);
+    }
+
+    /* process data */
+    if (process) {
+      process();
     }
   }
 

@@ -64,6 +64,12 @@ size_t orter_io_buf_wr(char *off, size_t len, char *buf, char **offset, size_t *
 /* set up pipe */
 void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter_io_rdwr_t wr, int out);
 
+/* set up pipe source */
+void orter_io_pipe_read_init(orter_io_pipe_t *pipe, int in);
+
+/* set up pipe sink */
+void orter_io_pipe_write_init(orter_io_pipe_t *pipe, int out);
+
 /* add to fd sets based on buffer state */
 void orter_io_pipe_fdset(orter_io_pipe_t *pipe);
 
@@ -77,7 +83,7 @@ void orter_io_select_zero(void);
 int orter_io_select(void);
 
 /* operate pipes until end or interrupted */
-int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num);
+int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void));
 
 /* write 16 bit BE int */
 void orter_io_put_16be(uint16_t u);
