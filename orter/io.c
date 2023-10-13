@@ -283,24 +283,22 @@ int orter_io_pipe_put(orter_io_pipe_t *buf, char b)
   return b;
 }
 
-void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter_io_rdwr_t wr, int out)
+void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, int out)
 {
   pipe->in = in;
-  pipe->rd = rd;
   pipe->off = pipe->buf;
   pipe->len = 0;
-  pipe->wr = wr;
   pipe->out = out;
 }
 
 void orter_io_pipe_read_init(orter_io_pipe_t *pipe, int in)
 {
-  orter_io_pipe_init(pipe, in, 0, 0, -1);
+  orter_io_pipe_init(pipe, in, -1);
 }
 
 void orter_io_pipe_write_init(orter_io_pipe_t *pipe, int out)
 {
-  orter_io_pipe_init(pipe, -1, 0, 0, out);
+  orter_io_pipe_init(pipe, -1, out);
 }
 
 void orter_io_pipe_move(orter_io_pipe_t *pipe)

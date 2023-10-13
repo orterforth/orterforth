@@ -65,7 +65,7 @@ int orter_io_pipe_get(orter_io_pipe_t *buf);
 int orter_io_pipe_put(orter_io_pipe_t *buf, char b);
 
 /* set up pipe */
-void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter_io_rdwr_t wr, int out);
+void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, int out);
 
 /* set up pipe source */
 void orter_io_pipe_read_init(orter_io_pipe_t *pipe, int in);

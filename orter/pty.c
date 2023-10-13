@@ -103,8 +103,8 @@ int orter_pty(char *name)
         orter_io_std_close();
         return ret;
     }
-    orter_io_pipe_init(&pipes[0], 0, 0, 0, orter_pty_master_fd);
-    orter_io_pipe_init(&pipes[1], orter_pty_master_fd, 0, 0, 1);
+    orter_io_pipe_init(&pipes[0], 0, orter_pty_master_fd);
+    orter_io_pipe_init(&pipes[1], orter_pty_master_fd, 1);
 
     /* run */
     p[0] = &pipes[0];

@@ -281,7 +281,7 @@ static int disc_mux(int argc, char **argv)
   /* serial in to disc (and stdout buffer) */
   orter_io_pipe_read_init(&in, orter_serial_fd);
   /* stdin to serial out */
-  orter_io_pipe_init(&mux_in, 0, 0, 0, orter_serial_fd);
+  orter_io_pipe_init(&mux_in, 0, orter_serial_fd);
   /* disc read to serial out */
   orter_io_pipe_write_init(&out, orter_serial_fd);
   /* stdout buffer to stdout */
