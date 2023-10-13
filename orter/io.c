@@ -95,6 +95,7 @@ size_t orter_io_fd_rd(int fd, char *off, size_t len)
 
   /* mark EOF */
   /* TODO make this a flag on pipe; use ssize_t with reversed semantics for -1 */
+  /* TODO set in fd to -1 if this comes to zero */
   if (n == 0 && !orter_io_eof) {
     orter_io_eof = 1;
   }
@@ -241,38 +242,45 @@ static void bufwrite(int out, orter_io_rdwr_t wr, char *buf, char **offset, size
   }
 }
 
-size_t orter_io_buf_rd(char *from_buf, char **from_off, size_t *from_len, char *off, size_t len)
+size_t orter_io_pipe_left(orter_io_pipe_t *buf)
 {
-  /* number of bytes to read */
-  size_t s = (*from_len > len) ? len : *from_len;
-
-  /* read bytes from buffer */
-  memcpy(off, *from_off, s);
-  *from_off += s;
-  *from_len -= s;
-
-  /* reset buffer */
-  if (!*from_len) {
-    *from_off = from_buf;
-    *from_len = 0;
-  }
-
-  return s;
+  return 256L - (buf->off - buf->buf) - buf->len;
 }
 
-size_t orter_io_buf_wr(char *off, size_t len, char *buf, char **offset, size_t *pending)
+int orter_io_pipe_get(orter_io_pipe_t *buf)
 {
-  /* need empty buffer */
-  if (*pending) {
-    return 0;
+  int b;
+
+  /* empty */
+  if (!buf->len) {
+    return -1;
   }
 
-  /* copy into buffer */
-  memcpy(buf, off, len);
-  *offset = buf;
-  *pending = len;
+  /* read byte */
+  b = *(buf->off);
+  buf->off++;
+  buf->len--;
 
-  return len;
+  /* reset ptr */
+  if (!buf->len) {
+    buf->off = buf->buf;
+  }
+
+  return b;
+}
+
+int orter_io_pipe_put(orter_io_pipe_t *buf, char b)
+{
+  /* full */
+  if (!orter_io_pipe_left(buf)) {
+    return -1;
+  }
+
+  /* write byte */
+  *(buf->off + buf->len) = b;
+  buf->len++;
+
+  return b;
 }
 
 void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, orter_io_rdwr_t rd, orter_io_rdwr_t wr, int out)

@@ -109,7 +109,7 @@ int orter_pty(char *name)
     /* run */
     p[0] = &pipes[0];
     p[1] = &pipes[1];
-    ret = orter_io_pipe_loop(p, 2);
+    ret = orter_io_pipe_loop(p, 2, 0);
 
     /* finally */
     orter_pty_close();

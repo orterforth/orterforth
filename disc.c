@@ -113,125 +113,8 @@ static void disc_log_output(char c)
   fputc(c == RF_ASCII_EOT ? '\n' : c, stderr);
 }
 
-/* write data to disc */
-static size_t disc_wr(char *off, size_t len)
-{
-  char c;
-  size_t i;
-
-  for (i = 0; i < len; i++) {
-    /* write byte */
-    c = *(off++);
-    if (rf_persci_putc(c) == -1) {
-      return i;
-    }
-
-    if (log) {
-      disc_log_input(c);
-    }
-
-    if (c == RF_ASCII_EOT) {
-      /* for correct length */
-      i++;
-      break;
-    }
-  }
-
-  /* return length */
-  return i;
-}
-
-/* read data from disc */
-static size_t disc_rd(char *off, size_t len)
-{
-  int c;
-  size_t i;
-
-  for (i = 0; i < len; i++) {
-    /* read byte */
-    c = rf_persci_getc();
-    if (c == -1) {
-      break;
-    }
-    *(off++) = c;
-
-    if (log) {
-      disc_log_output(c);
-    }
-
-    /* stop read once EOT read */
-    if (c == RF_ASCII_EOT) {
-      /* return correct length */
-      i++;
-      break;
-    }
-  }
-
-  return i;
-}
-
-static size_t disc_rd_mux(char *off, size_t len)
-{
-  size_t i, j;
-
-  /* read from disc */
-  i = disc_rd(off, len);
-
-  /* set bit 7 */
-  for (j = 0; j < i; j++) {
-    off[j] |= 0x80;
-  }
-
-  return i;
-}
-
-static char mux_out_buf[256];
-static char *mux_out_off = mux_out_buf;
-static size_t mux_out_len;
-
-/* serial data to disc and buffer for stdout */
-static size_t mux_wr(char *off, size_t len)
-{
-  size_t i, j = 0, k = 0;
-
-  /* don't read if mux out buff full */
-  if (mux_out_len) {
-    return 0;
-  }
-
-  /* mux between disc and mux_out_buf */
-  for (i = 0; i < len; i++) {
-    char c = off[i];
-    if (c & 0x80) {
-      /* disc */
-      c &= 0x7F;
-      if (rf_persci_putc(c) == -1) {
-        break;
-      }
-      j++;
-
-      if (log) {
-        disc_log_input(c);
-      }
-    } else {
-      /* console */
-      mux_out_off[k++] = c;
-    }
-  }
-
-  /* record/return both lengths */
-  mux_out_len = k;
-  return j + k;
-}
-
-/* read from mux console buffer */
-static size_t mux_out_rd(char *off, size_t len)
-{
-  return orter_io_buf_rd(mux_out_buf, &mux_out_off, &mux_out_len, off, len);
-}
-
 /* Server loop */
-static int serve(char *dr0, char *dr1)
+static int serve(char *dr0, char *dr1, void (*process)(void))
 {
   /* insert DR0 and DR1 if present */
   if (dr0) {
@@ -242,17 +125,74 @@ static int serve(char *dr0, char *dr1)
   }
 
   /* abstracted synchronous nonblocking I/O loop */
-  return orter_io_pipe_loop(pipes, pipe_count);
+  return orter_io_pipe_loop(pipes, pipe_count, process);
+}
+
+static int disc_get(void)
+{
+  int c;
+
+  c = rf_persci_getc();
+  if (c == -1) return c;
+  if (log) {
+    disc_log_output(c);
+  }
+  return c;
+}
+
+static int disc_put(int c)
+{
+  int r;
+
+  r = rf_persci_putc(c);
+  if (r == -1) return r;
+  if (log) {
+    disc_log_input(c);
+  }
+  return c;
+}
+
+static void process_simple(void)
+{
+  int c;
+
+  /* write to disc */
+  while ((c = orter_io_pipe_get(&in)) != -1) {
+
+    if (disc_put(c) == -1) {
+      break;
+    }
+
+    if (c == RF_ASCII_EOT) {
+      break;
+    }
+  }
+
+  /* read from disc */
+  while (orter_io_pipe_left(&out)) {
+
+    if ((c = disc_get()) == -1) {
+      break;
+    }
+
+    if (orter_io_pipe_put(&out, c) == -1) {
+      break;
+    }
+
+    if (c == RF_ASCII_EOT) {
+      break;
+    }
+  }
 }
 
 static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
 {
   /* create pipelines */
-  orter_io_pipe_init(&in, in_fd, 0, disc_wr, -1);
-  orter_io_pipe_init(&out, -1, disc_rd, 0, out_fd);
+  orter_io_pipe_read_init(&in, in_fd);
+  orter_io_pipe_write_init(&out, out_fd);
 
   /* run server */
-  return serve(dr0, dr1);
+  return serve(dr0, dr1, process_simple);
 }
 
 static int disc_pty(int argc, char **argv)
@@ -285,6 +225,43 @@ static int disc_serial(int argc, char **argv)
   return exit;
 }
 
+static void process_mux(void)
+{
+  int c;
+
+  /* mux between disc and mux_out_buf */
+  while (orter_io_pipe_left(&mux_out) && (c = orter_io_pipe_get(&in)) != -1) {
+    if (c & 0x80) {
+      /* disc */
+      c &= 0x7F;
+      if (disc_put(c) == -1) {
+        break;
+      }
+    } else {
+      /* console */
+      if (orter_io_pipe_put(&mux_out, c) == -1) {
+        break;
+      }
+    }
+  }
+
+  /* read from disc */
+  while (orter_io_pipe_left(&out)) {
+
+    if ((c = disc_get()) == -1) {
+      break;
+    }
+
+    if (orter_io_pipe_put(&out, c | 0x80) == -1) {
+      break;
+    }
+
+    if (c == RF_ASCII_EOT) {
+      break;
+    }
+  }
+}
+
 static int disc_mux(int argc, char **argv)
 {
   int exit = 0;
@@ -302,19 +279,19 @@ static int disc_mux(int argc, char **argv)
   /* include mux pipes, create pipelines */
   pipe_count = 4;
   /* serial in to disc (and stdout buffer) */
-  orter_io_pipe_init(&in, orter_serial_fd, 0, mux_wr, -1);
+  orter_io_pipe_read_init(&in, orter_serial_fd);
   /* stdin to serial out */
   orter_io_pipe_init(&mux_in, 0, 0, 0, orter_serial_fd);
   /* disc read to serial out */
-  orter_io_pipe_init(&out, -1, disc_rd_mux, 0, orter_serial_fd);
+  orter_io_pipe_write_init(&out, orter_serial_fd);
   /* stdout buffer to stdout */
-  orter_io_pipe_init(&mux_out, -1, mux_out_rd, 0, 1);
+  orter_io_pipe_write_init(&mux_out, 1);
 
   /* don't log as we are using the console for output */
   log = 0;
 
   /* run */
-  exit = serve(argv[4], argc > 5 ? argv[5] : 0);
+  exit = serve(argv[4], argc > 5 ? argv[5] : 0, process_mux);
 
   /* close and exit */
   orter_serial_close();

@@ -300,55 +300,13 @@ static void opts(int argc, char **argv)
   }
 }
 
-/* space left in buffer */
-size_t buf_left(orter_io_pipe_t *buf)
-{
-  return 256L - (buf->off - buf->buf) - buf->len;
-}
-
-int buf_get(orter_io_pipe_t *buf)
-{
-  int b;
-
-  /* empty */
-  if (!buf->len) {
-    return -1;
-  }
-
-  /* read byte */
-  b = *(buf->off);
-  buf->off++;
-  buf->len--;
-
-  /* reset ptr */
-  if (!buf->len) {
-    buf->off = buf->buf;
-  }
-
-  return b;
-}
-
-int buf_put(orter_io_pipe_t *buf, char b)
-{
-  /* full */
-  if (!buf_left(buf)) {
-    return -1;
-  }
-
-  /* write byte */
-  *(buf->off + buf->len) = b;
-  buf->len++;
-
-  return b;
-}
-
 void process(void)
 {
   int c;
 
   /* stdin to serial */
-  while (in.len && buf_left(&in2)) {
-    c = buf_get(&in);
+  while (in.len && orter_io_pipe_left(&in2)) {
+    c = orter_io_pipe_get(&in);
     /* -o onlcrx */
     if (c == 10 && onlcrx) {
       c = 13;
@@ -357,7 +315,7 @@ void process(void)
     if (c == 127 && odelbs) {
       c = 8;
     }
-    buf_put(&in2, c);
+    orter_io_pipe_put(&in2, c);
     if (delay) {
       usleep(delay);
       break;
@@ -365,14 +323,14 @@ void process(void)
   }
 
   /* serial to stdout */
-  while (out.len && buf_left(&out2)) {
-    c = buf_get(&out);
+  while (out.len && orter_io_pipe_left(&out2)) {
+    c = orter_io_pipe_get(&out);
     /* -a */
     if (c == 6 && ack) {
       orter_io_finished = 1;
       orter_io_exit = 0;
     }
-    buf_put(&out2, c);
+    orter_io_pipe_put(&out2, c);
   }
 
   /* start EOF timer */
