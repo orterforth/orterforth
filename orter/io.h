@@ -11,11 +11,9 @@ typedef size_t (*orter_io_rdwr_t)(char *, size_t);
 /* source, buffer and sink comprise a pipe */
 typedef struct orter_io_pipe_t {
     int in;
-    orter_io_rdwr_t rd;
     char buf[256];
     char *off;
     size_t len;
-    orter_io_rdwr_t wr;
     int out;
 } orter_io_pipe_t;
 
