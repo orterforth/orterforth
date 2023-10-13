@@ -5,9 +5,6 @@
 #include <stdint.h>
 #include <sys/select.h>
 
-/* function pointer type for a read or write operation */
-typedef size_t (*orter_io_rdwr_t)(char *, size_t);
-
 /* source, buffer and sink comprise a pipe */
 typedef struct orter_io_pipe_t {
     int in;
