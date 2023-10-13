@@ -162,7 +162,6 @@ static void process_simple(void)
     if (disc_put(c) == -1) {
       break;
     }
-
     if (c == RF_ASCII_EOT) {
       break;
     }
@@ -174,11 +173,9 @@ static void process_simple(void)
     if ((c = disc_get()) == -1) {
       break;
     }
-
     if (orter_io_pipe_put(&out, c) == -1) {
       break;
     }
-
     if (c == RF_ASCII_EOT) {
       break;
     }
@@ -229,12 +226,12 @@ static void process_mux(void)
 {
   int c;
 
-  /* mux between disc and mux_out_buf */
+  /* read from serial */
   while (orter_io_pipe_left(&mux_out) && (c = orter_io_pipe_get(&in)) != -1) {
+
     if (c & 0x80) {
       /* disc */
-      c &= 0x7F;
-      if (disc_put(c) == -1) {
+      if (disc_put(c & 0x7F) == -1) {
         break;
       }
     } else {
@@ -245,17 +242,23 @@ static void process_mux(void)
     }
   }
 
+  /* read from stdin */
+  while (orter_io_pipe_left(&out) && (c = orter_io_pipe_get(&mux_in)) != -1) {
+
+    if (orter_io_pipe_put(&out, c) == -1) {
+      break;
+    };
+  }
+
   /* read from disc */
   while (orter_io_pipe_left(&out)) {
 
     if ((c = disc_get()) == -1) {
       break;
     }
-
     if (orter_io_pipe_put(&out, c | 0x80) == -1) {
       break;
     }
-
     if (c == RF_ASCII_EOT) {
       break;
     }
@@ -278,13 +281,13 @@ static int disc_mux(int argc, char **argv)
 
   /* include mux pipes, create pipelines */
   pipe_count = 4;
-  /* serial in to disc (and stdout buffer) */
+  /* read serial */
   orter_io_pipe_read_init(&in, orter_serial_fd);
-  /* stdin to serial out */
-  orter_io_pipe_init(&mux_in, 0, orter_serial_fd);
-  /* disc read to serial out */
+  /* read stdin */
+  orter_io_pipe_read_init(&mux_in, 0);
+  /* write serial */
   orter_io_pipe_write_init(&out, orter_serial_fd);
-  /* stdout buffer to stdout */
+  /* write stdout */
   orter_io_pipe_write_init(&mux_out, 1);
 
   /* don't log as we are using the console for output */
