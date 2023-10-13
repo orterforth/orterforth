@@ -29,12 +29,6 @@ extern fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
 /* set up signal handler */
 void orter_io_signal_init(void);
 
-/* nonblocking read from fd */
-size_t orter_io_fd_rd(int fd, char *off, size_t len);
-
-/* nonblocking write to fd */
-size_t orter_io_fd_wr(int fd, char *off, size_t len);
-
 /* stdio file size */
 int orter_io_file_size(FILE *ptr, long *size);
 
@@ -43,12 +37,6 @@ int orter_io_std_open(void);
 
 /* restore stdin/stdout */
 int orter_io_std_close(void);
-
-/* nonblocking read from stdin */
-size_t orter_io_stdin_rd(char *off, size_t len);
-
-/* nonblocking write to stdout */
-size_t orter_io_stdout_wr(char *off, size_t len);
 
 /* space left in buffer */
 size_t orter_io_pipe_left(orter_io_pipe_t *buf);

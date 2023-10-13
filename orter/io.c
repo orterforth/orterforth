@@ -53,7 +53,7 @@ void orter_io_signal_init(void)
   signal(SIGSYS, handler);
 }
 
-size_t orter_io_fd_wr(int fd, char *off, size_t len)
+static size_t orter_io_fd_wr(int fd, char *off, size_t len)
 {
   ssize_t n;
 
@@ -75,7 +75,7 @@ size_t orter_io_fd_wr(int fd, char *off, size_t len)
   return (n < 0) ? 0 : n;
 }
 
-size_t orter_io_fd_rd(int fd, char *off, size_t len)
+static size_t orter_io_fd_rd(int fd, char *off, size_t len)
 {
   ssize_t n;
 
@@ -181,16 +181,6 @@ int orter_io_std_close(void)
   }
 
   return 0;
-}
-
-size_t orter_io_stdin_rd(char *off, size_t len)
-{
-  return orter_io_fd_rd(0, off, len);
-}
-
-size_t orter_io_stdout_wr(char *off, size_t len)
-{
-  return orter_io_fd_wr(1, off, len);
 }
 
 static void bufread(int in, char *buf, char **offset, size_t *pending)
