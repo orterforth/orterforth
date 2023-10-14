@@ -180,6 +180,11 @@ static void process_simple(void)
       break;
     }
   }
+
+  /* input EOF terminates */
+  if (orter_io_eof) {
+    orter_io_finished = 1;
+  }
 }
 
 static int serve_with_fds(int in_fd, int out_fd, char *dr0, char *dr1)
@@ -262,6 +267,11 @@ static void process_mux(void)
     if (c == RF_ASCII_EOT) {
       break;
     }
+  }
+
+  /* input EOF terminates */
+  if (orter_io_eof) {
+    orter_io_finished = 1;
   }
 }
 

@@ -367,9 +367,7 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
 
   /* main loop */
   orter_io_finished = 0;
-  /* TODO don't terminate on orter_io_eof */
-  /* TODO put eof flags on source/bufs instead */
-  while (!orter_io_finished && !orter_io_eof) {
+  while (!orter_io_finished) {
 
     /* init fd sets */
     orter_io_select_zero();

@@ -389,61 +389,8 @@ int orter_serial(int argc, char **argv)
   orter_io_pipe_read_init(&out, orter_serial_fd);
   orter_io_pipe_write_init(&out2, 1);
 
-  /* TODO fix orter_io_eof issue, replace with orter_io_pipe_loop */
-  /* also need to allow for wait - process() should control orter_io_finished */
-  while (!orter_io_finished) {
-
-    /* init fd sets */
-    orter_io_select_zero();
-
-    /* add to fd sets */
-    if (!eof) {
-      orter_io_pipe_fdset(&in);
-    }
-    orter_io_pipe_fdset(&in2);
-    orter_io_pipe_fdset(&out);
-    orter_io_pipe_fdset(&out2);
-
-    /* select */
-    if (orter_io_select() < 0) {
-      break;
-    }
-
-    /* check for exceptions */
-    if (FD_ISSET(1, &orter_io_exceptfds)) {
-      exit = errno;
-      perror("out error");
-      restore();
-      return exit;
-    }
-
-    /* exceptions expected from stdin until pipe attached */
-/*
-    if (FD_ISSET(0, &orter_io_exceptfds)) {
-      perror("in error");
-      restore();
-      return errno;
-    }
-*/
-    if (FD_ISSET(orter_serial_fd, &orter_io_exceptfds)) {
-      exit = errno;
-      perror("serial error");
-      restore();
-      return exit;
-    }
-
-    /* stdin */
-    orter_io_pipe_move(&in);
-    /* serial out */
-    orter_io_pipe_move(&in2);
-    /* serial in */
-    orter_io_pipe_move(&out);
-    /* stdout */
-    orter_io_pipe_move(&out2);
-
-    /* all postprocessing happens after reads/writes */
-    process();
-  }
+  /* run */
+  orter_io_pipe_loop(pipes, 4, process);
 
   /* done */
   restore();
