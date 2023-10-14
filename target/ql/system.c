@@ -25,8 +25,10 @@ int main(int argc, char *argv[]);
 /* no C environnment setup */
 extern (*_Cstart)() = main;
 
+/* console */
 static chanid_t con;
 
+/* serial port */
 static chanid_t ser;
 
 void rf_init(void)
@@ -49,6 +51,7 @@ void rf_init(void)
   con = io_open("CON_480X256A16X0", 0);
   sd_setpa(con, TIMEOUT_FOREVER, 0);
   sd_setin(con, TIMEOUT_FOREVER, 7);
+  sd_clear(con, TIMEOUT_FOREVER);
 }
 
 void rf_code_emit(void)
@@ -59,6 +62,8 @@ void rf_code_emit(void)
 
     /* move cursor for backspace */
     if (c == 8) {
+      sd_pcol(con, TIMEOUT_FOREVER);
+      io_sbyte(con, TIMEOUT_FOREVER, ' ');
       sd_pcol(con, TIMEOUT_FOREVER);
     } else {
       io_sbyte(con, TIMEOUT_FOREVER, c);
@@ -96,8 +101,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  /* TODO detect break */
-  RF_SP_PUSH(0);
+  RF_SP_PUSH(keyrow(1) == 8);
   RF_JUMP_NEXT;
 }
 
