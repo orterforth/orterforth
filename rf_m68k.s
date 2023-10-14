@@ -245,11 +245,10 @@ _rf_code_xloop:
 xloo2:  move.l  4(a1), d0 ; Limit = current?
         cmp.l   (a1), d0 ; Is better way?
         bhi     xloo3   ; Branch if limit>current
-        add.l   #4, a4  ; Clean up and leave
+xloo5:  add.l   #4, a4  ; Clean up and leave
         add.l   #8, a1
         bra     xloo4
-xloo3:  move.l  (a4), d0
-        add.l   d0, a4
+xloo3:  add.l   (a4), a4
 xloo4: ;bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
@@ -260,8 +259,13 @@ xloo4: ;bra     _rf_next
 _rf_code_xploo:
         move.l  (a3)+, d0
         add.l   d0, (a1)
-        bra     xloo2
-
+        tst.l   d0      ; NEGATIVE INCREMENT?
+        bpl     xloo2   ; POS INC
+        move.l  4(a1), d0
+        cmp.l   (a1), d0
+        bge     xloo5   ; DONE
+        bra     xloo3   ; CONTINUE
+*
         .align 2
         .extern _rf_code_xdo
 _rf_code_xdo:
