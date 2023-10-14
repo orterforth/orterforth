@@ -65,6 +65,13 @@ ln1: ;  bra     _rf_next
         move.l  (a5)+, a0
         jmp     (a0)
 
+        .align 2
+        .extern _rf_code_mon
+_rf_code_mon:
+        jsr     _rf_start
+        move.l  #0, _rf_fp
+        rts
+
 *  OPT <OPTIONS> 
 * NAM  "68000 FIG-FORTH 1.0 DECEMBER 1982"
 *
@@ -242,14 +249,14 @@ _rf_code_zbran:
         .extern _rf_code_xloop
 _rf_code_xloop:
         addq.l  #1, (a1) ; Increment current count
-xloo2:  move.l  4(a1), d0 ; Limit = current?
+XLOO2:  move.l  4(a1), d0 ; Limit = current?
         cmp.l   (a1), d0 ; Is better way?
-        bhi     xloo3   ; Branch if limit>current
-xloo5:  add.l   #4, a4  ; Clean up and leave
+        bhi     XLOO3   ; Branch if limit>current
+XLOO5:  add.l   #4, a4  ; Clean up and leave
         add.l   #8, a1
-        bra     xloo4
-xloo3:  add.l   (a4), a4
-xloo4: ;bra     _rf_next
+        bra     XLOO4
+XLOO3:  add.l   (a4), a4
+XLOO4: ;bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
@@ -260,11 +267,11 @@ _rf_code_xploo:
         move.l  (a3)+, d0
         add.l   d0, (a1)
         tst.l   d0      ; NEGATIVE INCREMENT?
-        bpl     xloo2   ; POS INC
+        bpl     XLOO2   ; POS INC
         move.l  4(a1), d0
         cmp.l   (a1), d0
-        bge     xloo5   ; DONE
-        bra     xloo3   ; CONTINUE
+        bge     XLOO5   ; DONE
+        bra     XLOO3   ; CONTINUE
 *
         .align 2
         .extern _rf_code_xdo
@@ -731,7 +738,49 @@ _rf_code_cstor:
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
+*
+        .align 2
+        .extern _rf_code_stod
+_rf_code_stod:
+        tst.l   (a3)
+        bmi     STOD1
+        move.l  #0, -(a3)
+        bra     STOD2
+STOD1:  move.l  #-1, -(a3)
+STOD2:  ;bra    _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+*
+        .align 2
+        .extern _rf_code_dovar
+_rf_code_dovar:
+        move.l  a5, -(a3)
+;       bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+*
+        .align 2
+        .extern _rf_code_docon
+_rf_code_docon:
+        move.l  (a5), -(a3)
+;       bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+*
+       .align 2
+        .extern _rf_code_douse
+_rf_code_douse:
+        move.l  (a5), d0
+        add.l   a6, d0
+        move.l  d0, -(a3)
+;       bra     _rf_next
+        move.l  (a4)+, a5
+        move.l  (a5)+, a0
+        jmp     (a0)
+*
         .align 2
         .extern _rf_code_docol
 _rf_code_docol:
@@ -742,36 +791,7 @@ _rf_code_docol:
         move.l  (a5)+, a0
         jmp     (a0)
 
-        .align 2
-        .extern _rf_code_docon
-_rf_code_docon:
-        move.l  (a5), -(a3)
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_dovar
-_rf_code_dovar:
-        move.l  a5, -(a3)
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_douse
-_rf_code_douse:
-        move.l  (a5), d0
-        add.l   a6, d0
-        move.l  d0, -(a3)
-;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
+         .align 2
         .extern _rf_code_dodoe
 _rf_code_dodoe:
         move.l  a4, -(a1)
@@ -781,26 +801,6 @@ _rf_code_dodoe:
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
-
-        .align 2
-        .extern _rf_code_stod
-_rf_code_stod:
-        tst.l   (a3)
-        bmi     stod1
-        move.l  #0, -(a3)
-        bra     stod2
-stod1:  move.l  #-1, -(a3)
-stod2: ;bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
-        jmp     (a0)
-
-        .align 2
-        .extern _rf_code_mon
-_rf_code_mon:
-        jsr     _rf_start
-        move.l  #0, _rf_fp
-        rts
 
         .align 2
         .extern _rf_code_cold
