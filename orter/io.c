@@ -22,9 +22,6 @@ static struct termios in_attr;
 static struct termios in_attr_save;
 static int            in_attr_saved = 0;
 
-/* flag to indicate EOF */
-int orter_io_eof = 0;
-
 /* exit code to return after cleanup */
 int orter_io_exit = 0;
 
@@ -75,7 +72,7 @@ static size_t orter_io_fd_wr(int fd, char *off, size_t len)
   return (n < 0) ? 0 : n;
 }
 
-static size_t orter_io_fd_rd(int fd, char *off, size_t len)
+static size_t orter_io_fd_rd(int *fd, char *off, size_t len)
 {
   ssize_t n;
 
@@ -85,7 +82,7 @@ static size_t orter_io_fd_rd(int fd, char *off, size_t len)
   }
 
   /* read bytes */
-  n = read(fd, off, len);
+  n = read(*fd, off, len);
   if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
     orter_io_exit = errno;
     orter_io_finished = 1;
@@ -94,10 +91,8 @@ static size_t orter_io_fd_rd(int fd, char *off, size_t len)
   }
 
   /* mark EOF */
-  /* TODO make this a flag on pipe; use ssize_t with reversed semantics for -1 */
-  /* TODO set in fd to -1 if this comes to zero */
-  if (n == 0 && !orter_io_eof) {
-    orter_io_eof = 1;
+  if (n == 0 && *fd != -1) {
+    *fd = -1;
   }
 
   /* return actual length */
@@ -183,7 +178,7 @@ int orter_io_std_close(void)
   return 0;
 }
 
-static void bufread(int in, char *buf, char **offset, size_t *pending)
+static void bufread(int *in, char *buf, char **offset, size_t *pending)
 {
   size_t n;
 
@@ -193,7 +188,7 @@ static void bufread(int in, char *buf, char **offset, size_t *pending)
   }
 
   /* read bytes and initialise buffer */
-  if (in != -1) {
+  if (*in != -1) {
     n = orter_io_fd_rd(in, buf, 256);
   } else {
     return;
@@ -287,7 +282,7 @@ void orter_io_pipe_write_init(orter_io_pipe_t *pipe, int out)
 
 void orter_io_pipe_move(orter_io_pipe_t *pipe)
 {
-  bufread(pipe->in, pipe->buf, &pipe->off, &pipe->len);
+  bufread(&pipe->in, pipe->buf, &pipe->off, &pipe->len);
   bufwrite(pipe->out, pipe->buf, &pipe->off, &pipe->len);
 }
 

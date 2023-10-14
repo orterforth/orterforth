@@ -182,7 +182,7 @@ static void process_simple(void)
   }
 
   /* input EOF terminates */
-  if (orter_io_eof) {
+  if (in.in == -1) {
     orter_io_finished = 1;
   }
 }
@@ -270,7 +270,7 @@ static void process_mux(void)
   }
 
   /* input EOF terminates */
-  if (orter_io_eof) {
+  if (mux_in.in == -1) {
     orter_io_finished = 1;
   }
 }

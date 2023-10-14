@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/select.h>
 
 /* source, buffer and sink comprise a pipe */
@@ -13,9 +14,6 @@ typedef struct orter_io_pipe_t {
     size_t len;
     int out;
 } orter_io_pipe_t;
-
-/* flag to indicate EOF */
-extern int orter_io_eof;
 
 /* exit code to return after cleanup */
 extern int orter_io_exit;
