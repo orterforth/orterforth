@@ -99,7 +99,6 @@ static void set_attr(struct termios *attr)
   }
 
   /* timing */
-  /* TODO 0, 0 ? */
   attr->c_cc[VTIME] = 5;
   attr->c_cc[VMIN]  = 1;
 }
@@ -334,7 +333,6 @@ void process(void)
   }
 
   /* start EOF timer */
-  /* TODO eof flag should be local to pipe struct */
   if (!eof && in.in == -1) {
     eof = 1;
     wai_timer = time(0) + wai_wait;
