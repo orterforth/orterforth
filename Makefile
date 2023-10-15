@@ -1,6 +1,5 @@
 # C compiler options
 CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
-# CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 
 # global defaults
 CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh scripts/check-memory.sh
