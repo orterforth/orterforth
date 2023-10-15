@@ -1,14 +1,14 @@
 #include <stdio.h>
-#ifdef __RC2014
-#include <z80.h>
-#endif
 
 #include "rf.h"
+
+/* sleep */
 
 #ifdef PICO
 #define RF_SLEEP(a) sleep_ms(a);
 #endif
 #ifdef __RC2014
+#include <z80.h>
 #define RF_SLEEP(a) z80_delay_ms(a);
 #endif
 
