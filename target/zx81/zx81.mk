@@ -50,14 +50,14 @@ zx81/inst.bin zx81/inst.P : zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
 	zcc $(ZX81ZCCOPTS) -lm -lzx81/rf -lzx81/system -lzx81/inst \
 		-create-app -m -o zx81/inst.bin main.c
 
-zx81/inst.lib : inst.c rf.h | zx81
+zx81/inst.lib : inst.c rf.h target/zx81/zx81.inc | zx81
 
 	zcc $(ZX81ZCCOPTS) -x -o $@ $<
 
-zx81/rf.lib : rf.c rf.h target/zx81/system.inc | zx81
+zx81/rf.lib : rf.c rf.h target/zx81/zx81.inc | zx81
 
 	zcc $(ZX81ZCCOPTS) -x -o $@ $<
 
-zx81/system.lib : target/zx81/system.c rf.h | zx81
+zx81/system.lib : target/zx81/system.c rf.h target/zx81/zx81.inc | zx81
 
 	zcc $(ZX81ZCCOPTS) -x -o $@ $<

@@ -71,9 +71,7 @@ void rf_code_cr()
 void rf_disc_read(char *c, unsigned char len)
 {
   for (; len; len--) {
-/*
     *(c++) = fgetc_cons();
-*/
   }
 }
 
