@@ -89,7 +89,7 @@ endif
 dragon-inst : dragon/orterforth.cas
 
 .PHONY : dragon-run
-dragon-run : dragon/orterforth.cas | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
+dragon-run : dragon/orterforth.cas | $(DISC) $(DR0) $(DR1) dragon/rx dragon/tx $(DRAGONROMS)
 
 	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
 
