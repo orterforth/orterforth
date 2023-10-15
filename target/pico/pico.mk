@@ -2,6 +2,12 @@
 
 PICOOPTION := default
 #PICOOPTION := assembly
+# PICOOPTION := default
+ifeq ($(TARGET),pico)
+ifneq ($(OPTION),)
+PICOOPTION := $(OPTION)
+endif
+endif
 
 PICOCMAKEOPTION := -DRF_ASSEMBLY=OFF
 ifeq ($(PICOOPTION),assembly)

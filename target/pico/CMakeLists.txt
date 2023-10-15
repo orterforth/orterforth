@@ -6,9 +6,7 @@ option(RF_ASSEMBLY "Use assembly code" OFF)
 
 # For assembly code, prevent inline to preserve r4, r5, r6 
 # (RP, SP, IP) during function prolog and before rf_start
-if(RF_ASSEMBLY)
-    add_compile_options("-O0" "-fno-inline")
-endif(RF_ASSEMBLY)
+add_compile_options("-O0" "-fno-inline")
 
 # Include build functions from Pico SDK
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
