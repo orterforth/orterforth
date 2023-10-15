@@ -17,7 +17,7 @@ endif
 endif
 
 ifeq ($(RC2014MACHINE),emulator)
-# TODO any emulator needs a pty and command line to run
+# any emulator needs a pty and command line to run
 # RC2014SERIALPORT := ...
 # RC2014STARTMACHINE := sh scripts/start.sh ...
 # RC2014STOPMACHINE := sh scripts/stop.sh ...
@@ -96,7 +96,7 @@ rc2014-clean :
 	rm -rf rc2014/*
 
 .PHONY : rc2014-connect
-rc2014-connect : | $(DISC)
+rc2014-connect : | $(DISC) $(DR0) $(DR1)
 
 	@$(RC2014CONNECT)
 
@@ -107,7 +107,7 @@ rc2014-hw : rc2014/hw.ihx | $(RC2014HEXLOAD) $(ORTER)
 	@$(ORTER) serial -o onlcrx -o odelbs $(RC2014SERIALPORT) 115200
 
 .PHONY : rc2014-run
-rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC)
+rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC) $(DR0) $(DR1)
 
 	@$(RC2014STARTMACHINE)
 	@$(RC2014LOAD) $<
