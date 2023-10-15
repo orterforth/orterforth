@@ -990,7 +990,7 @@ ENDIF
 PUBLIC _rf_code_cold            ;COLD
 _rf_code_cold:
         LD      HL,ORIG+0CH     ; FORTH vocabulary init
-        LD      DE,(ORIG+22H)
+        LD      DE,(ORIG+2AH)
         LDI
         LDI
         LD      HL,(UPINIT)     ; UP init
@@ -999,7 +999,7 @@ _rf_code_cold:
         LD      HL,ORIG+0CH
         LD      BC,16H
         LDIR
-        LD      BC,(ORIG+24H)   ; IP init to ABORT
+        LD      BC,(ORIG+2CH)   ; IP init to ABORT
         LD      IX,NEXT         ; POINTER TO NEXT
 IFDEF USEIY
         LD      IY,HPUSH        ; POINTER TO HPUSH

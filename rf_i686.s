@@ -125,7 +125,7 @@ _rf_code_cold:
         ADD     ECX,OFFSET _GLOBAL_OFFSET_TABLE_
         MOV     EDX,_rf_origin@GOTOFF[ECX]
         MOV     EAX,0x18[EDX]   # FORTH vocabulary init
-        MOV     EBX,0x44[EDX]
+        MOV     EBX,0x54[EDX]
         MOV     [EBX],EAX
         MOV     EDI,0x20[EDX]   # UP init
         MOV     UP@GOTOFF[ECX],EDI
@@ -133,7 +133,7 @@ _rf_code_cold:
         MOV     ECX,11
         LEA     ESI,0x18[EDX]
         REP     MOVSD
-        MOV     ESI,0x48[EDX]   # IP init to ABORT
+        MOV     ESI,0x58[EDX]   # IP init to ABORT
         JMP     rf_code_rpsto   # jump to RP!
 
         .section __DATA.__data,""

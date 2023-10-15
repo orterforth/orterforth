@@ -448,17 +448,25 @@ static void rf_inst_load(void)
     "DUP BLOCK compile "
     "LIT 1 + BRANCH ^-13 DROP "
     /* call ABORT just defined */
-    "LIT ^17 origin + @ @ LIT ^-22 + EXECUTE");
+    "LIT ^21 origin + @ @ LIT ^-22 + EXECUTE");
 
   /* set boot-up literals and run COLD */
+  /* LATEST */
   origin[6] = (uintptr_t) rf_inst_vocabulary;
+  /* USER area */
   origin[8] = (uintptr_t) RF_USER;
+  /* S0 */
   origin[9] = (uintptr_t) RF_S0;
+  /* R0 */
   origin[10] = (uintptr_t) RF_R0;
+  /* WARNING */
   origin[13] = 0;
+  /* DP */
   origin[15] = (uintptr_t) *rf_inst_dp;
-  origin[17] = (uintptr_t) &rf_inst_vocabulary;
-  origin[18] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
+  /* instead of FORTH */
+  origin[21] = (uintptr_t) &rf_inst_vocabulary;
+  /* instead of ABORT */
+  origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
   /* trampoline may require SP init (e.g., i686 stack frame copy) */
   rf_sp = (uintptr_t *) RF_S0;
   rf_fp = rf_code_cold;

@@ -1156,7 +1156,7 @@ static void rf_cold(void)
   /* FORTH vocabulary - parameter field set at inst time */
   /* 0C +ORIGIN LDA, 'T FORTH 4 + STA, ( FORTH VOCAB. ) */
   /* 0D +ORIGIN LDA, 'T FORTH 5 + STA, */
-  *((uintptr_t *) origin[17]) = origin[6];
+  *((uintptr_t *) origin[21]) = origin[6];
 
   /* 15 # LDY, ( INDEX TO VOC-LINK ) 0= IF, ( FORCED ) */
   i = 10;
@@ -1179,7 +1179,7 @@ static void rf_cold(void)
   /* jump to RP! then to ABORT - PFA set at inst time */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
   /* # LDA, IP STA, */
-  RF_IP_SET((uintptr_t *) origin[18]);
+  RF_IP_SET((uintptr_t *) origin[22]);
 
   /* 6C # LDA, W 1 - STA,  */
   /* 'T RP! JMP, ( RUN )  */

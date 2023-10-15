@@ -115,7 +115,7 @@ rf_code_cold:
 _rf_code_cold:
         MOV     RDX,_rf_origin[RIP]
         MOV     RAX,0x30[RDX]   # FORTH vocabulary init
-        MOV     RBX,0x88[RDX]
+        MOV     RBX,0xA8[RDX]
         MOV     [RBX],RAX
         MOV     RDI,0x40[RDX]   # UP init
         MOV     UP[RIP],RDI
@@ -123,7 +123,7 @@ _rf_code_cold:
         MOV     RCX,11
         LEA     RSI,0x30[RDX]
         REP     movsq
-        MOV     RSI,0x90[RDX]   # IP init to ABORT
+        MOV     RSI,0xB0[RDX]   # IP init to ABORT
         JMP     rf_code_rpsto   # jump to RP!
 
         .section __DATA.__data,""

@@ -749,7 +749,7 @@ rf_code_cold:
   ldr   x3, =rf_origin
   ldr   x3, [x3]
   ldr   x0, [x3, #48]           // FORTH vocabulary init
-  ldr   x1, [x3, #136]
+  ldr   x1, [x3, #168]
   str   x0, [x1]
   ldr   x1, [x3, #64]           // UP init
   ldr   x0, =rf_up
@@ -761,7 +761,7 @@ cold1:
   str   x0, [x1], #8
   subs  x2, x2, #1
   bne   cold1
-  ldr   x15, [x3, #8]           // IP init to ABORT
+  ldr   x15, [x3, #40]          // IP init to ABORT
   b     rf_code_rpsto           // jump to RP!
 
   .align 2

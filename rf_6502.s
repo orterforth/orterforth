@@ -1062,18 +1062,18 @@ _rf_code_cold:
 ; model source compiled these values inline using the 
 ; Forth 6502 assembler, which we cannot do. The rest of
 ; the code is close to the original.
-cold1: LDA ORIG+$22 ; move FORTH field to cold3 and cold4
+cold1: LDA ORIG+$2A ; move FORTH field to cold3 and cold4
        STA cold3+1
        STA cold4+1
-       LDA ORIG+$23
+       LDA ORIG+$2B
        STA cold3+2
        STA cold4+2
        INC cold4+1  ; increment cold4 by 1
        BNE cold2
        INC cold4+2
-cold2: LDA ORIG+$25 ; move ABORT PFA to cold7, cold8
+cold2: LDA ORIG+$2D ; move ABORT PFA to cold7, cold8
        STA cold7+1
-       LDA ORIG+$24
+       LDA ORIG+$2C
        STA cold8+1
 
        LDA ORIG+$0C ; from cold start area

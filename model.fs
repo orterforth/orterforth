@@ -882,8 +882,8 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
    35 cd cl  +ORIGIN  !  ( POINT COLD ENTRY TO HERE )
 35 cd HERE cl - !
-2 ln cl + BYTE.IN FORTH 11 cs +ORIGIN !
-0 BYTE.IN ABORT 12 cs +ORIGIN !
+2 ln cl + BYTE.IN FORTH 15 cs +ORIGIN !
+0 BYTE.IN ABORT 16 cs +ORIGIN !
 
 
 
@@ -1316,7 +1316,7 @@ R> IN ! R> BLK ! ;S
 
 :QUIT  [ CURRENT @ @ 1+ LIT 88 TOGGLE EMPTY-BUFFERS
        LIT 83 LOAD MON
-:ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 17 cs origin + @
+:ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs origin + @
        DUP CONTEXT ! CURRENT ! QUIT
 :X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
        R> DROP ;S
@@ -1441,8 +1441,9 @@ save ;S                         ( now save                    )
 ( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
 
 ( additional boot-up literals                                 )
-0 , 0 ,                         ( extra boot-up lits for COLD )
+0 , 0 ,                         ( extra boot-up lits for cpu  )
 th , tl ,                       ( extra boot-up lits for trgt )
+0 , 0 ,                         ( extra boot-up lits for COLD )
 
 ( additional words                                            )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)

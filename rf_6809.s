@@ -255,7 +255,7 @@ _rf_code_cold EXPORT
 _rf_code_cold
         LDX    #RF_ORIGIN
         LDD    12,X                 FORTH vocabulary init
-        LDY    34,X
+        LDY    42,X
         STD    ,Y
         LDY    16,X                 UP init
         STY    UP,PCR
@@ -265,7 +265,7 @@ COLD2   LDA    ,X+
         STA    ,Y+
         DECB
         BNE    COLD2
-        LDY    2,X                  IP init to ABORT
+        LDY    10,X                 IP init to ABORT
         LBRA   _rf_code_rpsto       jump to RP!
 
 _rf_code_spat EXPORT
