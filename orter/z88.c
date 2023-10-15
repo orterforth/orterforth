@@ -23,6 +23,8 @@ static int orter_z88_impexport_read(void)
 
         /* fetch byte */
         GETCHAR(c);
+
+        /* EOF */
         if (c == -1) {
             break;
         }
@@ -57,7 +59,6 @@ static int orter_z88_impexport_read(void)
 
                 /* end file */
                 case 'E':
-                    /* TODO handling multiple files */
                     state = STATE_START;
                     break;
 
@@ -76,7 +77,7 @@ static int orter_z88_impexport_read(void)
             continue;
         }
         
-        /* unescaped */
+        /* write byte (file name or data) */
         if (state == STATE_FILEDATA) {
             PUTCHAR(c);
         } else if (state == STATE_FILENAME) {
@@ -111,27 +112,28 @@ static int orter_z88_impexport_write(char *filename)
     int r;
     int c;
 
+    /* filename */
     PUTS("\033N");
     while (*filename) {
         if ((r = orter_z88_impexport_putchar(*(filename++)))) {
             return r;
         }
     }
-    PUTS("\033F");
 
+    /* file data */
+    PUTS("\033F");
     for (;;) {
 
         /* read byte */
-        if ((c = getchar()) == -1) {
-            if (feof(stdin)) {
-                fputs("\033E", stdout);
-                return 0;
-            } else {
-                perror("getchar failed");
-                return errno;
-            }
+        GETCHAR(c);
+
+        /* EOF */
+        if (c == -1) {
+            PUTS("\033E");
+            return 0;
         }
 
+        /* write byte */
         if ((r = orter_z88_impexport_putchar(c))) {
             return r;
         }
