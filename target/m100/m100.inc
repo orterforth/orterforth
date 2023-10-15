@@ -5,6 +5,6 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
-#define RF_ORIGIN 0xE000
+#define RF_ORIGIN 0xC800
 
-#define RF_LIMIT 0xF500
+#define RF_LIMIT 0xF5F0

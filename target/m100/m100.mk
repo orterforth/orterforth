@@ -15,7 +15,6 @@ m100 :
 
 	mkdir $@
 
-
 .PHONY : m100-hw
 m100-hw : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
 
@@ -25,7 +24,7 @@ m100-hw : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
 	@$(M100SLOWSEND) < m100/hw.ihx | $(M100SERIAL)
 
 .PHONY : m100-run
-m100-run : target/m100/hexload.ba m100/inst.ihx | $(ORTER)
+m100-run : target/m100/hexloa.ba m100/inst.ihx | $(ORTER)
 
 	@$(M100PROMPT)
 	@$(M100LOADLOADER)
