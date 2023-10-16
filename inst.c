@@ -1,19 +1,19 @@
 #include "inst.h"
 #include "rf.h"
 
+/* if disc controller runs in process */
 #ifdef RF_INST_LOCAL_DISC
-
-/* disc controller runs in process */
 #include "persci.h"
-
-/* fig-Forth source compiled into C array */
-/* const to compile to flash on e.g. Pico */
 const
 #include "model.inc"
-
 #endif
 
-/* delay start of inst to allow disc server to start */
+/* if disc controller switches after inst */
+#ifdef PICO
+extern char rf_system_local_disc;
+#endif
+
+/* if we delay start of inst to allow disc server to start */
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
 #include <z80.h>
@@ -58,18 +58,19 @@ static void rf_inst_code_hld(void)
   RF_JUMP_NEXT;
 }
 
-/* INST TIME DICTIONARY OPERATIONS */
+/* DICTIONARY OPERATIONS */
 
+/* DP */
 static uint8_t **rf_inst_dp = 0;
+
+/* CURRENT and CONTEXT vocabulary during inst */
+static uint8_t *rf_inst_vocabulary = 0;
 
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 {
   *(*((uintptr_t **) rf_inst_dp))++ = word;
 }
-
-/* CURRENT and CONTEXT vocabulary during inst */
-static uint8_t *rf_inst_vocabulary = 0;
 
 /* compile a definition and set CFA */
 static void rf_inst_code(const char *name, rf_code_t code)
@@ -125,22 +126,19 @@ static uint8_t __FASTCALL__ **rf_inst_lfa(uint8_t *nfa)
 static uint8_t *rf_inst_find(const char *t, uint8_t length)
 {
   uint8_t i;
-  uint8_t *n;
+  uint8_t *m, *n;
   uint8_t *nfa = rf_inst_vocabulary;
 
   while (nfa) {
-    /* test length from name field incl smudge bit */
+    /* match name (use smudge bit) */
     if ((*nfa & 0x3F) == length) {
-      /* match name */
+      m = (uint8_t *) t;
       n = nfa;
-      for (i = 0; i < length; ++i) {
-        if (t[i] != (*(++n) & 0x7F)) {
-          break;
+      i = length;
+      while (*(m++) == (*(++n) & 0x7F)) {
+        if (!--i) {
+          return nfa;
         }
-      }
-      /* if we have a match */
-      if (i == length) {
-        return nfa;
       }
     }
 
@@ -273,8 +271,6 @@ typedef struct rf_inst_code_t {
   rf_code_t value;
 } rf_inst_code_t;
 
-#define RF_INST_CODE_LIT_LIST_SIZE 62
-
 /* run proto interpreter */
 static void rf_inst_code_compile(void)
 {
@@ -381,14 +377,14 @@ static void rf_inst_load(void)
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
-  /* cold start UP DP */
+  /* cold start LATEST UP DP */
   rf_inst_vocabulary = 0;
   rf_up = (uintptr_t *) RF_USER;
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
   rf_inst_dp = (uint8_t **) &(RF_USER_DP);
 
   /* forward defined code words */
-  for (i = 0; i < RF_INST_CODE_LIT_LIST_SIZE; ++i) {
+  for (i = 0; i < 62; ++i) {
     const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
     if (code->word) {
       rf_inst_code(code->word, code->value);
@@ -467,15 +463,11 @@ static void rf_inst_load(void)
   origin[21] = (uintptr_t) &rf_inst_vocabulary;
   /* instead of ABORT */
   origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
-  /* trampoline may require SP init (e.g., i686 stack frame copy) */
+  /* TODO trampoline may require SP init (e.g., i686 stack frame copy) */
   rf_sp = (uintptr_t *) RF_S0;
   rf_fp = rf_code_cold;
   rf_trampoline();
 }
-
-#ifdef PICO
-extern char rf_system_local_disc;
-#endif
 
 void rf_inst(void)
 {
