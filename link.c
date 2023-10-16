@@ -109,9 +109,4 @@ void rf_inst(void)
 
   /* now flag as installed */
   rf_installed = 1;
-
-  /* some target code needs RP and SP initialised before COLD */
-  /* e.g., 6809 assembly stack frame handling */
-  RF_RP_SET((uintptr_t *) RF_R0);
-  RF_SP_SET((uintptr_t *) RF_S0);
 }

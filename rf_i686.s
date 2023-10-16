@@ -13,19 +13,22 @@ rf_trampoline:
 _rf_trampoline:
         PUSH    EBP     # enter stack frame
         MOV     EBP,ESP
-        PUSH    EBX     # callee save ebx
-        PUSH    ESI     # callee save esi
+        PUSH    EBX     # callee save EBX
+        PUSH    ESI     # callee save ESI
         CALL    __x86.get_pc_thunk.bx
         ADD     EBX,OFFSET _GLOBAL_OFFSET_TABLE_
         PUSH    EBX
+        MOV     EAX,_rf_origin@GOTOFF[EBX] # S0 to SP
+        MOV     EAX,36[EAX]
+        MOV     rf_sp@GOTOFF[EBX],EAX
 trampoline1:
         POP     EBX
         PUSH    EBX
         MOV     EAX,rf_fp@GOTOFF[EBX]   # if FP is null skip to exit
         TEST    EAX,EAX
         JE      trampoline2
-        MOV     ESI,_rf_ip@GOTOFF[EBX]  # IP to esi
-        MOV     EDX,_rf_w@GOTOFF[EBX]   # W to edx
+        MOV     ESI,_rf_ip@GOTOFF[EBX]  # IP to ESI
+        MOV     EDX,_rf_w@GOTOFF[EBX]   # W to EDX
         LEA     ECX,trampoline1@GOTOFF[EBX] # push the return address
         PUSH    ECX
         MOV     ebpsave@GOTOFF[EBX],EBP # save EBP

@@ -463,8 +463,6 @@ static void rf_inst_load(void)
   origin[21] = (uintptr_t) &rf_inst_vocabulary;
   /* instead of ABORT */
   origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
-  /* TODO trampoline may require SP init (e.g., i686 stack frame copy) */
-  rf_sp = (uintptr_t *) RF_S0;
   rf_fp = rf_code_cold;
   rf_trampoline();
 }
