@@ -194,13 +194,13 @@ DECIMAL    ;S
 ( ASSEMBLER OBJECT MEM ) HEX
 0000 , 0000 ,      ( WORD ALIGNED VECTOR TO COLD )
 0000 , 0000 ,      ( WORD ALIGNED VECTOR TO WARM )
-0000 ,   ver  ,  ( CPU, AND REVISION PARAMETERS )
+0000 ,   0 ic ,  ( CPU, AND REVISION PARAMETERS )
 0000   ,        ( TOPMOST WORD IN FORTH VOCABULARY )
-  bs   ,        ( BACKSPACE CHARACTER )
-user   ,        ( INITIAL USER AREA )
-s0     ,        ( INITIAL TOP OF STACK )
-r0     ,        ( INITIAL TOP OF RETURN STACK )
-tib    ,        ( TERMINAL INPUT BUFFER )
+1 ic   ,        ( BACKSPACE CHARACTER )
+2 ic   ,        ( INITIAL USER AREA )
+3 ic   ,        ( INITIAL TOP OF STACK )
+4 ic   ,        ( INITIAL TOP OF RETURN STACK )
+5 ic   ,        ( TERMINAL INPUT BUFFER )
 001F   ,        ( INITIAL NAME FIELD WIDTH )
 0001   ,        ( INITIAL WARNING = 1 )
 0000   ,        ( INITIAL FENCE )
@@ -565,8 +565,8 @@ HEX
 20  CONSTANT BL                                ( ASCII BLANK *)
 40  CONSTANT C/L                  ( TEXT CHARACTERS PER LINE *)
 
-FIRST   CONSTANT   FIRST   ( FIRST BYTE RESERVED FOR BUFFERS *)
-LIMIT   CONSTANT   LIMIT            ( JUST BEYOND TOP OF RAM *)
+9 ic    CONSTANT   FIRST   ( FIRST BYTE RESERVED FOR BUFFERS *)
+A ic    CONSTANT   LIMIT            ( JUST BEYOND TOP OF RAM *)
   80    CONSTANT   B/BUF            ( BYTES PER DISC BUFFER  *)
    8     CONSTANT  B/SCR  ( BLOCKS PER SCREEN = 1024 B/BUF / *)
 
@@ -828,8 +828,8 @@ HERE 1+
 
 (  FOLLOWING DEFINITION IS INSTALLATION DEPENDENT )
 : ?STACK    ( QUESTION UPON OVER OR UNDERFLOW OF STACK *)
-  [ s0 ] LITERAL SP@ < 1 ?ERROR SP@ [ s1 ] LITERAL < 7 ?ERROR ;
--->    
+[ 3 ic ] LITERAL SP@ < 1 ?ERROR
+SP@ [ B ic ] LITERAL < 7 ?ERROR ; -->
 (  INTERPRET,                                     WFR-79APR18 )
 
 : INTERPRET   ( INTERPRET OR COMPILE SOURCE TEXT INPUT WORDS *)
@@ -1280,7 +1280,7 @@ LATEST   6 cs  +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2 ln + 2 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
 ( START - PROTO INTERPRETER SOURCE                 orterforth )
 ( a simple proto-interpreter bootstraps the outer interpreter )
-:u cs user + R> DROP ;S :DP     LIT  9 u :BLK     LIT 11 u
+:u cs LIT 2 ic + R> DROP ;S :DP LIT  9 u :BLK     LIT 11 u
 :IN      LIT 12 u       :OFFSET LIT 15 u :CONTEXT LIT 16 u
 :CURRENT LIT 17 u       :STATE  LIT 18 u :BASE    LIT 19 u
 :CSP     LIT 22 u
@@ -1312,11 +1312,11 @@ R> IN ! R> BLK ! ;S
 
 :[ % LIT 0 STATE ! ;S
 
-:EMPTY-BUFFERS FIRST LIMIT OVER - LIT 0 FILL ;S
+:EMPTY-BUFFERS LIT 9 ic LIT 10 ic OVER - LIT 0 FILL ;S
 
 :QUIT  [ CURRENT @ @ 1+ LIT 88 TOGGLE EMPTY-BUFFERS
        LIT 83 LOAD MON
-:ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs origin + @
+:ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs LIT 8 ic + @
        DUP CONTEXT ! CURRENT ! QUIT
 :X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
        R> DROP ;S
@@ -1351,7 +1351,7 @@ CODE R/W
 : HEX         16 BASE ! ; : ] 192 STATE ! ;
 : DECIMAL     10 BASE ! ;
 : LITERAL     0 , , ; IMMEDIATE ( forward reference to LIT    )
-: +ORIGIN     origin + ;
+: +ORIGIN     8 ic + ;
 : [COMPILE]   -FIND DROP DROP cl - , ; IMMEDIATE
 : BYTE.IN     -FIND DROP DROP + ;
 : REPLACED.BY -FIND DROP DROP cl - SWAP ! ;
@@ -1379,8 +1379,8 @@ CODE R/W
 12 LOAD                         ( load params and code        )
 
 ( now resolve forward references in control words & LITERAL   )
-( NB we could wait until now to define these but that would   )
-( be inauthentic - they would be pre-existing in Forth        )
+
+
 01 cs BYTE.IN LITERAL   REPLACED.BY LIT
 01 cs BYTE.IN DO        REPLACED.BY (DO)
 02 cs BYTE.IN LOOP      REPLACED.BY (LOOP)
@@ -1402,13 +1402,13 @@ CODE R/W
 
 13 cd ' EMIT CFA !              ( set EMIT CFA from silent    )
 
-1 installed C!                  ( installed flag = 1          )
+1 12 ic C!                      ( installed flag = 1          )
 
 HERE 64 cs ALLOT                ( make room for link table    )
 -->
 ( CREATE LINK TABLE                                orterforth )
 : link                          ( --                          )
-  link? IF 
+  14 ic IF                      ( only if link enabled:       )
     59 0 DO I cd , LOOP         ( table of code addresses     )
     ' : 9 cs + ,                ( end of table has 5 refs in  )
     ' CONSTANT 4 cs + ,         ( word bodies                 )
@@ -1423,10 +1423,10 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
 2000 VARIABLE blk               ( first block of DR1          )
 -->
 ( SAVE INSTALLATION TO DR1 AS HEX                  orterforth )
-: start link? IF origin ELSE org ENDIF ;
-: end HERE link? IF 64 cs + ENDIF ;
+: start 14 ic IF 8 ic ELSE 13 ic ENDIF ; ( org or origin      )
+: end HERE 14 ic IF 64 cs + ENDIF ;      ( here or after link )
 : save                          ( --                          )
-  save? IF
+  15 ic IF                      ( only if save enabled:       )
     link                        ( write link table            )
     end start DO                ( write blocks of hex         )
       I hbl buf blk @ 0 R/W
@@ -1435,14 +1435,14 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
     buf 128 90 FILL             ( write a block of 'Z's       )
     buf blk @ 0 R/W
   ENDIF ;
-DP !                            ( move DP back                )
+DP !                            ( move DP back before table   )
 0 ' cl LFA !                    ( break inst dictionary link  )
-save ;S                         ( now save                    )
+save ;S                         ( now save, if enabled; done! )
 ( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
 
 ( additional boot-up literals                                 )
 0 , 0 ,                         ( extra boot-up lits for cpu  )
-th , tl ,                       ( extra boot-up lits for trgt )
+6 ic , 7 ic ,                   ( extra boot-up lits for trgt )
 0 , 0 ,                         ( extra boot-up lits for COLD )
 
 ( additional words                                            )

@@ -99,11 +99,11 @@ static void rf_inst_code(const char *name, rf_code_t code)
   }
 #endif
 
-  /* terminating bit */
-  *(here - 1) |= 0x80;
-
   /* update DP */
   *rf_inst_dp = here;
+
+  /* terminating bit */
+  *(--here) |= 0x80;
 
   /* link field */
   rf_inst_comma((uintptr_t) rf_inst_vocabulary);
@@ -113,7 +113,7 @@ static void rf_inst_code(const char *name, rf_code_t code)
   rf_inst_comma((uintptr_t) code);
 }
 
-/* NFA LFA */
+/* PFA LFA */
 static uint8_t __FASTCALL__ **rf_inst_lfa(uint8_t *nfa)
 {
   /* traverse name field */
@@ -150,14 +150,7 @@ static uint8_t *rf_inst_find(const char *t, uint8_t length)
   return 0;
 }
 
-/* compile a constant */
-static void rf_inst_constant(const char *name, uintptr_t value)
-{
-  rf_inst_code(name, rf_code_docon);
-  rf_inst_comma(value);
-}
-
-/* NFA CFA */
+/* PFA CFA */
 static rf_code_t __FASTCALL__ *rf_inst_cfa(uint8_t *nfa)
 {
   uint8_t **lfa = rf_inst_lfa(nfa);
@@ -383,6 +376,45 @@ static void rf_inst_load(void)
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
   rf_inst_dp = (uint8_t **) &(RF_USER_DP);
 
+  /* for boot time literals */
+  rf_inst_comma(RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
+  rf_inst_comma(RF_BS);
+  rf_inst_comma((uintptr_t) RF_USER);
+  rf_inst_comma((uintptr_t) RF_S0);
+  rf_inst_comma((uintptr_t) RF_R0);
+  rf_inst_comma((uintptr_t) RF_TIB);
+  /* boot time literals to identify platform */
+  rf_inst_comma(RF_TARGET_HI);
+  rf_inst_comma(RF_TARGET_LO);
+  /* for +ORIGIN and also for save */
+  rf_inst_comma((uintptr_t) RF_ORIGIN);
+  /* disc buffer constants */
+  rf_inst_comma((uintptr_t) RF_FIRST);
+  rf_inst_comma((uintptr_t) RF_LIMIT);
+  /* used in ?STACK */
+  rf_inst_comma((uintptr_t) ((uintptr_t *) RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE)));
+  /* installed flag */
+  rf_inst_comma((uintptr_t) &rf_installed);
+  /* used to save to DR1 */
+#ifdef RF_ORG
+  rf_inst_comma(RF_ORG);
+#else
+  rf_inst_comma(0);
+#endif
+#ifdef RF_INST_LINK
+  rf_inst_comma(1);
+#else
+  rf_inst_comma(0);
+#endif
+#ifdef RF_INST_SAVE
+  rf_inst_comma(1);
+#else
+  rf_inst_comma(0);
+#endif
+  /* inst dictionary start */
+  rf_inst_code("id", rf_code_docon);
+  rf_inst_comma((uintptr_t) RF_INST_DICTIONARY);
+
   /* forward defined code words */
   for (i = 0; i < 62; ++i) {
     const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
@@ -391,42 +423,12 @@ static void rf_inst_load(void)
     }
   }
 
-  /* boot time literals */
-  rf_inst_constant("ver", (uintptr_t) RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
-  rf_inst_constant("bs", (uintptr_t) RF_BS);
-  rf_inst_constant("user", (uintptr_t) RF_USER);
-  rf_inst_constant("s0", (uintptr_t) RF_S0);
-  rf_inst_constant("r0", (uintptr_t) RF_R0);
-  rf_inst_constant("tib", (uintptr_t) RF_TIB);
-  /* boot time literals to identify platform */
-  rf_inst_constant("th", RF_TARGET_HI);
-  rf_inst_constant("tl", RF_TARGET_LO);
-  /* for +ORIGIN and also for save */
-  rf_inst_constant("origin", (uintptr_t) RF_ORIGIN);
-  /* disc buffer constants */
-  rf_inst_constant("FIRST", (uintptr_t) RF_FIRST);
-  rf_inst_constant("LIMIT", (uintptr_t) RF_LIMIT);
-  /* s0, s1 used in ?STACK */
-  rf_inst_constant("s1", (uintptr_t) ((uintptr_t *) RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE)));
-  /* installed flag */
-  rf_inst_constant("installed", (uintptr_t) &rf_installed);
-  /* save install to DR1 in hex */
-#ifdef RF_ORG
-  rf_inst_constant("org", RF_ORG);
-#else
-  rf_inst_constant("org", 0);
-#endif
-#ifdef RF_INST_LINK
-  rf_inst_constant("link?", 1);
-#else
-  rf_inst_constant("link?", 0);
-#endif
-#ifdef RF_INST_SAVE
-  rf_inst_constant("save?", 1);
-#else
-  rf_inst_constant("save?", 0);
-#endif
-
+  /* installation constants */
+  rf_inst_compile(
+    ":ic cs id + @ ;S");
+  /* FIRST */
+  rf_inst_compile(
+    ":FIRST LIT 9 ic ;S");
   /* ?DISC */
   rf_inst_compile(
     ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
@@ -444,7 +446,7 @@ static void rf_inst_load(void)
     "DUP BLOCK compile "
     "LIT 1 + BRANCH ^-13 DROP "
     /* call ABORT just defined */
-    "LIT ^21 origin + @ @ LIT ^-22 + EXECUTE");
+    "LIT ^21 LIT 8 ic + @ @ LIT ^-24 + EXECUTE");
 
   /* set boot-up literals and run COLD */
   /* LATEST */
