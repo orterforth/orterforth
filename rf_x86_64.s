@@ -12,49 +12,57 @@
         .p2align 4, 0x90
 rf_trampoline:
 _rf_trampoline:
-        PUSH    RBP     # enter stack frame
+        PUSH    RBP                     # enter stack frame
         MOV     RBP,RSP
+# TODO S0 to SP?
 trampoline1:
-        CMP     QWORD PTR _rf_fp[RIP],0 # if FP is null skip to exit
-        JE      trampoline2
-        MOV     RSI,_rf_ip[RIP] # IP to rsi
-        MOV     RDX,_rf_w[RIP] # W to rdx
-        LEA     RAX,trampoline1[RIP] # push the return address
-        PUSH    RAX
-        MOV     rbpsave[RIP],RBP # save rbp
-        MOV     rspsave[RIP],RSP # save rsp
-        MOV     RBP,_rf_rp[RIP] # RP to rbp
-        MOV     RSP,_rf_sp[RIP] # SP to rsp
-        JMP     _rf_fp[RIP] # jump to FP
-                        # will return to trampoline1
+        MOV     RAX,_rf_fp[RIP]
+        TEST    RAX,RAX                 # if FP is null skip to exit
+        JZ      trampoline2
+        MOV     RSI,_rf_ip[RIP]         # IP to RSI
+        MOV     RDX,_rf_w[RIP]          # W to RDX
+        LEA     RCX,trampoline1[RIP]    # push the return address
+        PUSH    RCX
+        MOV     rbpsave[RIP],RBP        # save RBP
+        MOV     rspsave[RIP],RSP        # save RSP
+        MOV     RBP,_rf_rp[RIP]         # RP to RBP
+        MOV     RSP,_rf_sp[RIP]         # SP to RSP
+        JMP     RAX                     # jump to FP
+                                        # will return to trampoline1
 trampoline2:
-        POP     RBP     # leave stack frame
-        RET             # bye
+        POP     RBP                     # leave stack frame
+        RET                             # bye
 
         .globl rf_start
         .globl _rf_start
         .p2align 4, 0x90
 rf_start:
 _rf_start:
-        POP     RAX     # unwind rf_start return address
-        MOV     _rf_w[RIP],RDX # rdx to W
-        MOV     _rf_ip[RIP],RSI # rsi to IP
-        MOV     RCX,RBP # get difference between rsp and rbp
+        MOV     _rf_w[RIP],RDX          # RDX to W
+        MOV     _rf_ip[RIP],RSI         # RSI to IP
+                                        # C stack frame and return address have
+                                        # been pushed to Forth stack; we need to
+                                        # move them to the C stack:
+        POP     RAX                     # unwind rf_start return address
+        MOV     RCX,RBP                 # stack frame size to RCX
         SUB     RCX,RSP
-        MOV     RSI,RSP # old SP now in rsi
-        MOV     RSP,RBP # empty the stack frame, i.e., make rsp = rbp
-        POP     RBP     # get the pushed rbp (this is RP)
-        MOV     _rf_rp[RIP],RBP # rbp to RP
-        MOV     _rf_sp[RIP],RSP # rsp to SP
-        MOV     RBP,rbpsave[RIP] # restore rbp
-        MOV     RSP,rspsave[RIP] # restore rsp
-        PUSH    RBP     # push rbp as it would have been
-        MOV     RBP,RSP # and mov rsp into rbp
-        SUB     RSP,RCX # sub the difference from rsp
-        MOV     RDI,RSP # this is the new stack frame
-        CLD             # copy old stack frame here including any spill
-        REP     movsb   # NB LLVM errors if MOVS... is in upper case!
-        JMP     RAX     # carry on in C
+        MOV     RSI,RSP                 # stack frame start to RSI
+        MOV     RSP,RBP                 # empty the stack frame, i.e., make RSP = RBP
+        POP     RBP                     # RBP that was pushed (this is RP)
+        MOV     _rf_rp[RIP],RBP         # RBP to RP
+        MOV     _rf_sp[RIP],RSP         # RSP to SP
+        MOV     RBP,rbpsave[RIP]        # restore RBP
+        MOV     RSP,rspsave[RIP]        # restore RSP
+        PUSH    RBP                     # create new stack frame
+        MOV     RBP,RSP
+        SUB     RSP,RCX
+        MOV     RDI,RSP                 # new stack frame start to RDI
+        CLD                             # now copy data from old stack frame
+        REP     movsb                   # NB LLVM errors if MOVS... is in upper case!
+        JMP     RAX                     # carry on in C
+                                        # of course other x86_64 registers could be used
+                                        # avoiding this issue, but here we inherit
+                                        # from the original 8086 fig-Forth source.
 
         .globl rf_code_cl
         .globl _rf_code_cl
