@@ -100,11 +100,9 @@ void rf_code_cr(void)
 
 void rf_disc_read(char *p, uint8_t len)
 {
-  int t;
-
   ++len;
   while (--len) {
-    while ((t = ser_get(p)) != SER_ERR_OK) {
+    while (ser_get(p) != SER_ERR_OK) {
     }
     p++;
   }
