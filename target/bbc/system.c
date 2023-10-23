@@ -62,7 +62,7 @@ void rf_code_qterm(void)
   RF_JUMP_NEXT;
 }
 
-void rf_code_cr()
+void rf_code_cr(void)
 {
   RF_START;
   osnewl();
