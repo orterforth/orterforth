@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
     return disc_mux(argc, argv);
   }
 
-  /* Pty */
+  /* Pseudoteletype */
   if ((argc == 4 || argc == 5) && !strcmp("pty", argv[1])) {
     return disc_pty(argc, argv);
   }
