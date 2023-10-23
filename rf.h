@@ -45,6 +45,9 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/c64/c64.inc"
 #endif
 #endif
+/* 6502 */
+#define RF_CPU_HI 0x0004
+#define RF_CPU_LO 0x5ED2
 #endif
 
 /* cmoc */
@@ -62,6 +65,9 @@ typedef unsigned long rf_double_t;
 #define RF_TARGET_INC "target/dragon/dragon.inc"
 #endif
 #endif
+/* 6809 */
+#define RF_CPU_HI 0x0004
+#define RF_CPU_LO 0x6E09
 #endif
 
 /* z88dk */
@@ -97,6 +103,9 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/zx81/zx81.inc"
 #endif
 #endif
+/* Z80 */
+#define RF_CPU_HI 0x0000
+#define RF_CPU_LO 0xB250
 #endif
 #ifndef __SCCZ80
 #define __FASTCALL__
@@ -117,18 +126,39 @@ typedef unsigned long uintptr_t;
 #define RF_TARGET_INC "target/ql/ql.inc"
 #endif
 #endif
+/* 68000 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x009F7800
 #endif
 
 /* modern platforms */
 
 #ifdef __i386__
 #define RF_LE
+/* X86 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x0000A836
 #endif
+
 #ifdef __x86_64__
 #define RF_LE
+/* X8664 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x0353923C
 #endif
+
 #ifdef __arm__
 #define RF_LE
+/* ARM */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x00003682
+#endif
+
+#ifdef __aarch64__
+#define RF_LE
+/* ARM64 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x0113F2FC
 #endif
 
 #ifdef __CYGWIN__

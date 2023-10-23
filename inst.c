@@ -411,6 +411,9 @@ static void rf_inst_load(void)
 #else
   rf_inst_comma(0);
 #endif
+  /* CPU lits */
+  rf_inst_comma(RF_CPU_HI);
+  rf_inst_comma(RF_CPU_LO);
   /* inst dictionary start */
   rf_inst_code("id", rf_code_docon);
   rf_inst_comma((uintptr_t) RF_INST_DICTIONARY);

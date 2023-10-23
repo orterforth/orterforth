@@ -1441,9 +1441,10 @@ save ;S                         ( now save, if enabled; done! )
 ( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
 
 ( additional boot-up literals                                 )
-0 , 0 ,                         ( extra boot-up lits for cpu  )
-6 ic , 7 ic ,                   ( extra boot-up lits for trgt )
-0 , 0 ,                         ( extra boot-up lits for COLD )
+10 ic , 11 ic ,                 ( for CPU, base 36            )
+6 ic , 7 ic ,                   ( for target, base 36         )
+0 , 0 ,                         ( used by COLD                )
+0 ,                             ( for extension               )
 
 ( additional words                                            )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)
