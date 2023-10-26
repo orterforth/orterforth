@@ -195,23 +195,9 @@ typedef unsigned long uintptr_t;
 /* PICO */
 #define RF_TARGET_HI 0x00000000
 #define RF_TARGET_LO 0x00122928
+#ifndef RF_ALIGN
 #define RF_ALIGN 4
 #endif
-
-/* DERIVED WORD AND DOUBLE SIZE */
-
-#if (RF_WORD_SIZE == 2)
-#define RF_WORD_SIZE_BITS 16
-#define RF_DOUBLE_SIZE 4
-#define RF_DOUBLE_SIZE_BITS 32
-#elif (RF_WORD_SIZE == 4)
-#define RF_WORD_SIZE_BITS 32
-#define RF_DOUBLE_SIZE 8
-#define RF_DOUBLE_SIZE_BITS 64
-#elif (RF_WORD_SIZE == 8)
-#define RF_WORD_SIZE_BITS 64
-#define RF_DOUBLE_SIZE 16
-#define RF_DOUBLE_SIZE_BITS 128
 #endif
 
 /* OTHERWISE DEFAULT TARGET = HOST PLATFORM */

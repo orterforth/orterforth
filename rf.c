@@ -464,7 +464,16 @@ void rf_code_cmove(void)
 }
 #endif
 
-/* define double handling functions where required */
+/* DOUBLE ARITHMETIC */
+
+#if (RF_WORD_SIZE == 2)
+#define RF_WORD_SIZE_BITS 16
+#elif (RF_WORD_SIZE == 4)
+#define RF_WORD_SIZE_BITS 32
+#elif (RF_WORD_SIZE == 8)
+#define RF_WORD_SIZE_BITS 64
+#endif
+
 #ifdef RF_DOUBLE_ARITH
 #ifndef RF_TARGET_CODE_USTAR
 #define RF_UNDOUBLE
@@ -510,6 +519,7 @@ static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
   rf_undouble(d, ch, cl);
 }
 #else
+
 #if (RF_WORD_SIZE==2)
 #define RF_WORD_SIZE_BITS_HALF 8
 #define RF_WORD_MASK_LO 0x00FFU
@@ -525,6 +535,7 @@ static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
 #define RF_WORD_MASK_LO 0x00000000FFFFFFFFU
 #define RF_WORD_MASK_HI 0xFFFFFFFF00000000U
 #endif
+
 static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
 {
   uintptr_t ah = a >> RF_WORD_SIZE_BITS_HALF;
