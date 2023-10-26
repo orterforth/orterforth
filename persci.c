@@ -109,7 +109,7 @@ static char rf_persci_buf[131];
 static unsigned int rf_persci_idx = 0;
 static unsigned int rf_persci_len = 0;
 
-/* empty buffers */
+/* empty buffer */
 static void rf_persci_reset(void)
 {
   rf_persci_idx = 0;
