@@ -6,8 +6,8 @@ You will need:
  * CMake                 : https://cmake.org/
  * Raspberry Pi Pico SDK :
    https://github.com/raspberrypi/pico-sdk
-   and its dependencies (Makefile expects this to be located
-   at: ~/pico-sdk)
+   and its dependencies (Makefile expects PICO_SDK_PATH to be
+   located at: ~/pico/pico-sdk)
 
 To build, call:
 

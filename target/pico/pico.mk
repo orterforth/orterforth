@@ -39,7 +39,7 @@ pico-run : | $(ORTER) $(DISC)
 
 pico/Makefile : target/pico/CMakeLists.txt | pico
 
-	cd pico && PICO_SDK_PATH=~/pico-sdk cmake $(PICOCMAKEOPTION) ../target/pico
+	cd pico && PICO_SDK_PATH=~/pico/pico-sdk cmake $(PICOCMAKEOPTION) ../target/pico
 
 pico/orterforth.uf2 : \
 	pico/Makefile \
