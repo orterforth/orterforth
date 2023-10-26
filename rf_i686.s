@@ -11,10 +11,10 @@
         .globl _rf_trampoline
 rf_trampoline:
 _rf_trampoline:
-        PUSH    EBP     # enter stack frame
+        PUSH    EBP                     # enter stack frame
         MOV     EBP,ESP
-        PUSH    EBX     # callee save EBX
-        PUSH    ESI     # callee save ESI
+        PUSH    EBX                     # callee save EBX
+        PUSH    ESI                     # callee save ESI
         CALL    __x86.get_pc_thunk.bx
         ADD     EBX,OFFSET _GLOBAL_OFFSET_TABLE_
         PUSH    EBX
@@ -35,14 +35,14 @@ trampoline1:
         MOV     EBP,_rf_rp@GOTOFF[EBX]  # RP to EBP
         MOV     espsave@GOTOFF[EBX],ESP # save ESP
         MOV     ESP,_rf_sp@GOTOFF[EBX]  # SP to ESP
-        JMP     EAX     # jump to FP
-                        # will return to trampoline1
+        JMP     EAX                     # jump to FP
+                                        # will return to trampoline1
 trampoline2:
         POP     EBX
         POP     ESI
         POP     EBX
-        LEAVE           # leave stack frame
-        RET             # bye
+        LEAVE                           # leave stack frame
+        RET                             # bye
 
 	.globl	rf_start
 	.globl	_rf_start
@@ -50,25 +50,28 @@ rf_start:
 _rf_start:
         CALL    __x86.get_pc_thunk.ax
         ADD     EAX,OFFSET _GLOBAL_OFFSET_TABLE_
-        MOV     _rf_w@GOTOFF[EAX],EDX   # edx to W
-        MOV     _rf_ip@GOTOFF[EAX],ESI  # esi to IP
-        POP     EDX     # rf_start return address to edx
-        MOV     ECX,EBP # stack frame size to ECX
+        MOV     _rf_w@GOTOFF[EAX],EDX   # EDX to W
+        MOV     _rf_ip@GOTOFF[EAX],ESI  # ESI to IP
+                                        # C stack frame and return address have
+                                        # been pushed to Forth stack; we need to
+                                        # move them to the C stack:
+        POP     EDX                     # unwind rf_start return address
+        MOV     ECX,EBP                 # stack frame size to ECX
         SUB     ECX,ESP
-        MOV     ESI,ESP # SP (with stack frame) to esi
-        MOV     ESP,EBP # ebp to esp, empty the stack frame
-        POP     EBP     # RP to ebp (pushed by prolog)
+        MOV     ESI,ESP                 # stack frame start to ESI
+        MOV     ESP,EBP                 # empty the stack frame, i.e., make ESP = EBP
+        POP     EBP                     # EBP that was pushed (this is RP)
         MOV     _rf_rp@GOTOFF[EAX],EBP  # EBP to RP
         MOV     EBP,ebpsave@GOTOFF[EAX] # restore EBP
         MOV     _rf_sp@GOTOFF[EAX],ESP  # ESP to SP
         MOV     ESP,espsave@GOTOFF[EAX] # restore ESP
-        PUSH    EBP     # stack frame: push EBP
-        MOV     EBP,ESP #              ESP to EBP
-        SUB     ESP,ECX #              allocate stack space
-        MOV     EDI,ESP # copy stack frame
-        CLD
+        PUSH    EBP                     # create new stack frame
+        MOV     EBP,ESP
+        SUB     ESP,ECX
+        MOV     EDI,ESP                 # new stack frame start to EDI
+        CLD                             # now copy data from old stack frame
         REP     MOVSB
-        JMP     EDX     # carry on in C
+        JMP     EDX                     # carry on in C
 
         .globl rf_code_cl
         .globl _rf_code_cl
