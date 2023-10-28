@@ -8,11 +8,6 @@ const
 #include "model.inc"
 #endif
 
-/* if disc controller switches after inst */
-#ifdef PICO
-extern char rf_system_local_disc;
-#endif
-
 /* if we delay start of inst to allow disc server to start */
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
@@ -492,8 +487,5 @@ void rf_inst(void)
 #ifdef RF_INST_LOCAL_DISC
   /* now "eject" the inst disc */
   rf_persci_eject(0);
-#ifdef PICO
-  rf_system_local_disc = 0;
-#endif
 #endif
 }

@@ -8,6 +8,15 @@
 /* use heap memory */
 char *rf_origin = 0;
 
+/* repeat message for benefit of serial out */
+static void error(const char *message)
+{
+  for (;;) {
+    perror(message);
+    sleep_ms(1000);
+  }
+}
+
 void rf_init(void)
 {
   /* init UART */
@@ -19,20 +28,16 @@ void rf_init(void)
 */
   /* allocate memory */
   rf_origin = malloc(RF_MEMORY_SIZE);
-  /* on failure, repeat message */
   if (!rf_origin) {
-    for (;;) {
-      perror("memory init failed");
-      sleep_ms(1000);
-    }
+    error("memory init failed");
   }
 }
 
-char rf_system_local_disc = 1;
+extern uint8_t rf_persci_ejected;
 
 void rf_disc_read(char *p, uint8_t len)
 {
-  if (rf_system_local_disc) {
+  if (!rf_persci_ejected) {
     for (; len; --len) {
       *(p++) = rf_persci_getc();
     }
@@ -43,14 +48,10 @@ void rf_disc_read(char *p, uint8_t len)
 
 void rf_disc_write(char *p, uint8_t len)
 {
-  if (rf_system_local_disc) {
+  if (!rf_persci_ejected) {
     for (; len; --len) {
       if (rf_persci_putc(*(p++)) == -1) {
-        /* on failure, repeat message */
-        for (;;) {
-          fprintf(stderr, "rf_persci_putc invalid state\n");
-          sleep_ms(1000);
-        }
+        error("rf_persci_putc invalid state\n");
       }
     }
   } else {

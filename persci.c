@@ -84,6 +84,9 @@ void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
   discs[drive] = (uint8_t *) bytes;
 }
 
+/* flag used by e.g. Raspberry Pi Pico to start using external disc */
+uint8_t rf_persci_ejected = 0;
+
 void rf_persci_eject(int drive)
 {
   /* 0-3 only */
@@ -101,6 +104,9 @@ void rf_persci_eject(int drive)
   }
 
   discs[drive] = 0;
+
+  /* mark ejected */
+  rf_persci_ejected = 1;
 }
 
 /* BUFFER */
