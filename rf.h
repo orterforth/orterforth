@@ -198,6 +198,8 @@ typedef unsigned long uintptr_t;
 #ifndef RF_ALIGN
 #define RF_ALIGN 4
 #endif
+/* make MON just restart */
+#define RF_NOEXIT
 #endif
 
 /* OTHERWISE DEFAULT TARGET = HOST PLATFORM */

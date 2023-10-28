@@ -38,8 +38,14 @@ int main(void)
 #endif
 
   /* run COLD */
-  rf_fp = rf_code_cold;
-  rf_trampoline();
+#ifdef RF_NOEXIT
+  for (;;) {
+#endif
+    rf_fp = rf_code_cold;
+    rf_trampoline();
+#ifdef RF_NOEXIT
+  }
+#endif
 
   /* finalise */
   rf_fin();
