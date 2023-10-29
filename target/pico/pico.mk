@@ -33,7 +33,7 @@ PICOSERIALPORT := /dev/ttyACM0
 endif
 
 .PHONY : pico-run
-pico-run : | $(ORTER) $(DISC)
+pico-run : | $(ORTER) $(DISC) $(DR0) $(DR1)
 
 	$(DISC) mux $(PICOSERIALPORT) 115200 $(DR0) $(DR1)
 
