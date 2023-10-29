@@ -37,6 +37,7 @@ ifeq ($(UNAME_S),Linux)
 endif
 # TODO mingw32 support
 ifneq ($(filter MINGW%,$(UNAME_S)),)
+	CC := gcc
 	OPER := mingw
 endif
 
@@ -63,6 +64,7 @@ SYSTEM := $(OPER)-$(PROC)
 TARGET := $(SYSTEM)
 
 # local system target executables
+BLOCKS := $(SYSTEM)/blocks
 DISC := $(SYSTEM)/disc
 ORTER := $(SYSTEM)/orter
 ORTERFORTH := $(SYSTEM)/orterforth
@@ -81,6 +83,11 @@ SYSTEMDEPS := \
 # default target
 .PHONY : default
 default : build
+
+# disc image (blocks file) conversion utility
+$(BLOCKS) : blocks.c
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
 # local system disc server executable
 $(DISC) : \
@@ -173,9 +180,9 @@ $(TARGET)-help :
 	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then more help.txt ; else more target/$(TARGET)/help.txt ; fi
 
 # Forth source file to disc image
-%.img : %.fs | $(DISC)
+%.img : %.fs | $(BLOCKS)
 
-	$(DISC) create < $< > $@.io
+	$(BLOCKS) create < $< > $@.io
 	mv $@.io $@
 
 # build
