@@ -360,10 +360,22 @@ static void rf_inst_code_cd(void)
 extern char rf_installed;
 
 /* bootstrap the installing Forth vocabulary */
-static void rf_inst_load(void)
+void rf_inst(void)
 {
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
+
+#ifdef RF_INST_WAIT
+#ifdef __RC2014
+  /* wait for disc server to init */ 
+  z80_delay_ms(5000);
+#endif
+#endif
+
+#ifdef RF_INST_LOCAL_DISC
+  /* "insert" the inst disc */
+  rf_persci_insert_bytes(0, model_img);
+#endif
 
   /* cold start LATEST UP DP */
   rf_inst_vocabulary = 0;
@@ -465,24 +477,6 @@ static void rf_inst_load(void)
   origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
   rf_fp = rf_code_cold;
   rf_trampoline();
-}
-
-void rf_inst(void)
-{
-#ifdef RF_INST_WAIT
-#ifdef __RC2014
-  /* wait for disc server to init */ 
-  z80_delay_ms(5000);
-#endif
-#endif
-
-#ifdef RF_INST_LOCAL_DISC
-  /* "insert" the inst disc */
-  rf_persci_insert_bytes(0, model_img);
-#endif
-
-  /* LOAD all Forth model source from disc */
-  rf_inst_load();
 
 #ifdef RF_INST_LOCAL_DISC
   /* now "eject" the inst disc */
