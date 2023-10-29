@@ -440,7 +440,7 @@ static void rf_inst_load(void)
     /* empty buffers */
     "LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! "
     /* loop over blocks */
-    "LIT 641 DUP LIT -661 + 0BRANCH ^9 "
+    "LIT 785 DUP LIT -805 + 0BRANCH ^9 "
     "DUP BLOCK compile "
     "LIT 1 + BRANCH ^-13 DROP "
     /* call ABORT just defined */

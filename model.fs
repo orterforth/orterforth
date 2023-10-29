@@ -205,7 +205,7 @@ DECIMAL    ;S
 0001   ,        ( INITIAL WARNING = 1 )
 0000   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
-0000   ,        ( COLD START VALUE FOR VOC-LINK ) 5A LOAD -->
+0000   ,        ( COLD START VALUE FOR VOC-LINK ) 6C LOAD -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
 3 cd HERE cl - !
@@ -1278,6 +1278,294 @@ HERE    14 cs  +ORIGIN  !   ( COLD START FENCE )
 HERE    15 cs  +ORIGIN  !   ( COLD START DP )
 LATEST   6 cs  +ORIGIN  !   ( TOPMOST WORD )
 ' FORTH 2 ln + 2 cs + 16 cs +ORIGIN ! ( COLD VOC-LINK ) ;S
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(  TEXT,  LINE                                    WFR-79MAY01 )
+FORTH  DEFINITIONS   HEX
+: TEXT                        ( ACCEPT FOLLOWING TEXT TO PAD *)
+     HERE  C/L  1+   BLANKS  WORD  HERE  PAD  C/L  1+  CMOVE  ;
+
+: LINE              ( RELATIVE TO SCR, LEAVE ADDRESS OF LINE *)
+      DUP  FFF0  AND  17  ?ERROR   ( KEEP ON THIS SCREEN )
+      SCR  @  (LINE)  DROP  ;
+-->
+
+
+
+
+
+
+
+(  LINE EDITOR                                    WFR-79MAY03 )
+VOCABULARY  EDITOR  IMMEDIATE    HEX
+: WHERE                  ( PRINT SCREEN # AND IMAGE OF ERROR *)
+    DUP  B/SCR  /  DUP  SCR  !  ." SCR # "  DECIMAL  .
+    SWAP  C/L  /MOD  C/L  *  ROT  BLOCK  +  CR  C/L  TYPE
+    CR  HERE  C@  -  SPACES  5E EMIT  [COMPILE] EDITOR  QUIT  ;
+
+EDITOR  DEFINITIONS
+: #LOCATE                    ( LEAVE CURSOR OFFSET-2, LINE-1 *)
+         R#  @  C/L  /MOD  ;
+: #LEAD                 ( LINE ADDRESS-2, OFFSET-1 TO CURSOR *)
+         #LOCATE  LINE  SWAP  ;
+: #LAG              ( CURSOR ADDRESS-2, COUNT-1 AFTER CURSOR *)
+         #LEAD  DUP  >R  +  C/L  R>  -  ;
+: -MOVE      ( MOVE IN BLOCK BUFFER ADDR FROM-2,  LINE TO-1 *)
+         LINE  C/L  CMOVE  UPDATE  ;  -->
+(  LINE EDITING COMMANDS                          WFR-79MAY03 )
+: H                              ( HOLD NUMBERED LINE AT PAD *)
+      LINE  PAD  1+  C/L  DUP  PAD  C!  CMOVE  ;
+
+: E                               ( ERASE LINE-1 WITH BLANKS *)
+      LINE  C/L  BLANKS  UPDATE  ;
+
+: S                             ( SPREAD MAKING LINE # BLANK *)
+      DUP  1  -  ( LIMIT )  0E ( FIRST TO MOVE )
+      DO  I  LINE  I  1+  -MOVE  -1  +LOOP  E  ;
+
+: D                         ( DELETE LINE-1, BUT HOLD IN PAD *)
+      DUP  H  0F  DUP  ROT
+      DO  I  1+  LINE  I  -MOVE  LOOP  E  ;
+
+-->
+(  LINE EDITING COMMANDS                          WFR-79MAY03 )
+
+: M    ( MOVE CURSOR BY SIGNED AMOUNT-1, PRINT ITS LINE *)
+     R#  +!  CR  SPACE  #LEAD  TYPE  5F  EMIT
+                        #LAG   TYPE  #LOCATE  .  DROP  ;
+
+: T    ( TYPE LINE BY #-1,  SAVE ALSO IN PAD *)
+     DUP  C/L  *  R#  !  DUP  H  0  M  ;
+
+: L     ( RE-LIST SCREEN *)
+        SCR  @  LIST  0  M  ;
+-->
+
+
+
+
+(  LINE EDITING COMMANDS                           WFR-790105 )
+: R                          ( REPLACE ON LINE #-1, FROM PAD *)
+      PAD  1+  SWAP  -MOVE  ;
+
+: P                           ( PUT FOLLOWING TEXT ON LINE-1 *)
+      1  TEXT  R  ;
+
+: I                       ( INSERT TEXT FROM PAD ONTO LINE # *)
+      DUP  S  R  ;
+                            CR
+: TOP                    ( HOME CURSOR TO TOP LEFT OF SCREEN *)
+      0  R#  !  ;
+-->
+
+
+
+(  SCREEN EDITING COMMANDS                        WFR-79APR27 )
+: CLEAR                           ( CLEAR SCREEN BY NUMBER-1 *)
+      SCR  !  10  0  DO  FORTH  I  EDITOR  E  LOOP  ;
+
+: FLUSH                   ( WRITE ALL UPDATED BLOCKS TO DISC *)
+    [  LIMIT  FIRST  -  B/BUF 2 cs + /  ]  ( NUMBER OF BUFFERS)
+    LITERAL  0  DO  7FFF  BUFFER  DROP  LOOP  ;
+
+: COPY                   ( DUPLICATE SCREEN-2, ONTO SCREEN-1 *)
+   B/SCR  *  OFFSET  @  +  SWAP  B/SCR  *  B/SCR  OVER  +  SWAP
+   DO  DUP  FORTH  I  BLOCK  cl -  !  1+   UPDATE  LOOP
+   DROP  FLUSH  ;
+-->
+
+
+
+(  DOUBLE NUMBER SUPPORT                          WFR-80APR24 )
+(  OPERATES ON 32 BIT DOUBLE NUMBERS   OR TWO 16-BIT INTEGERS )
+FORTH DEFINITIONS
+
+: 2DROP   DROP    DROP  ;  ( DROP DOUBLE NUMBER )
+
+: 2DUP    OVER    OVER  ;  ( DUPLICATE A DOUBLE NUMBER )
+
+: 2SWAP   ROT     >R    ROT   R>  ;
+        ( BRING SECOND DOUBLE TO TOP OF STACK )
+EDITOR DEFINITIONS  -->
+
+
+
+
+
+(  STRING MATCH FOR EDITOR                     PM-WFR-80APR25 )
+: -TEXT                   ( ADDRESS-3, COUNT-2, ADDRESS-1 --- )
+ SWAP   -DUP  IF  ( LEAVE BOOLEAN MATCHED-NON-ZERO, NOPE-ZERO )
+              OVER + SWAP      ( NEITHER ADDRESS MAY BE ZERO! )
+        DO  DUP  C@  FORTH  I  C@  -
+            IF  0=  LEAVE  ELSE  1+  THEN    LOOP
+        ELSE  DROP  0=  THEN  ;
+: MATCH   ( CURSOR ADDRESS-4, BYTES LEFT-3, STRING ADDRESS-2, )
+          ( STRING COUNT-1, ---  BOOLEAN-2, CURSOR MOVEMENT-1 )
+  >R  >R  2DUP  R>  R>  2SWAP  OVER  +  SWAP
+  ( CADDR-6, BLEFT-5, $ADDR-4, $LEN-3, CADDR+BLEFT-2, CADDR-1 )
+  DO  2DUP  FORTH   I   -TEXT
+    IF  >R  2DROP  R>  -  I  SWAP  -  0  SWAP  0  0  LEAVE
+        (  CADDR BLEFT  $ADDR  $LEN  OR ELSE 0  OFFSET  0  0  )
+      THEN  LOOP 2DROP   ( CADDR-2, BLEFT-1, OR 0-2, OFFSET-1 )
+    SWAP  0=  SWAP  ;    -->
+(  STRING EDITING COMMANDS                        WFR-79MAR24 )
+: 1LINE       ( SCAN LINE WITH CURSOR FOR MATCH TO PAD TEXT, *)
+                             ( UPDATE CURSOR, RETURN BOOLEAN *)
+       #LAG  PAD  COUNT  MATCH  R#   +!   ;
+
+:  FIND   ( STRING AT PAD OVER FULL SCREEN RANGE, ELSE ERROR *)
+     BEGIN  3FF  R#  @  <
+         IF  TOP  PAD  HERE  C/L  1+  CMOVE  0  ERROR  ENDIF
+         1LINE   UNTIL   ;
+
+: DELETE                    ( BACKWARDS AT CURSOR BY COUNT-1 *)
+    >R  #LAG  +  FORTH  R  -  ( SAVE BLANK FILL LOCATION )
+    #LAG  R MINUS  R#  +!     ( BACKUP CURSOR )
+    #LEAD  +  SWAP  CMOVE
+    R>  BLANKS  UPDATE  ;   ( FILL FROM END OF TEXT )
+-->
+(  STRING EDITOR COMMANDS                         WFR-79MAR24 )
+: N     ( FIND NEXT OCCURANCE OF PREVIOUS TEXT *)
+      FIND  0  M  ;
+
+: F      ( FIND OCCURANCE OF FOLLOWING TEXT *)
+      1  TEXT  N  ;
+
+: B      ( BACKUP CURSOR BY TEXT IN PAD *)
+      PAD  C@  MINUS  M  ;
+
+: X     ( DELETE FOLLOWING TEXT *)
+      1  TEXT  FIND  PAD  C@  DELETE  0  M  ;
+
+: TILL      ( DELETE ON CURSOR LINE, FROM CURSOR TO TEXT END *)
+      #LEAD  +  1  TEXT  1LINE  0=  0  ?ERROR
+      #LEAD  +  SWAP  -  DELETE  0  M  ;     -->
+(  STRING EDITOR COMMANDS                         WFR-79MAR23 )
+: C        ( SPREAD AT CURSOR AND COPY IN THE FOLLOWING TEXT *)
+    1  TEXT  PAD  COUNT
+    #LAG  ROT  OVER  MIN  >R
+    FORTH  R  R#  +!  ( BUMP CURSOR )
+    R  -  >R          ( CHARS TO SAVE )
+    DUP  HERE  R  CMOVE  ( FROM OLD CURSOR TO HERE )
+    HERE  #LEAD  +  R>  CMOVE  ( HERE TO CURSOR LOCATION )
+    R>  CMOVE  UPDATE   ( PAD TO OLD CURSOR )
+    0  M  ( LOOK AT NEW LINE )  ;
+FORTH  DEFINITIONS   DECIMAL
+LATEST 6 cs  +ORIGIN  !   ( TOP NFA )
+HERE  14 cs  +ORIGIN  !   ( FENCE )
+HERE  15 cs  +ORIGIN  !   ( DP )
+'  EDITOR  2 ln + 2 cs + 16 cs  +ORIGIN  !  ( VOC-LINK )
+HERE  FENCE   !      ;S
 ( START - PROTO INTERPRETER SOURCE                 orterforth )
 ( a simple proto-interpreter bootstraps the outer interpreter )
 :u cs LIT 2 ic + R> DROP ;S :DP LIT  9 u :BLK     LIT 11 u
@@ -1315,7 +1603,7 @@ R> IN ! R> BLK ! ;S
 :EMPTY-BUFFERS LIT 9 ic LIT 10 ic OVER - LIT 0 FILL ;S
 
 :QUIT  [ CURRENT @ @ 1+ LIT 88 TOGGLE EMPTY-BUFFERS
-       LIT 83 LOAD MON
+       LIT 101 LOAD MON
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs LIT 8 ic + @
        DUP CONTEXT ! CURRENT ! QUIT
 :X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
