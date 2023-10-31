@@ -251,12 +251,10 @@ static void __FASTCALL__ rf_inst_compile(char *name)
 /* USRVER = r for retro */
 #define RF_USRVER 0x0072
 
-/* Table of inst time code addresses */
-
-typedef struct rf_inst_code_t {
-  const char *word;
-  rf_code_t value;
-} rf_inst_code_t;
+/* BS */
+#ifndef RF_BS
+#define RF_BS 0x007F
+#endif
 
 /* run proto interpreter */
 static void rf_inst_code_compile(void)
@@ -271,6 +269,12 @@ static void rf_inst_code_compile(void)
 
 static void rf_inst_code_cd(void);
 
+typedef struct rf_inst_code_t {
+  const char *word;
+  rf_code_t value;
+} rf_inst_code_t;
+
+/* Table of inst time code addresses */
 static const rf_inst_code_t rf_inst_code_lit_list[] = {
   { "cl", rf_code_cl },
   { "cs", rf_code_cs },
@@ -351,10 +355,6 @@ static void rf_inst_code_cd(void)
   RF_JUMP_NEXT;
 }
 
-#ifndef RF_BS
-#define RF_BS 0x007F
-#endif
-
 /* flag to indicate completion of install */
 extern char rf_installed;
 
@@ -363,18 +363,6 @@ void rf_inst(void)
 {
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
-
-  /* wait for disc server to init */ 
-#ifdef RF_INST_WAIT
-#ifdef __RC2014
-  z80_delay_ms(5000);
-#endif
-#endif
-
-  /* "insert" the inst disc */
-#ifdef RF_INST_LOCAL_DISC
-  rf_persci_insert_bytes(0, model_img);
-#endif
 
   /* cold start LATEST UP DP */
   rf_inst_vocabulary = 0;
@@ -474,6 +462,18 @@ void rf_inst(void)
   origin[21] = (uintptr_t) &rf_inst_vocabulary;
   /* instead of ABORT */
   origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
+
+  /* "insert" the inst disc */
+#ifdef RF_INST_LOCAL_DISC
+  rf_persci_insert_bytes(0, model_img);
+#endif
+
+  /* wait for disc server to init */ 
+#ifdef RF_INST_WAIT
+#ifdef __RC2014
+  z80_delay_ms(5000);
+#endif
+#endif
 
   /* run COLD, which inits and runs :inst */
   rf_fp = rf_code_cold;
