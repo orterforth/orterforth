@@ -182,9 +182,8 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
 }
 
 /* proto outer interpreter */
-static void __FASTCALL__ rf_inst_compile(const char *source)
+static void __FASTCALL__ rf_inst_compile(char *name)
 {
-  char *name = (char *) source;
   char *p;
   uint8_t *nfa;
 
@@ -359,21 +358,21 @@ static void rf_inst_code_cd(void)
 /* flag to indicate completion of install */
 extern char rf_installed;
 
-/* bootstrap the installing Forth vocabulary */
+/* bootstrap the installing Forth vocabulary and install Forth itself */
 void rf_inst(void)
 {
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
+  /* wait for disc server to init */ 
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
-  /* wait for disc server to init */ 
   z80_delay_ms(5000);
 #endif
 #endif
 
-#ifdef RF_INST_LOCAL_DISC
   /* "insert" the inst disc */
+#ifdef RF_INST_LOCAL_DISC
   rf_persci_insert_bytes(0, model_img);
 #endif
 
@@ -383,6 +382,7 @@ void rf_inst(void)
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
   rf_inst_dp = (uint8_t **) &(RF_USER_DP);
 
+  /* table of installation constants: */
   /* for boot time literals */
   rf_inst_comma(RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
   rf_inst_comma(RF_BS);
@@ -390,7 +390,7 @@ void rf_inst(void)
   rf_inst_comma((uintptr_t) RF_S0);
   rf_inst_comma((uintptr_t) RF_R0);
   rf_inst_comma((uintptr_t) RF_TIB);
-  /* boot time literals to identify platform */
+  /* for additional literals to identify platform */
   rf_inst_comma(RF_TARGET_HI);
   rf_inst_comma(RF_TARGET_LO);
   /* for +ORIGIN and also for save */
@@ -398,11 +398,11 @@ void rf_inst(void)
   /* disc buffer constants */
   rf_inst_comma((uintptr_t) RF_FIRST);
   rf_inst_comma((uintptr_t) RF_LIMIT);
-  /* used in ?STACK */
+  /* stack limit used in ?STACK */
   rf_inst_comma((uintptr_t) ((uintptr_t *) RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE)));
   /* installed flag */
   rf_inst_comma((uintptr_t) &rf_installed);
-  /* used to save to DR1 */
+  /* used in save */
 #ifdef RF_ORG
   rf_inst_comma(RF_ORG);
 #else
@@ -418,10 +418,11 @@ void rf_inst(void)
 #else
   rf_inst_comma(0);
 #endif
-  /* CPU lits */
+  /* for additional literals to identify CPU */
   rf_inst_comma(RF_CPU_HI);
   rf_inst_comma(RF_CPU_LO);
-  /* inst dictionary start */
+
+  /* to get start of table */
   rf_inst_code("id", rf_code_docon);
   rf_inst_comma((uintptr_t) RF_INST_DICTIONARY);
 
@@ -433,7 +434,7 @@ void rf_inst(void)
     }
   }
 
-  /* installation constants */
+  /* to fetch installation constants from table */
   rf_inst_compile(
     ":ic cs id + @ ;S");
   /* FIRST */
@@ -458,28 +459,28 @@ void rf_inst(void)
     /* call ABORT just defined */
     "LIT ^21 LIT 8 ic + @ @ LIT ^-24 + EXECUTE");
 
-  /* set boot-up literals and run COLD */
+  /* set boot-up literals */
   /* LATEST */
   origin[6] = (uintptr_t) rf_inst_vocabulary;
   /* USER area */
   origin[8] = (uintptr_t) RF_USER;
-  /* S0 */
+  /* S0, R0, WARNING, DP user variables */
   origin[9] = (uintptr_t) RF_S0;
-  /* R0 */
   origin[10] = (uintptr_t) RF_R0;
-  /* WARNING */
+  /* TODO set WARNING in FORTH */
   origin[13] = 0;
-  /* DP */
   origin[15] = (uintptr_t) *rf_inst_dp;
   /* instead of FORTH */
   origin[21] = (uintptr_t) &rf_inst_vocabulary;
   /* instead of ABORT */
   origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
+
+  /* run COLD, which inits and runs :inst */
   rf_fp = rf_code_cold;
   rf_trampoline();
 
-#ifdef RF_INST_LOCAL_DISC
   /* now "eject" the inst disc */
+#ifdef RF_INST_LOCAL_DISC
   rf_persci_eject(0);
 #endif
 }
