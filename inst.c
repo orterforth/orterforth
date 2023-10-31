@@ -452,11 +452,9 @@ void rf_inst(void)
   origin[6] = (uintptr_t) rf_inst_vocabulary;
   /* USER area */
   origin[8] = (uintptr_t) RF_USER;
-  /* S0, R0, WARNING, DP user variables */
+  /* S0, R0, DP user variables */
   origin[9] = (uintptr_t) RF_S0;
   origin[10] = (uintptr_t) RF_R0;
-  /* TODO set WARNING in FORTH */
-  origin[13] = 0;
   origin[15] = (uintptr_t) *rf_inst_dp;
   /* instead of FORTH */
   origin[21] = (uintptr_t) &rf_inst_vocabulary;

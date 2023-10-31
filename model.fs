@@ -1664,11 +1664,10 @@ CODE R/W
 
 ( LOAD BOOT-UP PARAMS AND MACHINE CODE DEFINITIONS orterforth )
 0 +ORIGIN DP !                  ( move DP back to origin      )
+
 12 LOAD                         ( load params and code        )
 
 ( now resolve forward references in control words & LITERAL   )
-
-
 01 cs BYTE.IN LITERAL   REPLACED.BY LIT
 01 cs BYTE.IN DO        REPLACED.BY (DO)
 02 cs BYTE.IN LOOP      REPLACED.BY (LOOP)
@@ -1678,18 +1677,19 @@ CODE R/W
 02 cs BYTE.IN ELSE      REPLACED.BY BRANCH
 26 cs BYTE.IN INTERPRET REPLACED.BY LIT
 -->
+
 ( LOAD HIGH LEVEL DEFINITIONS                      orterforth )
 33 LOAD                         ( high level utility defs     )
-( some forward references to HERE needed by our novel defns   )
-10 cs BYTE.IN :        REPLACED.BY HERE
-05 cs BYTE.IN CONSTANT REPLACED.BY HERE
-03 cs BYTE.IN VARIABLE REPLACED.BY HERE
-03 cs BYTE.IN USER     REPLACED.BY HERE
+
+10 cs BYTE.IN :        REPLACED.BY HERE ( some forward refs   )
+05 cs BYTE.IN CONSTANT REPLACED.BY HERE ( to HERE needed by   )
+03 cs BYTE.IN VARIABLE REPLACED.BY HERE ( our novel defns of  )
+03 cs BYTE.IN USER     REPLACED.BY HERE ( defining words      )
+0 WARNING !                     ( don't fetch "ISN'T UNIQUE"  )
 
 72 LOAD                         ( load high level definitions )
 
 13 cd ' EMIT CFA !              ( set EMIT CFA from silent    )
-
 1 12 ic C!                      ( installed flag = 1          )
 
 HERE 64 cs ALLOT                ( make room for link table    )
