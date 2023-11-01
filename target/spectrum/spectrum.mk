@@ -194,31 +194,28 @@ spectrum-hw : spectrum/hw.tap
 spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
 
 ifeq ($(SPECTRUMMACHINE),real)
-	@printf '* \035[1;35mOn the Spectrum type:\035[0;0m\n'
-	@printf '  FORMAT "b";$(SERIALBAUD) <enter>\n'
-	@printf '  LOAD *"b" <enter>\n'
-	@read -p '  then press enter to start: ' LINE
+	@$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>'
 
-	@printf '* \033[1;33mLoading loader\033[0;0m\n'
-	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
+	@$(INFO) 'Loading loader'
+	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 
-	@printf '* \033[1;33mLoading orterforth\033[0;0m\n'
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
+	@$(INFO) 'Loading orterforth'
+	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 endif
 
 	@$(SPECTRUMSTARTDISC) $(DR0) $(DR1)
 
 ifeq ($(SPECTRUMMACHINE),fuse)
-	@printf '* \033[1;33mRunning Fuse\033[0;0m\n'
+	@$(INFO) 'Running Fuse'
 	@$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx &
 	@$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx &
 	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
-	@printf '* \033[1;33mRunning MAME\033[0;0m\n'
-	@printf '  \033[1;35m1. Press Enter to skip the warning\033[0;0m\n'
-	@printf '  \033[1;35m2. Scroll Lock or Delete to enable UI controls\033[0;0m\n'
-	@printf '  \033[1;35m3. Start the tape via F2 or the Tape Control menu\033[0;0m\n'
+	@$(INFO) 'Running MAME'
+	@$(WARN) ' 1. Press Enter to skip the warning'
+	@$(WARN) ' 2. Scroll Lock or Delete to enable UI controls'
+	@$(WARN) ' 3. Start the tape via F2 or the Tape Control menu'
 	@mame spectrum $(MAMEOPTS) \
 		-exp intf1 \
 		-exp:intf1:rs232 null_modem \
@@ -301,11 +298,11 @@ SPECTRUMINSTDEPS := \
 	rx \
 	tx
 SPECTRUMSTARTINSTMACHINE := \
-		printf '* \033[1;33mStarting Fuse\033[0;0m\n' ; \
+		$(INFO) 'Starting Fuse' ; \
 		$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx & \
 		$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx & \
 		$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
-SPECTRUMSTOPINSTMACHINE := printf '* \033[1;33mStopping Fuse\033[0;0m\n' ; sh scripts/stop.sh fuse.pid
+SPECTRUMSTOPINSTMACHINE := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
 endif
 ifeq ($(SPECTRUMINSTMACHINE),real)
 SPECTRUMINSTDEPS := \
@@ -313,15 +310,12 @@ SPECTRUMINSTDEPS := \
 	$(DISC) \
 	$(ORTER)
 SPECTRUMSTARTINSTMACHINE := \
-	printf '* \033[1;35mOn the Spectrum type:\033[0;0m\n' ; \
-	printf '  FORMAT "b";$(SERIALBAUD) <enter>\n' ; \
-	printf '  LOAD *"b" <enter>\n' ; \
-	read -p '  then press enter to start: ' LINE ; \
-	printf '* \033[1;33mLoading loader\033[0;0m\n' ; \
+	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' ; \
+	$(INFO) 'Loading loader' ; \
 	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas ; \
-	printf '* \033[1;33mLoading inst\033[0;0m\n' ; \
+	$(INFO) 'Loading inst' ; \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser ; \
-	printf '  \033[1;35mNB Unfortunately this usually fails due to Spectrum RS232 unreliability\033[0;0m\n'
+	$(WARN) 'NB Unfortunately this usually fails due to Spectrum RS232 unreliability'
 SPECTRUMSTOPINSTMACHINE := :
 endif
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
@@ -330,7 +324,7 @@ SPECTRUMINSTDEPS := \
 	$(SYSTEM)/emulate_spectrum \
 	$(SPECTRUMROMS)
 SPECTRUMSTARTINSTMACHINE := \
-	printf '* \033[1;33mRunning headless emulator\033[0;0m\n' ; \
+	$(INFO) 'Running headless emulator' ; \
 	./$(SYSTEM)/emulate_spectrum
 SPECTRUMSTOPINSTMACHINE := :
 endif

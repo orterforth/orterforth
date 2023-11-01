@@ -2,20 +2,22 @@
 CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
 
 # global defaults
-CHECKMEMORY := printf '* \033[1;33mChecking memory limits\033[0;0m\n' ; sh scripts/check-memory.sh
+INFO           := printf '* \033[1;33m%s\033[0;0m\n'
+WARN           := printf '* \033[1;35m%s\033[0;0m\n'
+CHECKMEMORY    := $(INFO) 'Checking memory limits' ; sh scripts/check-memory.sh
 DR0=library.img
 DR1=data.img
-COMPLETEDR1FILE = mv $@.io $@ ; printf '* \033[1;33mDone\033[0;0m\n'
-EMPTYDR1FILE := printf '* \033[1;33mClearing DR1\033[0;0m\n' ; printf '' >
-MAMEOPTS := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
-PROMPT := sh scripts/prompt.sh
-SERIALBAUD := 9600
-START := sh scripts/start.sh /dev/stdin /dev/stdout
-STARTMAME := printf '* \033[1;33mStarting MAME\033[0;0m\n' ; $(START) mame.pid mame
-STARTDISCMSG := printf '* \033[1;33mStarting disc\033[0;0m\n'
-STOPDISC := printf '* \033[1;33mStopping disc\033[0;0m\n' ; sh scripts/stop.sh disc.pid
-STOPMAME := printf '* \033[1;33mStopping MAME\033[0;0m\n' ; sh scripts/stop.sh mame.pid
-WAITUNTILSAVED := printf '* \033[1;33mWaiting until saved\033[0;0m\n' ; sh scripts/wait-until-saved.sh
+COMPLETEDR1FILE = mv $@.io $@ ; $(INFO) 'Done'
+EMPTYDR1FILE   := $(INFO) 'Clearing DR1'           ; printf '' >
+MAMEOPTS       := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
+PROMPT         := sh scripts/prompt.sh
+SERIALBAUD     := 9600
+START          := sh scripts/start.sh /dev/stdin /dev/stdout
+STARTMAME      := $(INFO) 'Starting MAME'          ; $(START) mame.pid mame
+STARTDISCMSG   := $(INFO) 'Starting disc'
+STOPDISC       := $(INFO) 'Stopping disc'          ; sh scripts/stop.sh disc.pid
+STOPMAME       := $(INFO) 'Stopping MAME'          ; sh scripts/stop.sh mame.pid
+WAITUNTILSAVED := $(INFO) 'Waiting until saved'    ; sh scripts/wait-until-saved.sh
 
 # local OS
 UNAME_S := $(shell uname -s)

@@ -26,8 +26,9 @@ BBCCC65OPTS := -O -t none -D__BBC__
 BBCDEPS := bbc/inst.o bbc/main.o
 
 # load via serial
-BBCLOADSERIAL := $(PROMPT) "Connect serial and on BBC Micro type: *FX2,1 <RETURN>" && \
-	printf '* \033[1;33mLoading via serial\033[0;0m\n' && \
+BBCLOADSERIAL := \
+	$(PROMPT) "Connect serial and on BBC Micro type: *FX2,1 <RETURN>" && \
+	$(INFO) 'Loading via serial' && \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
 
 # MAME command line
@@ -121,7 +122,7 @@ BBCMAMERUN := -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
 ifeq ($(BBCMACHINE),mame)
 BBCSTARTDISC := $(STARTDISCTCP)
 BBCSTARTMACHINE := sleep 1 ; $(STARTMAME) $(BBCMAMEFAST) $(BBCMAMEINST)
-BBCRUNMACHINE := sleep 1 ; printf '* \033[1;33mRunning MAME\033[0;0m\n' ; mame $(BBCMAME) $(BBCMAMERUN)
+BBCRUNMACHINE := sleep 1 ; $(INFO) 'Running MAME' ; mame $(BBCMAME) $(BBCMAMERUN)
 BBCLOAD := :
 BBCLOADINST := :
 BBCSTOPMACHINE := $(STOPMAME)
@@ -130,7 +131,7 @@ ifeq ($(BBCMACHINE),real)
 BBCSTARTDISC := :
 BBCSTARTMACHINE := :
 BBCRUNMACHINE := :
-BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser && printf '* \033[1;33mRunning disc\033[0;0m\n' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 BBCSTOPMACHINE := :
 endif
