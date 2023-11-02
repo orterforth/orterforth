@@ -39,22 +39,22 @@ endif
 # ensure RC2014 is reset before starting
 RC2014RESET := \
 	$(PROMPT) "On the RC2014: connect serial and press reset" && \
-	printf '* \033[1;33mResetting\033[0;0m\n' && \
+	$(INFO) 'Resetting' && \
 	sh target/rc2014/reset.sh | $(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200
 
 # load modified hexload.bas
 RC2014LOADLOADER := \
-	printf '* \033[1;33mLoading $(RC2014HEXLOAD)\033[0;0m\n' && \
+	$(INFO) 'Loading $(RC2014HEXLOAD)' && \
 	$(ORTER) serial -a $(RC2014SERIALPORT) 115200 < $(RC2014HEXLOAD)
 
 # load an IHEX file
 RC2014LOADIHEX := \
-	printf '* \033[1;33mLoading IHEX\033[0;0m\n' && \
+	$(INFO) 'Loading IHEX' && \
 	$(ORTER) serial -a $(RC2014SERIALPORT) 115200 <
 
 RC2014LOAD := $(RC2014RESET) && $(RC2014LOADLOADER) && $(RC2014LOADIHEX)
 
-RC2014CONNECT := printf '* \033[1;33mStarting disc with console mux\033[0;0m\n' && \
+RC2014CONNECT := $(INFO) 'Starting disc with console mux' && \
 	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 RC2014ZCCOPTS := \
