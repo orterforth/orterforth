@@ -1,124 +1,119 @@
 SECTION code_user
 
-EXTERN _rf_next                 ; NEXT, when jp (ix) not available
+EXTERN _rf_next                 ; NEXT, when JP (IX) not available
 EXTERN _rf_up                   ; UP, for incrementing OUT
+EXTERN _rf_z80_hpush            ; HPUSH, when JP (IY) not available
 
 PUBLIC _rf_init
+PUBLIC _rf_fin
 
 _rf_init:
-  ret
+_rf_fin:
+        RET
 
 PUBLIC _rf_code_emit
 
 _rf_code_emit:
-  pop hl                        ; get character
-  ld a, $7F                     ; use low 7 bits
-  and l
-  cp $08
-  jp nz, emit1
-  rst $0008
-  ld a, $20
-  rst $0008
-  ld a, $08
-emit1:
-  rst $0008
-  ld hl, (_rf_up)               ; increment OUT
-  ld de, $001A
-  add hl, de
-  inc (hl)
-  jp nz, _rf_next
-  inc hl
-  inc (hl)
-  jp (ix)
+        POP     HL              ; get char
+        LD      A,$7F           ; use low 7 bits
+        AND     L
+        CP      $08             ; BS erase
+        JP      NZ,EMIT1
+        RST     $0008
+        LD      A,$20
+        RST     $0008
+        LD      A,$08
+EMIT1:  RST     $0008           ; output char
+        LD      HL,(_rf_up)     ; increment OUT
+        LD      DE,$001A
+        ADD     HL,DE
+        INC     (HL)
+        JP      NZ,_rf_next
+        INC     HL
+        INC     (HL)
+        JP      (IX)
 
 PUBLIC _rf_code_key
 
 _rf_code_key:
-  rst $0010
-  and a
-  jp m, _rf_code_key
-  ld h, $00
-  and $7F
-  cp $0A
-  jr nz, key1
-  ld a, $0D
-key1:
-  ld l, a
-  jp (iy)
+        RST     $0010           ; expect bit 7 reset
+        AND     A
+        JP      M,_rf_code_key
+        LD      H,$00
+        AND     $7F
+        CP      $0A             ; LF to CR
+        JR      NZ,KEY1
+        LD      A,$0D
+KEY1:   LD      L,A             ; push
+        JP      (IY)
 
 PUBLIC _rf_code_cr
 
 _rf_code_cr:
-  ld a, $0A
-  rst $0008
-  jp (ix)
+        LD      A,$0A           ; LF
+        RST     $0008
+        JP      (IX)
 
 PUBLIC _rf_code_qterm
 
 _rf_code_qterm:
-  ld hl, $0000
-  jp (iy)
+        LD      HL,$0000
+        RST     $0018           ; poll key
+        OR      A
+        JP      Z,_rf_z80_hpush ; no key pressed
+        RST     $0010           ; get key
+        CP      $1B             ; ESC (Escape)
+        JP      Z,qterm1
+        CP      $03             ; ETX (Ctrl-C)
+        JP      NZ,_rf_z80_hpush
+qterm1: INC     L
+        JP      (IY)
 
-discread:
-  rst $0010
-  and a
-  jp p, discread
-  and $7F
-  ret
+discr:  RST     $0010           ; expect bit 7 set
+        AND     A
+        JP      P,discr
+        AND     $7F             ; reset it
+        RET
 
 PUBLIC _rf_code_dchar
 
 _rf_code_dchar:
-  call discread                 ; read byte
-  pop hl                        ; get expected byte
-  cp l                          ; set flag if expected
-  ld hl, $0001
-  jr z, dchar2
-  dec l
-dchar2:
-  push hl                       ; push flag
-  ld l, a                       ; now push byte
-  jp (iy)
+        CALL    discr           ; read byte
+        POP     HL              ; get expected byte
+        CP      L               ; set flag if expected
+        LD      HL,$0001
+        JR      Z,dchar2
+        DEC     L
+dchar2: PUSH    HL              ; push flag
+        LD      L,A             ; now push byte
+        JP      (IY)
 
 PUBLIC _rf_code_bread
 
 _rf_code_bread:
-  pop hl
-  push bc
-  ld b, $80
-bread1:
-  push hl
-  call discread
-  pop hl
-  ld (hl), a
-  inc hl
-  djnz bread1
-  pop bc
-  jp (ix)
+        POP     HL              ; addr
+        PUSH    BC              ; save IP
+        LD      B,$80           ; loop for 128 bytes
+bread1: CALL    discr           ; read a byte
+        LD      (HL),A          ; write byte to addr
+        INC     HL              ; advance addr
+        DJNZ    bread1          ; loop back for more bytes
+        POP     BC              ; restore IP
+        JP      (IX)
 
 PUBLIC _rf_code_bwrit
 
 _rf_code_bwrit:
-  pop de                        ; len
-  pop hl                        ; addr
-  push bc                       ; save IP
-bwrit1:
-  push de                       ; save len
-  push hl                       ; save addr
-  ld a, (hl)                    ; read a byte from addr
-  or $80                        ; set bit 7
-  rst $0008                     ; write byte
-  pop hl                        ; restore addr
-  pop de                        ; restore len
-  inc hl                        ; advance addr
-  dec e                         ; advance len
-  jp nz, bwrit1                 ; loop back for more bytes
-  ld a, $84                     ; EOT + bit 7
-  rst $0008                     ; write byte
-  pop bc                        ; restore IP
-  jp (ix)
-
-PUBLIC _rf_fin
-
-_rf_fin:
-  ret
+        POP     DE              ; len
+        POP     HL              ; addr
+        PUSH    BC              ; save IP
+        LD      B,E             ; loop for len
+bwrit1: LD      A,(HL)          ; read a byte from addr
+        OR      $80             ; set bit 7
+        RST     $0008           ; write byte
+        INC     HL              ; advance addr
+        DJNZ    bwrit1          ; loop back for more bytes
+        LD      A,$84           ; EOT + bit 7
+        RST     $0008           ; write byte
+        POP     BC              ; restore IP
+        JP      (IX)
