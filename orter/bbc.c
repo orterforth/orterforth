@@ -60,41 +60,41 @@ static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
   /* read whole file */
   s = fread(data, 1, 65536, stdin);
 
-  while (block_nr * 256 < (int) s) {
-    uint16_t i = block_nr * 256;
+  while ((block_nr << 8) < (int) s) {
+    /* determine block */
+    uint16_t i = block_nr << 8;
     uint16_t j = MIN((size_t) i + 256, s);
     uint8_t *block = &data[i];
+    uint16_t lenblk = j - i;
 
     /* construct data header */
     uint8_t header[32];
     uint16_t lenname = MIN(10, strlen(name));
+    uint8_t *ptr = header + lenname;
     uint16_t lenhdr = 18 + lenname;
 
     /* name */
     memcpy(header, name, lenname);
-    header[lenname] = 0;
-    /* load */
-    orter_io_set_32le(load, header + lenname + 1);
-    /* exec */
-    orter_io_set_32le(exec, header + lenname + 5);
-    /* block no */
-    orter_io_set_16le(block_nr, header + lenname + 9);
-    /* block len */
-    orter_io_set_16le(j - i, header + lenname + 11);
-    /* flag */
-    header[lenname + 13] = ((j == s) ? 0x80 : 0);
-    /* spare */
-    orter_io_set_32le(0, header + lenname + 14);
+    ptr[0] = 0;
+    /* load, exec */
+    orter_io_set_32le(load, ptr + 1);
+    orter_io_set_32le(exec, ptr + 5);
+    /* block no, block len */
+    orter_io_set_16le(block_nr, ptr + 9);
+    orter_io_set_16le(lenblk, ptr + 11);
+    /* flag, spare */
+    ptr[13] = ((j == s) ? 0x80 : 0);
+    orter_io_set_32le(0, ptr + 14);
 
     /* write data */
-    chunk(0x0100, 1 + lenhdr + 2 + (j - i) + 2);
+    chunk(0x0100, lenhdr + lenblk + 5);
     fputc('*', stdout);
     /* header */
     fwrite(header, 1, lenhdr, stdout);
     orter_io_put_16be(crc(header, lenhdr));
     /* block */
-    fwrite(block, 1, j - i, stdout);
-    orter_io_put_16be(crc(block, j - i));
+    fwrite(block, 1, lenblk, stdout);
+    orter_io_put_16be(crc(block, lenblk));
 
     /* carrier tone */
     carrier(600);
