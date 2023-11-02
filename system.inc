@@ -9,11 +9,11 @@ process "inserts" this disc data and "ejects" it after inst.
 */
 #define RF_INST_LOCAL_DISC
 
-#ifndef PICO
 /*
 Accept command line arguments. Some platforms may put garbage
 in argc/argv, so undefine this to avoid processing them.
 */
+#ifndef PICO
 #define RF_ARGS
 #endif
 
