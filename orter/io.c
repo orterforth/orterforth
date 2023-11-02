@@ -1,5 +1,5 @@
 #ifdef __unix__
-/* to get strsignal */
+/* for pselect etc */
 #define _DEFAULT_SOURCE
 #endif
 
@@ -29,7 +29,7 @@ int orter_io_exit = 0;
 int orter_io_finished = 0;
 
 /* select handling */
-fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
+static fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
 
 /* signal handler */
 static void handler(int signum)
@@ -122,8 +122,9 @@ int orter_io_file_size(FILE *ptr, long *size)
 
 int orter_io_std_open(void)
 {
-  /* make stdin nonblocking (also applies to stdout/stderr) */
+  /* make nonblocking */
   if (!in_fl_saved) {
+    /* stdin also applies to stdout/stderr */
     in_fl = fcntl(0, F_GETFL, 0);
     in_fl_saved = 1;
     if (fcntl(0, F_SETFL, O_NONBLOCK)) {
@@ -131,8 +132,7 @@ int orter_io_std_open(void)
       return errno;
     }
   }
-
-  /* modify stdin attr */
+  /* make raw */
   if (!in_attr_saved && isatty(0)) {
     /* save current stdin attr */
     if (tcgetattr(0, &in_attr_save)) {
@@ -161,13 +161,15 @@ int orter_io_std_open(void)
 
 int orter_io_std_close(void)
 {
-  /* stdin (also stdout/stderr) */
+  /* restore from nonblocking */
   if (in_fl_saved) {
+    /* stdin also applies to stdout/stderr */
     if (fcntl(0, F_SETFL, in_fl)) {
       perror("stdin fcntl failed");
     }
     in_fl_saved = 0;
   }
+  /* restore from raw */
   if (in_attr_saved && isatty(0)) {
     if (tcsetattr(0, TCSANOW, &in_attr_save)) {
       perror("stdin tcsetattr failed");

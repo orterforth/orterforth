@@ -21,9 +21,6 @@ extern int orter_io_exit;
 /* flag for cleanup and exit */
 extern int orter_io_finished;
 
-/* select handling */
-extern fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
-
 /* set up signal handler */
 void orter_io_signal_init(void);
 
