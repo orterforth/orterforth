@@ -150,6 +150,9 @@ SPECTRUMRUNDEPS := \
 	spectrum/fuse-rs232-tx \
 	rx \
 	tx
+SPECTRUMSTARTDISC := \
+	$(STARTDISCMSG) && \
+	sh scripts/start.sh tx rx disc.pid $(DISC)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 SPECTRUMRUNDEPS := \
@@ -158,6 +161,7 @@ SPECTRUMRUNDEPS := \
 	$(DR1) | \
 	$(DISC) \
 	$(SPECTRUMROMS)
+SPECTRUMSTARTDISC := $(STARTDISCTCP)
 endif
 ifeq ($(SPECTRUMMACHINE),real)
 SPECTRUMRUNDEPS := \
@@ -167,18 +171,6 @@ SPECTRUMRUNDEPS := \
 	$(DR1) | \
 	$(DISC) \
 	$(ORTER)
-endif
-
-# start disc
-ifeq ($(SPECTRUMMACHINE),fuse)
-SPECTRUMSTARTDISC := \
-	$(STARTDISCMSG) && \
-	sh scripts/start.sh tx rx disc.pid $(DISC)
-endif
-ifeq ($(SPECTRUMMACHINE),mame)
-SPECTRUMSTARTDISC := $(STARTDISCTCP)
-endif
-ifeq ($(SPECTRUMMACHINE),real)
 # run and wait rather than start
 SPECTRUMSTARTDISC := \
 	$(STARTDISCMSG) && \
