@@ -4,7 +4,7 @@
 
 #include "rf.h"
 
-void rf_init()
+void rf_init(void)
 {
   /* disc controller over RS232 */
   if (rs232_params(RS_BAUD_9600 | RS_BITS_8 | RS_STOP_1, RS_PAR_NONE) != RS_ERR_OK) {
@@ -15,7 +15,7 @@ void rf_init()
   }
 }
 
-void rf_code_emit()
+void rf_code_emit(void)
 {
   RF_START;
   {
@@ -75,7 +75,7 @@ void rf_code_qterm(void)
   RF_JUMP_NEXT;
 }
 
-void rf_code_cr()
+void rf_code_cr(void)
 {
   RF_START;
   fputc_cons(10);
