@@ -182,8 +182,9 @@ static intptr_t __FASTCALL__ rf_inst_number(char *t)
 }
 
 /* proto outer interpreter */
-static void __FASTCALL__ rf_inst_compile(char *name)
+static void __FASTCALL__ rf_inst_compile(const char *source)
 {
+  char *name = (char *) source;
   char *p;
   uint8_t *nfa;
 
