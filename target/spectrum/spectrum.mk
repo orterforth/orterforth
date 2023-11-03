@@ -66,16 +66,6 @@ $(SYSTEM)/z80.o : \
 
 	$(CC) -g -Wall -Wextra -O2 -std=c99 -pedantic -c -o $@ $<
 
-# ROM files dir
-roms/spectrum : | roms
-
-	mkdir $@
-
-# ROM files
-roms/spectrum/% : | roms/spectrum
-
-	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
-
 spectrum :
 
 	mkdir $@

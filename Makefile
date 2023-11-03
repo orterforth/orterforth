@@ -255,10 +255,10 @@ model.inc : model.img | $(ORTER)
 	$(ORTER) hex include model_img < $< > $@.io
 	mv $@.io $@
 
-# ROM file dir
-roms : 
+# general rule for missing ROM files
+roms/% :
 
-	mkdir $@
+	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
 
 # run
 .PHONY : run

@@ -226,14 +226,6 @@ bbc/system_c.s : target/bbc/system.c rf.h target/bbc/bbc.inc | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 
-roms/bbcb : | roms
-
-	mkdir $@
-
-roms/bbcb/% : | roms/bbcb
-
-	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
-
 tools/github.com/haerfest/uef/uef2wave.py :
 
 	git submodule update --init tools/github.com/haerfest/uef
