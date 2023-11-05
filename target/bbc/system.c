@@ -4,6 +4,8 @@
 
 #include "../../rf.h"
 
+/* MOS calls */
+
 uint8_t osbyte(uint8_t a, uint8_t x);
 
 void osnewl(void);
