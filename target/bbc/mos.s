@@ -1,30 +1,30 @@
 .import incsp1
-.importzp	sp
+.importzp sp
 
-.export	_osbyte
+.export _osbyte
 
 _osbyte:
-	tax
-	ldy #0
-	lda (sp),y
-	jsr $FFF4
-	txa
-	jmp incsp1
+       TAX
+       LDY #0
+       LDA (sp),Y
+       JSR $FFF4
+       TXA
+       JMP incsp1
 
-.export	_osnewl: near
+.export _osnewl: near
 
 _osnewl = $FFE7
-; _osnewl:
-; 	jmp $FFE7
+;_osnewl:
+;      JMP $FFE7
 
 .export _osrdch
 
 _osrdch:
-	ldx	#0
-	jmp	$FFE0
+       LDX #0
+       JMP $FFE0
 
 .export _oswrch: near
 
 _oswrch = $FFEE
-; _oswrch:
-; 	jmp	$FFEE
+;_oswrch:
+;      JMP $FFEE
