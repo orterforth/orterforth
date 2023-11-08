@@ -1,34 +1,41 @@
 # === TRS-80 Model 100 ===
 
 M100ORG := 45000
+M100ORIGIN := 0xCB00
 M100PROMPT := $(PROMPT) 'On the target type RUN "COM:78N1E" <enter>'
 M100SERIAL := $(ORTER) serial -o ixon -o ixoff -o onlcrx -e 2 $(SERIALPORT) 4800
 M100SLOWSEND := (while read -r l; do echo "$$l"; sleep 1; done && printf '\032' && sleep 1)
-M100LOADLOADER := printf '* \033[1;33mLoading loader\033[0;0m\n' ; $(M100SLOWSEND) < target/m100/hexloa.ba | $(M100SERIAL)
+M100LOADLOADER := $(INFO) 'Loading loader' ; $(M100SLOWSEND) < target/m100/hexloa.ba | $(M100SERIAL)
 M100ZCCOPTS := \
 	+m100 -subtype=default -m \
 	-pragma-define:CLIB_EXIT_STACK_SIZE=0 \
 	-pragma-define:CRT_ORG_CODE=$(M100ORG) \
-	-DRF_ORG=$(M100ORG)
+	-DRF_ORG=$(M100ORG) \
+	-DRF_ORIGIN=$(M100ORIGIN)
 
 m100 :
 
 	mkdir $@
+
+m100-clean :
+
+	rm -f m100/*
 
 .PHONY : m100-hw
 m100-hw : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
 
 	@$(M100PROMPT)
 	@$(M100LOADLOADER)
-	@printf '* \033[1;33mLoading hex\033[0;0m\n'
+	@$(INFO) 'Loading hex'
 	@$(M100SLOWSEND) < m100/hw.ihx | $(M100SERIAL)
 
 .PHONY : m100-run
 m100-run : target/m100/hexloa.ba m100/inst.ihx | $(ORTER)
 
+	@$(CHECKMEMORY) $(M100ORG) $(M100ORIGIN) $$($(STAT) m100/inst.co)
 	@$(M100PROMPT)
 	@$(M100LOADLOADER)
-	@printf '* \033[1;33mLoading hex\033[0;0m\n'
+	@$(INFO) 'Loading hex'
 	@$(M100SLOWSEND) < m100/inst.ihx | $(M100SERIAL)
 
 m100/%.ihx : m100/%.co
