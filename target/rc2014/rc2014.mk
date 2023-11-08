@@ -169,9 +169,9 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@.io
 	mv $@.io $@
 
-rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) tx $(DISC) $(ORTER)
+rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) $(DISC) $(ORTER)
 
-	@# NB this does not allow for BSS
+	@# TODO NB this does not allow for BSS
 	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $$($(STAT) rc2014/inst_CODE.bin)
 	@$(RC2014STARTMACHINE)
 	@$(RC2014LOAD) $<
