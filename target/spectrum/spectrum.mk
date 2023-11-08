@@ -138,11 +138,11 @@ SPECTRUMRUNDEPS := \
 	$(DISC) \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx \
-	rx \
-	tx
+	spectrum/rx \
+	spectrum/tx
 SPECTRUMSTARTDISC := \
 	$(STARTDISCMSG) && \
-	sh scripts/start.sh tx rx disc.pid $(DISC)
+	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 SPECTRUMRUNDEPS := \
@@ -189,8 +189,8 @@ endif
 
 ifeq ($(SPECTRUMMACHINE),fuse)
 	@$(INFO) 'Running Fuse'
-	@$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx &
-	@$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx &
+	@$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
+	@$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
 	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
@@ -211,17 +211,14 @@ ifneq ($(SPECTRUMMACHINE),real)
 	@$(STOPDISC)
 endif
 
-# serial load file from binary
 spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
 	$(ORTER) spectrum header $< 3 32768 0 > $@
 
-# tap file from binary
 spectrum/%.tap : spectrum/%.bin
 
 	z88dk-appmake +zx -b $< --org $(SPECTRUMORG) -o $@
 
-# Fuse serial named pipe
 spectrum/fuse-rs232-% : | spectrum
 
 	mkfifo $@
@@ -230,7 +227,6 @@ spectrum/hw.tap : hw.c
 
 	zcc +zx -lndos -create-app -o spectrum/hw.bin $<
 
-# inst executable
 spectrum/inst.bin spectrum/inst_INST.bin : \
 	$(SPECTRUMDEPS) \
 	z80_memory.asm \
@@ -243,7 +239,6 @@ spectrum/inst.bin spectrum/inst_INST.bin : \
 		-o $@ \
 		z80_memory.asm main.c
 
-# inst code, which is located to be overwritten when complete
 spectrum/inst.lib : inst.c rf.h | spectrum
 
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $< \
@@ -264,12 +259,10 @@ spectrum/inst-2.bin : spectrum/inst-1.bin spectrum/inst_INST.bin
 
 	z88dk-appmake +inject -b $< -i spectrum/inst_INST.bin -s $(SPECTRUMINSTOFFSET) -o $@
 
-# final bin from the hex output by inst
 spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-# run inst which writes hex file to disc 01
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
@@ -277,12 +270,12 @@ SPECTRUMINSTDEPS := \
 	$(ORTER) \
 	spectrum/fuse-rs232-rx \
 	spectrum/fuse-rs232-tx \
-	rx \
-	tx
+	spectrum/rx \
+	spectrum/tx
 SPECTRUMSTARTINSTMACHINE := \
 		$(INFO) 'Starting Fuse' ; \
-		$(ORTER) spectrum fuse serial read  > tx < spectrum/fuse-rs232-tx & \
-		$(ORTER) spectrum fuse serial write < rx > spectrum/fuse-rs232-rx & \
+		$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx & \
+		$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx & \
 		$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
 SPECTRUMSTOPINSTMACHINE := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
 endif
@@ -331,20 +324,25 @@ endif
 
 	@$(COMPLETEDR1FILE)
 
-# base orterforth code
 spectrum/rf.lib : rf.c rf.h | spectrum
 
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
 
-# Z80 assembly optimised code
 spectrum/rf_z80.lib : rf_z80.asm | spectrum
 
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
 
-# system code, which may be C or assembler
+spectrum/rx :
+
+	mkfifo $@
+
 spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
+
+spectrum/tx :
+
+	mkfifo $@
 
 tools/github.com/superzazu/z80/z80.c tools/github.com/superzazu/z80/z80.h :
 

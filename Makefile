@@ -264,10 +264,6 @@ roms/% :
 .PHONY : run
 run : $(TARGET)-run
 
-rx :
-
-	mkfifo $@
-
 # run working script
 .PHONY : script
 script : scripts/script.sh
@@ -283,10 +279,6 @@ scripts/script.sh :
 test : $(ORTERFORTH) $(DR0)
 
 	echo 'VLIST 3 24 INDEX CR MON' | $(ORTERFORTH) $(DR0)
-
-tx :
-
-	mkfifo $@
 
 # uninstall from local
 .PHONY : uninstall
