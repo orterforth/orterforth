@@ -7,6 +7,7 @@ QLMACHINE := sqlux
 QLQCCOPTS =
 QLROM := ah.rom
 QLSERIALBAUD := 4800
+QLSERIALLOAD := $(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) <
 QLSQLUXOPTS := --ramsize 128 --romdir roms/ql --sysrom $(QLROM) --device mdv1,ql --win_size 2x
 
 # IDE may attempt to read from the symlink so delete it
@@ -34,6 +35,15 @@ endif
 
 QLQCCOPTS += -D RF_ORIGIN=$(QLORIGIN)
 
+ifeq ($(QLMACHINE),real)
+QLRUNDEPS := ql/loader.bas.ser ql/orterforth.bin.ser ql/orterforth.ser
+QLSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(QLSERIALBAUD)
+endif
+ifeq ($(QLMACHINE),sqlux)
+QLRUNDEPS := ql/orterforth.bin ql/orterforth
+QLSTARTDISC := $(STARTDISCPTY)
+endif
+
 ql :
 
 	mkdir $@
@@ -46,40 +56,34 @@ ql-hw : ql/hw
 
 	@sqlux $(QLSQLUXOPTS) --speed 1.0 --boot_cmd 'EXEC_W "mdv1_hw"'
 
-ifeq ($(QLMACHINE),real)
-QLRUNDEPS := ql/loader.bas.ser ql/orterforth.bin.ser ql/orterforth.ser
-endif
-ifeq ($(QLMACHINE),sqlux)
-QLRUNDEPS := ql/orterforth.bin ql/orterforth
-endif
-
 .PHONY : ql-run
 ql-run : $(QLRUNDEPS) | $(DISC) roms/ql/$(QLROM) $(DR0) $(DR1)
 
 ifeq ($(QLMACHINE),real)
 	@$(PROMPT) "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
-
-	@echo "* Loading loader..."
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader.bas.ser
+	@$(INFO) "Loading loader..."
+	@$(QLSERIALLOAD) ql/loader.bas.ser
 	@sleep 3
-
-	@echo "* Loading install..."
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.bin.ser
+	@$(INFO) "Loading install..."
+	@$(QLSERIALLOAD) ql/orterforth.bin.ser
 	@sleep 3
-
-	@echo "* Loading job..."
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/orterforth.ser
+	@$(INFO) "Loading job..."
+	@$(QLSERIALLOAD) ql/orterforth.ser
 	@sleep 3
-
-	@echo "* Starting disc..."
+	@$(INFO) "Starting disc..."
 	@$(DISC) serial $(SERIALPORT) $(QLSERIALBAUD) $(DR0) $(DR1)
 endif
-
 ifeq ($(QLMACHINE),sqlux)
 	@$(STARTDISCPTY) $(DR0) $(DR1)
 	@sqlux $(QLSQLUXOPTS) --speed 1.0 --ser2 $(SERIALPTY) --boot_cmd 'PRINT RESPR(RESPR(0)-$(QLORIGIN)):LBYTES "mdv1_orterforth.bin",$(QLORIGIN):EXEC_W "mdv1_orterforth"'
 	@$(STOPDISC)
 endif
+
+ql/%.bas.ser : target/ql/%.bas
+
+	cp $< $@.io
+	printf '\032' >> $@.io
+	mv $@.io $@
 
 ql/hw.ser : ql/hw
 
@@ -109,12 +113,6 @@ ql/link.o : link.c rf.h target/ql/ql.inc | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
-ql/%.bas.ser : target/ql/%.bas
-
-	cp $< $@.io
-	printf '\032' >> $@.io
-	mv $@.io $@
-
 ql/main.o : main.c rf.h target/ql/ql.inc inst.h | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
@@ -130,38 +128,23 @@ ql/orterforth.bin : ql/orterforth.bin.hex | $(ORTER)
 ql/orterforth.bin.hex : ql/inst.ser ql/loader-inst.bas.ser model.img | roms/ql/$(QLROM) $(DISC) $(ORTER)
 
 	@$(EMPTYDR1FILE) $@.io
-
 ifeq ($(QLMACHINE),real)
-
 	@$(PROMPT) "On the QL type: baud $(QLSERIALBAUD):lrun ser2z"
-
-	@echo "* Loading loader..."
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/loader-inst.bas.ser
-
-	@echo "* Loading installer..."
+	@$(INFO) "Loading loader..."
+	@$(QLSERIALLOAD) ql/loader-inst.bas.ser
+	@$(INFO) "Loading installer..."
 	@sleep 1
-	@$(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) < ql/inst.ser
-
-	@$(STARTDISC) serial $(SERIALPORT) $(QLSERIALBAUD) model.img $@.io
-
-	@$(WAITUNTILSAVED) $@.io
-
-	@$(STOPDISC)
-
+	@$(QLSERIALLOAD) ql/inst.ser
 endif
+	@$(QLSTARTDISC) model.img $@.io
 ifeq ($(QLMACHINE),sqlux)
-	@$(STARTDISCPTY) model.img $@.io
-
 	@$(START) sqlux.pid sqlux $(QLSQLUXOPTS) --speed 0.0 --ser2 $(SERIALPTY) --boot_cmd 'PRINT RESPR(RESPR(0)-$(QLORIGIN)):EXEC_W "mdv1_inst"'
-
-	@$(WAITUNTILSAVED) $@.io
-
-	@sh scripts/stop.sh sqlux.pid
-	
-	@$(STOPDISC)
-
 endif
-
+	@$(WAITUNTILSAVED) $@.io
+ifeq ($(QLMACHINE),sqlux)
+	@sh scripts/stop.sh sqlux.pid
+endif
+	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 
 ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
