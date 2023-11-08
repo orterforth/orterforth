@@ -14,6 +14,8 @@
 
 
 
+( orterforth library                                          )
+6 LOAD ;S
 
 
 
@@ -28,9 +30,7 @@
 
 
 
-
-
-
+( orterforth library                                          )
 
 
 
