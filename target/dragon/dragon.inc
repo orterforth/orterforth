@@ -13,7 +13,7 @@
 #define RF_INST_SAVE
 
 /* End of disc buffers and usable RAM */
-#define RF_LIMIT 0x7EC0
+#define RF_LIMIT 0x7E80
 
 /* C code start address */
 /* passed in command line */
