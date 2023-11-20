@@ -40,6 +40,9 @@ static char           ack = 0;
 /* delay */
 static useconds_t     delay = 0;
 
+/* stop if ixon set */
+static int            stop = 0;
+
 /* exit after EOF timer */
 static char           wai = 0;
 static int            wai_wait = 1;
@@ -88,9 +91,10 @@ static void set_attr(struct termios *attr)
   if (ixoff) {
     attr->c_iflag |= IXOFF;
   }
-  if (ixon) {
+  /* IXON not adequate, implement flow control here */
+  /*if (ixon) {
     attr->c_iflag |= IXON;
-  }
+  }*/
   if (ocrnl) {
     attr->c_oflag |= OPOST | OCRNL;
   }
@@ -129,6 +133,7 @@ int orter_serial_open(char *name, int baud)
   }
   serial_attr_saved = 1;
   /* raw mode, 8N1, RTSCTS, options */
+  serial_attr = serial_attr_save;
   set_attr(&serial_attr);
   /* baud */
   switch (baud) {
@@ -304,8 +309,9 @@ void process(void)
   int c;
 
   /* stdin to serial */
-  while (in.len && orter_io_pipe_left(&in2)) {
+  while (!stop && in.len && orter_io_pipe_left(&in2)) {
     c = orter_io_pipe_get(&in);
+    /*fputc(c, stderr);*/
     /* -o onlcrx */
     if (c == 10 && onlcrx) {
       c = 13;
@@ -315,6 +321,7 @@ void process(void)
       c = 8;
     }
     orter_io_pipe_put(&in2, c);
+    /* -d <delay> */
     if (delay) {
       usleep(delay);
       break;
@@ -328,6 +335,15 @@ void process(void)
     if (c == 6 && ack) {
       orter_io_finished = 1;
       orter_io_exit = 0;
+    }
+    /* -o ixon */
+    if (c == 0x11 && ixon) {
+      /*fputc('Q', stderr);*/
+      stop = 0;
+    }
+    if (c == 0x13 && ixon) {
+      /*fputc('S', stderr);*/
+      stop = 1;
     }
     orter_io_pipe_put(&out2, c);
   }

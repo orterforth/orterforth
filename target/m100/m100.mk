@@ -2,10 +2,11 @@
 
 M100ORG := 45000
 M100ORIGIN := 0xCB00
-M100PROMPT := $(PROMPT) 'On the target type RUN "COM:78N1E" <enter>'
-M100SERIAL := $(ORTER) serial -o ixon -o ixoff -o onlcrx -e 2 $(SERIALPORT) 4800
+M100PROMPT := $(PROMPT) 'On the target type RUN "COM:88N1E" <enter>'
+M100SERIAL := $(ORTER) serial -d 0.001 -o ixon -o ixoff -o onlcrx -e 2 $(SERIALPORT) 9600
 M100SLOWSEND := (while read -r l; do echo "$$l"; sleep 1; done && printf '\032' && sleep 1)
-M100LOADLOADER := $(INFO) 'Loading loader' ; $(M100SLOWSEND) < target/m100/hexloa.ba | $(M100SERIAL)
+M100FASTSEND := (while read -r l; do echo "$$l"; done && printf '\032' && sleep 1)
+M100LOADLOADER := $(INFO) 'Loading loader' ; $(M100FASTSEND) < target/m100/hexloa.ba | $(M100SERIAL)
 M100ZCCOPTS := \
 	+m100 -subtype=default -m \
 	-pragma-define:CLIB_EXIT_STACK_SIZE=0 \
@@ -27,7 +28,7 @@ m100-hw : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
 	@$(M100PROMPT)
 	@$(M100LOADLOADER)
 	@$(INFO) 'Loading hex'
-	@$(M100SLOWSEND) < m100/hw.ihx | $(M100SERIAL)
+	@$(M100FASTSEND) < m100/hw.ihx | $(M100SERIAL)
 
 .PHONY : m100-run
 m100-run : target/m100/hexloa.ba m100/inst.ihx | $(ORTER)
