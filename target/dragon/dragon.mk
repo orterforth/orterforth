@@ -56,6 +56,12 @@ ifeq ($(DRAGONMACHINE),mame)
 			-cassette
 	DRAGONSTOPMACHINE := $(STOPMAME)
 endif
+ifeq ($(DRAGONMACHINE),real)
+	DRAGONSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
+	DRAGONSTARTMACHINE := \
+		$(PROMPT) "On the Dragon type: CLOADM:EXEC"
+	DRAGONSTOPMACHINE := :
+endif
 ifeq ($(DRAGONMACHINE),xroar)
 	DRAGONSTARTDISC := $(INFO) 'Starting disc' ; sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC)
 	DRAGONSTARTMACHINE := \
