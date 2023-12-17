@@ -161,10 +161,7 @@ SPECTRUMRUNDEPS := \
 	$(DR1) | \
 	$(DISC) \
 	$(ORTER)
-# run and wait rather than start
-SPECTRUMSTARTDISC := \
-	$(STARTDISCMSG) && \
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD)
+SPECTRUMSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
 endif
 
 .PHONY : spectrum-hw
@@ -207,9 +204,11 @@ ifeq ($(SPECTRUMMACHINE),mame)
 		-cassette $<
 endif
 
-ifneq ($(SPECTRUMMACHINE),real)
-	@$(STOPDISC)
+ifeq ($(SPECTRUMMACHINE),real)
+	@$(PROMPT) "Press <enter> to stop disc"
 endif
+
+	@$(STOPDISC)
 
 spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
@@ -285,12 +284,11 @@ SPECTRUMINSTDEPS := \
 	$(DISC) \
 	$(ORTER)
 SPECTRUMSTARTINSTMACHINE := \
-	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' ; \
-	$(INFO) 'Loading loader' ; \
-	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas ; \
-	$(INFO) 'Loading inst' ; \
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser ; \
-	$(WARN) 'NB Unfortunately this usually fails due to Spectrum RS232 unreliability'
+	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' && \
+	$(INFO) 'Loading loader' && \
+	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas && \
+	$(INFO) 'Loading inst' && \
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
 SPECTRUMSTOPINSTMACHINE := :
 endif
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
