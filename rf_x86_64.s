@@ -14,7 +14,9 @@ rf_trampoline:
 _rf_trampoline:
         PUSH    RBP                     # enter stack frame
         MOV     RBP,RSP
-# TODO S0 to SP?
+        MOV     RAX,_rf_origin[RIP]     # S0 to SP, for consistency with i686
+        MOV     RAX,72[RAX]
+        MOV     _rf_sp[RIP],RAX
 trampoline1:
         MOV     RAX,_rf_fp[RIP]
         TEST    RAX,RAX                 # if FP is null skip to exit
@@ -138,12 +140,10 @@ _rf_code_cold:
         .data
 
         .p2align 3
-rbpsave:
-        .quad 0
+rbpsave:.quad 0
 
         .p2align 3
-rspsave:
-        .quad 0
+rspsave:.quad 0
 
         .text
 
