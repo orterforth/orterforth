@@ -5,7 +5,6 @@ RC2014HEXLOAD := rc2014/hexload-ack.bas
 RC2014INC := target/rc2014/rc2014.inc
 RC2014INSTOFFSET := 0x5000
 RC2014LIBS := -lrc2014/inst -lrc2014/system
-RC2014MACHINE := real
 RC2014ORG := 0x9000
 
 RC2014OPTION := assembly
@@ -16,13 +15,6 @@ RC2014OPTION := $(OPTION)
 endif
 endif
 
-ifeq ($(RC2014MACHINE),emulator)
-# any emulator needs a pty and command line to run
-# RC2014SERIALPORT := ...
-# RC2014STARTMACHINE := sh scripts/start.sh ...
-# RC2014STOPMACHINE := sh scripts/stop.sh ...
-endif
-ifeq ($(RC2014MACHINE),real)
 ifeq ($(OPER),cygwin)
 RC2014SERIALPORT := /dev/ttyS2
 endif
@@ -31,9 +23,6 @@ RC2014SERIALPORT := /dev/cu.usbserial-A50285BI
 endif
 ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
-endif
-RC2014STARTMACHINE := :
-RC2014STOPMACHINE := :
 endif
 
 # ensure RC2014 is reset before starting
@@ -109,10 +98,8 @@ rc2014-hw : rc2014/hw.ihx | $(RC2014HEXLOAD) $(ORTER)
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC) $(DR0) $(DR1)
 
-	@$(RC2014STARTMACHINE)
 	@$(RC2014LOAD) $<
 	@$(RC2014CONNECT)
-	@$(RC2014STOPMACHINE)
 
 # modify hexload.bas to send ACK once when run and once when hex load complete
 $(RC2014HEXLOAD) : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexload.bas | rc2014
@@ -171,15 +158,12 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 
 rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) $(DISC) $(ORTER)
 
-	@# TODO NB this does not allow for BSS
 	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $$($(STAT) rc2014/inst_CODE.bin)
-	@$(RC2014STARTMACHINE)
 	@$(RC2014LOAD) $<
 	@$(EMPTYDR1FILE) $@.io
 # Linux (though not Darwin) reads EOF from stdin if run in background
 # so pipe no bytes into stdin to keep disc from detecting EOF and terminating
 	@$(WAITUNTILSAVED) $@.io | $(DISC) mux $(RC2014SERIALPORT) 115200 model.img $@.io
-	@$(RC2014STOPMACHINE)
 	@$(COMPLETEDR1FILE)
 
 rc2014/orterforth.ihx : rc2014/orterforth
