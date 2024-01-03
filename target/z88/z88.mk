@@ -48,7 +48,7 @@ z88/inst.imp : z88/inst.bin
 
 z88/inst.lib : inst.c rf.h | z88
 
-	zcc $(ZX81ZCCOPTS) -x -o $@ $<
+	zcc $(Z88ZCCOPTS) -x -o $@ $<
 
 z88/rf.lib : rf.c rf.h target/z88/system.inc | z88
 
