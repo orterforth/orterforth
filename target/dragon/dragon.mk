@@ -145,9 +145,8 @@ dragon/installed : dragon/installed.hex | $(ORTER)
 
 dragon/installed.hex : dragon/inst.cas model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
-# TODO if link true, check memory for dragon/link instead (earlier)
-# TODO should this operate on a headerless dragon/inst
 ifneq ($(DRAGONLINK),true)
+	@# 9 byte header included here although not necessary
 	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/inst.bin)
 endif
 	@$(EMPTYDR1FILE) $@.io
@@ -198,6 +197,7 @@ dragon/rx : | dragon
 
 dragon/spacer : dragon/link
 
+	$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/link)
 	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $(shell $(STAT) dragon/link) )) > $@
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | dragon
