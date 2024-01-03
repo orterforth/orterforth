@@ -96,17 +96,17 @@ c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
 
 	@$(EMPTYDR1FILE) $@.io
 
-	@printf '* \033[1;33mStarting disc\033[0;0m\n'
+	@$(INFO) 'Starting disc'
 	@$(START) disc.pid $(DISC) tcp 25232 model.img $@.io
 
-	@printf '* \033[1;33mStarting Vice\033[0;0m\n'
+	@$(INFO) 'Starting Vice'
 	@$(START) vice.pid x64 $(C64VICEOPTS) -warp \
 		-userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400 \
 		-autostartprgmode 1 -autostart $<
 
 	@$(WAITUNTILSAVED) $@.io
 
-	@printf '* \033[1;33mStopping Vice\033[0;0m\n'
+	@$(INFO) 'Stopping Vice'
 	@sh scripts/stop.sh vice.pid
 
 	@$(STOPDISC)
@@ -130,6 +130,10 @@ c64/rf_6502.o : rf_6502.s | c64
 c64/system.s : target/c64/system.c rf.h target/c64/c64.inc | c64
 
 	cc65 $(C64CC65OPTS) -o $@ $<
+
+# c64/system.o : target/c64/system.s
+
+# 	ca65 -t c64 -o $@ $<
 
 # Johan's serial driver
 tools/github.com/nanoflite/c64-up2400-cc65/driver/c64-up2400.s :
