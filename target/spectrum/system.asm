@@ -63,12 +63,12 @@ _rf_code_key:
 IFDEF USEIY
         LD      IY,5C3AH
 ENDIF
-key0:   LD      A,(cursor)  ; get cursor value 'L' or 'C'
+key0:   LD      A,(cursor)      ; get cursor value 'L' or 'C'
         LD      E,A             ; save for later test
         CALL    18C1H           ; OUT_FLASH show cursor
         LD      A,8             ; back up one
         RST     10H             ; PRINT_A_1
-	      XOR     A               ; set LAST-K to 0
+        XOR     A               ; set LAST-K to 0
         LD      (5C08H),A
 IFDEF USEIY
         EI                      ; enable interrupts to scan keyboard
