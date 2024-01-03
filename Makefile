@@ -28,16 +28,17 @@ ifneq ($(filter CYGWIN%,$(UNAME_S)),)
 endif
 ifeq ($(UNAME_S),Darwin)
 	OPER := darwin
+	PLAY := afplay
 	SERIALPORT := /dev/cu.usbserial-FT2XIBOF
 	STAT := stat -f%z
 endif
 ifeq ($(UNAME_S),Linux)
 	LDFLAGS += -t gcc.ld
 	OPER := linux
+	PLAY := aplay
 	SERIALPORT := /dev/ttyUSB0
 	STAT := stat -c %s
 endif
-# TODO mingw32 support
 ifneq ($(filter MINGW%,$(UNAME_S)),)
 	CC := gcc
 	OPER := mingw
