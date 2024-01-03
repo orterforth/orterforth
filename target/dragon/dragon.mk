@@ -42,6 +42,9 @@ ifeq ($(DRAGONLINK),true)
 	DRAGONCMOCOPTS += -DRF_INST_LINK
 endif
 
+DRAGONMEDIA := dragon/orterforth.cas
+DRAGONINSTMEDIA := dragon/inst.cas
+
 ifeq ($(DRAGONMACHINE),mame)
 	DRAGONMAMEWARNINGS := \
 		$(WARN) 'NB ORG must be 0x0C00 to allow for DragonDOS' ; \
@@ -57,9 +60,12 @@ ifeq ($(DRAGONMACHINE),mame)
 	DRAGONSTOPMACHINE := $(STOPMAME)
 endif
 ifeq ($(DRAGONMACHINE),real)
+	DRAGONMEDIA := dragon/orterforth.wav
+	DRAGONINSTMEDIA := dragon/inst.wav
 	DRAGONSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
 	DRAGONSTARTMACHINE := \
-		$(PROMPT) "On the Dragon type: CLOADM:EXEC"
+		$(PROMPT) "On the Dragon type: CLOADM:EXEC" && \
+		$(PLAY)
 	DRAGONSTOPMACHINE := :
 endif
 ifeq ($(DRAGONMACHINE),xroar)
@@ -92,10 +98,10 @@ ifeq ($(DRAGONMACHINE),xroar)
 endif
 
 .PHONY : dragon-inst
-dragon-inst : dragon/orterforth.cas
+dragon-inst : $(DRAGONMEDIA)
 
 .PHONY : dragon-run
-dragon-run : dragon/orterforth.cas | $(DISC) $(DR0) $(DR1) dragon/rx dragon/tx $(DRAGONROMS)
+dragon-run : $(DRAGONMEDIA) | $(DISC) $(DR0) $(DR1) dragon/rx dragon/tx $(DRAGONROMS)
 
 	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
 
@@ -106,6 +112,10 @@ ifeq ($(DRAGONMACHINE),mame)
 		-rs232 null_modem -bitb socket.localhost:5705 \
 		-cassette $< \
 		-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r"
+endif
+ifeq ($(DRAGONMACHINE),real)
+	@$(DRAGONSTARTMACHINE) $<
+	@$(PROMPT) "To stop disc press a key"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
 	@$(INFO) 'Running XRoar'
@@ -143,7 +153,7 @@ dragon/installed : dragon/installed.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-dragon/installed.hex : dragon/inst.cas model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
+dragon/installed.hex : $(DRAGONINSTMEDIA) model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
 ifneq ($(DRAGONLINK),true)
 	@# 9 byte header included here although not necessary
