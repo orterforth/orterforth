@@ -187,11 +187,8 @@ system-independent:
                          this version of fig-Forth.)
 
  ln ( c-addr -- a-addr ) Aligns the stack value according to
-                         CPU requirements. Used in CREATE when
-                         adding the name field and in other 
-                         non-aligned dictionary operations. 
-                         (ALIGNED is not part of this version
-                         of fig-Forth.)
+                         CPU requirements. (ALIGNED is not part
+                         of this version of fig-Forth.)
 
 
 BACKGROUND
