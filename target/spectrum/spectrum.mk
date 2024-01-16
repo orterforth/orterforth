@@ -1,6 +1,9 @@
 # === ZX Spectrum ===
 
-# configure Fuse Emulator
+# Fuse Emulator
+SPECTRUMFUSEFIFOS := \
+	spectrum/fuse-rs232-rx.fifo spectrum/fuse-rs232-tx.fifo \
+	spectrum/rx.fifo spectrum/tx.fifo
 FUSEOPTS := \
 	--auto-load \
 	--graphics-filter 2x \
@@ -9,8 +12,12 @@ FUSEOPTS := \
 	--no-autosave-settings \
 	--no-confirm-actions \
 	--phantom-typist-mode keyword \
-	--rs232-rx spectrum/fuse-rs232-rx \
-	--rs232-tx spectrum/fuse-rs232-tx
+	--rs232-rx spectrum/fuse-rs232-rx.fifo \
+	--rs232-tx spectrum/fuse-rs232-tx.fifo
+SPECTRUMFUSERUNSERIAL := \
+	$(ORTER) spectrum fuse serial read  > spectrum/tx.fifo < spectrum/fuse-rs232-tx.fifo & \
+	$(ORTER) spectrum fuse serial write < spectrum/rx.fifo > spectrum/fuse-rs232-rx.fifo &
+
 # default inst time emulator
 SPECTRUMINSTMACHINE := fuse
 # locates inst code at 0xC800
@@ -131,36 +138,17 @@ endif
 ifeq ($(SPECTRUMMACHINE),fuse)
 # assume ROMS are available to Fuse
 SPECTRUMROMS :=
-SPECTRUMRUNDEPS := \
-	spectrum/orterforth.tap \
-	$(DR0) \
-	$(DR1) | \
-	$(DISC) \
-	spectrum/fuse-rs232-rx \
-	spectrum/fuse-rs232-tx \
-	spectrum/rx \
-	spectrum/tx
+SPECTRUMRUNDEPS := spectrum/orterforth.tap $(DR0) $(DR1) | $(DISC) $(SPECTRUMFUSEFIFOS)
 SPECTRUMSTARTDISC := \
 	$(STARTDISCMSG) && \
-	sh scripts/start.sh spectrum/tx spectrum/rx disc.pid $(DISC)
+	sh scripts/start.sh spectrum/tx.fifo spectrum/rx.fifo disc.pid $(DISC)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
-SPECTRUMRUNDEPS := \
-	spectrum/orterforth.tap \
-	$(DR0) \
-	$(DR1) | \
-	$(DISC) \
-	$(SPECTRUMROMS)
+SPECTRUMRUNDEPS := spectrum/orterforth.tap $(DR0) $(DR1) | $(DISC) $(SPECTRUMROMS)
 SPECTRUMSTARTDISC := $(STARTDISCTCP)
 endif
 ifeq ($(SPECTRUMMACHINE),real)
-SPECTRUMRUNDEPS := \
-	spectrum/orterforth.ser \
-	target/spectrum/load-serial.bas \
-	$(DR0) \
-	$(DR1) | \
-	$(DISC) \
-	$(ORTER)
+SPECTRUMRUNDEPS := spectrum/orterforth.ser target/spectrum/load-serial.bas $(DR0) $(DR1) | $(DISC) $(ORTER)
 SPECTRUMSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
 endif
 
@@ -174,20 +162,15 @@ spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
 
 ifeq ($(SPECTRUMMACHINE),real)
 	@$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>'
-
 	@$(INFO) 'Loading loader'
 	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
-
 	@$(INFO) 'Loading orterforth'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
 endif
-
 	@$(SPECTRUMSTARTDISC) $(DR0) $(DR1)
-
 ifeq ($(SPECTRUMMACHINE),fuse)
 	@$(INFO) 'Running Fuse'
-	@$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx &
-	@$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx &
+	@$(SPECTRUMFUSERUNSERIAL)
 	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
@@ -203,12 +186,14 @@ ifeq ($(SPECTRUMMACHINE),mame)
 		-autoboot_command 'j""\n' \
 		-cassette $<
 endif
-
 ifeq ($(SPECTRUMMACHINE),real)
 	@$(PROMPT) "Press <enter> to stop disc"
 endif
-
 	@$(STOPDISC)
+
+spectrum/%.fifo : | spectrum
+
+	mkfifo $@
 
 spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
@@ -217,10 +202,6 @@ spectrum/%.ser : spectrum/%.bin | $(ORTER)
 spectrum/%.tap : spectrum/%.bin
 
 	z88dk-appmake +zx -b $< --org $(SPECTRUMORG) -o $@
-
-spectrum/fuse-rs232-% : | spectrum
-
-	mkfifo $@
 
 spectrum/hw.tap : hw.c
 
@@ -267,14 +248,10 @@ SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
 	$(DISC) \
 	$(ORTER) \
-	spectrum/fuse-rs232-rx \
-	spectrum/fuse-rs232-tx \
-	spectrum/rx \
-	spectrum/tx
+	$(SPECTRUMFUSEFIFOS)
 SPECTRUMSTARTINSTMACHINE := \
 		$(INFO) 'Starting Fuse' ; \
-		$(ORTER) spectrum fuse serial read  > spectrum/tx < spectrum/fuse-rs232-tx & \
-		$(ORTER) spectrum fuse serial write < spectrum/rx > spectrum/fuse-rs232-rx & \
+		$(SPECTRUMFUSERUNSERIAL) \
 		$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
 SPECTRUMSTOPINSTMACHINE := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
 endif
@@ -305,21 +282,14 @@ endif
 spectrum/orterforth.bin.hex : model.img $(SPECTRUMINSTDEPS)
 
 	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $$($(STAT) spectrum/inst.bin)
-
 	@$(EMPTYDR1FILE) $@.io
-
 	@$(SPECTRUMSTARTINSTMACHINE)
-
 ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(SPECTRUMSTARTDISC) model.img $@.io
-
 	@$(WAITUNTILSAVED) $@.io
-
 	@$(SPECTRUMSTOPINSTMACHINE)
-
 	@$(STOPDISC)
 endif
-
 	@$(COMPLETEDR1FILE)
 
 spectrum/rf.lib : rf.c rf.h | spectrum
@@ -330,17 +300,9 @@ spectrum/rf_z80.lib : rf_z80.asm | spectrum
 
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
 
-spectrum/rx :
-
-	mkfifo $@
-
 spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
-
-spectrum/tx :
-
-	mkfifo $@
 
 tools/github.com/superzazu/z80/z80.c tools/github.com/superzazu/z80/z80.h :
 
