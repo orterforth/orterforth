@@ -90,7 +90,6 @@ void rf_start(void)
 void rf_code_lit(void)
 {
   RF_START;
-  RF_LOG("lit");
   {
     uintptr_t a = *(RF_IP_GET);
     RF_SP_PUSH(a);
@@ -114,7 +113,6 @@ void rf_next(void)
 void rf_code_exec(void)
 {
   RF_START;
-  RF_LOG("exec");
   rf_w = (rf_code_t *) RF_SP_POP;
   RF_JUMP(*rf_w);
 }
@@ -128,7 +126,6 @@ static void rf_branch(void);
 void rf_code_bran(void)
 {
   RF_START;
-  RF_LOG("bran");
   rf_branch();
   RF_JUMP_NEXT;
 }
@@ -142,7 +139,6 @@ static void rf_branch(void);
 void rf_code_zbran(void)
 {
   RF_START;
-  RF_LOG("zbran");
   if (RF_SP_POP) {
     RF_IP_INC;
   } else {
@@ -160,7 +156,6 @@ static void rf_branch(void);
 void rf_code_xloop(void)
 {
   RF_START;
-  RF_LOG("xloop");
   {
     intptr_t index = (intptr_t) RF_RP_POP;
     intptr_t limit = (intptr_t) RF_RP_POP;
@@ -185,7 +180,6 @@ static void rf_branch(void);
 void rf_code_xploo(void)
 {
   RF_START;
-  RF_LOG("xploo");
   {
     intptr_t n = (intptr_t) RF_SP_POP;
     intptr_t index = RF_RP_POP;
@@ -216,7 +210,6 @@ static void rf_branch(void)
 void rf_code_xdo(void)
 {
   RF_START;
-  RF_LOG("xdo");
   {
     uintptr_t n2 = RF_SP_POP;
     uintptr_t n1 = RF_SP_POP;
@@ -231,7 +224,6 @@ void rf_code_xdo(void)
 void rf_code_dodoe(void)
 {
   RF_START;
-  RF_LOG("dodoe");
   {
     uintptr_t *p1;
     uintptr_t *p2;
@@ -257,7 +249,6 @@ void rf_code_dodoe(void)
 void rf_code_rr(void)
 {
   RF_START;
-  RF_LOG("rr");
   {
     uintptr_t i = (uintptr_t) *(RF_RP_GET);
     RF_SP_PUSH(i);
@@ -287,7 +278,6 @@ static uint8_t rf_digit(uint8_t base, uint8_t c)
 void rf_code_digit(void)
 {
   RF_START;
-  RF_LOG("digit");
   {
     uint8_t b, c, d;
 
@@ -367,7 +357,6 @@ static uintptr_t rf_pfind(uint8_t *addr1, uint8_t *addr2)
 void rf_code_pfind(void)
 {
   RF_START;
-  RF_LOG("pfind");
   {
     uint8_t *addr2;
     uint8_t *addr1;
@@ -440,7 +429,6 @@ static void rf_encl(void)
 void rf_code_encl(void)
 {
   RF_START;
-  RF_LOG("encl");
   rf_encl();
   RF_JUMP_NEXT;
 }
@@ -450,7 +438,6 @@ void rf_code_encl(void)
 void rf_code_cmove(void)
 {
   RF_START;
-  RF_LOG("cmove");
   {
     uintptr_t count = RF_SP_POP;
     char *to = (char *) RF_SP_POP;
@@ -563,7 +550,6 @@ static void rf_ustar(uintptr_t a, uintptr_t b, uintptr_t *ch, uintptr_t *cl)
 void rf_code_ustar(void)
 {
   RF_START;
-  RF_LOG("ustar");
   {
     uintptr_t a, b, ch, cl;
 
@@ -642,7 +628,6 @@ static uintptr_t rf_uslas(uintptr_t uh, uintptr_t ul, uintptr_t v, uintptr_t *r)
 void rf_code_uslas(void)
 {
   RF_START;
-  RF_LOG("uslas");
   {
     uintptr_t ah, al, b, q, r;
 
@@ -661,7 +646,6 @@ void rf_code_uslas(void)
 void rf_code_andd(void)
 {
   RF_START;
-  RF_LOG("andd");
   {
     uintptr_t a;
     uintptr_t b;
@@ -678,7 +662,6 @@ void rf_code_andd(void)
 void rf_code_orr(void)
 {
   RF_START;
-  RF_LOG("orr");
   {
     uintptr_t a;
     uintptr_t b;
@@ -695,7 +678,6 @@ void rf_code_orr(void)
 void rf_code_xorr(void)
 {
   RF_START;
-  RF_LOG("xorr");
   {
     uintptr_t a;
     uintptr_t b;
@@ -712,7 +694,6 @@ void rf_code_xorr(void)
 void rf_code_spat(void)
 {
   RF_START;
-  RF_LOG("spat");
   {
     uintptr_t sp;
 
@@ -727,7 +708,6 @@ void rf_code_spat(void)
 void rf_code_spsto(void)
 {
   RF_START;
-  RF_LOG("spsto");
   RF_SP_SET((uintptr_t *) RF_USER_S0);
   RF_JUMP_NEXT;
 }
@@ -737,7 +717,6 @@ void rf_code_spsto(void)
 void rf_code_rpsto(void)
 {
   RF_START;
-  RF_LOG("rpsto");
   RF_RP_SET((uintptr_t *) RF_USER_R0);
   RF_JUMP_NEXT;
 }
@@ -747,7 +726,6 @@ void rf_code_rpsto(void)
 void rf_code_semis(void)
 {
   RF_START;
-  RF_LOG("semis");
   RF_IP_SET((uintptr_t *) RF_RP_POP);
   RF_JUMP_NEXT;
 }
@@ -757,7 +735,6 @@ void rf_code_semis(void)
 void rf_code_leave(void)
 {
   RF_START;
-  RF_LOG("leave");
   {
     uintptr_t index;
 
@@ -774,7 +751,6 @@ void rf_code_leave(void)
 void rf_code_tor(void)
 {
   RF_START;
-  RF_LOG("tor");
   RF_RP_PUSH(RF_SP_POP);
   RF_JUMP_NEXT;
 }
@@ -784,7 +760,6 @@ void rf_code_tor(void)
 void rf_code_fromr(void)
 {
   RF_START;
-  RF_LOG("fromr");
   RF_SP_PUSH((uintptr_t) RF_RP_POP);
   RF_JUMP_NEXT;
 }
@@ -794,7 +769,6 @@ void rf_code_fromr(void)
 void rf_code_zequ(void)
 {
   RF_START;
-  RF_LOG("zequ");
   {
     uintptr_t a;
 
@@ -809,7 +783,6 @@ void rf_code_zequ(void)
 void rf_code_zless(void)
 {
   RF_START;
-  RF_LOG("zless");
   {
     uintptr_t a;
     
@@ -824,7 +797,6 @@ void rf_code_zless(void)
 void rf_code_plus(void)
 {
   RF_START;
-  RF_LOG("plus");
   {
     intptr_t a;
     intptr_t b;
@@ -864,7 +836,6 @@ static void rf_dplus(uintptr_t ah, uintptr_t al, uintptr_t bh, uintptr_t bl, uin
 void rf_code_dplus(void)
 {
   RF_START;
-  RF_LOG("dplus");
   {
     uintptr_t ah, al, bh, bl, ch, cl;
 
@@ -884,7 +855,6 @@ void rf_code_dplus(void)
 void rf_code_minus(void)
 {
   RF_START;
-  RF_LOG("minus");
   {
     uintptr_t a;
 
@@ -919,7 +889,6 @@ static void rf_dminu(uintptr_t bh, uintptr_t bl, uintptr_t *ch, uintptr_t *cl)
 void rf_code_dminu(void)
 {
   RF_START;
-  RF_LOG("dminu");
   {
     uintptr_t bh, bl, ch, cl;
     
@@ -937,7 +906,6 @@ void rf_code_dminu(void)
 void rf_code_over(void)
 {
   RF_START;
-  RF_LOG("over");
   {
     uintptr_t a;
     uintptr_t b;
@@ -956,7 +924,6 @@ void rf_code_over(void)
 void rf_code_drop(void)
 {
   RF_START;
-  RF_LOG("drop");
   (void) RF_SP_POP;
   RF_JUMP_NEXT;
 }
@@ -966,7 +933,6 @@ void rf_code_drop(void)
 void rf_code_swap(void)
 {
   RF_START;
-  RF_LOG("swap");
   {
     uintptr_t a;
     uintptr_t b;
@@ -984,7 +950,6 @@ void rf_code_swap(void)
 void rf_code_dup(void)
 {
   RF_START;
-  RF_LOG("dup");
   {
     uintptr_t a;
 
@@ -1000,7 +965,6 @@ void rf_code_dup(void)
 void rf_code_pstor(void)
 {
   RF_START;
-  RF_LOG("pstor");
   {
     uintptr_t *addr;
     intptr_t n;
@@ -1017,7 +981,6 @@ void rf_code_pstor(void)
 void rf_code_toggl(void)
 {
   RF_START;
-  RF_LOG("toggl");
   {
     char bits;
     char *addr;
@@ -1034,7 +997,6 @@ void rf_code_toggl(void)
 void rf_code_at(void)
 {
   RF_START;
-  RF_LOG("at");
   {
     uintptr_t *addr;
     uintptr_t word;
@@ -1051,7 +1013,6 @@ void rf_code_at(void)
 void rf_code_cat(void)
 {
   RF_START;
-  RF_LOG("cat");
   {
     uint8_t *addr;
     
@@ -1066,7 +1027,6 @@ void rf_code_cat(void)
 void rf_code_store(void)
 {
   RF_START;
-  RF_LOG("store");
   {
     uintptr_t *addr;
     uintptr_t p;
@@ -1083,7 +1043,6 @@ void rf_code_store(void)
 void rf_code_cstor(void)
 {
   RF_START;
-  RF_LOG("cstor");
   {
     uint8_t *addr;
     uint8_t c;
@@ -1100,7 +1059,6 @@ void rf_code_cstor(void)
 void rf_code_docol(void)
 {
   RF_START;
-  RF_LOG("docol");
   RF_RP_PUSH((uintptr_t) RF_IP_GET);
   RF_IP_SET((uintptr_t *) rf_w + 1);
   RF_JUMP_NEXT;
@@ -1111,7 +1069,6 @@ void rf_code_docol(void)
 void rf_code_docon(void)
 {
   RF_START;
-  RF_LOG("docon");
   RF_SP_PUSH(*((uintptr_t *) rf_w + 1));
   RF_JUMP_NEXT;
 }
@@ -1121,7 +1078,6 @@ void rf_code_docon(void)
 void rf_code_dovar(void)
 {
   RF_START;
-  RF_LOG("dovar");
   RF_SP_PUSH((uintptr_t) (rf_w + 1));
   RF_JUMP_NEXT;
 }
@@ -1131,7 +1087,6 @@ void rf_code_dovar(void)
 void rf_code_douse(void)
 {
   RF_START;
-  RF_LOG("douse");
   {
     uintptr_t idx;
 
@@ -1146,7 +1101,6 @@ void rf_code_douse(void)
 void rf_code_stod(void)
 {
   RF_START;
-  RF_LOG("stod");
   {
     intptr_t a;
 
@@ -1200,7 +1154,6 @@ static void rf_cold(void)
 void rf_code_cold(void)
 {
   RF_START;
-  RF_LOG("cold");
   rf_cold();
 }
 #endif
@@ -1259,7 +1212,6 @@ void rf_code_mon(void)
 void rf_code_cl(void)
 {
   RF_START;
-  RF_LOG("cl");
   RF_SP_PUSH(RF_WORD_SIZE);
   RF_JUMP_NEXT;
 }
@@ -1269,7 +1221,6 @@ void rf_code_cl(void)
 void rf_code_cs(void)
 {
   RF_START;
-  RF_LOG("cs");
   {
     uintptr_t a;
 
@@ -1284,7 +1235,6 @@ void rf_code_cs(void)
 void rf_code_ln(void)
 {
   RF_START;
-  RF_LOG("ln");
 #ifdef RF_ALIGN
   {
     uintptr_t a;

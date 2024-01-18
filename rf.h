@@ -260,9 +260,6 @@ typedef unsigned long uintptr_t;
 
 /* FORTH MACHINE */
 
-/* macro for introducing diagnostics */
-#define RF_LOG(name)
-
 /* SP */
 extern uintptr_t *rf_sp;
 
