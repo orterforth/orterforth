@@ -134,8 +134,8 @@ bbc/%.o : bbc/%.s
 
 bbc/%.ser : bbc/%
 
-	printf "10FOR I%%=&$(BBCORG) TO &$(BBCORG)+$$($(STAT) $<)-1:?I%%=GET:NEXT I%%:P.\"done\"\r" > $@.io
-	printf "20*FX3,7\r30VDU 6\r40FOR J%%=1 TO 10000:NEXT J%%:CALL &$(BBCORG)\rRUN\r" >> $@.io
+	printf "10FOR I%%=&%X TO &%X:?I%%=GET:NEXT I%%:P.\"done\"\r" 0x$(BBCORG) $$((0x$(BBCORG)+$$($(STAT) $<)-1)) > $@.io
+	printf "20*FX3,7\r30VDU 6\r40FOR J%%=1 TO 10000:NEXT J%%:CALL &%X\rRUN\r" 0x$(BBCORG) >> $@.io
 	cat -u $< >> $@.io
 	mv $@.io $@
 
