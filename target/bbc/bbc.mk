@@ -93,7 +93,7 @@ endif
 # requires a disc tcp client to connect to MAME tcp server
 ifeq ($(BBCMACHINE),mame)
 BBCSTARTDISC := $(STARTDISCTCP)
-BBCLOAD := sleep 1 ; $(INFO) 'Running MAME' ; mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
+BBCLOAD := $(INFO) 'Running MAME' ; mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
 BBCLOADINST := sleep 1 ; $(STARTMAME) $(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
 BBCSTOPMACHINE := $(STOPMAME)
 endif
