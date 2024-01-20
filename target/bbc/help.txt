@@ -21,18 +21,24 @@ To build in MAME, call:
                                  buffers, so starts at
                                  &0E00)
 
-To load via serial and build on a physical BBC Micro Model B,
-call:
+To build on a physical BBC Micro Model B, call:
 
  make TARGET=bbc [OPTION=...] BBCMACHINE=real
+  BBCLOADINGMETHOD=serial (uses serial loader)
+ make TARGET=bbc [OPTION=...] BBCMACHINE=real
+  BBCLOADINGMETHOD=tape (uses tape audio)
 
-and follow the instructions.
+and follow the instructions. You may need suitable
+amplification between the host machine's audio output and the
+BBC Micro for it to load successfully.
 
 Target files are:
 
  bbc/orterforth     (pure binary)
- bbc/orterforth.ssd (disc image)
- bbc/orterforth.uef (tape image)
+ bbc/orterforth.ser (binary prepended with BASIC serial loader)
+ bbc/orterforth.ssd (disc emulator file)
+ bbc/orterforth.uef (tape emulator file)
+ bbc/orterforth.wav (tape audio)
 
 To run in MAME, call:
 
@@ -40,10 +46,10 @@ To run in MAME, call:
  make run TARGET=bbc OPTION=assembly (loads .ssd)
  make run TARGET=bbc OPTION=tape     (loads .uef)
 
-Likewise, to load via serial and run on a physical machine,
-call:
+Likewise, to run on a physical machine, call:
 
  make run TARGET=bbc [OPTION=...] BBCMACHINE=real
+  BBCLOADINGMETHOD=...
 
 It is necessary to supply the OPTION variable, because make
 will attempt to build any intermediate targets which may be

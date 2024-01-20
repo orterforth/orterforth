@@ -9,6 +9,10 @@ BBCLOADSERIAL := \
 	$(PROMPT) "Connect serial and on BBC Micro type: *FX2,1 <RETURN>" && \
 	$(INFO) 'Loading via serial' && \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
+BBCLOADTAPE := \
+	$(PROMPT) "Connect tape audio and on BBC Micro type: *TAPE <RETURN> *RUN <RETURN>" && \
+	$(INFO) 'Loading via tape' && \
+	$(PLAY)
 BBCMACHINE := mame
 # BBCMACHINE := real
 BBCMAME := bbcb $(MAMEOPTS) -rs423 null_modem -bitb socket.127.0.0.1:5705
@@ -62,7 +66,7 @@ BBCCC65OPTS += -DRF_ORG='0x$(BBCORG)' -DRF_ORIGIN='0x$(BBCORIGIN)'
 BBCDEPS += bbc/bbc.lib
 
 ifeq ($(BBCMACHINE),real)
-	BBCLOADINGMETHOD := serial
+#	BBCLOADINGMETHOD := serial
 	BBCROMS :=
 endif
 
@@ -104,8 +108,22 @@ ifeq ($(BBCMACHINE),real)
 BBCSTARTDISC := :
 BBCSTARTMACHINE := :
 BBCRUNMACHINE := :
+
+ifeq ($(BBCLOADINGMETHOD),disk)
+BBCLOAD := $(WARN) "disk load not implemented" ; exit 1
+BBCLOADINST := $(WARN) "disk load not implemented" ; exit 1
+endif
+ifeq ($(BBCLOADINGMETHOD),serial)
 BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
+endif
+ifeq ($(BBCLOADINGMETHOD),tape)
+BBCINSTMEDIA = bbc/inst.wav
+BBCMEDIA = bbc/orterforth.wav
+BBCLOAD := $(BBCLOADTAPE) $(BBCMEDIA) && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+BBCLOADINST = $(BBCLOADTAPE) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
+endif
+
 BBCSTOPMACHINE := :
 endif
 
