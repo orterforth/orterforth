@@ -65,11 +65,6 @@ BBCCC65OPTS += -DRF_ORG='0x$(BBCORG)' -DRF_ORIGIN='0x$(BBCORIGIN)'
 # apparently bbc.lib must be the last dep
 BBCDEPS += bbc/bbc.lib
 
-ifeq ($(BBCMACHINE),real)
-#	BBCLOADINGMETHOD := serial
-	BBCROMS :=
-endif
-
 ifeq ($(BBCLOADINGMETHOD),disk)
 	BBCINSTMEDIA = bbc/inst.ssd
 	BBCMEDIA = bbc/orterforth.ssd
@@ -105,23 +100,25 @@ BBCLOADINST := :
 BBCSTOPMACHINE := $(STOPMAME)
 endif
 ifeq ($(BBCMACHINE),real)
+BBCROMS :=
+BBCRUNMACHINE := :
 BBCSTARTDISC := :
 BBCSTARTMACHINE := :
-BBCRUNMACHINE := :
 
 ifeq ($(BBCLOADINGMETHOD),disk)
 BBCLOAD := $(WARN) "disk load not implemented" ; exit 1
 BBCLOADINST := $(WARN) "disk load not implemented" ; exit 1
 endif
 ifeq ($(BBCLOADINGMETHOD),serial)
-BBCLOAD := $(BBCLOADSERIAL) bbc/orterforth.ser && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+BBCLOAD := $(BBCLOADSERIAL) $(BBCMEDIA) && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 endif
 ifeq ($(BBCLOADINGMETHOD),tape)
 BBCINSTMEDIA = bbc/inst.wav
 BBCMEDIA = bbc/orterforth.wav
-BBCLOAD := $(BBCLOADTAPE) $(BBCMEDIA) && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
-BBCLOADINST = $(BBCLOADTAPE) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
+BBCLOAD := $(BBCLOADTAPE) $(BBCMEDIA) && $(PROMPT) 'Press <enter> to stop disc'
+BBCLOADINST = $(BBCLOADTAPE) $(BBCINSTMEDIA)
+BBCSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
 endif
 
 BBCSTOPMACHINE := :
@@ -216,6 +213,8 @@ bbc/orterforth : bbc/orterforth.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
+# TODO when BBCLOADINGMETHOD is different between build and run time
+# make attempts to rebuild because bbc/inst.* is newer.
 bbc/orterforth.hex : $(BBCINSTMEDIA) model.img | $(BBCROMS) $(DISC)
 
 	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
