@@ -93,25 +93,22 @@ endif
 # requires a disc tcp client to connect to MAME tcp server
 ifeq ($(BBCMACHINE),mame)
 BBCSTARTDISC := $(STARTDISCTCP)
-BBCSTARTMACHINE := sleep 1 ; $(STARTMAME) $(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
-BBCRUNMACHINE := sleep 1 ; $(INFO) 'Running MAME' ; mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
-BBCLOAD := :
-BBCLOADINST := :
+BBCLOAD := sleep 1 ; $(INFO) 'Running MAME' ; mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
+BBCLOADINST := sleep 1 ; $(STARTMAME) $(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
 BBCSTOPMACHINE := $(STOPMAME)
 endif
 ifeq ($(BBCMACHINE),real)
 BBCROMS :=
-BBCRUNMACHINE := :
-BBCSTARTDISC := :
-BBCSTARTMACHINE := :
-
+BBCSTOPMACHINE := :
 ifeq ($(BBCLOADINGMETHOD),disk)
 BBCLOAD := $(WARN) "disk load not implemented" ; exit 1
 BBCLOADINST := $(WARN) "disk load not implemented" ; exit 1
+BBCSTARTDISC := $(WARN) "disk load not implemented" ; exit 1
 endif
 ifeq ($(BBCLOADINGMETHOD),serial)
 BBCLOAD := $(BBCLOADSERIAL) $(BBCMEDIA) && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
+BBCSTARTDISC := :
 endif
 ifeq ($(BBCLOADINGMETHOD),tape)
 BBCINSTMEDIA = bbc/inst.wav
@@ -120,8 +117,6 @@ BBCLOAD := $(BBCLOADTAPE) $(BBCMEDIA) && $(PROMPT) 'Press <enter> to stop disc'
 BBCLOADINST = $(BBCLOADTAPE) $(BBCINSTMEDIA)
 BBCSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
 endif
-
-BBCSTOPMACHINE := :
 endif
 
 bbc :
@@ -135,7 +130,6 @@ bbc-build : $(BBCMEDIA)
 bbc-run : $(BBCMEDIA) | $(BBCROMS) $(DISC) $(DR0) $(DR1)
 
 	@$(BBCSTARTDISC) $(DR0) $(DR1)
-	@$(BBCRUNMACHINE)
 	@$(BBCLOAD)
 	@$(STOPDISC)
 
@@ -220,7 +214,6 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) model.img | $(BBCROMS) $(DISC)
 	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
 	@$(EMPTYDR1FILE) $@.io
 	@$(BBCSTARTDISC) model.img $@.io
-	@$(BBCSTARTMACHINE)
 	@$(BBCLOADINST)
 	@$(WAITUNTILSAVED) $@.io
 	@$(BBCSTOPMACHINE)
