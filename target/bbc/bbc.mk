@@ -135,7 +135,7 @@ bbc-run : $(BBCMEDIA) | $(BBCROMS) $(DISC) $(DR0) $(DR1)
 
 bbc/%.inf : | bbc
 
-	echo "$$.orterfo  $(BBCORG)   $(BBCORG)  CRC=0" > $@
+	printf "$$.orterfo  %04X   %04X  CRC=0\n" 0x$(BBCORG) 0x$(BBCORG) > $@
 
 bbc/%.o : bbc/%.s
 
