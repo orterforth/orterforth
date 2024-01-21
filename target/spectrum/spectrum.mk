@@ -32,6 +32,18 @@ SPECTRUMLIBS := \
 	-lndos \
 	-lspectrum/inst \
 	-lspectrum/system
+# real serial load
+SPECTRUMLOADSERIAL := \
+	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' && \
+	$(INFO) 'Loading loader' && \
+	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas && \
+	$(INFO) 'Loading binary' && \
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < 
+# real tape load
+SPECTRUMLOADTAPE := \
+	$(PROMPT) 'On the Spectrum type:\n  LOAD "" <enter>' && \
+	$(INFO) 'Loading' && \
+	$(PLAY) 
 # ORG starts at non-contended memory, 0x8000, for performance
 SPECTRUMORG := 0x8000
 # ROM files for emulator
@@ -169,16 +181,10 @@ spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
 
 ifeq ($(SPECTRUMMACHINE),real)
 ifeq ($(SPECTRUMLOADINGMETHOD),serial)
-	@$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>'
-	@$(INFO) 'Loading loader'
-	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
-	@$(INFO) 'Loading orterforth'
-	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
+	@$(SPECTRUMLOADSERIAL) spectrum/orterforth.ser
 endif
 ifeq ($(SPECTRUMLOADINGMETHOD),tape)
-	@$(PROMPT) 'On the Spectrum type:\n  LOAD "" <enter>\n'
-	@$(INFO) 'Loading orterforth'
-	@$(PLAY) spectrum/orterforth.wav
+	@$(SPECTRUMLOADTAPE) spectrum/orterforth.wav
 endif
 endif
 	@$(SPECTRUMSTARTDISC) $(DR0) $(DR1)
@@ -272,19 +278,11 @@ endif
 ifeq ($(SPECTRUMINSTMACHINE),real)
 ifeq ($(SPECTRUMLOADINGMETHOD),serial)
 SPECTRUMINSTDEPS := spectrum/inst-2.ser | $(DISC) $(ORTER)
-SPECTRUMSTARTINSTMACHINE := \
-	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' && \
-	$(INFO) 'Loading loader' && \
-	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas && \
-	$(INFO) 'Loading inst' && \
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
+SPECTRUMSTARTINSTMACHINE := $(SPECTRUMLOADSERIAL) spectrum/inst-2.ser
 endif
 ifeq ($(SPECTRUMLOADINGMETHOD),tape)
 SPECTRUMINSTDEPS := spectrum/inst-2.wav | $(DISC) $(ORTER)
-SPECTRUMSTARTINSTMACHINE := \
-	$(PROMPT) 'On the Spectrum type:\n  LOAD "" <enter>' && \
-	$(INFO) 'Loading inst' && \
-	$(PLAY) spectrum/inst-2.wav
+SPECTRUMSTARTINSTMACHINE := $(SPECTRUMLOADTAPE) spectrum/inst-2.wav
 endif
 SPECTRUMSTOPINSTMACHINE := :
 endif
