@@ -135,6 +135,10 @@ ifeq ($(SPECTRUMMACHINE),superzazu)
 SPECTRUMMACHINE := fuse
 endif
 
+# TODO currently only applies to real machine
+SPECTRUMLOADINGMETHOD := serial
+# SPECTRUMLOADINGMETHOD := tape
+
 ifeq ($(SPECTRUMMACHINE),fuse)
 # assume ROMS are available to Fuse
 SPECTRUMROMS :=
@@ -150,6 +154,9 @@ endif
 ifeq ($(SPECTRUMMACHINE),real)
 SPECTRUMRUNDEPS := spectrum/orterforth.ser target/spectrum/load-serial.bas $(DR0) $(DR1) | $(DISC) $(ORTER)
 SPECTRUMSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
+ifeq ($(SPECTRUMLOADINGMETHOD),tape)
+SPECTRUMRUNDEPS := spectrum/orterforth.wav $(DR0) $(DR1) | $(DISC) $(ORTER)
+endif
 endif
 
 .PHONY : spectrum-hw
@@ -161,11 +168,18 @@ spectrum-hw : spectrum/hw.tap
 spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
 
 ifeq ($(SPECTRUMMACHINE),real)
+ifeq ($(SPECTRUMLOADINGMETHOD),serial)
 	@$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>'
 	@$(INFO) 'Loading loader'
 	@$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas
 	@$(INFO) 'Loading orterforth'
 	@$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/orterforth.ser
+endif
+ifeq ($(SPECTRUMLOADINGMETHOD),tape)
+	@$(PROMPT) 'On the Spectrum type:\n  LOAD "" <enter>\n'
+	@$(INFO) 'Loading orterforth'
+	@$(PLAY) spectrum/orterforth.wav
+endif
 endif
 	@$(SPECTRUMSTARTDISC) $(DR0) $(DR1)
 ifeq ($(SPECTRUMMACHINE),fuse)
@@ -199,9 +213,9 @@ spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
 	$(ORTER) spectrum header $< 3 32768 0 > $@
 
-spectrum/%.tap : spectrum/%.bin
+spectrum/%.tap spectrum/%.wav : spectrum/%.bin
 
-	z88dk-appmake +zx -b $< --org $(SPECTRUMORG) -o $@
+	z88dk-appmake +zx --audio -b $< --org $(SPECTRUMORG) -o $@
 
 spectrum/hw.tap : hw.c
 
@@ -256,16 +270,22 @@ SPECTRUMSTARTINSTMACHINE := \
 SPECTRUMSTOPINSTMACHINE := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
 endif
 ifeq ($(SPECTRUMINSTMACHINE),real)
-SPECTRUMINSTDEPS := \
-	spectrum/inst-2.ser | \
-	$(DISC) \
-	$(ORTER)
+ifeq ($(SPECTRUMLOADINGMETHOD),serial)
+SPECTRUMINSTDEPS := spectrum/inst-2.ser | $(DISC) $(ORTER)
 SPECTRUMSTARTINSTMACHINE := \
 	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' && \
 	$(INFO) 'Loading loader' && \
 	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas && \
 	$(INFO) 'Loading inst' && \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < spectrum/inst-2.ser
+endif
+ifeq ($(SPECTRUMLOADINGMETHOD),tape)
+SPECTRUMINSTDEPS := spectrum/inst-2.wav | $(DISC) $(ORTER)
+SPECTRUMSTARTINSTMACHINE := \
+	$(PROMPT) 'On the Spectrum type:\n  LOAD "" <enter>' && \
+	$(INFO) 'Loading inst' && \
+	$(PLAY) spectrum/inst-2.wav
+endif
 SPECTRUMSTOPINSTMACHINE := :
 endif
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
