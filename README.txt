@@ -46,7 +46,7 @@ https://github.com/orterforth/orterforth/discussions
 https://github.com/orterforth/orterforth/issues
 
 
-ORTERFORTH IS IMPLEMENTED IN C
+FORTH IN C
 
 A typical Forth implementation rests on a number of base words
 implemented in native machine code. Higher-level words,
@@ -61,9 +61,6 @@ field address (CFA) points at this code.
 Instead of this, orterforth has platform-independent 
 implementations of each base word in C. The CFA is set to point
 to this C code.
-
-
-THE TRAMPOLINE - EMULATING JUMPS IN C
 
 Forth implementations normally use jump instructions to
 transfer control through successive native code, rather than 
@@ -103,7 +100,7 @@ The emulated disc drive is available to the user to load
 programs in the same way it was used for install.
 
 
-THE RETRO DISC CONTROLLER - EMULATED HERE
+THE DISC CONTROLLER
 
 The Installation Manual contains an implementation of the 
 protocol used by the PerSci 1070 Intelligent Diskette
@@ -131,7 +128,7 @@ An RS-232 serial port can be added to a modern machine that
 doesn't have one, using a USB to RS-232 converter.
 
 
-INTEGRATING WITH ASSEMBLY CODE - IMPROVING PERFORMANCE
+FORTH IN ASSEMBLY LANGUAGE
 
 orterforth will usually be substantially slower than other 
 Forth implementations written in assembly code, because many 
@@ -171,7 +168,7 @@ trampoline and hook will not be called, and performance will
 generally be much better.
 
 
-ADDITIONAL WORDS - PLATFORM INDEPENDENCE
+PLATFORM INDEPENDENCE
 
 To support different platforms, while making the minimum of 
 changes to the fig-Forth language itself, there are a small 
