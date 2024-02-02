@@ -98,14 +98,14 @@ DECLARE VOCABULARY
 FORTH DEFINITIONS VOCABULARY example IMMEDIATE
 example DEFINITIONS
 : hw 7 LOAD ;
-: fib 8 LOAD ;
-: fac 9 LOAD ;
-: rev 10 LOAD ;
-: roman 11 LOAD ;
-: mandelbrot 13 LOAD ;
-: pascal 15 LOAD ;
+: collatz 8 LOAD ;
+: fib 9 LOAD ;
+: fac 10 LOAD ;
+: rev 11 LOAD ;
+: roman 12 LOAD ;
+: mandelbrot 14 LOAD ;
+: pascal 16 LOAD ;
 FORTH DEFINITIONS
-
 
 
 
@@ -126,6 +126,22 @@ FORTH DEFINITIONS
 
 
 ;S
+( Collatz sequences                                   collatz )
+: collatz
+  BEGIN DUP . DUP 1 - WHILE
+    DUP 2 MOD IF 3 * 1+ ELSE 2 / ENDIF REPEAT CR ;
+: test 50 1 DO I collatz LOOP ;
+test ;S
+
+
+
+
+
+
+
+
+
+
 ( Fibonacci sequence                                      fib )
 FORTH DEFINITIONS VOCABULARY fib IMMEDIATE fib DEFINITIONS
 DECIMAL
@@ -159,7 +175,7 @@ CR fac list CR
 
 ;S
 ( Reverse a string                                        rev )
-DECIMAL 16 LOAD                ( load str vocabulary          )
+DECIMAL 17 LOAD                ( load str vocabulary          )
 FORTH DEFINITIONS VOCABULARY rev IMMEDIATE rev DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
@@ -207,7 +223,7 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
-20 LOAD ( sys vocabulary ) HEX
+21 LOAD ( sys vocabulary ) HEX
 FORTH DEFINITIONS
 : mandelbrot
     CR
