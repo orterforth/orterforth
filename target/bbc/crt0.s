@@ -1,4 +1,4 @@
-.import initlib, donelib
+;.import initlib, donelib
 .import callmain	
 .importzp sp
 
@@ -6,93 +6,86 @@
 		
 .include "zeropage.inc"
 
-evntv := $0220
-osbyte := $FFF4
+EVNTV  =$0220
+OSBYTE =$FFF4
 
-.segment	"STARTUP"
+.segment "STARTUP"
 
 .export __Cstart
 
 __Cstart:
 
-	lda	#$00                      ; init C stack at $0600
-	sta	sp
-	lda	#$06
-	sta	sp+1
+       LDA #$00                 ; init C stack at $0600
+       STA sp
+       LDA #$06
+       STA sp+1
 
-	sei                           ; set escape handler
-	lda	evntv
-	sta	evntv_save
-	lda	evntv+1
-	sta	evntv_save+1	
-	lda	#<handle
-	sta	evntv
-	lda	#>handle
-	sta	evntv+1
-	cli
+       SEI                      ; set escape handler
+       LDA EVNTV
+       STA EVNTVS
+       LDA EVNTV+1
+       STA EVNTVS+1	
+       LDA #<hand
+       STA EVNTV
+       LDA #>hand
+       STA EVNTV+1
+       CLI
 
-	lda	#$0E                      ; enable escape event
-	ldx	#$06
-	jsr	osbyte
-	stx	enable_save
+       LDA #$0E                 ; enable escape event
+       LDX #$06
+       JSR OSBYTE
+       STX enable_save
 
-	jsr	initlib                   ; run constructors
+;      JSR initlib              ; run constructors
 
-	tsx                           ; save S
-	stx	s_save
+       TSX                      ; save S
+       STX s_save
 
-	jsr	callmain                  ; call C
+       JSR callmain             ; call C
 
-doexit:
-	tax                           ; return exit code in user flag
-	ldy	#$00
-	lda	#$01
-	jsr	osbyte
+dox:   TAX                      ; return exit code in user flag
+       LDY #$00
+       LDA #$01
+       JSR OSBYTE
 
-	jsr donelib
+;      JSR donelib              ; run destructors
 
-	lda	enable_save               ; reset escape event state
-	bne	doexit1
-	lda	#$0D
-	ldx	#$06
-	jsr	osbyte
+       LDA enable_save          ; reset escape event state
+       BNE dox1
+       LDA #$0D
+       LDX #$06
+       JSR OSBYTE
 
-doexit1:
-	sei                           ; restore event handler
-	lda	evntv_save
-	sta	evntv
-	lda	evntv_save+1
-	sta	evntv+1
-	cli
+dox1:  SEI                      ; restore event handler
+       LDA EVNTVS
+       STA EVNTV
+       LDA EVNTVS+1
+       STA EVNTV+1
+       CLI
 
-	rts                           ; done
+       RTS                      ; done
 
 .export _exit
 
-_exit:
+_exit: LDX s_save               ; restore S
+       TXS
+       JMP dox                  ; as above
 
-	ldx	s_save                    ; restore S
-	txs
-	jmp	doexit                    ; as above
-
-handle:
-
-	php
-	cmp	#$06                      ; if escape detected, no op
-	bne	handle1
-	plp
-	rts
-handle1:
-	plp                           ; else forward to saved handler
-	jmp	(evntv_save)
+hand:  PHP
+       CMP #$06                 ; if escape detected, no op
+       BNE hand1
+       PLP
+       RTS
+hand1: PLP                      ; else forward to saved handler
+       JMP (EVNTVS)
 
 .export initmainargs
 
 initmainargs:
-	rts                           ; dummy initmainargs
+       RTS                      ; dummy initmainargs
 
 .bss
 
-evntv_save: .res 2
+EVNTVS: .res 2
 enable_save: .res 1
 s_save: .res 1
