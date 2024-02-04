@@ -1054,29 +1054,34 @@ DODOE: LDA IP+1
        ADC #0
        JMP PUSH
 
+;
+;                             COLD
+;                             SCREEN 55 LINE 1
+;
 .export _rf_code_cold
 
 _rf_code_cold:
-; This preamble modifies the following code to hold the
-; parameter field addresses required. The original Forth
-; model source compiled these values inline using the 
-; Forth 6502 assembler, which we cannot do. The rest of
-; the code is close to the original.
-cold1: LDA ORIG+$2A ; move FORTH field to cold3 and cold4
-       STA cold3+1
+; This preamble modifies the code that follows to hold the
+; required addresses. The original Forth model source compiled
+; these values inline using the Forth 6502 assembler, after
+; the addresses were known, which we cannot do as they are
+; unknown at this point. The rest of the code is close to the 
+; original.
+       LDA ORIG+$2A ; move FORTH field from boot-up literal
+       STA cold3+1  ; to two locations in the code that follows
        STA cold4+1
        LDA ORIG+$2B
        STA cold3+2
        STA cold4+2
-       INC cold4+1  ; increment cold4 by 1
+       INC cold4+1  ; now increment the second location by 1
        BNE cold2
        INC cold4+2
-cold2: LDA ORIG+$2D ; move ABORT PFA to cold7, cold8
-       STA cold7+1
-       LDA ORIG+$2C
+cold2: LDA ORIG+$2D ; move ABORT PFA from boot-up literal
+       STA cold7+1  ; high byte first
+       LDA ORIG+$2C ; then low byte
        STA cold8+1
 
-       LDA ORIG+$0C ; from cold start area
+       LDA ORIG+$0C    ; from cold start area
 cold3: STA $FFFF    ; self modified
        LDA ORIG+$0D
 cold4: STA $FFFF    ; self modified
