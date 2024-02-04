@@ -1109,7 +1109,7 @@ _rf_code_stod:
        LDA 1,X
        BPL stod1
        DEY
-stod1:
-       TYA
+stod1: TYA
        PHA
        JMP PUSH
+;TODO above format change desired?
