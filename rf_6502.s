@@ -1112,4 +1112,3 @@ _rf_code_stod:
 stod1: TYA
        PHA
        JMP PUSH
-;TODO above format change desired?
