@@ -6,6 +6,7 @@
 
 void rf_init(void)
 {
+  putchar('A');
 }
 
 void rf_code_emit(void)
