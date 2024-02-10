@@ -770,7 +770,7 @@ _rf_code_docon:
         move.l  (a5)+, a0
         jmp     (a0)
 *
-       .align 2
+        .align 2
         .extern _rf_code_douse
 _rf_code_douse:
         move.l  (a5), d0
@@ -791,7 +791,7 @@ _rf_code_docol:
         move.l  (a5)+, a0
         jmp     (a0)
 
-         .align 2
+        .align 2
         .extern _rf_code_dodoe
 _rf_code_dodoe:
         move.l  a4, -(a1)
