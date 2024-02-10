@@ -88,7 +88,7 @@ SYSTEMDEPS := \
 default : build
 
 # disc image (blocks file) conversion utility
-$(BLOCKS) : blocks.c
+$(BLOCKS) : blocks.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
