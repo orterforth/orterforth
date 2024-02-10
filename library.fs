@@ -129,7 +129,7 @@ FORTH DEFINITIONS
 ( Collatz sequences                                   collatz )
 : collatz
   BEGIN DUP . DUP 1 - WHILE
-    DUP 2 MOD IF 3 * 1+ ELSE 2 / ENDIF REPEAT CR ;
+    DUP 2 MOD IF 3 * 1+ ELSE 2 / ENDIF REPEAT DROP CR ;
 : test 50 1 DO I collatz LOOP ;
 test ;S
 
