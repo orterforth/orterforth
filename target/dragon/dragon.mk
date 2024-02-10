@@ -157,7 +157,7 @@ dragon/installed.hex : $(DRAGONINSTMEDIA) model.img | $(DISC) dragon/rx dragon/t
 
 ifneq ($(DRAGONLINK),true)
 	@# 9 byte header included here although not necessary
-	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/inst.bin)
+	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $$($(STAT) dragon/inst.bin)
 endif
 	@$(EMPTYDR1FILE) $@.io
 	@$(DRAGONSTARTDISC) model.img $@.io
@@ -190,7 +190,7 @@ endif
 
 dragon/orterforth.bin : dragon/orterforth
 
-	$(ORTER) dragon bin header 2 $(DRAGONORG) $(shell $(STAT) $<) $(DRAGONORG) > $@
+	$(ORTER) dragon bin header 2 $(DRAGONORG) $$($(STAT) $<) $(DRAGONORG) > $@
 	cat $< >> $@
 
 dragon/rf.o : rf.c rf.h target/dragon/dragon.inc | dragon
@@ -207,8 +207,8 @@ dragon/rx : | dragon
 
 dragon/spacer : dragon/link
 
-	$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $(shell $(STAT) dragon/link)
-	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $(shell $(STAT) dragon/link) )) > $@
+	$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $$($(STAT) dragon/link)
+	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $$($(STAT) dragon/link) )) > $@
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | dragon
 
