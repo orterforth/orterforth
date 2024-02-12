@@ -20,6 +20,26 @@ typedef __uint128_t rf_double_t;
 #endif
 #endif
 
+/* MS Visual C */
+
+#ifdef _WIN32
+#include <stdint.h>
+#ifdef _WIN64
+#define RF_WORD_SIZE 8
+#undef RF_DOUBLE_ARITH
+#define RF_LE
+/* X8664 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x0353923C
+#else
+#define RF_WORD_SIZE 4
+/* X86 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x0000A836
+#endif
+#define RF_ALIGN RF_WORD_SIZE
+#endif
+
 /* TARGET ARCHITECTURE */
 
 /* cc65 */

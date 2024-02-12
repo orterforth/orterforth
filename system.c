@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <termios.h>
 #include <unistd.h>
-
+#endif
 #include "rf.h"
 #include "persci.h"
 
@@ -40,9 +41,9 @@ void rf_code_emit(void)
   }
   RF_JUMP_NEXT;
 }
-
+#ifndef _WIN32
 static struct termios tp, save;
-
+#endif
 void rf_code_key(void)
 {
   RF_START;
@@ -53,8 +54,8 @@ void rf_code_key(void)
       /* read auto boot command */
       c = *(rf_system_auto_cmd++);
     } else {
-
-      if (isatty(0)) {
+#ifndef _WIN32
+        if (isatty(0)) {
         /* save terminal settings */
         if (tcgetattr(0, &tp) == -1) {
           perror("tcgetattr failed");
@@ -69,10 +70,10 @@ void rf_code_key(void)
           exit(1);
         }
       }
-
+#endif
       /* get key */
       c = fgetc(stdin);
-
+#ifndef _WIN32
       if (isatty(0)) {
         /* restore terminal settings */
         if (tcsetattr(0, TCSANOW, &save) == -1) {
@@ -80,7 +81,7 @@ void rf_code_key(void)
           exit(1);
         }
       }
-
+#endif
       /* exit if eof */
       if (c == -1) {
         exit(0);
