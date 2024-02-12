@@ -1,8 +1,8 @@
 BUILDING ORTERFORTH
 ===================
 
-To build orterforth for the local system (Linux, macOS, 
-Cygwin), call:
+To build orterforth for the local system (Cygwin, Linux, macOS,
+Windows), call:
 
  make
 
@@ -14,16 +14,18 @@ call:
 
 The target executable is built at the location:
 
- <os>-<arch>/orterforth.exe (on Cygwin)
+ <os>-<arch>/orterforth.exe (on Cygwin, Windows)
  <os>-<arch>/orterforth     (on others)
 
-where <os>   is e.g.: cygwin, darwin, linux
+where <os>   is e.g.: cygwin, darwin, linux, windows
       <arch> is e.g.: aarch64, armv6l, i686, x86_64
 
 To run the local system build call:
 
  make run
 
+NB on Windows you will need to use a Native Tools Command
+Prompt. The file make.bat invokes NMAKE.
 
 BUILDING FOR RETRO PLATFORMS
 ============================
