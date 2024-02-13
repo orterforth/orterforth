@@ -25,6 +25,7 @@ typedef __uint128_t rf_double_t;
 #ifdef _WIN32
 #include <stdint.h>
 #undef RF_DOUBLE_ARITH
+#define RF_BS 0x08
 #ifdef _WIN64
 #define RF_WORD_SIZE 8
 #else

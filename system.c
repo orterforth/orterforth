@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <termios.h>
 #include <unistd.h>
 #endif
@@ -13,6 +15,10 @@ char *rf_origin = 0;
 /* auto command for boot purposes */
 char *rf_system_auto_cmd = 0;
 
+#ifdef _WIN32
+static HANDLE hstdin;
+#endif
+
 void rf_init(void)
 {
   /* allocate memory */
@@ -21,6 +27,13 @@ void rf_init(void)
     perror("memory init failed");
     exit(1);
   }
+
+#ifdef _WIN32
+  hstdin = GetStdHandle(STD_INPUT_HANDLE);
+  DWORD mode = 0;
+  GetConsoleMode(hstdin, &mode);
+  SetConsoleMode(hstdin, mode & (~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
+#endif
 }
 
 void rf_code_emit(void)
@@ -48,14 +61,22 @@ void rf_code_key(void)
 {
   RF_START;
   {
+#ifdef _WIN32
+    uint8_t c;
+    long unsigned int char_read = 0;
+#else
     int c;
+#endif
 
     if (rf_system_auto_cmd && *rf_system_auto_cmd) {
       /* read auto boot command */
       c = *(rf_system_auto_cmd++);
     } else {
-#ifndef _WIN32
-        if (isatty(0)) {
+      /* get key */
+#ifdef _WIN32
+      ReadConsole(hstdin, &c, 1, &char_read, NULL);
+#else
+      if (isatty(0)) {
         /* save terminal settings */
         if (tcgetattr(0, &tp) == -1) {
           perror("tcgetattr failed");
@@ -70,10 +91,7 @@ void rf_code_key(void)
           exit(1);
         }
       }
-#endif
-      /* get key */
       c = fgetc(stdin);
-#ifndef _WIN32
       if (isatty(0)) {
         /* restore terminal settings */
         if (tcsetattr(0, TCSANOW, &save) == -1) {
@@ -81,16 +99,15 @@ void rf_code_key(void)
           exit(1);
         }
       }
-#endif
       /* exit if eof */
       if (c == -1) {
-        exit(0);
+          exit(0);
       }
-
       /* LF to CR */
       if (c == 10) {
-        c = 13;
+          c = 13;
       }
+#endif
     }
 
     /* return key */
