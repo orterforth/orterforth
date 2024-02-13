@@ -28,11 +28,15 @@ void rf_init(void)
     exit(1);
   }
 
+  /* handle Windows console */
 #ifdef _WIN32
   hstdin = GetStdHandle(STD_INPUT_HANDLE);
-  DWORD mode = 0;
-  GetConsoleMode(hstdin, &mode);
-  SetConsoleMode(hstdin, mode & (~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
+  DWORD type = GetFileType(hstdin);
+  if (type == FILE_TYPE_CHAR) {
+    DWORD mode = 0;
+    GetConsoleMode(hstdin, &mode);
+    SetConsoleMode(hstdin, mode & (~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
+  }
 #endif
 }
 
@@ -74,7 +78,16 @@ void rf_code_key(void)
     } else {
       /* get key */
 #ifdef _WIN32
-      ReadConsole(hstdin, &c, 1, &char_read, NULL);
+      DWORD type = GetFileType(hstdin);
+      if (type == FILE_TYPE_CHAR) {
+        ReadConsole(hstdin, &c, 1, &char_read, NULL);
+      } else {
+        ReadFile(hstdin, &c, 1, &char_read, NULL);
+      }
+      /* exit if eof */
+      if (char_read == 0) {
+          exit(0);
+      }
 #else
       if (isatty(0)) {
         /* save terminal settings */
