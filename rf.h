@@ -24,18 +24,11 @@ typedef __uint128_t rf_double_t;
 
 #ifdef _WIN32
 #include <stdint.h>
+#undef RF_DOUBLE_ARITH
 #ifdef _WIN64
 #define RF_WORD_SIZE 8
-#undef RF_DOUBLE_ARITH
-#define RF_LE
-/* X8664 */
-#define RF_CPU_HI 0x00000000
-#define RF_CPU_LO 0x0353923C
 #else
 #define RF_WORD_SIZE 4
-/* X86 */
-#define RF_CPU_HI 0x00000000
-#define RF_CPU_LO 0x0000A836
 #endif
 #define RF_ALIGN RF_WORD_SIZE
 #endif
@@ -153,11 +146,25 @@ typedef unsigned long uintptr_t;
 
 /* modern platforms */
 
+#ifdef _M_IX86
+#define RF_LE
+/* X86 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x0000A836
+#endif
+
 #ifdef __i386__
 #define RF_LE
 /* X86 */
 #define RF_CPU_HI 0x00000000
 #define RF_CPU_LO 0x0000A836
+#endif
+
+#ifdef _M_AMD64
+#define RF_LE
+/* X8664 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x0353923C
 #endif
 
 #ifdef __x86_64__
