@@ -10,9 +10,9 @@ default: build
 
 .phony:
 
-build: $(SYSTEM)\orterforth.exe
+build: $(SYSTEM)\orterforth.exe .phony
 
-clean:
+clean: .phony
 	del /Q $(SYSTEM)\*.*
 
 library.img: library.fs $(SYSTEM)\blocks.exe
@@ -28,36 +28,36 @@ run: $(SYSTEM)\orterforth.exe library.img .phony
 	@$(SYSTEM)\orterforth.exe library.img
 
 $(SYSTEM)\blocks.exe: blocks.c
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fe$@ $**
 
 $(SYSTEM)\inst.obj: inst.c inst.h model.inc rf.h system.inc
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c inst.c
 
 $(SYSTEM)\orter.exe: orter\main.c $(SYSTEM)\orter_hex.obj
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fe$@ $**
 
 $(SYSTEM)\orterforth.exe: main.c $(SYSTEM)\inst.obj $(SYSTEM)\persci.obj $(SYSTEM)\rf.obj $(SYSTEM)\system.obj
 	$(CC) $(CFLAGS) /Fe$@ $**
 
 $(SYSTEM)\orter_bbc.obj: orter\bbc.c orter\bbc.h orter\io.h
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c orter\bbc.c
 
 $(SYSTEM)\orter_hex.obj: orter\hex.c orter\hex.h
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c orter\hex.c
 
 $(SYSTEM)\persci.obj: persci.c persci.h
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c persci.c
 
 $(SYSTEM)\rf.obj: rf.c rf.h system.inc
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c rf.c
 
 $(SYSTEM)\system.obj: system.c rf.h system.inc
-	$(MAKESYSTEMDIR)
+	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c system.c
