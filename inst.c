@@ -490,9 +490,8 @@ void rf_inst(void)
     /* empty buffers */
     "LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! "
     /* loop over blocks */
-    "LIT 785 DUP LIT -805 + 0BRANCH ^9 "
-    "DUP BLOCK compile "
-    "LIT 1 + BRANCH ^-13 DROP "
+    "LIT 785 DUP BLOCK compile LIT 1 + "
+    "DUP LIT -805 + 0= 0BRANCH ^-12 DROP "
     /* call ABORT just defined */
     "LIT ^21 LIT 8 ic + @ @ LIT ^-24 + EXECUTE");
 
