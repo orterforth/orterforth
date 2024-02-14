@@ -268,93 +268,139 @@ static void rf_inst_code_compile(void)
   RF_JUMP_NEXT;
 }
 
-static void rf_inst_code_cd(void);
-
-typedef struct rf_inst_code_t {
-  const char *word;
-  rf_code_t value;
-} rf_inst_code_t;
-
-/* Table of inst time code addresses */
-static const rf_inst_code_t rf_inst_code_lit_list[] = {
-  { "cl", rf_code_cl },
-  { "cs", rf_code_cs },
-  { "ln", rf_code_ln },
-  { "LIT", rf_code_lit },
-  { "EXECUTE", rf_code_exec },
-  { "BRANCH", rf_code_bran },
-  { "0BRANCH", rf_code_zbran },
-  { 0, rf_code_xloop },
-  { 0, rf_code_xploo },
-  { 0, rf_code_xdo },
-  { "DIGIT", rf_code_digit },
-  { "(FIND)", rf_code_pfind },
-  { "ENCLOSE", rf_code_encl },
-  { 0, rf_code_emit },
+/* table of inst time code addresses */
+static const rf_code_t rf_inst_codes[] = {
+  rf_code_cl,
+  rf_code_cs,
+  rf_code_ln,
+  rf_code_lit,
+  rf_code_exec,
+  rf_code_bran,
+  rf_code_zbran,
+  rf_code_xloop,
+  rf_code_xploo,
+  rf_code_xdo,
+  rf_code_digit,
+  rf_code_pfind,
+  rf_code_encl,
+  rf_code_emit,
 #ifdef RF_INST_SILENT
-  { 0, rf_code_drop },
+  rf_code_drop,
 #else
-  { 0, rf_code_emit },
+  rf_code_emit,
 #endif
-  { 0, rf_code_key },
-  { 0, rf_code_qterm },
-  { 0, rf_code_cr },
-  { "CMOVE", rf_code_cmove },
-  { "U*", rf_code_ustar },
-  { 0, rf_code_uslas },
-  { "AND", rf_code_andd },
-  { 0, rf_code_orr },
-  { 0, rf_code_xorr },
-  { "SP@", rf_code_spat },
-  { "SP!", rf_code_spsto },
-  { 0, rf_code_rpsto },
-  { ";S", rf_code_semis },
-  { 0, rf_code_leave },
-  { ">R", rf_code_tor },
-  { "R>", rf_code_fromr },
-  { "R", rf_code_rr },
-  { "0=", rf_code_zequ },
-  { "0<", rf_code_zless },
-  { "+", rf_code_plus },
-  { 0, rf_code_dplus },
-  { "MINUS", rf_code_minus },
-  { 0, rf_code_dminu },
-  { "OVER", rf_code_over },
-  { "DROP", rf_code_drop },
-  { "SWAP", rf_code_swap },
-  { "DUP", rf_code_dup },
-  { "+!", rf_code_pstor },
-  { "TOGGLE", rf_code_toggl },
-  { "@", rf_code_at },
-  { "C@", rf_code_cat },
-  { "!", rf_code_store },
-  { "C!", rf_code_cstor },
-  { 0, rf_code_docol },
-  { 0, rf_code_docon },
-  { 0, rf_code_dovar },
-  { 0, rf_code_douse },
-  { 0, rf_code_dodoe },
-  { "COLD", rf_code_cold },
-  { 0, rf_code_stod },
-  { "D/CHAR", rf_code_dchar },
-  { "BLOCK-WRITE", rf_code_bwrit },
-  { "BLOCK-READ", rf_code_bread },
-  { "MON", rf_code_mon },
-  { "hld", rf_inst_code_hld },
-  { "compile", rf_inst_code_compile },
-  { "cd", rf_inst_code_cd }
+  rf_code_key,
+  rf_code_qterm,
+  rf_code_cr,
+  rf_code_cmove,
+  rf_code_ustar,
+  rf_code_uslas,
+  rf_code_andd,
+  rf_code_orr,
+  rf_code_xorr,
+  rf_code_spat,
+  rf_code_spsto,
+  rf_code_rpsto,
+  rf_code_semis,
+  rf_code_leave,
+  rf_code_tor,
+  rf_code_fromr,
+  rf_code_rr,
+  rf_code_zequ,
+  rf_code_zless,
+  rf_code_plus,
+  rf_code_dplus,
+  rf_code_minus,
+  rf_code_dminu,
+  rf_code_over,
+  rf_code_drop,
+  rf_code_swap,
+  rf_code_dup,
+  rf_code_pstor,
+  rf_code_toggl,
+  rf_code_at,
+  rf_code_cat,
+  rf_code_store,
+  rf_code_cstor,
+  rf_code_docol,
+  rf_code_docon,
+  rf_code_dovar,
+  rf_code_douse,
+  rf_code_dodoe,
+  rf_code_cold,
+  rf_code_stod,
+  rf_code_dchar,
+  rf_code_bwrit,
+  rf_code_bread,
+  rf_code_mon,
+  rf_inst_code_hld,
+  rf_inst_code_compile
 };
 
-/* look up a code address in the table */
-static void rf_inst_code_cd(void)
-{
-  RF_START;
-  {
-    uintptr_t idx = RF_INST_SP_POP;
-    RF_INST_SP_PUSH((uintptr_t) rf_inst_code_lit_list[idx].value);
-  }
-  RF_JUMP_NEXT;
-}
+/* corresponding word names */
+static const char * rf_inst_names[] = {
+  "cl",
+  "cs",
+  "ln",
+  "LIT",
+  "EXECUTE",
+  "BRANCH",
+  "0BRANCH",
+  0,
+  0,
+  0,
+  "DIGIT",
+  "(FIND)",
+  "ENCLOSE",
+  0,
+  0,
+  0,
+  0,
+  0,
+  "CMOVE",
+  "U*",
+  0,
+  "AND",
+  0,
+  0,
+  "SP@",
+  "SP!",
+  0,
+  ";S",
+  0,
+  ">R",
+  "R>",
+  "R",
+  "0=",
+  "0<",
+  "+",
+  0,
+  "MINUS",
+  0,
+  "OVER",
+  "DROP",
+  "SWAP",
+  "DUP",
+  "+!",
+  "TOGGLE",
+  "@",
+  "C@",
+  "!",
+  "C!",
+  0,
+  0,
+  0,
+  0,
+  0,
+  "COLD",
+  0,
+  "D/CHAR",
+  "BLOCK-WRITE",
+  "BLOCK-READ",
+  "MON",
+  "hld",
+  "compile",
+};
 
 /* flag to indicate completion of install */
 extern char rf_installed;
@@ -410,16 +456,18 @@ void rf_inst(void)
   /* for additional literals to identify CPU */
   rf_inst_comma(RF_CPU_HI);
   rf_inst_comma(RF_CPU_LO);
+  /* to get code table */
+  rf_inst_comma((uintptr_t) &rf_inst_codes);
 
-  /* to get start of table */
+  /* to get constant table */
   rf_inst_code("id", rf_code_docon);
   rf_inst_comma((uintptr_t) RF_INST_DICTIONARY);
 
   /* forward defined code words */
-  for (i = 0; i < 62; ++i) {
-    const rf_inst_code_t *code = &rf_inst_code_lit_list[i];
-    if (code->word) {
-      rf_inst_code(code->word, code->value);
+  for (i = 0; i < 61; ++i) {
+    const char *name = rf_inst_names[i];
+    if (name) {
+      rf_inst_code(name, rf_inst_codes[i]);
     }
   }
 

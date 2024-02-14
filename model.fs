@@ -203,7 +203,7 @@ DECIMAL    ;S
 5 ic   ,        ( TERMINAL INPUT BUFFER )
 001F   ,        ( INITIAL NAME FIELD WIDTH )
 0001   ,        ( INITIAL WARNING = 1 )
-0000   ,        ( INITIAL FENCE )
+0200   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
 0000   ,        ( COLD START VALUE FOR VOC-LINK ) 6C LOAD -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
@@ -1571,7 +1571,7 @@ HERE  FENCE   !      ;S
 :u cs LIT 2 ic + R> DROP ;S :DP LIT  9 u :BLK     LIT 11 u
 :IN      LIT 12 u       :OFFSET LIT 15 u :CONTEXT LIT 16 u
 :CURRENT LIT 17 u       :STATE  LIT 18 u :BASE    LIT 19 u
-:CSP     LIT 22 u
+:CSP     LIT 22 u       :cd cs LIT 18 ic + @ ;S
 :-      MINUS + ;S   :HERE DP @ ;S   :1+ LIT 1 + ;S
 :FILL   SWAP >R OVER C! DUP 1+ R> LIT 1 - CMOVE ;S
 :WORD   BLK @ BLOCK IN @ + SWAP ENCLOSE HERE LIT 34 LIT 32 FILL
