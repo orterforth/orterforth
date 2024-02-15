@@ -434,7 +434,7 @@ void rf_inst(void)
   rf_inst_comma((uintptr_t) RF_FIRST);
   rf_inst_comma((uintptr_t) RF_LIMIT);
   /* stack limit used in ?STACK */
-  rf_inst_comma((uintptr_t) ((uintptr_t *) RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE)));
+  rf_inst_comma((uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
   /* installed flag */
   rf_inst_comma((uintptr_t) &rf_installed);
   /* used in save */
@@ -482,8 +482,14 @@ void rf_inst(void)
     ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
   /* BLOCK */
   rf_inst_compile(
-    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 DUP hld LIT 10 BLOCK-WRITE ?DISC FIRST "
-    "cl + BLOCK-READ ?DISC DUP FIRST ! DROP FIRST cl + ;S");
+    /* test if fetched already */
+    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 "
+    /* send I ss tt /0 */
+    "DUP hld LIT 10 BLOCK-WRITE ?DISC "
+    /* receive block contents */
+    "FIRST cl + BLOCK-READ ?DISC "
+    /* record block no. and return addr */
+    "DUP FIRST ! DROP FIRST cl + ;S");
   /* read from disc and run proto interpreter */
   rf_inst_compile(
     ":inst SP! "
@@ -522,6 +528,8 @@ void rf_inst(void)
 #endif
 
   /* run COLD, which inits and runs :inst */
+  /* NB no code can be run before COLD because */
+  /* necessary operations may live there */
   rf_fp = rf_code_cold;
   rf_trampoline();
 
