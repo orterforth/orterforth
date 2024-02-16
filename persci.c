@@ -6,6 +6,15 @@
 
 #include "persci.h"
 
+/* DRIVES */
+
+static FILE *files[4] = { 0, 0, 0, 0 };
+
+static uint8_t *discs[4] = { 0, 0, 0, 0 };
+
+/* flag used by e.g. Raspberry Pi Pico to start using external disc */
+uint8_t rf_persci_ejected = 0;
+
 /* STATE */
 
 #define RF_PERSCI_STATE_IDLE 0
@@ -17,16 +26,10 @@
 
 static char rf_persci_state = RF_PERSCI_STATE_IDLE;
 
-/* DRIVES */
-
-static FILE *files[4] = { 0, 0, 0, 0 };
-
-static uint8_t *discs[4] = { 0, 0, 0, 0 };
-
 static int validate_drive_no(int drive)
 {
   if (drive < 0 || drive > 3) {
-    fprintf(stderr, "invalid drive number %d\n", drive);
+    fprintf(stderr, "persci: invalid drive number %d\n", drive);
     return 1;
   }
 
@@ -36,62 +39,63 @@ static int validate_drive_no(int drive)
 int rf_persci_insert(int drive, char *filename)
 {
   FILE *ptr;
+  int ret;
 
-  /* 0-3 only */
-  if (validate_drive_no(drive)) {
-    return 1;
+  /* drive 0-3 only */
+  if ((ret = validate_drive_no(drive))) {
+    return ret;
   }
-
   /* disc must be not already inserted */
-  ptr = files[drive];
-  if (ptr) {
-    fprintf(stderr, "file already open: drive %d\n", drive);
+  if (files[drive]) {
+    fprintf(stderr, "persci: file already open: drive %d\n", drive);
     return 1;
   }
-
   /* open disc file */
-  files[drive] = ptr = fopen(filename, "r+b");
-  if (!ptr) {
-    perror("fopen failed");
-    fprintf(stderr, "filename=%s\n", filename);
-    return 1;
+  if (!(ptr = fopen(filename, "r+b"))) {
+    ret = errno;
+    fprintf(stderr, "persci: fopen failed: %s filename=%s\n", strerror(ret), filename);
+    return ret;
   }
-
-  /* read contents into memory */
+  /* allocate memory */
   if (!(discs[drive] = malloc(256256))) {
-    fprintf(stderr, "malloc failed: drive %d\n", drive);
+    ret = errno;
+    perror("persci: malloc failed");
     fclose(ptr);
-    files[drive] = 0;
-    return 1;
+    return ret;
   }
+  /* read file into memory */
   fread(discs[drive], 1, 256256, ptr);
   if (ferror(ptr)) {
-    fprintf(stderr, "fread failed: drive %d\n", drive);
+    ret = errno;
+    fprintf(stderr, "persci: fread failed: %s drive=%d\n", strerror(ret), drive);
     fclose(ptr);
-    files[drive] = 0;
-    return 1;
+    return ret;
   }
-
+  /* ok */
+  files[drive] = ptr;
   return 0;
 }
 
 void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
 {
-  /* 0-3 only */
-  validate_drive_no(drive);
+  int ret;
 
+  /* drive 0-3 only */
+  if ((ret = validate_drive_no(drive))) {
+    exit(ret);
+  }
   /* point at byte array */
   discs[drive] = (uint8_t *) bytes;
 }
 
-/* flag used by e.g. Raspberry Pi Pico to start using external disc */
-uint8_t rf_persci_ejected = 0;
-
 void rf_persci_eject(int drive)
 {
-  /* 0-3 only */
-  validate_drive_no(drive);
+  int ret;
 
+  /* drive 0-3 only */
+  if ((ret = validate_drive_no(drive))) {
+    exit(ret);
+  }
   /* close the file */
   if (files[drive]) {
     fclose(files[drive]);
@@ -102,9 +106,8 @@ void rf_persci_eject(int drive)
       free(discs[drive]);
     }
   }
-
+  /* if no file, data was static and malloc was not used */
   discs[drive] = 0;
-
   /* mark ejected */
   rf_persci_ejected = 1;
 }
@@ -127,7 +130,7 @@ static void rf_persci_w(char c)
 {
   /* validate not full */
   if (rf_persci_len >= 131) {
-    fprintf(stderr, "rf_persci_w buffer full\n");
+    fprintf(stderr, "persci: buffer full\n");
     exit(1);
   }
 
@@ -184,13 +187,11 @@ static char rf_persci_validate(uint8_t track, uint8_t sector, uint8_t drive)
     rf_persci_error("COMMAND");
     return 1;
   }
-
   /* check disc is present */
   if (!discs[drive]) {
     rf_persci_error_on_drive("READY", drive);
     return 1;
   }
-
   /* validate track and sector numbers */
   if (track > 76 || sector < 1 || sector > 26) {
     rf_persci_error_on_drive("COMMAND", drive);
@@ -218,8 +219,7 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
 
   /* read from memory */
   p = discs[drive] + offset(track, sector);
-  i = 128;
-  for (; i; --i) {
+  for (i = 128; i; --i) {
     rf_persci_w(*(p++));
   }
 
@@ -259,10 +259,9 @@ static char rf_persci_peek(void)
 {
   /* validate buffer */
   if (rf_persci_idx >= rf_persci_len) {
-    fprintf(stderr, "buffer empty\n");
+    fprintf(stderr, "persci: buffer empty\n");
     exit(1);
   }
-
   /* read char from buffer */
   return rf_persci_buf[rf_persci_idx];
 }
@@ -293,30 +292,26 @@ static void rf_persci_write(void)
   /* get size of data */
   for (len = 0; rf_persci_r() != RF_ASCII_EOT; ++len) {
   }
-
   /* get location */
   off = offset(rf_persci_track, rf_persci_sector);
-
   /* write data to file (if present) */
-  ptr = files[rf_persci_drive];
-  if (ptr) {
+  if ((ptr = files[rf_persci_drive])) {
 
     /* move to track and sector */
     if (fseek(ptr, off, SEEK_SET)) {
-      perror("fseek failed");
+      perror("persci: fseek failed");
       rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
       return;
     }
-
     /* write sector */
     s = fwrite(rf_persci_buf, 1, len, ptr);
     if (s != len) {
-      perror("fwrite failed");
+      perror("persci: fwrite failed");
       rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
       return;
     }
     if (fflush(ptr)) {
-      perror("fflush failed");
+      perror("persci: fflush failed");
       rf_persci_error_on_drive("HARD DISK", rf_persci_drive);
     }
   }
@@ -332,7 +327,7 @@ static void rf_persci_write(void)
   rf_persci_w(RF_ASCII_ACK);
   rf_persci_w(RF_ASCII_EOT);
 
-  /* reset controller state */
+  /* update state */
   rf_persci_state = RF_PERSCI_STATE_WRITTEN;
 }
 
@@ -341,14 +336,7 @@ static void rf_persci_write(void)
 /* skip whitespace in buffer */
 static void rf_persci_read_ws(void)
 {
-  /* validate buffer */
-  if (rf_persci_idx >= rf_persci_len) {
-    fprintf(stderr, "buffer empty\n");
-    exit(1);
-  }
-
   while (rf_persci_peek() == ' ') {
-    /* skip whitespace */
     rf_persci_r();
   }
 }
@@ -356,8 +344,7 @@ static void rf_persci_read_ws(void)
 /* read decimal int from buffer */
 static char rf_persci_read_int(void)
 {
-  char i;
-  char c;
+  char i, c;
 
   rf_persci_read_ws();
 
@@ -394,16 +381,13 @@ static void rf_persci_command(void)
 
       /* track */
       track = rf_persci_read_int();
-
       /* sector */
       sector = rf_persci_read_int();
-
       /* drive */
       if (!rf_persci_expect('/')) {
         break;
       }
       drive = rf_persci_read_int();
-
       /* EOT */
       if (!rf_persci_expect(RF_ASCII_EOT)) {
         break;
@@ -446,7 +430,7 @@ static void rf_persci_serve(void)
       rf_persci_write();
       break;
     default:
-      fprintf(stderr, "rf_persci_serve invalid state\n");
+      fprintf(stderr, "persci: invalid state\n");
       exit(1);
   }
 }
@@ -463,15 +447,13 @@ int rf_persci_getc(void)
     rf_persci_state != RF_PERSCI_STATE_ERROR) {
     return -1;
   }
-
   /* test not empty */
   if (rf_persci_idx >= rf_persci_len) {
     return -1;
   }
-
   /* get char */
   c = rf_persci_r();
-  /* when empty set state */
+  /* update state */
   if (rf_persci_idx == 0) {
     rf_persci_state = (rf_persci_state == RF_PERSCI_STATE_OUTPUT) ? RF_PERSCI_STATE_WRITING : RF_PERSCI_STATE_IDLE;
   }
