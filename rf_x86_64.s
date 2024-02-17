@@ -145,6 +145,42 @@ rbpsave:.quad 0
         .p2align 3
 rspsave:.quad 0
 
+        .globl rf_fp
+        .globl _rf_fp
+        .p2align 3
+rf_fp:
+_rf_fp: .quad 0
+
+        .globl rf_ip
+        .globl _rf_ip
+        .p2align 3
+rf_ip:
+_rf_ip: .quad 0
+
+        .globl rf_rp
+        .globl _rf_rp
+        .p2align 3
+rf_rp:
+_rf_rp: .quad 0
+
+        .globl rf_sp
+        .globl _rf_sp
+        .p2align 3
+rf_sp:
+_rf_sp: .quad 0
+
+        .globl rf_up
+        .globl _rf_up
+        .p2align 3
+rf_up:
+_rf_up: .quad 0
+
+        .globl rf_w
+        .globl _rf_w
+        .p2align 3
+rf_w:
+_rf_w: .quad 0
+
         .text
 
 # ***************************************

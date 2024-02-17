@@ -146,12 +146,46 @@ _rf_code_cold:
         .data
 
         .p2align 2
-ebpsave:
-        .long	0
+ebpsave:.long	0
 
         .p2align 2
-espsave:
-        .long	0
+espsave:.long	0
+
+        .p2align 2
+        .global rf_fp
+        .global _rf_fp
+rf_fp:
+_rf_fp: .long 0
+
+        .p2align 2
+        .global rf_ip
+        .global _rf_ip
+rf_ip:
+_rf_ip: .long 0
+
+        .p2align 2
+        .global rf_rp
+        .global _rf_rp
+rf_rp:
+_rf_rp: .long 0
+
+        .p2align 2
+        .global rf_sp
+        .global _rf_sp
+rf_sp:
+_rf_sp: .long 0
+
+        .p2align 2
+        .global rf_up
+        .global _rf_up
+rf_up:
+_rf_up: .long 0
+
+        .p2align 2
+        .global rf_w
+        .global _rf_w
+rf_w: 
+_rf_w:  .long 0
 
         .text
 

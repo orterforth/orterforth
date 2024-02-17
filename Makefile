@@ -80,7 +80,6 @@ STARTDISCTCP := $(STARTDISC) tcp 5705
 SYSTEMDEPS := \
 	$(SYSTEM)/inst.o \
 	$(SYSTEM)/persci.o \
-	$(SYSTEM)/rf.o \
 	$(SYSTEM)/system.o
 
 # default target
@@ -113,12 +112,18 @@ SYSTEMOPTION := $(OPTION)
 endif
 endif
 
-# local system assembly option config:
+# assembly option config:
 ifeq ($(SYSTEMOPTION),assembly)
 # add the assembly code to deps
 SYSTEMDEPS += $(SYSTEM)/rf_$(PROC).o
 # tell C code it is there
 CPPFLAGS += -DRF_ASSEMBLY
+endif
+
+# default option config:
+ifeq ($(SYSTEMOPTION),default)
+# add C code to deps
+SYSTEMDEPS += $(SYSTEM)/rf.o
 endif
 
 # local system executable

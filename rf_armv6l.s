@@ -38,6 +38,34 @@ trampoline1:
 trampoline2:
         POP     {R7, R8, R10, FP, PC}
 
+        .data
+
+        .p2align 2
+        .global rf_fp
+rf_fp:  .long 0
+
+        .p2align 2
+        .global rf_ip
+rf_ip:  .long 0
+
+        .p2align 2
+        .global rf_rp
+rf_rp:  .long 0
+
+        .p2align 2
+        .global rf_sp
+rf_sp:  .long 0
+
+        .p2align 2
+        .global rf_up
+rf_up:  .long 0
+
+        .p2align 2
+        .global rf_w
+rf_w:   .long 0
+
+        .text
+
         .p2align 2
         .global rf_start
 rf_start:

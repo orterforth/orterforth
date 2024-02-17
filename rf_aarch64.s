@@ -40,6 +40,34 @@ rf_start:
         str     x13, [x0]
         ret
 
+        .data
+
+        .p2align 3
+        .global rf_fp
+rf_fp:  .quad 0
+
+        .p2align 3
+        .global rf_ip
+rf_ip:  .quad 0
+
+        .p2align 3
+        .global rf_rp
+rf_rp:  .quad 0
+
+        .p2align 3
+        .global rf_sp
+rf_sp:  .quad 0
+
+        .p2align 3
+        .global rf_up
+rf_up:  .quad 0
+
+        .p2align 3
+        .global rf_w
+rf_w:   .quad 0
+
+        .text
+
         .align 2
         .global rf_code_lit
 rf_code_lit:
