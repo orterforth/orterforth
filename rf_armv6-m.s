@@ -52,13 +52,13 @@ wp:     .word rf_w
         .thumb_func
         .code 16
 rf_code_cold:
-        LDR     R3, =rf_origin
+        LDR     R3, originp
         LDR     R3, [R3]
         LDR     R0, [R3, #24]   @ FORTH vocabulary init
         LDR     R1, [R3, #84]
         STR     R0, [R1]
         LDR     R1, [R3, #32]   @ UP init
-        LDR     R0, =rf_up
+        LDR     R0, upp
         STR     R1, [R0]
         MOVS    R2, #11         @ USER variables init
         ADDS    R3, R3, #24
@@ -68,6 +68,10 @@ cold1:  LDM     R3!, {R0}
         BNE     cold1
         LDR     R6, [R3, #20]   @ IP init to ABORT
         B       rf_code_rpsto   @ jump to RP!
+
+        .align 4
+originp:.word rf_origin
+upp:    .word rf_up
 
         .align 1
         .global rf_code_cl
@@ -104,7 +108,8 @@ rf_code_cs:
         .code 16
 rf_code_ln:
         LDR     R0, [R5]
-        CMP     R0, #3
+        MOVS    R1, #3
+        ANDS    R1, R0, R1
         BEQ     ln1
         MOVS    R1, #4
         NEGS    R1, R1
