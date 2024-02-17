@@ -17,6 +17,12 @@ char *rf_system_auto_cmd = 0;
 
 #ifdef _WIN32
 static HANDLE hstdin;
+
+static DWORD stdin_type;
+#else
+static int stdin_isatty;
+
+static struct termios tp, save;
 #endif
 
 void rf_init(void)
@@ -28,15 +34,18 @@ void rf_init(void)
     exit(1);
   }
 
-  /* handle Windows console */
 #ifdef _WIN32
+  /* Windows console */
   hstdin = GetStdHandle(STD_INPUT_HANDLE);
-  DWORD type = GetFileType(hstdin);
-  if (type == FILE_TYPE_CHAR) {
+  stdin_type = GetFileType(hstdin);
+  if (stdin_type == FILE_TYPE_CHAR) {
     DWORD mode = 0;
     GetConsoleMode(hstdin, &mode);
     SetConsoleMode(hstdin, mode & (~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
   }
+#else
+  /* Unix console */
+  stdin_isatty = isatty(0);
 #endif
 }
 
@@ -58,9 +67,7 @@ void rf_code_emit(void)
   }
   RF_JUMP_NEXT;
 }
-#ifndef _WIN32
-static struct termios tp, save;
-#endif
+
 void rf_code_key(void)
 {
   RF_START;
@@ -78,18 +85,17 @@ void rf_code_key(void)
     } else {
       /* get key */
 #ifdef _WIN32
-      DWORD type = GetFileType(hstdin);
-      if (type == FILE_TYPE_CHAR) {
+      if (stdin_type == FILE_TYPE_CHAR) {
         ReadConsole(hstdin, &c, 1, &char_read, NULL);
       } else {
         ReadFile(hstdin, &c, 1, &char_read, NULL);
       }
       /* exit if eof */
       if (char_read == 0) {
-          exit(0);
+        exit(0);
       }
 #else
-      if (isatty(0)) {
+      if (stdin_isatty) {
         /* save terminal settings */
         if (tcgetattr(0, &tp) == -1) {
           perror("tcgetattr failed");
@@ -105,7 +111,7 @@ void rf_code_key(void)
         }
       }
       c = fgetc(stdin);
-      if (isatty(0)) {
+      if (stdin_isatty) {
         /* restore terminal settings */
         if (tcsetattr(0, TCSANOW, &save) == -1) {
           perror("tcsetattr failed");
@@ -114,11 +120,11 @@ void rf_code_key(void)
       }
       /* exit if eof */
       if (c == -1) {
-          exit(0);
+        exit(0);
       }
       /* LF to CR */
       if (c == 10) {
-          c = 13;
+        c = 13;
       }
 #endif
     }
