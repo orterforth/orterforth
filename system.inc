@@ -92,12 +92,14 @@ This will omit the C code definitions from the build so that
 the assembly code definitions are linked instead.
 */
 #ifdef RF_ASSEMBLY
+#ifndef PICO
 #define RF_TARGET_FP
 #define RF_TARGET_IP
 #define RF_TARGET_RP
 #define RF_TARGET_SP
 #define RF_TARGET_UP
 #define RF_TARGET_W
+#endif
 #define RF_TARGET_TRAMPOLINE
 #define RF_TARGET_NEXT
 #define RF_TARGET_CODE_LIT
