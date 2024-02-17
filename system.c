@@ -143,32 +143,6 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
-void rf_disc_read(char *p, uint8_t len)
-{
-  int c;
-
-  for (; len; --len) {
-    c = rf_persci_getc();
-    if (c == -1) {
-      break;
-    }
-    *(p++) = c;
-    if (c == 0x04) {
-      break;
-    }
-  }
-}
-
-void rf_disc_write(char *p, uint8_t len)
-{
-  for (; len; --len) {
-    if (rf_persci_putc(*(p++)) == -1) {
-      fprintf(stderr, "rf_persci_putc invalid state\n");
-      exit(1);
-    }
-  }
-}
-
 void rf_code_dchar(void)
 {
   RF_START;
@@ -176,7 +150,7 @@ void rf_code_dchar(void)
     char a, c;
 
     a = (char) RF_SP_POP;
-    rf_disc_read(&c, 1);
+    c = rf_persci_getc();
     RF_SP_PUSH(c == a);
     RF_SP_PUSH(c);
   }
@@ -186,11 +160,23 @@ void rf_code_dchar(void)
 void rf_code_bread(void)
 {
   RF_START;
-  rf_disc_read((char *) RF_SP_POP, RF_BBLK);
+  {
+    int c, len;
+    uint8_t *p = (uint8_t *) RF_SP_POP;
+
+    for (len = RF_BBLK; len; --len) {
+      c = rf_persci_getc();
+      if (c == -1) {
+        break;
+      }
+      *(p++) = c;
+      if (c == 0x04) {
+        break;
+      }
+    }
+  }
   RF_JUMP_NEXT;
 }
-
-static char eot = 0x04;
 
 void rf_code_bwrit(void)
 {
@@ -199,8 +185,17 @@ void rf_code_bwrit(void)
     uint8_t a = (uint8_t) RF_SP_POP;
     char *b = (char *) RF_SP_POP;
 
-    rf_disc_write(b, a);
-    rf_disc_write(&eot, 1);
+    for (; a; --a) {
+      if (rf_persci_putc(*(b++)) == -1) {
+        fprintf(stderr, "rf_persci_putc invalid state\n");
+        exit(1);
+      }
+    }
+
+    if (rf_persci_putc(0x04) == -1) {
+      fprintf(stderr, "rf_persci_putc invalid state\n");
+      exit(1);
+    }
   }
   RF_JUMP_NEXT;
 }
