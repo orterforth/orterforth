@@ -260,18 +260,17 @@ void rf_code_rr(void)
 #ifndef RF_TARGET_CODE_DIGIT
 static uint8_t rf_digit(uint8_t base, uint8_t c)
 {
-  if (c >= 0x30) {
-    c -= 0x30;
-    if (c > 9) {
-      if (c < 17) {
-        return 0xFF;
-      }
-      c -= 7;
+  c -= 0x30;
+  if (c > 9) {
+    if (c < 17) {
+      return 0xFF;
     }
-    if (c < base) {
-      return c;
-    }
+    c -= 7;
   }
+  if (c < base) {
+    return c;
+  }
+
   return 0xFF;
 }
 
