@@ -95,23 +95,25 @@ DECLARE VOCABULARY
 
 
 ( examples index                                      example )
-FORTH DEFINITIONS VOCABULARY example IMMEDIATE
-example DEFINITIONS
-: hw 7 LOAD ;
-: collatz 8 LOAD ;
-: fib 9 LOAD ;
-: fac 10 LOAD ;
-: rev 11 LOAD ;
-: roman 12 LOAD ;
-: mandelbrot 14 LOAD ;
-: pascal 16 LOAD ;
-FORTH DEFINITIONS
+FORTH DEFINITIONS DECIMAL
+VOCABULARY example IMMEDIATE example DEFINITIONS
+: loader <BUILDS , DOES> DUP CFA NFA 32 TOGGLE @ LOAD ;
+7 loader hw 8 loader collatz 9 loader fib 10 loader fac
+11 loader rev 12 loader roman 14 loader mandelbrot
+16 loader pascal
+: help ." collatz fac fib hw mandelbrot pascal rev roman" CR ;
+FORTH DEFINITIONS ;S
 
 
 
-;S
+
+
+
+
 ( Hello World                                              hw )
-." Hello World" CR
+example DEFINITIONS
+: hw ." Hello World" CR ;
+hw ;S
 
 
 
@@ -124,16 +126,14 @@ FORTH DEFINITIONS
 
 
 
-
-;S
 ( Collatz sequences                                   collatz )
-: collatz
+example DEFINITIONS DECIMAL
+
+: step
   BEGIN DUP . DUP 1 - WHILE
     DUP 2 MOD IF 3 * 1+ ELSE 2 / ENDIF REPEAT DROP CR ;
-: test 50 1 DO I collatz LOOP ;
-test ;S
-
-
+: collatz 50 1 DO I step LOOP ;
+collatz ;S
 
 
 
@@ -143,40 +143,40 @@ test ;S
 
 
 ( Fibonacci sequence                                      fib )
-FORTH DEFINITIONS VOCABULARY fib IMMEDIATE fib DEFINITIONS
-DECIMAL
+example DEFINITIONS DECIMAL
+
 : length                        ( Overflows after this point  )
   cl 2 = IF 23 ENDIF
   cl 4 = IF 46 ENDIF
   cl 8 = IF 92 ENDIF ;
-: list                          ( Print the whole sequence    )
+: fib                           ( Print the whole sequence    )
   0 1
   length 0 DO
-    SWAP OVER + DUP 0 D.
-  LOOP ;
+    SWAP OVER + DUP 0 D. LOOP ;
 
-CR fib list CR
+fib ;S
 
-;S
+
+
 ( Factorial sequence                                      fac )
-FORTH DEFINITIONS VOCABULARY fac IMMEDIATE fac DEFINITIONS
-DECIMAL
+example DEFINITIONS DECIMAL
+
 : length                        ( Overflows after this point  )
   cl 2 = IF 9 ENDIF
   cl 4 = IF 14 ENDIF
   cl 8 = IF 22 ENDIF ;
-: list
+: fac
   1 length 1 DO
-    I * DUP 0 D.
-  LOOP ;
+    I * DUP 0 D. LOOP ;
 
-CR fac list CR
+fac ;S
 
 
-;S
+
+
 ( Reverse a string                                        rev )
 DECIMAL 17 LOAD                ( load str vocabulary          )
-FORTH DEFINITIONS VOCABULARY rev IMMEDIATE rev DEFINITIONS
+example DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
 : reverse                      ( s1 s2 --                     )
@@ -186,12 +186,12 @@ s1 C@ str new CONSTANT s2
   1+ DUP R + SWAP DO           ( iterate over string 1        )
     I C@ OVER C! -1 +          ( copy byte, decrement ptr     )
   LOOP DROP R> DROP ;          ( done, discard len and ptr    )
-s1 s2 reverse CR               ( reverse s1 into s2           )
-." s1: " s1 COUNT TYPE CR      ( print them both              )
-." s2: " s2 COUNT TYPE CR
-;S
+: rev s1 s2 reverse CR         ( reverse s1 into s2           )
+  ." s1: " s1 COUNT TYPE CR    ( print them both              )
+  ." s2: " s2 COUNT TYPE CR ;
+rev ;S
 ( Roman numerals                                        roman )
-FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
+example DEFINITIONS DECIMAL
 : place <BUILDS , DOES>         ( n --                        )
   OVER OVER @ < IF              ( less than place value?      )
     DROP                        ( yes, drop place value addr  )
@@ -215,16 +215,16 @@ FORTH DEFINITIONS VOCABULARY roman IMMEDIATE roman DEFINITIONS
     ?TERMINAL IF LEAVE ENDIF    ( stop if break pressed       )
   LOOP CR ;
 
-2023 roman list
-
+: roman 2023 list ;
+roman
 
 
 
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
-21 LOAD ( sys vocabulary ) HEX
-FORTH DEFINITIONS
+DECIMAL 21 LOAD ( sys vocabulary )
+example DEFINITIONS HEX
 : mandelbrot
     CR
     466 DUP MINUS DO            ( y axis                      )
@@ -255,7 +255,7 @@ FORTH DEFINITIONS
 
 mandelbrot DECIMAL ;S
 ( Pascal's Triangle                                    pascal )
-DECIMAL
+example DEFINITIONS DECIMAL
 HERE 100 cs ALLOT CONSTANT buf
 : init buf SWAP cs ERASE 1 buf ! ;
 : .line CR buf SWAP 0 DO DUP @ . cl + LOOP DROP ;
@@ -264,12 +264,12 @@ HERE 100 cs ALLOT CONSTANT buf
     I @ I cl + +!
   -1 cs +LOOP ;
 : pascal
-  DUP init
+  18 init
   1 .line
-  1 DO
+  18 1 DO
     I next I 1+ .line
   LOOP ;
-18 pascal ;S
+pascal ;S
 ( string handling: ", copy                                str )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
