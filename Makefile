@@ -5,8 +5,8 @@ CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
 INFO           := printf '* \033[1;33m%s\033[0;0m\n'
 WARN           := printf '* \033[1;35m%s\033[0;0m\n'
 CHECKMEMORY    := $(INFO) 'Checking memory limits' ; sh scripts/check-memory.sh
-DR0=library.img
-DR1=data.img
+DR0=forth/library.img
+DR1=forth/data.img
 COMPLETEDR1FILE = mv $@.io $@ ; $(INFO) 'Done'
 EMPTYDR1FILE   := $(INFO) 'Clearing DR1'           ; printf '' >
 MAMEOPTS       := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
@@ -202,7 +202,7 @@ build : $(TARGET)-build
 clean : $(TARGET)-clean
 
 # empty disc image to use as default DR1
-data.img :
+forth/data.img :
 
 	touch $@
 
