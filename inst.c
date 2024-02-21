@@ -482,14 +482,11 @@ void rf_inst(void)
     ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
   /* BLOCK */
   rf_inst_compile(
-    /* test if fetched already */
-    ":BLOCK DUP FIRST @ MINUS + 0BRANCH ^15 "
-    /* send I ss tt /0 */
-    "DUP hld LIT 10 BLOCK-WRITE ?DISC "
-    /* receive block contents */
-    "FIRST cl + BLOCK-READ ?DISC "
-    /* record block no. and return addr */
-    "DUP FIRST ! DROP FIRST cl + ;S");
+    ":BLOCK FIRST cl + "
+    "OVER FIRST @ MINUS + 0BRANCH ^10 "
+    "OVER hld LIT 10 BLOCK-WRITE ?DISC "
+    "DUP BLOCK-READ ?DISC "
+    "SWAP FIRST ! ;S");
   /* read from disc and run proto interpreter */
   rf_inst_compile(
     ":inst SP! "
