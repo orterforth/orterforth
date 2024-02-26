@@ -7,11 +7,9 @@
 rf_trampoline:
         stp     x13, x14, [sp, #-16]!
         stp     x15, x30, [sp, #-16]!
-trampoline1:
-        ldr     x0, =rf_fp
+tramp1: ldr     x0, =rf_fp
         ldr     x0, [x0]
-        cmp     x0, #0
-        beq     trampoline2
+        cbz     x0, tramp2
         ldr     x15, =rf_ip
         ldr     x15, [x15]
         ldr     x3, =rf_w
@@ -20,10 +18,9 @@ trampoline1:
         ldr     x14, [x14]
         ldr     x13, =rf_rp
         ldr     x13, [x13]
-        ldr     lr, =trampoline1
+        ldr     lr, =tramp1
         br      x0
-trampoline2:
-        ldp     x15, x30, [sp], #16
+tramp2: ldp     x15, x30, [sp], #16
         ldp     x13, x14, [sp], #16
         ret
 
@@ -100,8 +97,7 @@ rf_code_exec:
         .align 2
         .global rf_code_bran
 rf_code_bran:
-bran1:
-        ldr     x0, [x15]
+bran1:  ldr     x0, [x15]
         add     x15, x15, x0    // (IP) <- (IP) + ((IP))
 #       b       next            // JUMP TO OFFSET
         ldr     x3, [x15], #8
@@ -112,8 +108,8 @@ bran1:
         .global rf_code_zbran
 rf_code_zbran:
         ldr     x0, [x14], #8   // GET STACK VALUE
-        tst     x0, x0          // ZERO?
-        beq     bran1           // YES, BRANCH
+        cbz     x0, bran1       // ZERO?
+                                // YES, BRANCH
         add     x15, x15, #8    // NO, CONTINUE...
 #       b       next
         ldr     x3, [x15], #8
@@ -250,8 +246,8 @@ pfin5:  add     x1, x1, #1      // NEXT ADDR
         b       pfin5           // LOOP UNTIL FOUND
 #
 pfin6:  ldr     x1, [x1]        // GET LINK FIELD ADDR
-        cmp     x1, #0          // START OF DICT. (0)?
-        bne     pfin1           // NO, LOOK SOME MORE
+        cbnz    x1, pfin1       // START OF DICT. (0)?
+                                // NO, LOOK SOME MORE
         mov     x0, #0          // FALSE FLAG
 
 #       b       apush           // DONE (NO MATCH FOUND)
@@ -277,8 +273,8 @@ encl1:  add     x1, x1, #1      // ADDR +1
         cmp     x0, x2
         beq     encl1           // WAIT FOR NON-TERMINATOR
         str     x3, [x14, #-8]! // OFFSET TO 1ST TEXT CHR
-        cmp     x2, #0          // NULL CHAR?
-        bne     encl2           // NO
+        cbnz    x2, encl2       // NULL CHAR?
+                                // NO
 #
 # FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
         mov     x0, x3          // COPY COUNTER
@@ -296,8 +292,8 @@ encl2:  add     x1, x1, #1      // ADDR+1
         ldrb    w2, [x1]        // TERMINATOR CHAR?
         cmp     x0, x2
         beq     encl4           // YES
-        cmp     x2, #0          // NULL CHAR
-        bne     encl2           // NO, LOOP AGAIN
+        cbnz    x2, encl2       // NULL CHAR
+                                // NO, LOOP AGAIN
 #
 # FOUND NULL AT END OF TEXT
 #
@@ -323,8 +319,7 @@ rf_code_cmove:
         ldp     x2, x1, [x14], #16 // COUNT
                                 // DEST.
         ldr     x3, [x14], #8   // SOURCE
-        cmp     x2, #0
-        beq     cmov2
+        cbz     x2, cmov2
 cmov1:  ldrb    w0, [x3], #1    // THATS THE MOVE
         strb    w0, [x1], #1
         subs    x2, x2, #1
@@ -373,8 +368,7 @@ umdiv1: adds    x0, x0, x0      // double precision shift (modh, modl)
 umdiv4: add     x4, x4, x3      // add single pecision mask
         sub     x1, x1, x2      // subtract single precision div
 umdiv2: lsr     x3, x3, #1      // shift mask one bit to the right
-        ands    x3, x3, x3
-        bne     umdiv1
+        cbnz    x3, umdiv1
 umdiv3: stp     x4, x1, [x14, #-16]! // remainder
                                 // quotient
 
@@ -490,11 +484,10 @@ rf_code_fromr:
         .align 2
         .global rf_code_zequ
 rf_code_zequ:
-        ldr     x0, [x14], #8
-        tst     x0, x0          // DO TEST
+        ldr     x1, [x14], #8
+                                // DO TEST
         mov     x0, #1          // TRUE
-        beq     apush
-#       beq     zequ1           // ITS ZERO
+        cbz     x1, zequ1       // ITS ZERO
         sub     x0, x0, #1      // FALSE
 zequ1:  # b     apush
         str     x0, [x14, #-8]!
@@ -508,8 +501,7 @@ rf_code_zless:
         ldr     x0, [x14], #8
         tst     x0, x0          // SET FLAGS
         mov     x0, #1          // TRUE
-        bmi     apush
-#       bmi     zless1
+        bmi     zless1
         sub     x0, x0, #1      // FLASE
 zless1: # b     apush
         str     x0, [x14, #-8]!
