@@ -3,9 +3,11 @@
 #include "rf.h"
 #include "inst.h"
 #ifdef RF_INST_LOCAL_DISC
-#ifdef RF_ARGS
+/* disc controller in process */
 #include "persci.h"
-#endif
+/* inst disc binary image */
+const
+#include "model.inc"
 #endif
 
 /* indicates whether installation has been completed */
@@ -22,7 +24,17 @@ int main(void)
 
   /* install */
   if (!rf_installed) {
+    /* "insert" the inst disc */
+#ifdef RF_INST_LOCAL_DISC
+    rf_persci_insert_bytes(0, model_img);
+#endif
+
     rf_inst();
+
+    /* now "eject" the inst disc */
+#ifdef RF_INST_LOCAL_DISC
+    rf_persci_eject(0);
+#endif
   }
 
 #ifdef RF_INST_LOCAL_DISC

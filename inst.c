@@ -1,13 +1,6 @@
 #include "inst.h"
 #include "rf.h"
 
-/* if disc controller runs in process */
-#ifdef RF_INST_LOCAL_DISC
-#include "persci.h"
-const
-#include "model.inc"
-#endif
-
 /* if we delay start of inst to allow disc server to start */
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
@@ -512,11 +505,6 @@ void rf_inst(void)
   /* instead of ABORT */
   origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
 
-  /* "insert" the inst disc */
-#ifdef RF_INST_LOCAL_DISC
-  rf_persci_insert_bytes(0, model_img);
-#endif
-
   /* wait for disc server to init */ 
 #ifdef RF_INST_WAIT
 #ifdef __RC2014
@@ -529,9 +517,4 @@ void rf_inst(void)
   /* necessary operations may live there */
   rf_fp = rf_code_cold;
   rf_trampoline();
-
-  /* now "eject" the inst disc */
-#ifdef RF_INST_LOCAL_DISC
-  rf_persci_eject(0);
-#endif
 }
