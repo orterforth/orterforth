@@ -20,11 +20,10 @@
         .global rf_trampoline
 rf_trampoline:
         PUSH    {R7, R8, R10, FP, LR}
-trampoline1:
-        LDR     R0, =rf_fp
+tramp1: LDR     R0, =rf_fp
         LDR     R0, [R0]
         CMP     R0, #0
-        BEQ     trampoline2
+        BEQ     tramp2
         LDR     R10, =rf_ip     @ IP to R10
         LDR     R10, [R10]
         LDR     R3, =rf_w       @ W to R3
@@ -33,10 +32,9 @@ trampoline1:
         LDR     R8, [R8]
         LDR     R7, =rf_rp      @ RP to R7
         LDR     R7, [R7]
-        LDR     LR, =trampoline1 @ return addr
+        LDR     LR, =tramp1     @ return addr
         BX      R0
-trampoline2:
-        POP     {R7, R8, R10, FP, PC}
+tramp2: POP     {R7, R8, R10, FP, PC}
 
         .data
 
