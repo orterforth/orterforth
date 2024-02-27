@@ -230,16 +230,9 @@ implementing multitasking, implementing security, and so on.
 
 The C / assembly interop is, admittedly, an awkward exercise.
 It requires a number of changes to the C code, such as calls
-to worker functions after the RF_START hook, that would not
-make sense outside of the context of attempting to override or
-anticipate a particular C compiler's calling convention and
-optimisations.
-
-If we give the C code the role of a mere facilitator of the
-installation process, and allow the possibility that other
-approaches might be attempted (e.g., fully hand-assembled
-code, or a more managed environment such as Python), then it
-might seem less of an issue.
+to worker functions after the RF_START hook, that attempt to
+override or anticipate the particular C compiler's calling 
+convention and optimisations.
 
 The idea of self-hosting - creating a Forth implementation that
 builds itself from the absolute minimum of bootstrap code and
