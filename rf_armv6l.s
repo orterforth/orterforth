@@ -444,9 +444,9 @@ DIGI2:  SUB     R0, R0, R0      @ FALSE FLAG
         BX      R0
 
 
-# *************
-# *   PFIND   *
-# *************
+# **************
+# *   (FIND)   *
+# **************
 #
         .p2align 2
         .global rf_code_pfind

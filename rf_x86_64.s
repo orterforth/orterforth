@@ -499,9 +499,9 @@ DIGI2:  SUB     RAX,RAX # FALSE FLAG
         JMP     QWORD PTR [RDX]
 
 
-# *************
-# *   PFIND   *
-# *************
+# **************
+# *   (FIND)   *
+# **************
 #
         .globl rf_code_pfind
         .globl _rf_code_pfind

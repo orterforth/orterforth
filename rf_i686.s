@@ -495,9 +495,9 @@ DIGI2:  SUB     EAX,EAX # FALSE FLAG
         JMP     DWORD PTR [EDX]
 
 
-# *************
-# *   PFIND   *
-# *************
+# **************
+# *   (FIND)   *
+# **************
 #
         .globl rf_code_pfind
         .globl _rf_code_pfind
