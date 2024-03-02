@@ -304,24 +304,19 @@ static uint8_t __FASTCALL__ **rf_lfa(uint8_t *nfa)
 
 static uint8_t *rf_find(uint8_t *t, uint8_t length, uint8_t *nfa)
 {
-  uint8_t i;
-  uint8_t *n;
+  uint8_t b;
+  uint8_t *m, *n;
 
   while (nfa) {
     /* match length from name field incl smudge bit */
     if (length == (*nfa & 0x3F)) {
-      /* match name */
+      /* match name - NB matches the whole aligned name field */
       n = nfa;
-      for (i = 0; i < length; i++) {
-        if (t[i] != (*(++n) & 0x7F)) {
-          break;
-        }
-      }
-      if (i == length) {
-        return nfa;
+      m = t;
+      while (*(m++) == ((b = *(++n)) & 0x7F)) {
+        if (b & 0x80) return nfa;
       }
     }
-
     /* if no match, follow link */
     nfa = *(rf_lfa(nfa));
   }
