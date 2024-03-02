@@ -226,6 +226,8 @@ include target/c64/c64.mk
 
 include target/dragon/dragon.mk
 
+#include target/esp32c3/esp32c3.mk
+
 include target/m100/m100.mk
 
 include target/pico/pico.mk
@@ -282,9 +284,9 @@ scripts/script.sh :
 
 # basic test
 .PHONY : test
-test : $(ORTERFORTH) $(DR0)
+test : $(ORTERFORTH) forth/test.img
 
-	echo 'VLIST 3 24 INDEX CR MON' | $(ORTERFORTH) $(DR0)
+	echo 'EMPTY-BUFFERS 1 LOAD MON' | $(ORTERFORTH) forth/test.img
 
 # uninstall from local
 .PHONY : uninstall
