@@ -189,6 +189,14 @@ typedef unsigned long uintptr_t;
 #define RF_CPU_LO 0x0113F2FC
 #endif
 
+#ifdef __riscv
+#define RF_LE
+#define RF_ALIGN 4
+/* RISCV */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x02C15B0F
+#endif
+
 #ifdef __CYGWIN__
 /* CYGWIN */
 #define RF_TARGET_HI 0x00000000
@@ -223,10 +231,14 @@ typedef unsigned long uintptr_t;
 /* PICO */
 #define RF_TARGET_HI 0x00000000
 #define RF_TARGET_LO 0x00122928
-#ifndef RF_ALIGN
 #define RF_ALIGN 4
+#define RF_NOEXIT
 #endif
-/* make MON just restart */
+
+#ifdef ESP_PLATFORM
+/* ESP32 */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x017B3BFE
 #define RF_NOEXIT
 #endif
 
