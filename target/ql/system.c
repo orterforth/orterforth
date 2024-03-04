@@ -47,8 +47,8 @@ void rf_init(void)
 /*
   io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);
 */
-  /* 80 columns, 25 rows, white on black */
-  con = io_open("CON_480X256A16X0", 0);
+  /* 85 columns, 25 rows, white on black */
+  con = io_open("CON_512X256A0X0", 0);
   sd_setpa(con, TIMEOUT_FOREVER, 0);
   sd_setin(con, TIMEOUT_FOREVER, 7);
   sd_clear(con, TIMEOUT_FOREVER);
