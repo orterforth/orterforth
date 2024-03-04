@@ -22,30 +22,6 @@ static uint8_t cmd[11] = {
   'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '\x04'
 };
 
-/* write two place decimal integer */
-static void rf_inst_puti(uint8_t idx, uint8_t i)
-{
-  cmd[idx++] = 48 + (i / 10);
-  cmd[idx] = 48 + (i % 10);
-}
-
-/* hld - write I nn nn /n and return buffer address */
-static void rf_inst_code_hld(void)
-{
-  RF_START;
-  {
-    uintptr_t block = RF_INST_SP_POP;
-
-    /* convert block number into track and sector */
-    rf_inst_puti(2, (uint8_t) (block / 26));
-    rf_inst_puti(5, (uint8_t) (block % 26) + 1);
-
-    /* return command addr */
-    RF_INST_SP_PUSH((uintptr_t) cmd);
-  }
-  RF_JUMP_NEXT;
-}
-
 /* DICTIONARY OPERATIONS */
 
 /* DP */
@@ -326,7 +302,6 @@ static const rf_code_t rf_inst_codes[] = {
   rf_code_bwrit,
   rf_code_bread,
   rf_code_mon,
-  rf_inst_code_hld,
   rf_inst_code_compile
 };
 
@@ -352,7 +327,7 @@ static const char * rf_inst_names[] = {
   0,
   "CMOVE",
   "U*",
-  0,
+  "U/",
   "AND",
   0,
   0,
@@ -391,12 +366,46 @@ static const char * rf_inst_names[] = {
   "BLOCK-WRITE",
   "BLOCK-READ",
   "MON",
-  "hld",
   "compile",
 };
 
 /* flag to indicate completion of install */
 extern char rf_installed;
+
+/* table of installation constants: */
+static uintptr_t rf_inst_constants[] = {
+  RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA,
+  RF_BS,
+  0,
+  0,
+  0,
+  0,
+  RF_TARGET_HI,
+  RF_TARGET_LO,
+  0,
+  0,
+  0,
+  0,
+  0,
+#ifdef RF_ORG
+  RF_ORG,
+#else
+  0,
+#endif
+#ifdef RF_INST_LINK
+  1,
+#else
+  0,
+#endif
+#ifdef RF_INST_SAVE
+  1,
+#else
+  0,
+#endif
+  RF_CPU_HI,
+  RF_CPU_LO,
+  0
+};
 
 /* bootstrap the installing Forth vocabulary and install Forth itself */
 void rf_inst(void)
@@ -410,85 +419,59 @@ void rf_inst(void)
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
   rf_inst_dp = (uint8_t **) &(RF_USER_DP);
 
-  /* table of installation constants: */
-  /* for boot time literals */
-  rf_inst_comma(RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA);
-  rf_inst_comma(RF_BS);
-  rf_inst_comma((uintptr_t) RF_USER);
-  rf_inst_comma((uintptr_t) RF_S0);
-  rf_inst_comma((uintptr_t) RF_R0);
-  rf_inst_comma((uintptr_t) RF_TIB);
-  /* for additional literals to identify platform */
-  rf_inst_comma(RF_TARGET_HI);
-  rf_inst_comma(RF_TARGET_LO);
-  /* for +ORIGIN and also for save */
-  rf_inst_comma((uintptr_t) RF_ORIGIN);
-  /* disc buffer constants */
-  rf_inst_comma((uintptr_t) RF_FIRST);
-  rf_inst_comma((uintptr_t) RF_LIMIT);
-  /* stack limit used in ?STACK */
-  rf_inst_comma((uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE));
-  /* installed flag */
-  rf_inst_comma((uintptr_t) &rf_installed);
-  /* used in save */
-#ifdef RF_ORG
-  rf_inst_comma(RF_ORG);
-#else
-  rf_inst_comma(0);
-#endif
-#ifdef RF_INST_LINK
-  rf_inst_comma(1);
-#else
-  rf_inst_comma(0);
-#endif
-#ifdef RF_INST_SAVE
-  rf_inst_comma(1);
-#else
-  rf_inst_comma(0);
-#endif
-  /* for additional literals to identify CPU */
-  rf_inst_comma(RF_CPU_HI);
-  rf_inst_comma(RF_CPU_LO);
-  /* to get code table */
-  rf_inst_comma((uintptr_t) &rf_inst_codes);
+  /* heap alloc dependent constants */
+  rf_inst_constants[2] = (uintptr_t) RF_USER;
+  rf_inst_constants[3] = (uintptr_t) RF_S0;
+  rf_inst_constants[4] = (uintptr_t) RF_R0;
+  rf_inst_constants[5] = (uintptr_t) RF_TIB;
+  rf_inst_constants[8] = (uintptr_t) RF_ORIGIN;
+  rf_inst_constants[9] = (uintptr_t) RF_FIRST;
+  rf_inst_constants[10] = (uintptr_t) RF_LIMIT;
+  rf_inst_constants[11] = (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE);
+  /* some C compilers do not regard these & expressions as constant */
+  rf_inst_constants[12] = (uintptr_t) &rf_installed;
+  rf_inst_constants[18] = (uintptr_t) &rf_inst_codes;
 
   /* to get constant table */
   rf_inst_code("id", rf_code_docon);
-  rf_inst_comma((uintptr_t) RF_INST_DICTIONARY);
+  rf_inst_comma((uintptr_t) &rf_inst_constants);
 
-  /* forward defined code words */
-  for (i = 0; i < 61; ++i) {
+  /* code words */
+  for (i = 0; i < 60; ++i) {
     const char *name = rf_inst_names[i];
     if (name) {
       rf_inst_code(name, rf_inst_codes[i]);
     }
   }
 
-  /* to fetch installation constants from table */
+  /* disc command (set track and sector) */
+  rf_inst_code("cmd", rf_code_docon);
+  rf_inst_comma((uintptr_t) &cmd);
   rf_inst_compile(
-    ":ic cs id + @ ;S");
-  /* FIRST */
+    ":ch cmd + SWAP LIT 48 + SWAP C! ;S "
+    ":hl >R LIT 0 LIT 10 U/ R ch R> LIT 1 + ch ;S "
+    ":hld LIT 0 LIT 26 U/ LIT 2 hl LIT 1 + LIT 5 hl cmd ;S");
+  /* ic (installation constants), FIRST */
   rf_inst_compile(
-    ":FIRST LIT 9 ic ;S");
-  /* ?DISC */
+    ":ic cs id + @ ;S :FIRST LIT 9 ic ;S");
+  /* ?DISC, BLOCK */
   rf_inst_compile(
-    ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S LIT 4 D/CHAR DROP DROP ;S");
-  /* BLOCK */
-  rf_inst_compile(
+    ":?DISC LIT 1 D/CHAR DROP 0BRANCH ^2 ;S "
+    "LIT 4 D/CHAR DROP DROP ;S "
     ":BLOCK FIRST cl + "
     "OVER FIRST @ MINUS + 0BRANCH ^10 "
     "OVER hld LIT 10 BLOCK-WRITE ?DISC "
     "DUP BLOCK-READ ?DISC "
     "SWAP FIRST ! ;S");
-  /* read from disc and run proto interpreter */
+  /* load and launch the outer interpreter */
   rf_inst_compile(
-    ":inst SP! "
-    /* empty buffers */
+    ":inst");
+  origin[22] = (uintptr_t) *rf_inst_dp;
+  rf_inst_compile(
+    "SP! "
     "LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! "
-    /* loop over blocks */
     "LIT 785 DUP BLOCK compile LIT 1 + "
     "DUP LIT -805 + 0= 0BRANCH ^-12 DROP "
-    /* call ABORT just defined */
     "LIT ^21 LIT 8 ic + @ @ LIT ^-24 + EXECUTE");
 
   /* set boot-up literals */
@@ -503,7 +486,7 @@ void rf_inst(void)
   /* instead of FORTH */
   origin[21] = (uintptr_t) &rf_inst_vocabulary;
   /* instead of ABORT */
-  origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);
+  /*origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);*/
 
   /* wait for disc server to init */ 
 #ifdef RF_INST_WAIT
