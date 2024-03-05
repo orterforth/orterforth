@@ -18,6 +18,9 @@ clean: .phony
 forth\library.img: forth\library.fs $(SYSTEM)\blocks.exe
 	$(SYSTEM)\blocks.exe create < forth\library.fs > forth\library.img
 
+forth\test.img: forth\test.fs $(SYSTEM)\blocks.exe
+	$(SYSTEM)\blocks.exe create < forth\test.fs > forth\test.img
+
 model.img: model.fs $(SYSTEM)\blocks.exe
 	$(SYSTEM)\blocks.exe create < model.fs > model.img
 
@@ -26,6 +29,9 @@ model.inc: model.img $(SYSTEM)\orter.exe
 
 run: $(SYSTEM)\orterforth.exe forth\library.img .phony
 	@$(SYSTEM)\orterforth.exe forth\library.img
+
+test: $(SYSTEM)\orterforth.exe forth\test.img .phony
+	@echo EMPTY-BUFFERS 1 LOAD | $(SYSTEM)\orterforth.exe forth\test.img
 
 $(SYSTEM)\blocks.exe: blocks.c
 	@$(MAKESYSTEMDIR)
