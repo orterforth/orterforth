@@ -15,8 +15,8 @@ build: $(SYSTEM)\orterforth.exe .phony
 clean: .phony
 	del /Q $(SYSTEM)\*.*
 
-library.img: library.fs $(SYSTEM)\blocks.exe
-	$(SYSTEM)\blocks.exe create < library.fs > library.img
+forth\library.img: forth\library.fs $(SYSTEM)\blocks.exe
+	$(SYSTEM)\blocks.exe create < forth\library.fs > forth\library.img
 
 model.img: model.fs $(SYSTEM)\blocks.exe
 	$(SYSTEM)\blocks.exe create < model.fs > model.img
@@ -24,10 +24,14 @@ model.img: model.fs $(SYSTEM)\blocks.exe
 model.inc: model.img $(SYSTEM)\orter.exe
 	$(SYSTEM)\orter.exe hex include model_img < model.img > model.inc
 
-run: $(SYSTEM)\orterforth.exe library.img .phony
-	@$(SYSTEM)\orterforth.exe library.img
+run: $(SYSTEM)\orterforth.exe forth\library.img .phony
+	@$(SYSTEM)\orterforth.exe forth\library.img
 
 $(SYSTEM)\blocks.exe: blocks.c
+	@$(MAKESYSTEMDIR)
+	$(CC) $(CFLAGS) /Fe$@ $**
+
+$(SYSTEM)\disc.exe: disc.c
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fe$@ $**
 
