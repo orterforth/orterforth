@@ -20,8 +20,8 @@ static uint8_t cmd[11] = {
 /* DP */
 static uint8_t **rf_inst_dp = 0;
 
-/* CURRENT and CONTEXT vocabulary during inst */
-static uint8_t *rf_inst_vocabulary = 0;
+/* LATEST */
+static uint8_t *rf_inst_latest = 0;
 
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
@@ -63,8 +63,8 @@ static void rf_inst_code(const char *name, rf_code_t code)
   *(--here) |= 0x80;
 
   /* link field */
-  rf_inst_comma((uintptr_t) rf_inst_vocabulary);
-  rf_inst_vocabulary = there;
+  rf_inst_comma((uintptr_t) rf_inst_latest);
+  rf_inst_latest = there;
 
   /* code field */
   rf_inst_comma((uintptr_t) code);
@@ -84,7 +84,7 @@ static uint8_t *rf_inst_find(const char *t, uint8_t length)
 {
   uint8_t i;
   uint8_t *m, *n;
-  uint8_t *nfa = rf_inst_vocabulary;
+  uint8_t *nfa = rf_inst_latest;
 
   while (nfa) {
     /* match name (use smudge bit) */
@@ -159,7 +159,7 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
     switch (*name) {
       case '%':
       /* make immediate */
-      *rf_inst_vocabulary ^= 0x40;
+      *rf_inst_latest ^= 0x40;
       break;
       case ':':
       /* create colon definition */
@@ -407,7 +407,7 @@ void rf_inst(void)
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
   /* cold start LATEST UP DP */
-  rf_inst_vocabulary = 0;
+  rf_inst_latest = 0;
   rf_up = (uintptr_t *) RF_USER;
   RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
   rf_inst_dp = (uint8_t **) &(RF_USER_DP);
@@ -469,7 +469,7 @@ void rf_inst(void)
 
   /* set boot-up literals */
   /* LATEST */
-  origin[6] = (uintptr_t) rf_inst_vocabulary;
+  origin[6] = (uintptr_t) rf_inst_latest;
   /* USER area */
   origin[8] = (uintptr_t) RF_USER;
   /* S0, R0, DP user variables */
@@ -477,9 +477,9 @@ void rf_inst(void)
   origin[10] = (uintptr_t) RF_R0;
   origin[15] = (uintptr_t) *rf_inst_dp;
   /* instead of FORTH */
-  origin[21] = (uintptr_t) &rf_inst_vocabulary;
+  origin[21] = (uintptr_t) &rf_inst_latest;
   /* instead of ABORT */
-  /*origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_vocabulary) + 1);*/
+  /*origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_latest) + 1);*/
 
   /* wait for disc server to init */ 
 #ifdef RF_INST_WAIT
