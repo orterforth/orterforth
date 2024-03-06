@@ -8,13 +8,6 @@
 #endif
 #endif
 
-/* STACK OPERATIONS */
-
-/* we don't rely on macros from rf.h because 
-   functions defined in rf.c may not be present */
-#define RF_INST_SP_POP (*(rf_sp++))
-#define RF_INST_SP_PUSH(a) { *(--rf_sp) = (a); }
-
 /* DISC OPERATIONS */
 
 /* disc command buffer */
@@ -231,7 +224,7 @@ static void rf_inst_code_compile(void)
 {
   RF_START;
   {
-    char *addr = (char *) RF_INST_SP_POP;
+    char *addr = (char *) (*(rf_sp++));
     rf_inst_compile(addr);
   }
   RF_JUMP_NEXT;
