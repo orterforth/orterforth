@@ -22,6 +22,7 @@ WAITUNTILSAVED := $(INFO) 'Waiting until saved'    ; sh scripts/wait-until-saved
 # local OS
 UNAME_S := $(shell uname -s)
 ifneq ($(filter CYGWIN%,$(UNAME_S)),)
+	LDFLAGS += -t gcc.ld
 	OPER := cygwin
 	SERIALPORT := /dev/ttyS2
 	STAT := stat -c %s
