@@ -200,7 +200,7 @@ HEX
 : D= ROT = ROT ROT = AND ;
 : 3pick SP@ 3 cs + @ ;
 : t-ustar 3pick 3pick 3pick 3pick
-  U* D= t SWAP 0 D. 0 D. ." U* -- " D. CR ;
+  U* D= t SWAP 0 D. 0 D. ." U* -- " 4 cs D.R 2E EMIT CR ;
 40000000. 8000 8000 t-ustar
 E1000000. F000 F000 t-ustar
 FFFE0001. FFFF FFFF t-ustar
@@ -209,8 +209,8 @@ FORGET D=
 ( U/                                                     test )
 HEX : 4pick SP@ 4 cs + @ ;
 : t-uslas 4pick 4pick 4pick 4pick 4pick
-  U/ SWAP ROT == ROT ROT == AND t
-  ROT ROT 8 D.R SPACE 0 4 D.R ."  U/ -- " . . ;
+  U/ SWAP ROT == ROT ROT == AND t ROT ROT 4 cs D.R ." . "
+  0 4 D.R ."  U/ -- " S->D 4 D.R SPACE S->D 4 D.R SPACE ;
   -1   -1 00000001. 0000 t-uslas ." division by 0" CR
   -1   -1 0000 0004 0004 t-uslas ." overflow" CR
 7000 7000 70000000. FFFF t-uslas CR
@@ -222,15 +222,23 @@ HEX : 4pick SP@ 4 cs + @ ;
 E38F 738E 7FFFFFFF. 8FFF t-uslas CR
 FFE2 01C1 7FFFFFFF. 800F t-uslas CR
 FORGET 4pick -->
-( Summary                                                test )
+( AND, OR, XOR SP@, SP!                                  test )
 HEX
-( AND, OR, XOR                                                )
 FEAE EF51 AND EE00 t= ." FEFE EF51 AND -- EE00" CR
 12AE 4851 OR  5AFF t= ." 12AE 4851  OR -- 5AFF" CR
 12AE 37FF XOR 2551 t= ." 12AE 37FF XOR -- 2551" CR
-( SP@, SP!                                                    )
 123 SP@ @ 123 t= DROP ." 123 SP@ @ -- 123" CR
 SP! SP@ 9 cs +ORIGIN @ t= ." SP! SP@ -- S0" CR
+
+
+
+
+
+
+
+
+-->
+( Summary                                                test )
 DECIMAL
 passes @ fails @ + . ." tests "
 passes ? ." passes "
