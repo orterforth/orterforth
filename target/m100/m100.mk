@@ -8,6 +8,7 @@ M100PROMPT := $(PROMPT) 'On the target type RUN "COM:88N1E" <enter>'
 # This is to avoid overrunning the short buffer at the Model 100 end.
 M100SERIAL := $(ORTER) serial -d 0.001 -o ixon -o ixoff -o onlcrx -e 2 $(SERIALPORT) 9600
 M100SEND := (while read -r l; do echo "$$l"; done && printf '\032' && sleep 1)
+M100SENDX := (cat && printf '\032' && sleep 1)
 M100LOADLOADER := $(INFO) 'Loading loader' ; $(M100SEND) < target/m100/hexloa.ba | $(M100SERIAL)
 M100ZCCOPTS := \
 	+m100 -subtype=default -m \
@@ -30,7 +31,15 @@ m100-hw : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
 	@$(M100PROMPT)
 	@$(M100LOADLOADER)
 	@$(INFO) 'Loading hex'
-	@$(M100SEND) < m100/hw.ihx | $(M100SERIAL)
+	@$(M100SENDX) < m100/hw.ihx | $(M100SERIAL)
+
+.PHONY : m100-hw-ser
+m100-hw-ser : target/m100/loader.ba m100/hw.ser | $(ORTER)
+
+	@$(M100PROMPT)
+	@$(INFO) 'Loading loader' ; $(M100SENDX) < target/m100/loader.ba | $(M100SERIAL)
+	@$(INFO) 'Loading file'
+	@$(M100SENDX) < m100/hw.ser | $(M100SERIAL)
 
 .PHONY : m100-run
 m100-run : target/m100/hexloa.ba m100/inst.ihx | $(ORTER)
@@ -44,6 +53,10 @@ m100-run : target/m100/hexloa.ba m100/inst.ihx | $(ORTER)
 m100/%.ihx : m100/%.co
 
 	z88dk-appmake +hex --binfile $< --org $$(( $(M100ORG) - 6 )) --output $@
+
+m100/%.ser : m100/%.co | $(ORTER)
+
+	$(ORTER) m100 serial write < $< > $@
 
 m100/hw.co : hw.c | m100
 

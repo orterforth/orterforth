@@ -9,6 +9,7 @@
 #endif
 #ifndef _WIN32
 #include "hex.h"
+#include "m100.h"
 #include "pty.h"
 #include "ql.h"
 #include "serial.h"
@@ -23,6 +24,7 @@ static int usage(void)
   fprintf(stderr, "             bbc ...\n");
   fprintf(stderr, "             dragon ...\n");
   fprintf(stderr, "             hex ...\n");
+  fprintf(stderr, "             m100 ...\n");
   fprintf(stderr, "             pty ...\n");
   fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
@@ -51,6 +53,9 @@ int main(int argc, char *argv[])
     }
     if (argc > 3 && !strcmp("hex", arg) && !strcmp("include", argv[2])) {
       return orter_hex_include(argv[3]);
+    }
+    if (!strcmp("m100", arg)) {
+      return orter_m100(argc, argv);
     }
 #ifndef _WIN32
     if (argc > 2 && !strcmp("pty", arg)) {
