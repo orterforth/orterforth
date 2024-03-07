@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/select.h>
 
 /* source, buffer and sink comprise a pipe */
 typedef struct orter_io_pipe_t {

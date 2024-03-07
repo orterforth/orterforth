@@ -67,7 +67,6 @@ SYSTEM := $(OPER)-$(PROC)
 TARGET := $(SYSTEM)
 
 # local system target executables
-BLOCKS := $(SYSTEM)/blocks
 DISC := $(SYSTEM)/disc
 ORTER := $(SYSTEM)/orter
 ORTERFORTH := $(SYSTEM)/orterforth
@@ -85,11 +84,6 @@ SYSTEMDEPS := \
 # default target
 .PHONY : default
 default : build
-
-# disc image (blocks file) conversion utility
-$(BLOCKS) : blocks.c | $(SYSTEM)
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
 # local system disc server executable
 $(DISC) : \
@@ -188,9 +182,9 @@ $(TARGET)-help :
 	@if [ "$(TARGET)" = "$(SYSTEM)" ] ; then more help.txt ; else more target/$(TARGET)/help.txt ; fi
 
 # Forth source file to disc image
-%.img : %.fs | $(BLOCKS)
+%.img : %.fs | $(DISC)
 
-	$(BLOCKS) create < $< > $@.io
+	$(DISC) create < $< > $@.io
 	mv $@.io $@
 
 # build

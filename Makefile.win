@@ -5,8 +5,15 @@ PROC = $(PROC:x86=i686)
 PROC = $(PROC:x64=x86_64)
 SYSTEM = windows-$(PROC)
 MAKESYSTEMDIR = if not exist $(SYSTEM) md $(SYSTEM)
+DR0=forth\library.img
 
 default: build
+
+.SUFFIXES: .fs
+
+.fs.img:
+	make $(SYSTEM)\disc.exe
+	$(SYSTEM)\disc.exe create < $< > $@
 
 .phony:
 
@@ -15,27 +22,14 @@ build: $(SYSTEM)\orterforth.exe .phony
 clean: .phony
 	del /Q $(SYSTEM)\*.*
 
-forth\library.img: forth\library.fs $(SYSTEM)\blocks.exe
-	$(SYSTEM)\blocks.exe create < forth\library.fs > forth\library.img
-
-forth\test.img: forth\test.fs $(SYSTEM)\blocks.exe
-	$(SYSTEM)\blocks.exe create < forth\test.fs > forth\test.img
-
-model.img: model.fs $(SYSTEM)\blocks.exe
-	$(SYSTEM)\blocks.exe create < model.fs > model.img
-
 model.inc: model.img $(SYSTEM)\orter.exe
 	$(SYSTEM)\orter.exe hex include model_img < model.img > model.inc
 
-run: $(SYSTEM)\orterforth.exe forth\library.img .phony
-	@$(SYSTEM)\orterforth.exe forth\library.img
+run: $(SYSTEM)\orterforth.exe $(DR0) .phony
+	@$(SYSTEM)\orterforth.exe $(DR0)
 
 test: $(SYSTEM)\orterforth.exe forth\test.img .phony
 	@echo EMPTY-BUFFERS 1 LOAD | $(SYSTEM)\orterforth.exe forth\test.img
-
-$(SYSTEM)\blocks.exe: blocks.c
-	@$(MAKESYSTEMDIR)
-	$(CC) $(CFLAGS) /Fe$@ $**
 
 $(SYSTEM)\disc.exe: disc.c
 	@$(MAKESYSTEMDIR)

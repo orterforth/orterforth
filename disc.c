@@ -13,6 +13,71 @@
 
 #define RF_BBLK 128
 
+static char line[66];
+
+static int lineno = 0;
+
+static int disc_create_line(char *block)
+{
+  size_t len;
+
+  /* read line from stdin */
+  if (!fgets(line, 66, stdin)) {
+    if (feof(stdin)) {
+      return 0;
+    }
+    perror("fgets failed");
+    return errno;
+  }
+
+  /* count lines */
+  lineno++;
+
+  /* strip newline */
+  len = strlen(line);
+  if (line[len - 1] == '\n') {
+    --len;
+  }
+  /* fail if too long */
+  if (len > 64) {
+    fprintf(stderr, "line %u too long\n", lineno);
+    return 1;
+  }
+
+  /* write to the block */
+  memcpy(block, line, len);
+
+  /* ok */
+  return 0;
+}
+
+static int disc_create(void)
+{
+  char block[RF_BBLK];
+  int i, status;
+
+  /* 77 tracks x 26 sectors */
+  lineno = 0;
+  for (i = 0; i < 2002; i++) {
+
+    /* clear buffer with spaces */
+    memset(&block, ' ', RF_BBLK);
+
+    /* read two lines */
+    CHECK(status, disc_create_line(block));
+    CHECK(status, disc_create_line(block + 64));
+
+    /* write block to stdout */
+    if (fwrite(block, 1, RF_BBLK, stdout) != RF_BBLK) {
+      perror("fwrite failed");
+      return errno;
+    }
+  }
+
+  /* ok */
+  return 0;
+}
+
 /* NONBLOCKING I/O PIPES */
 static orter_io_pipe_t in;
 static orter_io_pipe_t out;
@@ -87,6 +152,7 @@ static int disc_put(int c)
   return c;
 }
 
+#ifndef _WIN32
 static void process_simple(void)
 {
   int c;
@@ -276,9 +342,16 @@ static int disc_tcp(int argc, char **argv)
   orter_tcp_close();
   return exit;
 }
+#endif
 
 int main(int argc, char *argv[])
 {
+  /* Text file to Forth block disc image */
+  if (argc == 2 && !strcmp("create", argv[1])) {
+    return disc_create();
+  }
+
+#ifndef _WIN32
   /* Physical serial port but multiplex serial and disc */
   if ((argc == 5 || argc == 6) && !strcmp("mux", argv[1])) {
     return disc_mux(argc, argv);
@@ -303,12 +376,16 @@ int main(int argc, char *argv[])
   if ((argc == 4 || argc == 5) && !strcmp("tcp", argv[1])) {
     return disc_tcp(argc, argv);
   }
+#endif
 
   /* Usage */
-  fputs("Usage: disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
+  fputs("Usage: disc create   Convert text file (stdin) into Forth block format (stdout)\n", stderr);
+#ifndef _WIN32
+  fputs("       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
   fputs("       disc pty <link> <dr0> <dr1>           Run disc controller over pty and create symlink\n", stderr);
   fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n"
         "       disc tcp <port> <dr0> <dr1>           Run disc controller over tcp port\n", stderr);
   fputs("       disc <dr0> <dr1>                      Run disc controller over stdin/stdout\n", stderr);
+#endif
   return 1;
 }
