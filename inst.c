@@ -486,6 +486,9 @@ void rf_inst(void)
 #ifdef __RC2014
   z80_delay_ms(5000);
 #endif
+#ifdef __M100__
+  sleep(5);
+#endif
 #endif
 
   /* run COLD, which inits and runs :inst */

@@ -5,4 +5,8 @@
 #undef RF_INLINE_RP
 #undef RF_INLINE_SP
 
+#define RF_INST_WAIT
+
+#define RF_BS 0x0008
+
 #define RF_LIMIT 0xF5F0

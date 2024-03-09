@@ -34,7 +34,7 @@ m100-hw : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
 	@$(M100SENDX) < m100/hw.ihx | $(M100SERIAL)
 
 .PHONY : m100-hw-ser
-m100-hw-ser : target/m100/loader.ba m100/hw.ser | $(ORTER)
+m100-hw-ser : target/m100/loader.ba m100/hw.ser | $(DISC) $(ORTER) model.img
 
 	@$(M100PROMPT)
 	@$(INFO) 'Loading loader' ; $(M100SENDX) < target/m100/loader.ba | $(M100SERIAL)
@@ -44,11 +44,23 @@ m100-hw-ser : target/m100/loader.ba m100/hw.ser | $(ORTER)
 .PHONY : m100-run
 m100-run : target/m100/hexloa.ba m100/inst.ihx | $(ORTER)
 
+	@# 6 byte header does not matter
 	@$(CHECKMEMORY) $(M100ORG) $(M100ORIGIN) $$($(STAT) m100/inst.co)
 	@$(M100PROMPT)
 	@$(M100LOADLOADER)
 	@$(INFO) 'Loading hex'
 	@$(M100SEND) < m100/inst.ihx | $(M100SERIAL)
+
+.PHONY : m100-run-ser
+m100-run-ser : target/m100/loader.ba m100/inst.ser m100/inst.co | $(ORTER)
+
+	@# 6 byte header does not matter - need to depend on .co
+	@$(CHECKMEMORY) $(M100ORG) $(M100ORIGIN) $$($(STAT) m100/inst.co)
+	@$(M100PROMPT)
+	@$(INFO) 'Loading loader' ; $(M100SENDX) < target/m100/loader.ba | $(M100SERIAL)
+	@$(INFO) 'Loading inst'
+	@$(M100SENDX) < m100/inst.ser | $(M100SERIAL)
+	@$(INFO) 'Running disc' ; $(DISC) serial $(SERIALPORT) 9600 model.img
 
 m100/%.ihx : m100/%.co
 
@@ -62,13 +74,17 @@ m100/hw.co : hw.c | m100
 
 	zcc $(M100ZCCOPTS) -create-app -m -o $@ $<
 
-m100/inst.co : main.c m100/rf.lib m100/system.lib m100/inst.lib
+m100/inst.co : main.c m100/m100.lib m100/rf.lib m100/system.lib m100/inst.lib
 
 	zcc $(M100ZCCOPTS) \
-		-lm100/rf -lm100/system -lm100/inst \
+		-lm100/m100 -lm100/rf -lm100/system -lm100/inst \
 		-create-app -m -o $@ $<
 
 m100/inst.lib : inst.c inst.h rf.h target/m100/m100.inc | m100
+
+	zcc $(M100ZCCOPTS) -x -o $@ $<
+
+m100/m100.lib : target/m100/m100.asm | m100
 
 	zcc $(M100ZCCOPTS) -x -o $@ $<
 
