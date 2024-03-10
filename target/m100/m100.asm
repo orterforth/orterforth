@@ -1,5 +1,12 @@
 SECTION code_user
 
+PUBLIC _rf_console_put
+
+_rf_console_put:
+
+        MOV     A,L
+        JP      $4B44           ; CHROUT
+
 serialb: DEFB 0                 ; buffer write index
 seriala: DEFB 0                 ; buffer read index
 
