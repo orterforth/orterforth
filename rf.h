@@ -87,24 +87,22 @@ typedef unsigned long rf_double_t;
 /* z88dk */
 
 #ifdef __SCCZ80
-#ifndef __Z80
-#define __Z80
-#endif
-#endif
-#ifdef __Z80
 #include <stdint.h>
 #define RF_WORD_SIZE 2
 #define RF_DOUBLE_ARITH
 typedef uint32_t rf_double_t;
 #define RF_LE
+#endif
+
+#ifndef __Z80
+#ifdef Z80
+#define __Z80
+#endif
+#endif
+#ifdef __Z80
 #ifdef __RC2014
 #ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/rc2014/rc2014.inc"
-#endif
-#endif
-#ifdef __M100__
-#ifndef RF_TARGET_INC
-#define RF_TARGET_INC "target/m100/m100.inc"
 #endif
 #endif
 #ifdef SPECTRUM
@@ -117,9 +115,19 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/zx81/zx81.inc"
 #endif
 #endif
+#ifndef __8085__
 /* Z80 */
 #define RF_CPU_HI 0x0000
 #define RF_CPU_LO 0xB250
+#endif
+#endif
+#ifdef __8085__
+#ifdef __M100__
+#define RF_TARGET_INC "target/m100/m100.inc"
+#endif
+/* 8085 */
+#define RF_CPU_HI 0x0005
+#define RF_CPU_LO 0xB325
 #endif
 #ifndef __SCCZ80
 #define __FASTCALL__
