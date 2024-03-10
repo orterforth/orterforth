@@ -1,10 +1,10 @@
 /* SYSTEM BINDINGS */
 
-#include <stdio.h>
-
 #include "rf.h"
 
 void rf_serial_init(void);
+
+uint8_t rf_console_get(void);
 
 void __FASTCALL__ rf_console_put(uint8_t b);
 
@@ -36,12 +36,8 @@ void rf_code_key(void)
 {
   RF_START;
   {
-    int c;
-
-    /* return key */
-    c = getchar();
-    /* LF back to CR */
-    if (c == 10) c = 13;
+    uint8_t c;
+    c = rf_console_get();
     RF_SP_PUSH(c & 0x7F);
   }
   RF_JUMP_NEXT;
@@ -57,7 +53,6 @@ void rf_code_qterm(void)
 void rf_code_cr(void)
 {
   RF_START;
-  /* TODO rf_console_cr */
   rf_console_put('\r');
   rf_console_put('\n');
   RF_JUMP_NEXT;

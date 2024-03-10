@@ -1,5 +1,14 @@
 SECTION code_user
 
+
+PUBLIC _rf_console_get
+
+_rf_console_get:
+
+        CALL    $12CB           ; KYREAD
+        MOV     L,A
+        RET
+
 PUBLIC _rf_console_put
 
 _rf_console_put:
