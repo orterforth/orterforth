@@ -39,7 +39,7 @@ $(SYSTEM)\inst.obj: inst.c inst.h model.inc rf.h system.inc
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c inst.c
 
-$(SYSTEM)\orter.exe: orter\main.c $(SYSTEM)\orter_hex.obj
+$(SYSTEM)\orter.exe: orter\main.c $(SYSTEM)\orter_hex.obj $(SYSTEM)\orter_m100.obj
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fe$@ $**
 
@@ -53,6 +53,10 @@ $(SYSTEM)\orter_bbc.obj: orter\bbc.c orter\bbc.h orter\io.h
 $(SYSTEM)\orter_hex.obj: orter\hex.c orter\hex.h
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c orter\hex.c
+
+$(SYSTEM)\orter_m100.obj: orter\m100.c orter\m100.h
+	@$(MAKESYSTEMDIR)
+	$(CC) $(CFLAGS) /Fo$@ -c orter\m100.c
 
 $(SYSTEM)\persci.obj: persci.c persci.h
 	@$(MAKESYSTEMDIR)
