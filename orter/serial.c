@@ -167,6 +167,9 @@ int orter_serial_open(char *name, int baud)
 #endif
     case 115200: br = B115200; break;
     case 230400: br = B230400; break;
+#ifdef B460800
+    case 460800: br = B460800; break;
+#endif
     default:
     fprintf(stderr, "invalid baud rate: %d\n", baud);
     return -1;
