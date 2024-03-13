@@ -5,8 +5,8 @@ CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
 INFO           := printf '* \033[1;33m%s\033[0;0m\n'
 WARN           := printf '* \033[1;35m%s\033[0;0m\n'
 CHECKMEMORY    := $(INFO) 'Checking memory limits' ; sh scripts/check-memory.sh
-DR0=forth/library.img
-DR1=forth/data.img
+DR0             = forth/library.img
+DR1             = forth/data.img
 COMPLETEDR1FILE = mv $@.io $@ ; $(INFO) 'Done'
 EMPTYDR1FILE   := $(INFO) 'Clearing DR1'           ; printf '' >
 MAMEOPTS       := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
@@ -205,7 +205,7 @@ forth/data.img :
 .PHONY : disc
 disc : $(DISC) $(DR0) $(DR1)
 
-	$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 
 # help
 .PHONY : help
@@ -281,7 +281,7 @@ scripts/script.sh :
 .PHONY : test
 test : $(ORTERFORTH) forth/test.img
 
-	echo 'EMPTY-BUFFERS 1 LOAD MON' | $(ORTERFORTH) forth/test.img
+	@echo 'EMPTY-BUFFERS 1 LOAD MON' | $(ORTERFORTH) forth/test.img
 
 # uninstall from local
 .PHONY : uninstall
