@@ -8,20 +8,19 @@
 #endif
 #endif
 
-/* DISC OPERATIONS */
-
-/* disc command buffer */
-static uint8_t cmd[11] = {
-  'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '\x04'
-};
-
-/* DICTIONARY OPERATIONS */
+/* flag to indicate completion of install */
+extern char rf_installed;
 
 /* DP */
 static uint8_t **rf_inst_dp = 0;
 
 /* LATEST */
 static uint8_t *rf_inst_latest = 0;
+
+/* disc command buffer */
+static uint8_t cmd[11] = {
+  'I', ' ', '0', '0', ' ', '0', '0', ' ', '/', '0', '\x04'
+};
 
 /* , */
 static void __FASTCALL__ rf_inst_comma(uintptr_t word)
@@ -30,7 +29,7 @@ static void __FASTCALL__ rf_inst_comma(uintptr_t word)
 }
 
 /* compile a definition and set CFA */
-static void rf_inst_code(const char *name, rf_code_t code)
+static void rf_inst_code(const char *name, const rf_code_t code)
 {
   uint8_t *here = *rf_inst_dp;
   uint8_t *there = here;
@@ -181,6 +180,17 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
   }
 }
 
+/* run proto interpreter */
+static void rf_inst_code_compile(void)
+{
+  RF_START;
+  {
+    char *addr = (char *) (*(rf_sp++));
+    rf_inst_compile(addr);
+  }
+  RF_JUMP_NEXT;
+}
+
 /* put inst time definitions in spare memory and unlink them when finished */
 /* NB 3000 may be tight with more extensions */
 #ifndef RF_INST_DICTIONARY
@@ -218,17 +228,6 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
 #ifndef RF_BS
 #define RF_BS 0x007F
 #endif
-
-/* run proto interpreter */
-static void rf_inst_code_compile(void)
-{
-  RF_START;
-  {
-    char *addr = (char *) (*(rf_sp++));
-    rf_inst_compile(addr);
-  }
-  RF_JUMP_NEXT;
-}
 
 /* table of inst time code addresses */
 static const rf_code_t rf_inst_codes[] = {
@@ -362,9 +361,6 @@ static const char * rf_inst_names[] = {
   "compile",
 };
 
-/* flag to indicate completion of install */
-extern char rf_installed;
-
 /* table of installation constants: */
 static uintptr_t rf_inst_constants[] = {
   RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA,
@@ -406,12 +402,6 @@ void rf_inst(void)
   int i;
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
-  /* cold start LATEST UP DP */
-  rf_inst_latest = 0;
-  rf_up = (uintptr_t *) RF_USER;
-  RF_USER_DP = (uintptr_t) RF_INST_DICTIONARY;
-  rf_inst_dp = (uint8_t **) &(RF_USER_DP);
-
   /* heap alloc dependent constants */
   rf_inst_constants[2] = (uintptr_t) RF_USER;
   rf_inst_constants[3] = (uintptr_t) RF_S0;
@@ -424,6 +414,12 @@ void rf_inst(void)
   /* some C compilers do not regard these & expressions as constant */
   rf_inst_constants[12] = (uintptr_t) &rf_installed;
   rf_inst_constants[18] = (uintptr_t) &rf_inst_codes;
+
+  /* cold start LATEST UP DP */
+  rf_inst_latest = 0;
+  rf_up = (uintptr_t *) RF_USER;
+  rf_inst_dp = (uint8_t **) &(RF_USER_DP);
+  *rf_inst_dp = (uint8_t *) RF_INST_DICTIONARY;
 
   /* to get constant table */
   rf_inst_code("id", rf_code_docon);
