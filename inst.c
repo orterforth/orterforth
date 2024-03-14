@@ -372,16 +372,30 @@ static const char * rf_inst_names[] = {
 static uintptr_t rf_inst_constants[] = {
   RF_USRVER | RF_ATTRWI | RF_ATTRE | RF_ATTRB | RF_ATTRA,
   RF_BS,
+#ifdef RF_INST_DYNAMIC
   0,
   0,
   0,
   0,
+#else
+  RF_USER,
+  RF_S0,
+  RF_R0,
+  RF_TIB,
+#endif
   RF_TARGET_HI,
   RF_TARGET_LO,
+#ifdef RF_INST_DYNAMIC
   0,
   0,
   0,
   0,
+#else
+  (uintptr_t) RF_ORIGIN,
+  (uintptr_t) RF_FIRST,
+  (uintptr_t) RF_LIMIT,
+  (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE),
+#endif
   0,
 #ifdef RF_ORG
   RF_ORG,
@@ -410,6 +424,7 @@ void rf_inst(void)
   uintptr_t *origin = (uintptr_t *) RF_ORIGIN;
 
   /* heap alloc dependent constants */
+#ifdef RF_INST_DYNAMIC
   rf_inst_constants[2] = (uintptr_t) RF_USER;
   rf_inst_constants[3] = (uintptr_t) RF_S0;
   rf_inst_constants[4] = (uintptr_t) RF_R0;
@@ -418,6 +433,7 @@ void rf_inst(void)
   rf_inst_constants[9] = (uintptr_t) RF_FIRST;
   rf_inst_constants[10] = (uintptr_t) RF_LIMIT;
   rf_inst_constants[11] = (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE);
+#endif
   /* some C compilers do not regard these & expressions as constant */
   rf_inst_constants[12] = (uintptr_t) &rf_installed;
   rf_inst_constants[18] = (uintptr_t) &rf_inst_codes;

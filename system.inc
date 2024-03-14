@@ -14,7 +14,9 @@ Accept command line arguments. Some platforms may put garbage
 in argc/argv, so undefine this to avoid processing them.
 */
 #ifndef PICO
+#ifndef ESP_PLATFORM
 #define RF_ARGS
+#endif
 #endif
 
 /*
@@ -53,6 +55,13 @@ suppresses output until inst is complete, for those platforms
 where inst is always carried out on startup.
 */
 #define RF_INST_SILENT
+
+/*
+Don't treat memory addresses as constants. Targets that don't
+define this benefit from knowing the address of ORIGIN, S0,
+TIB, R0, USER, etc at compile time and the install is smaller.
+*/
+#define RF_INST_DYNAMIC
 
 /*
 Allocated memory size. Platforms that allocate the Forth memory
