@@ -3,9 +3,16 @@
 
 /* if we delay start of inst to allow disc server to start */
 #ifdef RF_INST_WAIT
+#ifdef __M100__
+#include <stdlib.h>
+#define RF_INST_SLEEP sleep(5)
+#endif
 #ifdef __RC2014
 #include <z80.h>
+#define RF_INST_SLEEP z80_delay_ms(5000)
 #endif
+#else
+#define RF_INST_SLEEP
 #endif
 
 /* flag to indicate completion of install */
@@ -478,14 +485,7 @@ void rf_inst(void)
   /*origin[22] = (uintptr_t) ((uintptr_t *) rf_inst_cfa(rf_inst_latest) + 1);*/
 
   /* wait for disc server to init */ 
-#ifdef RF_INST_WAIT
-#ifdef __RC2014
-  z80_delay_ms(5000);
-#endif
-#ifdef __M100__
-  sleep(5);
-#endif
-#endif
+  RF_INST_SLEEP;
 
   /* run COLD, which inits and runs :inst */
   /* NB no code can be run before COLD because */
