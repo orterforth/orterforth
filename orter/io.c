@@ -10,16 +10,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <termios.h>
 #include <unistd.h>
+#endif
 
 #include "io.h"
 
 /* stdin (also stdout/stderr) */
 static int            in_fl;
 static int            in_fl_saved = 0;
+#ifndef _WIN32
 static struct termios in_attr;
 static struct termios in_attr_save;
+#endif
 static int            in_attr_saved = 0;
 
 /* exit code to return after cleanup */
@@ -29,7 +33,9 @@ int orter_io_exit = 0;
 int orter_io_finished = 0;
 
 /* select handling */
+#ifndef _WIN32
 static fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
+#endif
 
 /* signal handler */
 static void handler(int signum)
@@ -40,6 +46,7 @@ static void handler(int signum)
 
 void orter_io_signal_init(void)
 {
+#ifndef _WIN32
   signal(SIGHUP, handler);
   signal(SIGINT, handler);
   signal(SIGTRAP, handler);
@@ -48,8 +55,10 @@ void orter_io_signal_init(void)
   signal(SIGPIPE, handler);
   signal(SIGTERM, handler);
   signal(SIGSYS, handler);
+#endif
 }
 
+#ifndef _WIN32
 static size_t orter_io_fd_wr(int fd, char *off, size_t len)
 {
   ssize_t n;
@@ -98,6 +107,7 @@ static size_t orter_io_fd_rd(int *fd, char *off, size_t len)
   /* return actual length */
   return (n < 0) ? 0 : n;
 }
+#endif
 
 int orter_io_file_size(FILE *ptr, long *size)
 {
@@ -120,6 +130,7 @@ int orter_io_file_size(FILE *ptr, long *size)
   return 0;
 }
 
+#ifndef _WIN32
 int orter_io_std_open(void)
 {
   /* make nonblocking */
@@ -393,6 +404,7 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
   /* finished */
   return orter_io_exit;
 }
+#endif
 
 void orter_io_put_16be(uint16_t u)
 {

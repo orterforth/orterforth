@@ -1,23 +1,38 @@
+SECTION data_user
+
+serb:   DEFB    0               ; buffer write index
+sera:   DEFB    0               ; buffer read index
+
 SECTION code_user
 
+PUBLIC _rf_serial_init
+_rf_serial_init:
+        MVI     A,$25           ; RS232 not modem
+        OUT     $BA
+        MVI     A,28            ; 8N1
+        OUT     $D8
+        MVI     A,64            ; 9600 baud
+        OUT     $BD
+        MVI     A,16
+        OUT     $BC
+        MVI     A,$C3
+        OUT     $B8
+        LXI     H,serint        ; redirect interrupts
+        SHLD    $F5FD
+        LXI     H,$F5FC
+        MVI     M,$C3
+        RET
 
 PUBLIC _rf_console_get
-
 _rf_console_get:
-
         CALL    $12CB           ; KYREAD
         MOV     L,A
         RET
 
 PUBLIC _rf_console_put
-
 _rf_console_put:
-
         MOV     A,L
         JP      $4B44           ; CHROUT
-
-serialb: DEFB 0                 ; buffer write index
-seriala: DEFB 0                 ; buffer read index
 
                                 ; serial interrupt handler 6.5
 
@@ -25,7 +40,7 @@ serint: XTHL                    ; discard return addr
         PUSH    D               ; and save regs
         PUSH    PSW
 
-        LHLD    serialb         ; fetch both idxs
+        LHLD    serb            ; fetch both idxs
         MOV     D,H
 		MOV     E,L
 
@@ -40,8 +55,8 @@ serint: XTHL                    ; discard return addr
         INR     E               ; increment write idx
         MOV     A,E
         ANI     $3F
-		STA     serialb
-
+		STA     serb
+   
         SUB     D               ; get buffer size
         ANI     $3F
         CPI     $28             ; if high water, deassert RTS
@@ -57,33 +72,9 @@ serin1: POP     PSW             ; restore regs
         EI                      ; int handler finished
         RET
 
-
-PUBLIC _rf_serial_init
-
-_rf_serial_init:
-
-        MVI     A,$25           ; RS232 not modem
-        OUT     $BA
-        MVI     A,28            ; 8N1
-        OUT     $D8
-        MVI     A,64            ; 9600 baud
-        OUT     $BD
-        MVI     A,16
-        OUT     $BC
-        MVI     A,$C3
-        OUT     $B8
-        LXI     H,serint        ; redirect interrupts
-        SHLD    $F5FD
-        LXI     H,$F5FC
-        MVI     M,$C3
-
-        RET
-
 PUBLIC _rf_serial_get
-
 _rf_serial_get:
-
-        LHLD    serialb         ; fetch both idxs
+        LHLD    serb            ; fetch both idxs
         MOV     A,L             ; get buffer size
 		MOV     E,H
         SUB     E
@@ -105,13 +96,12 @@ get1:   LXI     H,$FF46         ; get read ptr
         INR     E               ; increment read idx
         MOV     A,E
         ANI     $3F
-        STA     seriala
-
+        STA     sera
+    
 		MOV     L,D             ; return byte
         RET
 
 PUBLIC _rf_serial_put
-
 _rf_serial_put:
         IN      $D8             ; wait for ready
         ANI     $10
@@ -127,9 +117,7 @@ put1:   IN      $BB             ; wait for CTS
         RET
 
 PUBLIC _rf_serial_fin
-
 _rf_serial_fin:
-
         LXI     H,$F5FC         ; restore interrupt vector
         MVI     M,$C9
 		INX     H

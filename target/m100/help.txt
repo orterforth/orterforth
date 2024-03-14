@@ -1,0 +1,24 @@
+Building for the Tandy TRS-80 Model 100
+=======================================
+
+You will need:
+
+* z88dk https://z88dk.org/
+* Serial port and physical machine
+
+To build, call:
+
+ make TARGET=m100
+
+The target files are:
+
+ m100/orterforth.co  (a .CO file)
+ m100/orterforth.ser (for loading with loader.ba)
+
+To load and run, call:
+
+ make run TARGET=m100
+
+Note: memory is tight on the 24K Model 100 and orterforth.co is
+too large to both save as a RAM file and also load at the
+execution address.
