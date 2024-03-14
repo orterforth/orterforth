@@ -13,7 +13,7 @@ M100PROMPT := $(PROMPT) 'On the target type POKE 62972,201 <enter> RUN "COM:88N1
 # -o ixon is implemented in software and does not rely on termios flags / the UART
 # This is to avoid overrunning the short buffer at the Model 100 end.
 M100SEND := (cat && printf '\032' && sleep 1)
-M100SERIAL := $(ORTER) serial -d 0.001 -o ixon -o ixoff -o onlcrx -e 2 $(SERIALPORT) $(SERIALBAUD)
+M100SERIAL := $(ORTER) serial -d 0.001 -o ixon -o ixoff -o onlcrx -a $(SERIALPORT) $(SERIALBAUD)
 M100LOADHEXLOADER := $(M100PROMPT) && $(INFO) 'Loading loader' ; $(M100SEND) < target/m100/hexloa.ba | $(M100SERIAL)
 M100LOADLOADER := $(M100PROMPT) && $(INFO) 'Loading loader' ; $(M100SEND) < target/m100/loader.ba | $(M100SERIAL)
 
