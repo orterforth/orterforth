@@ -2,25 +2,31 @@
 
 # M100OPTION := default
 M100OPTION := assembly
+ifeq ($(TARGET),m100)
+ifneq ($(OPTION),)
+M100OPTION := $(OPTION)
+endif
+endif
 
 M100DEPS := main.c m100/m100.lib m100/rf.lib m100/system.lib m100/inst.lib
 M100LIBS := -lm100/m100 -lm100/rf -lm100/system -lm100/inst
 M100ORG := 45000
-M100ORIGIN := 0xC900
+M100ORIGIN := 0xC880
 # POKE is to reset the RS232 interrupt handler; now load loader at 9600 baud, 8N1, XON/XOFF
 M100PROMPT := $(PROMPT) 'On the target type POKE 62972,201 <enter> RUN "COM:88N1E" <enter>'
 # -d 0.001 ensures any TX FIFO does not fill up faster than data transfer
 # -o ixon is implemented in software and does not rely on termios flags / the UART
 # This is to avoid overrunning the short buffer at the Model 100 end.
-M100SEND := (cat && printf '\032' && sleep 1)
+M100SEND := (cat && printf '\032')
 M100SERIAL := $(ORTER) serial -d 0.001 -o ixon -o ixoff -o onlcrx -a $(SERIALPORT) $(SERIALBAUD)
 M100LOADHEXLOADER := $(M100PROMPT) && $(INFO) 'Loading loader' ; $(M100SEND) < target/m100/hexloa.ba | $(M100SERIAL)
 M100LOADLOADER := $(M100PROMPT) && $(INFO) 'Loading loader' ; $(M100SEND) < target/m100/loader.ba | $(M100SERIAL)
+M100LOADFILE := $(M100LOADLOADER) && $(INFO) 'Loading file' && $(M100SERIAL) <
 
 ifeq ($(M100OPTION),assembly)
 	M100DEPS += m100/rf_8080.lib
 	M100LIBS += -lm100/rf_8080
-	M100ORIGIN := 0xBF00
+	M100ORIGIN := 0xBE80
 endif
 
 M100ZCCOPTS := \
@@ -46,9 +52,7 @@ m100-build : m100/orterforth.ser
 .PHONY : m100-hw
 m100-hw : target/m100/loader.ba m100/hw.ser | $(ORTER)
 
-	@$(M100LOADLOADER)
-	@$(INFO) 'Loading file'
-	@$(M100SEND) < m100/hw.ser | $(M100SERIAL)
+	@$(M100LOADFILE) m100/hw.ser
 
 .PHONY : m100-hw-hex
 m100-hw-hex : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
@@ -60,9 +64,7 @@ m100-hw-hex : target/m100/hexloa.ba m100/hw.ihx | $(ORTER)
 .PHONY : m100-load
 m100-load : target/m100/loader.ba m100/orterforth.ser | $(ORTER)
 
-	@$(M100LOADLOADER)
-	@$(INFO) 'Loading orterforth'
-	@$(M100SEND) < m100/orterforth.ser | $(M100SERIAL)
+	@$(M100LOADFILE) m100/orterforth.ser
 
 .PHONY : m100-run
 m100-run : m100-load disc
@@ -105,9 +107,7 @@ m100/orterforth.hex : target/m100/loader.ba m100/inst.ser m100/inst.co model.img
 
 	@# 6 byte header does not matter
 	@$(CHECKMEMORY) $(M100ORG) $(M100ORIGIN) $$($(STAT) m100/inst.co)
-	@$(M100LOADLOADER)
-	@$(INFO) 'Loading inst'
-	@$(M100SEND) < m100/inst.ser | $(M100SERIAL)
+	@$(M100LOADFILE) m100/inst.ser
 	@$(EMPTYDR1FILE) $@.io
 	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
 	@$(WAITUNTILSAVED) $@.io
