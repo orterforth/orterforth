@@ -8,6 +8,8 @@ uint8_t rf_console_get(void);
 
 void __FASTCALL__ rf_console_put(uint8_t b);
 
+uint8_t rf_console_qterm(void);
+
 uint8_t __FASTCALL__ rf_serial_get(void);
 
 void __FASTCALL__ rf_serial_put(uint8_t b);
@@ -46,7 +48,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  RF_SP_PUSH(0);
+  RF_SP_PUSH(rf_console_qterm());
   RF_JUMP_NEXT;
 }
 

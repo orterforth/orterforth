@@ -34,6 +34,14 @@ _rf_console_put:
         MOV     A,L
         JP      $4B44           ; CHROUT
 
+PUBLIC _rf_console_qterm
+_rf_console_qterm:
+        CALL    $729F
+        LXI     H,0
+        RNZ
+        INR     L
+        RET
+
                                 ; serial interrupt handler 6.5
 
 serint: XTHL                    ; discard return addr
@@ -42,10 +50,10 @@ serint: XTHL                    ; discard return addr
 
         LHLD    serb            ; fetch both idxs
         MOV     D,H
-		MOV     E,L
+        MOV     E,L
 
         LXI     H,$FF46         ; get write ptr
-		MOV     A,E
+        MOV     A,E
         ADD     L
         MOV     L,A
 
@@ -55,7 +63,7 @@ serint: XTHL                    ; discard return addr
         INR     E               ; increment write idx
         MOV     A,E
         ANI     $3F
-		STA     serb
+        STA     serb
    
         SUB     D               ; get buffer size
         ANI     $3F
@@ -76,7 +84,7 @@ PUBLIC _rf_serial_get
 _rf_serial_get:
         LHLD    serb            ; fetch both idxs
         MOV     A,L             ; get buffer size
-		MOV     E,H
+        MOV     E,H
         SUB     E
         ANI     $3F
         JZ      _rf_serial_get  ; if empty, wait
@@ -88,7 +96,7 @@ _rf_serial_get:
         OUT     $BA
 
 get1:   LXI     H,$FF46         ; get read ptr
-		MOV     A,E
+        MOV     A,E
         ADD     L
         MOV     L,A
         MOV     D,M             ; read byte
@@ -98,7 +106,7 @@ get1:   LXI     H,$FF46         ; get read ptr
         ANI     $3F
         STA     sera
     
-		MOV     L,D             ; return byte
+        MOV     L,D             ; return byte
         RET
 
 PUBLIC _rf_serial_put
@@ -120,8 +128,8 @@ PUBLIC _rf_serial_fin
 _rf_serial_fin:
         LXI     H,$F5FC         ; restore interrupt vector
         MVI     M,$C9
-		INX     H
+        INX     H
         MVI     M,$00
-		INX     H
+        INX     H
         MVI     M,$00
-		RET
+        RET
