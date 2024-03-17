@@ -32,6 +32,7 @@ Z88ZCCOPTS := +z88 \
 	-DRF_ORG=$(Z88ORG) \
 	-DRF_ORIGIN=$(Z88ORIGIN) \
 	-Ca-DRF_ORIGIN=$(Z88ORIGIN) \
+	-Ca-DUSEIY \
 	-DRF_TARGET_INC='\"target/z88/system.inc\"'
 
 ifeq ($(Z88OPTION),assembly)
