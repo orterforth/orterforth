@@ -4,8 +4,6 @@ SECTION code_user
 
 ; orterforth interop with C code definitions
 
-DEFINE USEIY                    ; to hold HPUSH
-
 PUBLIC _rf_start
 _rf_start:                      ; C code calls this to switch from registers to C variables
         POP     HL              ; C return address
