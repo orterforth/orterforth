@@ -43,6 +43,9 @@ z88 :
 
 	mkdir $@
 
+.PHONY : z88-build
+z88-build : z88/orterforth.imp
+
 .PHONY : z88-hw
 z88-hw : z88/hw.imp
 

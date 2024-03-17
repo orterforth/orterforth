@@ -1,0 +1,31 @@
+Building for the Cambridge Z88
+==============================
+
+You will need:
+
+* z88dk https://z88dk.org/
+* Expanded Cambridge Z88 with serial adapter
+
+To build, call:
+
+ make TARGET=z88
+
+Follow the instructions to import via Imp-Export and run in BBC
+Basic.
+
+The target files will be built in the respective named 
+directory, e.g.:
+
+ z88/orterforth.bin (BBC Basic target)
+ z88/orterforth.imp (in Imp-Export escaped format)
+
+To load the resulting file, call:
+
+ make z88-install
+
+and again follow instructions. From then on you will be able
+to:
+
+ RUN "orterforth"
+
+directly from BBC Basic.
