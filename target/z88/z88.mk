@@ -8,20 +8,24 @@ Z88OPTION := $(OPTION)
 endif
 endif
 
-Z88DEPS := z88/inst.lib z88/rf.lib z88/system.lib main.c
+Z88DEPS := z88/inst.lib z88/system.lib main.c
 Z88IMPEXPORT := \
 	$(PROMPT) "On the Z88 go to: Imp-Export and R)eceive file" && \
 	$(INFO) "Importing file" && \
 	$(ORTER) serial -e 15 $(SERIALPORT) $(SERIALBAUD) <
-Z88LIBS := -lm -lz88/inst -lz88/rf -lz88/system
+Z88LIBS := -lm -lz88/inst -lz88/system
 # PAGE
 Z88ORG := 0x2300
 Z88ORIGIN := 0x3E00
 
-ifeq ($(M100OPTION),assembly)
+ifeq ($(Z88OPTION),assembly)
 	Z88DEPS += z88/rf_z80.lib
 	Z88LIBS += -lz88/rf_z80
 	Z88ORIGIN := 0x3300
+endif
+ifeq ($(Z88OPTION),default)
+	Z88DEPS += z88/rf.lib
+	Z88LIBS += -lz88/rf
 endif
 
 Z88ZCCOPTS := +z88 \
@@ -30,7 +34,7 @@ Z88ZCCOPTS := +z88 \
 	-Ca-DRF_ORIGIN=$(Z88ORIGIN) \
 	-DRF_TARGET_INC='\"target/z88/system.inc\"'
 
-ifeq ($(M100OPTION),assembly)
+ifeq ($(Z88OPTION),assembly)
 	Z88ZCCOPTS += -DRF_ASSEMBLY
 endif
 

@@ -1,22 +1,19 @@
 #include <rs232.h>
+#include <stdint.h>
 
 #include "rf.h"
 
 void rf_init(void)
 {
-  if (rs232_params(RS_BAUD_9600 | RS_BITS_8 | RS_STOP_1, RS_PAR_NONE) != RS_ERR_OK) {
-    exit(1);
-  }
-  if (rs232_init() != RS_ERR_OK) {
-    exit(1);
-  }
+  rs232_params(RS_BAUD_9600 | RS_BITS_8 | RS_STOP_1, RS_PAR_NONE);
+  rs232_init();
 }
 
 void rf_code_emit(void)
 {
   RF_START;
   {
-    unsigned char c = RF_SP_POP & 0x7F;
+    unsigned char c = (*(rf_sp++)) & 0x7F;
     fputc_cons(c);
     RF_USER_OUT++;
   }
@@ -30,7 +27,7 @@ void rf_code_key(void)
     int c = fgetc_cons();
     /* LF -> CR  */
     if (c == 10) c = 13;
-    RF_SP_PUSH(c & 0x7F);
+    *(--rf_sp) = (c & 0x7F);
   }
   RF_JUMP_NEXT;
 }
@@ -38,7 +35,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  RF_SP_PUSH(0);
+  *(--rf_sp) = 0;
   RF_JUMP_NEXT;
 }
 
@@ -49,34 +46,26 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
-void rf_disc_read(char *c, uint8_t len)
+static uint8_t rf_serial_get(void)
 {
-  ++len;
-  while (--len) {
-    while (rs232_get(c) == RS_ERR_NO_DATA) {
-    }
-    c++;
-  }
+  uint8_t b;
+  while (rs232_get(&b) == RS_ERR_NO_DATA) { }
+  return b;
 }
 
-void rf_disc_write(char *p, uint8_t len)
+static void __FASTCALL__ rf_serial_put(uint8_t b)
 {
-  ++len;
-  while (--len) {
-    while (rs232_put(*p) == RS_ERR_OVERFLOW) {
-    }
-    p++;
-  }
+  while (rs232_put(b) == RS_ERR_OVERFLOW) { }
 }
 
 void rf_code_dchar(void)
 {
   RF_START;
   {
-    char a, c;
+    uint8_t a, c;
 
-    a = (char) (*(rf_sp++));
-    rf_disc_read(&c, 1);
+    a = (uint8_t) (*(rf_sp++));
+    c = rf_serial_get();
     *(--rf_sp) = (c == a);
     *(--rf_sp) = (c);
   }
@@ -86,28 +75,34 @@ void rf_code_dchar(void)
 void rf_code_bread(void)
 {
   RF_START;
-  rf_disc_read((char *) (*(rf_sp++)), RF_BBLK);
+  {
+    uint8_t *b = (uint8_t *) (*(rf_sp++));
+    uint8_t len = RF_BBLK + 1;
+
+    while (--len) {
+      *(b++) = rf_serial_get();
+    }
+  }
   RF_JUMP_NEXT;
 }
-
-static char eot = 0x04;
 
 void rf_code_bwrit(void)
 {
   RF_START;
   {
     uint8_t a = (uint8_t) (*(rf_sp++));
-    char *b = (char *) (*(rf_sp++));
+    uint8_t *b = (uint8_t *) (*(rf_sp++));
 
-    rf_disc_write(b, a);
-    rf_disc_write(&eot, 1);
+    ++a;
+    while (--a) {
+      rf_serial_put(*(b++));
+    }
+    rf_serial_put(0x04);
   }
   RF_JUMP_NEXT;
 }
 
 void rf_fin(void)
 {
-  if (rs232_close() != RS_ERR_OK) {
-    exit(1);
-  }
+  rs232_close();
 }
