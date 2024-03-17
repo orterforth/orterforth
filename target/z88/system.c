@@ -13,8 +13,13 @@ void rf_code_emit(void)
 {
   RF_START;
   {
-    unsigned char c = (*(rf_sp++)) & 0x7F;
+    uint8_t c = (*(rf_sp++)) & 0x7F;
     fputc_cons(c);
+    /* backspace clear */
+    if (c == 8) {
+      fputc_cons(' ');
+      fputc_cons(c);
+    }
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;
@@ -80,7 +85,9 @@ void rf_code_bread(void)
     uint8_t len = RF_BBLK + 1;
 
     while (--len) {
-      *(b++) = rf_serial_get();
+      if ((*(b++) = rf_serial_get()) == 0x04) {
+        break;
+      }
     }
   }
   RF_JUMP_NEXT;
