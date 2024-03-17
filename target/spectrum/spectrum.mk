@@ -56,6 +56,7 @@ SPECTRUMSYSTEM := target/spectrum/system.c
 SPECTRUMZCCOPTS := +zx \
 		-DRF_TARGET_INC='\"target/spectrum/spectrum.inc\"' \
 		-Ca-DSPECTRUM \
+		-Ca-DUSEIY \
 		-Ca-DRF_INST_OFFSET=$(SPECTRUMINSTOFFSET) \
 		-Ca-DRF_ORG=$(SPECTRUMORG) \
 		-DRF_ORG=$(SPECTRUMORG)
