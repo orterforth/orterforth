@@ -44,7 +44,8 @@ _rf_code_cl:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 
 PUBLIC _rf_code_cs              ;cs
@@ -54,7 +55,8 @@ _rf_code_cs:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 
 PUBLIC _rf_code_ln              ;ln
@@ -250,7 +252,8 @@ _rf_code_lit:                   ;(S1)<--((IP))
 IFDEF USEIY
         JP      (IY)            ;(S1)<--(HL)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_exec            ;EXECUTE
@@ -388,7 +391,8 @@ DIGI2:  LD      L,H             ;(HL)<--FALSE
 IFDEF USEIY
         JP      (IY)            ;(S1)<--FALSE
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_pfind           ;(FIND) (2-1)FAILURE
@@ -439,7 +443,8 @@ PFIN5:  INC     DE              ;(DE)<--LFA
 IFDEF USEIY
         JP      (IY)            ;NO MATCH FOUND, RETURN
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_encl            ;ENCLOSE
@@ -530,7 +535,8 @@ _rf_code_ustar:                 ;994 T cycles average (8080)
 IFDEF USEIY
         JP      (IY)            ;(S1)<--PRODUCT.HW
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 ;       MULTIPLY PRIMITIVE
@@ -607,7 +613,8 @@ _rf_code_andd:                  ;(S1)<--(S1) AND (S2)
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_orr             ;OR
@@ -623,7 +630,8 @@ _rf_code_orr:                   ;(S1)<--(S1) OR (S2)
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_xorr            ;XOR
@@ -639,7 +647,8 @@ _rf_code_xorr:                  ;(S1)<--(S1) XOR (S2)
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_spat            ;SP@
@@ -649,7 +658,8 @@ _rf_code_spat:                  ;(S1)<--(SP)
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_spsto           ;SP!
@@ -732,7 +742,8 @@ _rf_code_zequ:
 IFDEF USEIY
 ZEQU1:  JP      (IY)
 ELSE
-ZEQU1:  JP      HPUSH
+ZEQU1:  PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_zless           ;0<
@@ -746,7 +757,8 @@ _rf_code_zless:
 IFDEF USEIY
 ZLES1:  JP      (IY)
 ELSE
-ZLES1:  JP      HPUSH
+ZLES1:  PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_plus            ;+
@@ -757,7 +769,8 @@ _rf_code_plus:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_dplus           ;D+ ( d1L d1H d2L d2h -- d3L d3H)
@@ -796,7 +809,8 @@ _rf_code_minus:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_dminu           ;DMINUS
@@ -836,7 +850,8 @@ _rf_code_swap:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 PUBLIC _rf_code_dup             ;DUP
@@ -846,7 +861,8 @@ _rf_code_dup:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 
 PUBLIC _rf_code_pstor           ;+!
@@ -888,7 +904,8 @@ _rf_code_cat:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 
@@ -950,7 +967,8 @@ DOUSE:  INC     DE
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 
@@ -981,7 +999,8 @@ DODOE:  LD      HL,(RPP)
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      HPUSH
+        PUSH    HL
+        JP      (IX)
 ENDIF
 ;
 
