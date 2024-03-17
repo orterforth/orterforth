@@ -49,7 +49,9 @@ where <target> is one of:
 
   bbc
   c64
+  m100
   pico
   ql
   rc2014
   spectrum
+  z88
