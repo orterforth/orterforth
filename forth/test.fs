@@ -106,7 +106,7 @@ DECLARE VOCABULARY
 
 : t= == t ;
 
-
+: D= ROT = ROT ROT = AND ;
 
 
 CR -->
@@ -197,14 +197,14 @@ from DUP 2+ 2 CMOVE
 from 2+ DUP C@ 1 t= ." CMOVE" CR 1+ C@ 2 t= CR
 
 HEX
-: D= ROT = ROT ROT = AND ;
+
 : 3pick SP@ 3 cs + @ ;
 : t-ustar 3pick 3pick 3pick 3pick
   U* D= t SWAP 0 D. 0 D. ." U* -- " 4 cs D.R 2E EMIT CR ;
 40000000. 8000 8000 t-ustar
 E1000000. F000 F000 t-ustar
 FFFE0001. FFFF FFFF t-ustar
-FORGET D=
+FORGET 3pick
 -->
 ( U/                                                     test )
 HEX : 4pick SP@ 4 cs + @ ;
@@ -229,16 +229,23 @@ FEAE EF51 AND EE00 t= ." FEFE EF51 AND -- EE00" CR
 12AE 37FF XOR 2551 t= ." 12AE 37FF XOR -- 2551" CR
 123 SP@ @ 123 t= DROP ." 123 SP@ @ -- 123" CR
 SP! SP@ 9 cs +ORIGIN @ t= ." SP! SP@ -- S0" CR
-
-
-
-
-
-
-
-
+: t-semis 123 ;S DROP 456 ; t-semis 123 t= ." ;S -- " CR
+: t-leave 1 >R 2 >R LEAVE R> R> ; t-leave 2 == SWAP 2 == AND t
+  ." [1 2] LEAVE == [2 2]" CR
+: t-tor >R 456 R> ; 123 t-tor 123 == SWAP 456 == AND t
+  ." 123 >R -- [123]" CR
+234 t-tor 234 == SWAP 456 == AND t ." [234] R> -- 234" CR
+4 0= 0 == t ." 4 0= -- 0" CR
+0 0= 1 == t ." 0 0= -- 1" CR
 -->
 ( Summary                                                test )
+HEX
+5 0< 0 == t ." 5 0< -- 0" CR
+0 0< 0 == t ." 0 0< -- 1" CR
+-6 0< 1 == t ." -6 0< -- 1" CR
+00FF 0002 + 0101 == t ." 00FF 0002 + -- 0101" CR
+0001FFFF. 00000002. D+ 00020001. D= t ." D+ -- 00020001." CR
+00000001. -2.       D+ -1.       D= t ." D+ -- -1." CR
 DECIMAL
 passes @ fails @ + . ." tests "
 passes ? ." passes "
