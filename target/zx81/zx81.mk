@@ -16,6 +16,9 @@ zx81 :
 
 	mkdir $@
 
+.PHONY : zx81-build
+zx81-build : zx81/inst.tzx
+
 ZX81ORG := 0x4082
 ZX81ORIGIN := 0x6000
 
@@ -33,7 +36,7 @@ zx81-hw : zx81/hw.tzx | tools/jtyone.jar
 .PHONY : zx81-run
 zx81-run : zx81/inst.bin zx81/inst.tzx | tools/jtyone.jar
 
-	@$(CHECKMEMORY) $(ZX81ORG) $(ZX81ORIGIN) $(shell $(STAT) zx81/inst.bin)
+	@$(CHECKMEMORY) $(ZX81ORG) $(ZX81ORIGIN) $$($(STAT) zx81/inst.bin)
 
 	java -jar tools/jtyone.jar zx81/inst.tzx@0 -scale 3 -machine ZX81
 
