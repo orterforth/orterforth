@@ -6,6 +6,7 @@ PROC = $(PROC:x64=x86_64)
 SYSTEM = windows-$(PROC)
 MAKESYSTEMDIR = if not exist $(SYSTEM) md $(SYSTEM)
 DR0=forth\library.img
+DR1=forth\data.img
 
 default: build
 
@@ -25,8 +26,8 @@ clean: .phony
 model.inc: model.img $(SYSTEM)\orter.exe
 	$(SYSTEM)\orter.exe hex include model_img < model.img > model.inc
 
-run: $(SYSTEM)\orterforth.exe $(DR0) .phony
-	@$(SYSTEM)\orterforth.exe $(DR0)
+run: $(SYSTEM)\orterforth.exe $(DR0) $(DR1) .phony
+	@$(SYSTEM)\orterforth.exe $(DR0) $(DR1)
 
 test: $(SYSTEM)\orterforth.exe forth\test.img .phony
 	@echo EMPTY-BUFFERS 1 LOAD | $(SYSTEM)\orterforth.exe forth\test.img
