@@ -1732,7 +1732,7 @@ save ;S                         ( now save, if enabled; done! )
 10 ic , 11 ic ,                 ( for CPU, base 36            )
 6 ic , 7 ic ,                   ( for target, base 36         )
 0 , 0 ,                         ( used by COLD                )
-0 ,                             ( for extension               )
+13 ic ,                         ( for extension               )
 
 ( additional words                                            )
 CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)

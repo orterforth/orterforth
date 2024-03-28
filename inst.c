@@ -414,8 +414,14 @@ static uintptr_t rf_inst_constants[] = {
 #endif
   RF_CPU_HI,
   RF_CPU_LO,
+  0,
+#ifdef RF_EXT
+  (uintptr_t) rf_ext
+#else
   0
+#endif
 };
+
 
 /* bootstrap the installing Forth vocabulary and install Forth itself */
 void rf_inst(void)
