@@ -91,17 +91,17 @@ static int orter_z88_impexport_read(void)
 
 static int orter_z88_impexport_putchar(unsigned char c)
 {
+    /* write unescaped */
     if (c >= 0x20 && c <= 0x7E) {
-        /* write unescaped */
         PUTCHAR(c);
-    } else {
-        /* write escaped */
-        if (printf("\033B%02X", c) < 0) {
-            perror("printf failed");
-            return errno;
-        }            
+        return 0;
     }
 
+    /* write escaped */
+    if (printf("\033B%02X", c) < 0) {
+        perror("printf failed");
+        return errno;
+    }
     return 0;
 }
 
@@ -150,7 +150,6 @@ int orter_z88(int argc, char **argv)
   }
 
   if (argc == 5 && !strcmp(argv[2], "imp-export") && !strcmp(argv[3], "write")) {
-    /* filename e.g. :RAM.0/KARMA */
     return orter_z88_impexport_write(argv[4]);
   }
 
