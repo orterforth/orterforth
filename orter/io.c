@@ -44,71 +44,6 @@ static void handler(int signum)
   orter_io_finished = 1;
 }
 
-void orter_io_signal_init(void)
-{
-#ifndef _WIN32
-  signal(SIGHUP, handler);
-  signal(SIGINT, handler);
-  signal(SIGTRAP, handler);
-  signal(SIGABRT, handler);
-  signal(SIGKILL, handler);
-  signal(SIGPIPE, handler);
-  signal(SIGTERM, handler);
-  signal(SIGSYS, handler);
-#endif
-}
-
-#ifndef _WIN32
-static size_t orter_io_fd_wr(int fd, char *off, size_t len)
-{
-  ssize_t n;
-
-  /* no op if length is 0 */
-  if (!len) {
-    return 0;
-  }
-
-  /* write bytes */
-  n = write(fd, off, len);
-  if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    orter_io_exit = errno;
-    orter_io_finished = 1;
-    perror("write failed");
-    return 0;
-  }
-
-  /* return actual length */
-  return (n < 0) ? 0 : n;
-}
-
-static size_t orter_io_fd_rd(int *fd, char *off, size_t len)
-{
-  ssize_t n;
-
-  /* no op if length is 0 */
-  if (!len) {
-    return 0;
-  }
-
-  /* read bytes */
-  n = read(*fd, off, len);
-  if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
-    orter_io_exit = errno;
-    orter_io_finished = 1;
-    perror("read failed");
-    return 0;
-  }
-
-  /* mark EOF */
-  if (n == 0 && *fd != -1) {
-    *fd = -1;
-  }
-
-  /* return actual length */
-  return (n < 0) ? 0 : n;
-}
-#endif
-
 int orter_io_file_size(FILE *ptr, long *size)
 {
   /* get file size */
@@ -193,38 +128,61 @@ int orter_io_std_close(void)
 
 static void bufread(int *in, char *buf, char **offset, size_t *pending)
 {
-  size_t n;
+  ssize_t n;
 
+  /* no op if no fd */
+  if (*in == -1) {
+    return;
+  }
   /* no op if buffer already non-empty */
   if (*pending) {
     return;
   }
 
-  /* read bytes and initialise buffer */
-  if (*in != -1) {
-    n = orter_io_fd_rd(in, buf, 256);
-  } else {
+  /* read bytes */
+  n = read(*in, buf, 256);
+  if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
+    orter_io_exit = errno;
+    orter_io_finished = 1;
+    perror("read failed");
     return;
   }
+
+  /* mark EOF */
+  if (n == 0 && *in != -1) {
+    *in = -1;
+  }
+
+  /* initialise buffer */
+  if (n < 0) n = 0;
   *offset = buf;
   *pending = n;
 }
 
 static void bufwrite(int out, char *buf, char **offset, size_t *pending)
 {
-  size_t n;
+  ssize_t n;
 
+  /* no op if no fd */
+  if (out == -1) {
+    return;
+  }
   /* no op if no pending bytes */
   if (!*pending) {
     return;
   }
 
-  /* write bytes and advance pointers */
-  if (out != -1) {
-    n = orter_io_fd_wr(out, *offset, *pending);
-  } else {
+  /* write bytes */
+  n = write(out, *offset, *pending);
+  if (n <= 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != ETIMEDOUT) {
+    orter_io_exit = errno;
+    orter_io_finished = 1;
+    perror("write failed");
     return;
   }
+
+  /* advance pointers */
+  if (n < 0) n = 0;
   *offset += n;
   *pending -= n;
 
@@ -371,7 +329,14 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
   int i;
 
   /* finish if interrupted by signal */
-  orter_io_signal_init();
+  signal(SIGHUP, handler);
+  signal(SIGINT, handler);
+  signal(SIGTRAP, handler);
+  signal(SIGABRT, handler);
+  signal(SIGKILL, handler);
+  signal(SIGPIPE, handler);
+  signal(SIGTERM, handler);
+  signal(SIGSYS, handler);
 
   /* main loop */
   orter_io_finished = 0;
@@ -379,7 +344,6 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
 
     /* init fd sets */
     orter_io_select_zero();
-
     /* add to fd sets */
     for (i = 0; i < num; i++) {
       orter_io_pipe_fdset(pipes[i]);
@@ -389,7 +353,6 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
     if (orter_io_select() < 0) {
       break;
     }
-
     /* move data along pipes */
     for (i = 0; i < num; i++) {
       orter_io_pipe_move(pipes[i]);

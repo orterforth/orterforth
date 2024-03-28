@@ -314,7 +314,6 @@ void process(void)
   /* stdin to serial */
   while (!stop && in.len && orter_io_pipe_left(&in2)) {
     c = orter_io_pipe_get(&in);
-    /*fputc(c, stderr);*/
     /* -o onlcrx */
     if (c == 10 && onlcrx) {
       c = 13;
@@ -341,11 +340,9 @@ void process(void)
     }
     /* -o ixon */
     if (c == 0x11 && ixon) {
-      /*fputc('Q', stderr);*/
       stop = 0;
     }
     if (c == 0x13 && ixon) {
-      /*fputc('S', stderr);*/
       stop = 1;
     }
     orter_io_pipe_put(&out2, c);
@@ -380,9 +377,6 @@ int orter_serial(int argc, char **argv)
   if (argc != 2) {
     return usage();
   }
-
-  /* signal handlers */
-  orter_io_signal_init();
 
   /* serial */
   if (orter_serial_open(argv[0], atoi(argv[1]))) {

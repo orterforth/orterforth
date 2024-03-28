@@ -20,9 +20,6 @@ extern int orter_io_exit;
 /* flag for cleanup and exit */
 extern int orter_io_finished;
 
-/* set up signal handler */
-void orter_io_signal_init(void);
-
 /* stdio file size */
 int orter_io_file_size(FILE *ptr, long *size);
 
