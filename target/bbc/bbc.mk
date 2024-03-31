@@ -45,7 +45,7 @@ ifeq ($(BBCOPTION),assembly)
 endif
 # default C code
 ifeq ($(BBCOPTION),default)
-	BBCDEPS += bbc/mos.o bbc/rf.o bbc/system_c.o
+	BBCDEPS += bbc/io.o bbc/mos.o bbc/rf.o bbc/system_c.o
 endif
 # assembly code, tape only
 ifeq ($(BBCOPTION),tape)
@@ -194,6 +194,10 @@ bbc/inst.s : inst.c rf.h target/bbc/bbc.inc | bbc
 		--data-name INST \
 		--rodata-name INST \
 		-o $@ $<
+
+bbc/io.s : io.c rf.h target/bbc/bbc.inc | bbc
+
+	cc65 $(BBCCC65OPTS) -o $@ $<
 
 bbc/main.s : main.c inst.h rf.h target/bbc/bbc.inc | bbc
 
