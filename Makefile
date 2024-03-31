@@ -79,6 +79,7 @@ STARTDISCTCP := $(STARTDISC) tcp 5705
 # local system object files
 SYSTEMDEPS := \
 	$(SYSTEM)/inst.o \
+	$(SYSTEM)/io.o \
 	$(SYSTEM)/persci.o \
 	$(SYSTEM)/system.o
 
@@ -153,6 +154,10 @@ $(SYSTEM)-run : $(ORTERFORTH) $(DR0) $(DR1)
 	@$^
 
 $(SYSTEM)/inst.o : inst.c model.inc rf.h system.inc persci.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+$(SYSTEM)/io.o : io.c rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

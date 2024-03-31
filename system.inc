@@ -88,12 +88,10 @@ LIMIT at the end of memory, by default much of the memory map
 */
 #define RF_LIMIT ((char *) rf_origin + RF_MEMORY_SIZE)
 
-/* defined in system.c rather than rf.c */
-#ifndef PICO
+/* defined in io.c rather than rf.c */
 #define RF_TARGET_CODE_DCHAR
 #define RF_TARGET_CODE_BREAD
 #define RF_TARGET_CODE_BWRIT
-#endif
 
 /*
 Define this to flag that assembly code definitions are provided.
