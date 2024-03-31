@@ -32,6 +32,10 @@
 /* origin passed in command line, follows the C code */
 /*#define RF_ORIGIN xxxx*/
 
+/* define these in system.c */
+#define RF_TARGET_CODE_DCHAR
+#define RF_TARGET_CODE_BREAD
+#define RF_TARGET_CODE_BWRIT
 /* no assembly definitions */
 
 #endif
