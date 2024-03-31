@@ -28,93 +28,71 @@ void rf_init(void)
   }
 }
 
-void rf_code_emit(void)
+void rf_console_put(uint8_t c)
 {
-  RF_START;
-  {
-    uint8_t c;
-    
-    c = RF_SP_POP & 0x7F;
-
-    /* PETSCII swap case */
-    if (((c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z')) {
-      c ^= 0x20;
-    }
-    /* BS */
-    else if (c == 0x08) {
-      c = 0x14;
-    }
-
-    cbm_k_bsout(c);
-
-    RF_USER_OUT++;
+  /* PETSCII swap case */
+  if (((c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z')) {
+    c ^= 0x20;
   }
-  RF_JUMP_NEXT;
-}
-
-void rf_code_key(void)
-{
-  RF_START;
-  {
-    int c;
-
-    /* show cursor */
-    *((uint8_t *) 204) = 0;
-    *((uint8_t *) 647) = 1;
-    *((uint8_t *) 207) = 0;
-
-    /* wait for key */
-    while (!(c = cbm_k_getin())) {
-    }
-
-    /* hide cursor */
-    *((uint8_t *) 647) = 14;
-    *((uint8_t *) 206) = 32;
-    *((uint8_t *) 204) = 255;
-    *((uint8_t *) 207) = 0;
-
-    /* PETSCII correct case */
-    if (c >= 'A' && c <= 'Z') {
-      c ^= 0x20;
-    }
-
-    /* return key */
-    RF_SP_PUSH(c & 0x7F);
+  /* BS */
+  else if (c == 0x08) {
+    c = 0x14;
   }
-  RF_JUMP_NEXT;
+
+  cbm_k_bsout(c);
 }
 
-void rf_code_qterm(void)
+uint8_t rf_console_get(void)
 {
-  RF_START;
-  RF_SP_PUSH(*((uint8_t *) 0x00CB) == 0x3F);
-  RF_JUMP_NEXT;
+  int c;
+
+  /* show cursor */
+  *((uint8_t *) 204) = 0;
+  *((uint8_t *) 647) = 1;
+  *((uint8_t *) 207) = 0;
+
+  /* wait for key */
+  while (!(c = cbm_k_getin())) {
+  }
+
+  /* hide cursor */
+  *((uint8_t *) 647) = 14;
+  *((uint8_t *) 206) = 32;
+  *((uint8_t *) 204) = 255;
+  *((uint8_t *) 207) = 0;
+
+  /* PETSCII correct case */
+  if (c >= 'A' && c <= 'Z') {
+    c ^= 0x20;
+  }
+
+  /* return key */
+  return c;
 }
 
-void rf_code_cr(void)
+uint8_t rf_console_qterm(void)
 {
-  RF_START;
+  return (*((uint8_t *) 0x00CB) == 0x3F);
+}
+
+void rf_console_cr(void)
+{
   cbm_k_bsout('\r');
-  RF_JUMP_NEXT;
 }
 
-void rf_disc_read(char *p, uint8_t len)
+uint8_t rf_serial_get(void)
 {
-  ++len;
-  while (--len) {
-    while (ser_get(p) != SER_ERR_OK) {
-    }
-    p++;
+  uint8_t b;
+
+  while (ser_get(&b) != SER_ERR_OK) {
   }
+
+  return b;
 }
 
-void rf_disc_write(char *p, uint8_t len)
+void rf_serial_put(uint8_t b)
 {
-  ++len;
-  while (--len) {
-    while (ser_put(*p) == SER_ERR_OVERFLOW) {
-    }
-    p++;
+  while (ser_put(b) == SER_ERR_OVERFLOW) {
   }
 }
 

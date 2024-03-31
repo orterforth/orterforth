@@ -1,7 +1,7 @@
 # === Commodore 64 ===
 
 C64CC65OPTS := -O -t c64
-C64DEPS := c64/main.o c64/rf.o c64/inst.o c64/system.o c64/c64-up2400.o
+C64DEPS := c64/io.o c64/main.o c64/rf.o c64/inst.o c64/system.o c64/c64-up2400.o
 # C64OPTION := assembly
 C64OPTION := default
 ifeq ($(TARGET),c64)
@@ -69,6 +69,10 @@ c64/inst.s : inst.c inst.h rf.h target/c64/c64.inc | c64
 		--data-name INST \
 		--rodata-name INST \
 		-o $@ $<
+
+c64/io.s : io.c rf.h target/c64/c64.inc | c64
+
+	cc65 $(C64CC65OPTS) -o $@ $<
 
 c64/main.s : main.c inst.h rf.h target/c64/c64.inc | c64
 

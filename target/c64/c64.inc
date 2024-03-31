@@ -278,6 +278,11 @@
 /* in front of C stack at 0xCFFF */
 #define RF_LIMIT 0xCF00
 
+/* now defined in io.c */
+#define RF_TARGET_CODE_DCHAR
+#define RF_TARGET_CODE_BREAD
+#define RF_TARGET_CODE_BWRIT
+
 #ifdef RF_ASSEMBLY
 /* for return stack, reserve some space above the stack used by the calling C */
 #define RF_R0 0x01C0
