@@ -32,8 +32,8 @@ else
 DRAGONORIGIN := 0x1A00
 endif
 else
-DRAGONDEPS += dragon/rf.o dragon/system.o
-DRAGONLINKDEPS += dragon/rf.o dragon/system.o
+DRAGONDEPS += dragon/io.o dragon/rf.o dragon/system.o
+DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/system.o
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)
@@ -166,6 +166,10 @@ endif
 	@$(DRAGONSTOPMACHINE)
 	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
+
+dragon/io.o : io.c rf.h target/dragon/dragon.inc | dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 dragon/link : dragon/link.bin
 

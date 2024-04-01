@@ -17,86 +17,63 @@ void rf_init(void)
   }
 }
 
-#ifndef RF_TARGET_CODE_EMIT
-void rf_code_emit(void)
+void rf_console_put(uint8_t ch)
 {
-  RF_START;
-  {
-    char ch = (char) RF_SP_POP & 0x7F;
-    asm {
-      lda :ch
-      jsr $B54A
-    }
-    RF_USER_OUT++;
+  asm {
+    lda :ch
+    jsr $B54A
   }
-  RF_JUMP_NEXT;
 }
-#endif
 
-#ifndef RF_TARGET_CODE_KEY
-void rf_code_key(void)
+uint8_t rf_console_get(void)
 {
-  RF_START;
-  {
-    char ch;
-    asm {
-      jsr $B538
-      sta :ch
-    }
-    RF_SP_PUSH(ch);
+  char ch;
+
+  asm {
+    jsr $B538
+    sta :ch
   }
-  RF_JUMP_NEXT;
-}
-#endif
 
-#ifndef RF_TARGET_CODE_QTERM
-void rf_code_qterm(void)
+  return ch;
+}
+
+uint8_t rf_console_qterm(void)
 {
-  RF_START;
-  {
-    char k;
-    asm {
-      jsr $8006
-      sta :k
-    }
-    RF_SP_PUSH(k == 0x03);
+  char k;
+
+  asm {
+    jsr $8006
+    sta :k
   }
-  RF_JUMP_NEXT;
-}
-#endif
 
-#ifndef RF_TARGET_CODE_CR
-void rf_code_cr(void)
+  return (k == 0x03);
+}
+
+void rf_console_cr(void)
 {
-  RF_START;
   asm {
     lda #$0D
     jsr $B54A
   }
-  RF_JUMP_NEXT;
 }
-#endif
 
-void rf_disc_read(char *p, unsigned char len)
+uint8_t rf_serial_get(void)
 {
-  while (len--) {
-    while (!(*((uint8_t *) 0xFF05) & 0x10)) {
-    }
-    *(p++) = *((uint8_t *) 0xFF04);
+  while (!(*((uint8_t *) 0xFF05) & 0x10)) {
   }
+  return *((uint8_t *) 0xFF04);
 }
 
-void rf_disc_write(char *p, unsigned char len)
+void rf_serial_put(uint8_t b)
 {
   *((uint8_t *) 0xFF06) |= 0x01;
-  while (len--) {
-    while (!(*((uint8_t *) 0xFF05) & 0x08)) {
-    }
-    *((uint8_t *) 0xFF04) = *(p++);
+  while (!(*((uint8_t *) 0xFF05) & 0x08)) {
   }
+  *((uint8_t *) 0xFF04) = b;
   *((uint8_t *) 0xFF06) &= 0xFE;
 }
 
 void rf_fin(void)
 {
+  /* might reset Speedkey here. */
 }

@@ -22,7 +22,7 @@ void rf_code_emit(void)
 {
   RF_START;
   {
-    rf_console_put(RF_SP_POP & 0x7F);
+    rf_console_put((uint8_t) RF_SP_POP & 0x7F);
     RF_USER_OUT++;
   }
   RF_JUMP_NEXT;

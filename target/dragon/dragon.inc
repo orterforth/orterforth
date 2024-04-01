@@ -26,6 +26,11 @@
 /* cmoc not handling preprocessor arithmetic as constant */
 #define RF_INST_DYNAMIC
 
+/* now defined in io.c */
+#define RF_TARGET_CODE_DCHAR
+#define RF_TARGET_CODE_BREAD
+#define RF_TARGET_CODE_BWRIT
+
 /* assembly code definitions */
 #ifdef RF_ASSEMBLY
 #define RF_TARGET_FP
