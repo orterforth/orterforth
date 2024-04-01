@@ -23,6 +23,9 @@
 /* passed in command line */
 /*#define RF_ORIGIN 0xxxxx*/
 
+/* cmoc not handling preprocessor arithmetic as constant */
+#define RF_INST_DYNAMIC
+
 /* assembly code definitions */
 #ifdef RF_ASSEMBLY
 #define RF_TARGET_FP
