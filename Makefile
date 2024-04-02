@@ -224,6 +224,8 @@ include target/bbc/bbc.mk
 
 include target/c64/c64.mk
 
+#include target/cpm/cpm.mk
+
 include target/dragon/dragon.mk
 
 #include target/esp32c3/esp32c3.mk
