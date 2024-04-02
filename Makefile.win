@@ -40,11 +40,15 @@ $(SYSTEM)\inst.obj: inst.c inst.h model.inc rf.h system.inc
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c inst.c
 
+$(SYSTEM)\io.obj: io.c rf.h system.inc
+	@$(MAKESYSTEMDIR)
+	$(CC) $(CFLAGS) /Fo$@ -c io.c
+
 $(SYSTEM)\orter.exe: orter\main.c $(SYSTEM)\orter_hex.obj $(SYSTEM)\orter_io.obj $(SYSTEM)\orter_m100.obj
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fe$@ $**
 
-$(SYSTEM)\orterforth.exe: main.c $(SYSTEM)\inst.obj $(SYSTEM)\persci.obj $(SYSTEM)\rf.obj $(SYSTEM)\system.obj
+$(SYSTEM)\orterforth.exe: main.c $(SYSTEM)\inst.obj $(SYSTEM)\io.obj $(SYSTEM)\persci.obj $(SYSTEM)\rf.obj $(SYSTEM)\system.obj
 	$(CC) $(CFLAGS) /Fe$@ $**
 
 $(SYSTEM)\orter_bbc.obj: orter\bbc.c orter\bbc.h orter\io.h
