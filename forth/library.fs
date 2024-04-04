@@ -98,12 +98,12 @@ DECLARE VOCABULARY
 FORTH DEFINITIONS DECIMAL
 VOCABULARY example IMMEDIATE example DEFINITIONS
 : loader <BUILDS , DOES> DUP CFA NFA 32 TOGGLE @ LOAD ;
-7 loader hw 8 loader collatz 9 loader fib 10 loader fac
-11 loader rev 12 loader roman 14 loader mandelbrot
-16 loader pascal
-: help ." collatz fac fib hw mandelbrot pascal rev roman" CR ;
+ 7 loader hw          8 loader collatz     9 loader fib
+10 loader fac        11 loader rev        12 loader roman
+14 loader mandelbrot 16 loader pascal     17 loader about
+: help
+  ." about collatz fac fib hw mandelbrot pascal rev roman" CR ;
 FORTH DEFINITIONS ;S
-
 
 
 
@@ -175,7 +175,7 @@ fac ;S
 
 
 ( Reverse a string                                        rev )
-DECIMAL 17 LOAD                ( load str vocabulary          )
+DECIMAL 19 LOAD                ( load str vocabulary          )
 example DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
@@ -217,13 +217,13 @@ example DEFINITIONS DECIMAL
 
 : roman 2023 list ;
 roman
-
+FORGET place                    ( redefining I causes probs   )
 
 
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
-DECIMAL 21 LOAD ( sys vocabulary )
+DECIMAL 23 LOAD ( sys vocabulary )
 example DEFINITIONS HEX
 : mandelbrot
     CR
@@ -270,6 +270,38 @@ HERE 100 cs ALLOT CONSTANT buf
     I next I 1+ .line
   LOOP ;
 pascal ;S
+(                                                       about )
+0 WARNING ! HEX
+CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
+: d36. BASE @ >R 24 BASE ! D. R> BASE ! ;
+." Version        : " 4 lit@ 100 /MOD .. 2E EMIT ..
+5 lit@ 7F AND EMIT CR
+." Platform       : " 14 lit@ 13 lit@ d36. CR
+." CPU            : " 12 lit@ 11 lit@ d36. CR
+." Cell size      : " cl . ." bytes" CR
+: endn 5 lit@ 0200 AND IF ." Little" ELSE ." Big" ENDIF ;
+." Byte order     : " endn ." -endian" CR
+: addr 5 lit@ 0100 AND IF ." Word" ELSE ." Byte" ENDIF ;
+." CPU Addressing : " addr CR : ad. 0 cl DUP + D.R ;
+." Origin         : " 0 +ORIGIN ad. CR
+." DP             : " DP @ ad. CR
+." SP             : " SP@ ad. CR -->
+(                                                             )
+." TIB            : " TIB @ ad. CR
+." CONTEXT        : " CONTEXT @ cl + NFA CFA NFA ID. CR
+." CURRENT        : " CURRENT @ cl + NFA CFA NFA ID. CR
+FORGET lit@
+;S
+
+
+
+
+
+
+
+
+
+
 ( string handling: ", copy                                str )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
