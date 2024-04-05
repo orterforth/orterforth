@@ -288,8 +288,8 @@ CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
 ." SP             : " SP@ ad. CR -->
 (                                                             )
 ." TIB            : " TIB @ ad. CR
-." CONTEXT        : " CONTEXT @ cl + NFA CFA NFA ID. CR
-." CURRENT        : " CURRENT @ cl + NFA CFA NFA ID. CR
+." CONTEXT        : " CONTEXT @ 2 cs + NFA CFA NFA ID. CR
+." CURRENT        : " CURRENT @ 2 cs + NFA CFA NFA ID. CR
 FORGET lit@
 ;S
 
