@@ -12,7 +12,7 @@ void rf_console_cr(void);
 
 uint8_t rf_console_qterm(void);
 
-uint8_t __FASTCALL__ rf_serial_get(void);
+uint8_t rf_serial_get(void);
 
 void __FASTCALL__ rf_serial_put(uint8_t b);
 
