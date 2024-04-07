@@ -313,9 +313,9 @@ static const char * rf_inst_names[] = {
   "EXECUTE",
   "BRANCH",
   "0BRANCH",
+  "(LOOP)",
   0,
-  0,
-  0,
+  "(DO)",
   "DIGIT",
   "(FIND)",
   "ENCLOSE",
@@ -487,9 +487,8 @@ void rf_inst(void)
   origin[22] = (uintptr_t) *rf_inst_dp;
   rf_inst_compile(
     "SP! "
-    "LIT 0 DUP FIRST ! FIRST cl + LIT 128 + ! "
-    "LIT 785 DUP BLOCK compile LIT 1 + "
-    "DUP LIT -805 + 0= 0BRANCH ^-12 DROP "
+    "LIT 0 FIRST OVER OVER ! cl + LIT 128 + ! "
+    "LIT 805 LIT 785 (DO) R BLOCK compile (LOOP) ^-4 "
     "LIT ^21 LIT 8 ic + @ @ LIT ^-24 + EXECUTE");
 
   /* set boot-up literals */
