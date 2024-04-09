@@ -394,7 +394,7 @@ static uintptr_t rf_inst_constants[] = {
   (uintptr_t) RF_ORIGIN,
   (uintptr_t) RF_FIRST,
   (uintptr_t) RF_LIMIT,
-  (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE),
+  (uintptr_t) RF_S1,
 #endif
   0,
 #ifdef RF_ORG
@@ -438,7 +438,7 @@ void rf_inst(void)
   rf_inst_constants[8] = (uintptr_t) RF_ORIGIN;
   rf_inst_constants[9] = (uintptr_t) RF_FIRST;
   rf_inst_constants[10] = (uintptr_t) RF_LIMIT;
-  rf_inst_constants[11] = (uintptr_t) ((uintptr_t *) RF_S0 - RF_STACK_SIZE);
+  rf_inst_constants[11] = (uintptr_t) RF_S1;
 #endif
   /* some C compilers do not regard these & expressions as constant */
   rf_inst_constants[12] = (uintptr_t) &rf_installed;
