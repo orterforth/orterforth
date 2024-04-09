@@ -288,12 +288,6 @@ typedef unsigned long uintptr_t;
 
 /* USER VARIABLES */
 
-#define RF_USER_S0_IDX 3
-#define RF_USER_S0 rf_up[RF_USER_S0_IDX]
-#define RF_USER_R0_IDX 4
-#define RF_USER_R0 rf_up[RF_USER_R0_IDX]
-#define RF_USER_DP_IDX 9
-#define RF_USER_DP rf_up[RF_USER_DP_IDX]
 #define RF_USER_OUT_IDX 13
 #define RF_USER_OUT rf_up[RF_USER_OUT_IDX]
 

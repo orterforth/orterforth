@@ -702,7 +702,7 @@ void rf_code_spat(void)
 void rf_code_spsto(void)
 {
   RF_START;
-  RF_SP_SET((uintptr_t *) RF_USER_S0);
+  RF_SP_SET((uintptr_t *) rf_up[3]);
   RF_JUMP_NEXT;
 }
 #endif
@@ -711,7 +711,7 @@ void rf_code_spsto(void)
 void rf_code_rpsto(void)
 {
   RF_START;
-  RF_RP_SET((uintptr_t *) RF_USER_R0);
+  RF_RP_SET((uintptr_t *) rf_up[4]);
   RF_JUMP_NEXT;
 }
 #endif

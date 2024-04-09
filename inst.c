@@ -447,7 +447,7 @@ void rf_inst(void)
   /* cold start LATEST UP DP */
   rf_inst_latest = 0;
   rf_up = (uintptr_t *) RF_USER;
-  rf_inst_dp = (uint8_t **) &(RF_USER_DP);
+  rf_inst_dp = (uint8_t **) &(rf_up[9]);
   *rf_inst_dp = (uint8_t *) RF_INST_DICTIONARY;
 
   /* to get constant table */
