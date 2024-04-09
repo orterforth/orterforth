@@ -99,7 +99,7 @@ typedef uint32_t rf_double_t;
 #define RF_TARGET_INC "target/spectrum/spectrum.inc"
 #endif
 #ifdef Z88
-#define RF_TARGET_INC "target/z88/system.inc"
+#define RF_TARGET_INC "target/z88/z88.inc"
 #endif
 #ifdef ZX81
 #define RF_TARGET_INC "target/zx81/zx81.inc"
