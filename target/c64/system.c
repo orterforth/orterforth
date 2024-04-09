@@ -20,12 +20,9 @@ extern char c64_serial;
 void rf_init(void)
 {
   /* init serial */
-  if (ser_install(&c64_serial)) {
-  }
-  if (ser_open(&serial_params)) {
-  }
-  if (ser_ioctl(1, NULL)) {
-  }
+  ser_install(&c64_serial);
+  ser_open(&serial_params);
+  ser_ioctl(1, NULL);
 }
 
 void rf_console_put(uint8_t c)
