@@ -73,6 +73,11 @@ static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
     uint8_t *ptr = header + lenname;
     uint16_t lenhdr = 18 + lenname;
 
+    /* start block */
+    chunk(0x0100, lenhdr + lenblk + 5);
+    fputc('*', stdout);
+
+    /* header */
     /* name */
     memcpy(header, name, lenname);
     ptr[0] = 0;
@@ -86,13 +91,10 @@ static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
     ptr[13] = ((j == s) ? 0x80 : 0);
     orter_io_set_32le(0, ptr + 14);
 
-    /* write data */
-    chunk(0x0100, lenhdr + lenblk + 5);
-    fputc('*', stdout);
-    /* header */
     fwrite(header, 1, lenhdr, stdout);
     orter_io_put_16be(crc(header, lenhdr));
-    /* block */
+
+    /* data */
     fwrite(block, 1, lenblk, stdout);
     orter_io_put_16be(crc(block, lenblk));
 
