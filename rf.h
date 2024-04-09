@@ -45,19 +45,13 @@ typedef __uint128_t rf_double_t;
 typedef uint32_t rf_double_t;
 #define RF_LE
 #ifdef __APPLE2__
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/apple2/apple2.inc"
 #endif
-#endif
 #ifdef __BBC__
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/bbc/bbc.inc"
 #endif
-#endif
 #ifdef __C64__
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/c64/c64.inc"
-#endif
 #endif
 /* 6502 */
 #define RF_CPU_HI 0x0004
@@ -75,9 +69,7 @@ typedef unsigned int uintptr_t;
 typedef unsigned long rf_double_t;
 #define RF_BE
 #ifdef DRAGON
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/dragon/dragon.inc"
-#endif
 #endif
 /* 6809 */
 #define RF_CPU_HI 0x0004
@@ -101,19 +93,16 @@ typedef uint32_t rf_double_t;
 #endif
 #ifdef __Z80
 #ifdef __RC2014
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/rc2014/rc2014.inc"
 #endif
-#endif
 #ifdef SPECTRUM
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/spectrum/spectrum.inc"
 #endif
+#ifdef Z88
+#define RF_TARGET_INC "target/z88/system.inc"
 #endif
 #ifdef ZX81
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/zx81/zx81.inc"
-#endif
 #endif
 #ifndef __8085__
 /* Z80 */
@@ -144,9 +133,7 @@ typedef unsigned char uint8_t;
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
 #ifdef QDOS
-#ifndef RF_TARGET_INC
 #define RF_TARGET_INC "target/ql/ql.inc"
-#endif
 #endif
 /* 68000 */
 #define RF_CPU_HI 0x00000000
@@ -293,6 +280,10 @@ typedef unsigned long uintptr_t;
 
 #ifndef RF_STACK_SIZE
 #define RF_STACK_SIZE 128
+#endif
+
+#ifndef RF_S1
+#define RF_S1 (RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE))
 #endif
 
 /* USER VARIABLES */
