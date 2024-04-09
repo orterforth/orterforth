@@ -75,6 +75,7 @@ void rf_inst(void)
   /* cold start vector */
   *((uintptr_t *) (RF_ORIGIN) + 1) = (uintptr_t) rf_code_cold;
 
+  /* walk dictionary beginning at LATEST */
   while (p) {
     uint8_t *nfa = p;
     rf_code_t *cfa;
@@ -100,7 +101,7 @@ void rf_inst(void)
     p = *((uint8_t **) p);
   }
 
-  /* code addresses in body */
+  /* now do code addresses in defining word bodies */
   *((rf_code_t *) (here[59])) = rf_code_docol;
   *((rf_code_t *) (here[60])) = rf_code_docon;
   *((rf_code_t *) (here[61])) = rf_code_dovar;
