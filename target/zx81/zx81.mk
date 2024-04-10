@@ -40,6 +40,10 @@ zx81-run : zx81/inst.bin zx81/inst.tzx | tools/jtyone.jar
 
 	java -jar tools/jtyone.jar zx81/inst.tzx@0 -scale 3 -machine ZX81
 
+zx81/%.lib : %.c rf.h target/zx81/zx81.inc | zx81
+
+	zcc $(ZX81ZCCOPTS) -x -o $@ $<
+
 zx81/%.tzx : zx81/%.P | $(SYSTEM)/zx81putil
 
 	$(SYSTEM)/zx81putil -tzx $<
@@ -48,19 +52,10 @@ zx81/hw.bin zx81/hw.P : hw.c
 
 	zcc $(ZX81ZCCOPTS) -lm -create-app -o zx81/hw.bin $<
 
-zx81/inst.bin zx81/inst.P : zx81/rf.lib zx81/system.lib zx81/inst.lib main.c
+zx81/inst.bin zx81/inst.P : zx81/inst.lib zx81/io.lib zx81/rf.lib zx81/system.lib main.c
 
-	zcc $(ZX81ZCCOPTS) -lm -lzx81/rf -lzx81/system -lzx81/inst \
-		-create-app -m -o zx81/inst.bin main.c
+	zcc $(ZX81ZCCOPTS) -lm -lzx81/inst -lzx81/io -lzx81/rf -lzx81/system -create-app -m -o zx81/inst.bin main.c
 
-zx81/inst.lib : inst.c rf.h target/zx81/zx81.inc | zx81
-
-	zcc $(ZX81ZCCOPTS) -x -o $@ $<
-
-zx81/rf.lib : rf.c rf.h target/zx81/zx81.inc | zx81
-
-	zcc $(ZX81ZCCOPTS) -x -o $@ $<
-
-zx81/system.lib : target/zx81/system.c rf.h target/zx81/zx81.inc | zx81
+zx81/system.lib : target/zx81/system.c | zx81
 
 	zcc $(ZX81ZCCOPTS) -x -o $@ $<

@@ -19,3 +19,7 @@
 /*#define RF_ORIGIN xxxx*/
 
 #define RF_LIMIT 0x7F00
+
+#define RF_TARGET_CODE_DCHAR
+#define RF_TARGET_CODE_BREAD
+#define RF_TARGET_CODE_BWRIT
