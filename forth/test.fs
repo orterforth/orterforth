@@ -94,32 +94,32 @@ DECLARE VOCABULARY
 
 
 
-( Test framework                                         test )
-0 VARIABLE passes 0 VARIABLE fails
-: t IF
-  ." [ ] " 1 passes +! ELSE
-  ." [X] " 1 fails +! ENDIF ;
-: ==
-  OVER OVER = IF
-    DROP DROP 1 ELSE
-    ."     should be " . ." but is " . CR 0 ENDIF ;
-
-: t= == t ;
-
-: D= ROT = ROT ROT = AND ;
-
-
+( double word handling                                   test )
+: test ; : D= ROT = ROT ROT = AND ; : 2DROP DROP DROP ;
+: 2OVER SP@ 3 cs + @ SP@ 3 cs + @ ;
+( test framework                                              )
+0 VARIABLE passes 0 VARIABLE fails 0 VARIABLE case
+: c ." [" case @ IF 0 case ! 88 ELSE 32 ENDIF EMIT ." ] " ;
+: a IF 1 passes +! ELSE 1 fails +! 1 case +! ENDIF ;
+: t
+  OVER OVER = DUP a IF
+    DROP DROP ELSE
+    ."     should be " . ." but is " . CR ENDIF ;
+: dt
+  2OVER 2OVER D= DUP a IF
+    2DROP 2DROP ELSE
+    ."     should be " D. ." but is " D. CR ENDIF ;
 CR -->
 ( LIT, EXECUTE, BRANCH                                   test )
 
 : t-lit LIT [ 123 , ] ;
-t-lit 123 t= ." LIT -- 123" CR
+t-lit 123 t c ." LIT -- 123" CR
 
-' t-lit CFA EXECUTE 123 t= ." CFA EXECUTE --" CR
+' t-lit CFA EXECUTE 123 t c ." CFA EXECUTE --" CR
 FORGET t-lit
 
 : t-bran BRANCH [ 4 cs , ] 123 ;S 456 ;
-t-bran 456 t= ." BRANCH --" CR
+t-bran 456 t c ." BRANCH --" CR
 FORGET t-bran
 
 
@@ -128,15 +128,15 @@ FORGET t-bran
 -->
 ( 0BRANCH, (LOOP                                         test )
 : t-zbran 0BRANCH [ 4 cs , ] 234 ;S 567 ;
-0 t-zbran 567 t= ." 0 0BRANCH --" CR
-1 t-zbran 234 t= ." 1 0BRANCH --" CR
+0 t-zbran 567 t c ." 0 0BRANCH --" CR
+1 t-zbran 234 t c ." 1 0BRANCH --" CR
 FORGET t-zbran
 
 : t-xloop SWAP >R >R (LOOP) [ 4 cs , ] 345 ;S R> R> 
   DROP ;
-6 0 t-xloop   1 t= ." [6 0] (LOOP) -- [6 1]" CR
-6 4 t-xloop   5 t= ." [6 4] (LOOP) -- [6 5]" CR
-6 5 t-xloop 345 t= ." [6 5] (LOOP) -- []" CR
+6 0 t-xloop   1 t c ." [6 0] (LOOP) -- [6 1]" CR
+6 4 t-xloop   5 t c ." [6 4] (LOOP) -- [6 5]" CR
+6 5 t-xloop 345 t c ." [6 5] (LOOP) -- []" CR
 FORGET t-xloop
 
 
@@ -145,25 +145,25 @@ FORGET t-xloop
 ( (+LOOP, (DO, I, R                                      test )
 : t-xploo ROT >R SWAP >R (+LOOP) [ 4 cs , ] 99 ;S R> R>
   DROP ;
- 6  0  2 t-xploo  2 t= ." [ 6  0]  2 (+LOOP) -- [ 6  2]" CR
- 6  2 -2 t-xploo 99 t= ." [ 6  2] -2 (+LOOP) -- []" CR
--6  0 -2 t-xploo -2 t= ." [-6  0] -2 (+LOOP) -- [ 6 -2]" CR
-( -6 -4 -2 t-xploo -6 t= ." [-6 -4] -2 (+LOOP  -- [-6 -6]" CR )
--6 -6 -2 t-xploo 99 t= ." [-6 -6] -2 (+LOOP) -- []" CR
+ 6  0  2 t-xploo  2 t c ." [ 6  0]  2 (+LOOP) -- [ 6  2]" CR
+ 6  2 -2 t-xploo 99 t c ." [ 6  2] -2 (+LOOP) -- []" CR
+-6  0 -2 t-xploo -2 t c ." [-6  0] -2 (+LOOP) -- [ 6 -2]" CR
+-6 -4 -2 t-xploo 99 t c ." [-6 -4] -2 (+LOOP  -- []" CR
+-6 -6 -2 t-xploo 99 t c ." [-6 -6] -2 (+LOOP) -- []" CR
 FORGET t-xploo
 
-6 0 (DO) R> 0 == R> 6 == AND t ." [6 0] (DO)" CR
+6 0 (DO) R> 0 t R> 6 t c ." 6 0 (DO) -- [6 0]" CR
 
-123 >R I 123 t= R> DROP ." I -- I" CR
-456 >R R 456 t= R> DROP ." R -- R" CR
+123 >R I 123 t c R> DROP ." I -- I" CR
+456 >R R 456 t c R> DROP ." R -- R" CR
 
 -->
 ( DIGIT                                                  test )
 DECIMAL
-: t-digit-0 OVER OVER DIGIT 0 t=
+: t-digit-0 OVER OVER DIGIT 0 t c
   SWAP . . ." DIGIT -- 0" CR ;
 : t-digit-1 DUP >R ROT DUP >R ROT DUP >R ROT
-  DIGIT 1 == SWAP ROT == AND t
+  DIGIT 1 t t c
   R> . R> R> . ." DIGIT -- " . 1 . CR ;
    47 10 t-digit-0    47 16 t-digit-0
  0 48 10 t-digit-1  0 48 16 t-digit-1
@@ -179,40 +179,40 @@ DECIMAL
 DECIMAL HERE 3 C, 65 C, 66 C, 83 C, 32 C, 32 C, 32 C, 32 C,
 CURRENT @ @ (FIND)
 ( true flag is not always 1 e.g., 6502 asm returns 0101h      )
-0= 0= 1 == SWAP 131 == AND SWAP ' ABS == AND t
+0= 0= 1 t 131 t ' ABS t c
 ." ABS LATEST (FIND) -- ABS 131 1" CR
 HERE 2 C, 68 C, 82 C, 32 C, 32 C, 32 C, 32 C, 32 C,
 CURRENT @ @ (FIND)
-0 t= ." DR  LATEST (FIND) -- 0" CR FORGET t-digit-0
+0 t c ." DR  LATEST (FIND) -- 0" CR FORGET t-digit-0
 HERE 32 C, 67 C, 82 C, 32 C, CONSTANT name
 name 32 ENCLOSE
-4 == SWAP 3 == AND SWAP 1 == AND SWAP name ==
-AND t ." CR 32 ENCLOSE -- addr 1 3 4" CR
+4 t 3 t 1 t name t c
+." CR 32 ENCLOSE -- addr 1 3 4" CR
 FORGET name
 -->
 ( CMOVE, U*                                              test )
 DECIMAL
 HERE 1 C, 2 C, 3 C, 4 C, CONSTANT from
 from DUP 2+ 2 CMOVE
-from 2+ DUP C@ 1 t= ." CMOVE" CR 1+ C@ 2 t= CR
+from 2+ DUP C@ 1 t c ." CMOVE" CR 1+ C@ 2 t c CR
 
 HEX
 
-: 3pick SP@ 3 cs + @ ;
-: t-ustar 3pick 3pick 3pick 3pick
-  U* D= t SWAP 0 D. 0 D. ." U* -- " 4 cs D.R 2E EMIT CR ;
+
+: t-ustar 2OVER 2OVER
+  U* dt c SWAP 0 D. 0 D. ." U* -- " 4 cs D.R 2E EMIT CR ;
 40000000. 8000 8000 t-ustar
 E1000000. F000 F000 t-ustar
 FFFE0001. FFFF FFFF t-ustar
-FORGET 3pick
+
 -->
 ( U/                                                     test )
 HEX : 4pick SP@ 4 cs + @ ;
 : t-uslas 4pick 4pick 4pick 4pick 4pick
-  U/ SWAP ROT == ROT ROT == AND t ROT ROT 4 cs D.R ." . "
+  U/ SWAP ROT t t c ROT ROT 4 cs D.R ." . "
   0 4 D.R ."  U/ -- " S->D 4 D.R SPACE S->D 4 D.R SPACE ;
-  -1   -1 00000001. 0000 t-uslas ." division by 0" CR
-  -1   -1 0000 0004 0004 t-uslas ." overflow" CR
+  -1   -1 00000001. 0000 t-uslas CR
+  -1   -1 0000 0004 0004 t-uslas CR
 7000 7000 70000000. FFFF t-uslas CR
 6000 6000 60000000. FFFF t-uslas CR
 2000 2000 20000000. FFFF t-uslas CR
@@ -222,33 +222,41 @@ HEX : 4pick SP@ 4 cs + @ ;
 E38F 738E 7FFFFFFF. 8FFF t-uslas CR
 FFE2 01C1 7FFFFFFF. 800F t-uslas CR
 FORGET 4pick -->
-( AND, OR, XOR SP@, SP!                                  test )
+( AND, OR, XOR SP@, SP!, ;S, LEAVE, >R, R>, 0=           test )
 HEX
-FEAE EF51 AND EE00 t= ." FEFE EF51 AND -- EE00" CR
-12AE 4851 OR  5AFF t= ." 12AE 4851  OR -- 5AFF" CR
-12AE 37FF XOR 2551 t= ." 12AE 37FF XOR -- 2551" CR
-123 SP@ @ 123 t= DROP ." 123 SP@ @ -- 123" CR
-SP! SP@ 9 cs +ORIGIN @ t= ." SP! SP@ -- S0" CR
-: t-semis 123 ;S DROP 456 ; t-semis 123 t= ." ;S -- " CR
-: t-leave 1 >R 2 >R LEAVE R> R> ; t-leave 2 == SWAP 2 == AND t
-  ." [1 2] LEAVE == [2 2]" CR
-: t-tor >R 456 R> ; 123 t-tor 123 == SWAP 456 == AND t
-  ." 123 >R -- [123]" CR
-234 t-tor 234 == SWAP 456 == AND t ." [234] R> -- 234" CR
-4 0= 0 == t ." 4 0= -- 0" CR
-0 0= 1 == t ." 0 0= -- 1" CR
+FEAE EF51 AND EE00 t c ." FEFE EF51 AND -- EE00" CR
+12AE 4851 OR  5AFF t c ." 12AE 4851  OR -- 5AFF" CR
+12AE 37FF XOR 2551 t c ." 12AE 37FF XOR -- 2551" CR
+123 SP@ @ 123 t c DROP ." 123 SP@ @ -- 123" CR
+SP! SP@ 9 cs +ORIGIN @ t c ." SP! SP@ -- S0" CR
+: t-semis 123 ;S DROP 456 ; t-semis 123 t c ." ;S -- " CR
+: t-leave 1 >R 2 >R LEAVE R> R> ; t-leave 2 t 2 t c
+  ." [1 2] LEAVE -- [2 2]" CR
+: t-tor >R 456 R> ;
+123 t-tor 123 t 456 t c ." 123 >R -- [123]" CR
+234 t-tor 234 t 456 t c ." [234] R> -- 234" CR
+4 0= 0 t c ." 4 0= -- 0" CR
+0 0= 1 t c ." 0 0= -- 1" CR
+-->
+( 0<, +, D+                                              test )
+HEX
+: t-zless OVER OVER 0< t c . ." 0< -- " . CR ;
+0 5 t-zless
+0 0 t-zless
+0 7FFF t-zless
+1 -6 t-zless
+
+00FF 0002 + 0101 t c ." 00FF 0002 + -- 0101" CR
+
+0001FFFF. 00000002. D+ 00020001. dt c
+." 0001FFFF. 00000002. D+ -- 00020001." CR
+00000001.       -2. D+       -1. dt c
+." 00000001.       -2. D+ --       -1." CR
+
 -->
 ( Summary                                                test )
-HEX
-5 0< 0 == t ." 5 0< -- 0" CR
-0 0< 0 == t ." 0 0< -- 1" CR
--6 0< 1 == t ." -6 0< -- 1" CR
-00FF 0002 + 0101 == t ." 00FF 0002 + -- 0101" CR
-0001FFFF. 00000002. D+ 00020001. D= t ." D+ -- 00020001." CR
-00000001. -2.       D+ -1.       D= t ." D+ -- -1." CR
 DECIMAL
 passes @ fails @ + . ." tests "
-passes ? ." passes "
-fails ? ." fails" CR
-FORGET passes
+passes ? ." passes " fails ? ." fails" CR
+FORGET test
 ;S
