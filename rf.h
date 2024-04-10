@@ -92,6 +92,9 @@ typedef uint32_t rf_double_t;
 #endif
 #endif
 #ifdef __Z80
+#ifdef CPM
+#define RF_TARGET_INC "target/cpm/cpm.inc"
+#endif
 #ifdef __RC2014
 #define RF_TARGET_INC "target/rc2014/rc2014.inc"
 #endif
@@ -355,11 +358,10 @@ extern rf_code_t rf_fp;
 /* start trampoline */
 void rf_trampoline(void);
 
-#define RF_JUMP(a) { rf_fp = (a); }
-
 /* NEXT */
 void rf_next(void);
 
+#define RF_JUMP(a) { rf_fp = (a); }
 #define RF_JUMP_NEXT { rf_fp = rf_next; }
 
 /* C CODE START - save registers */
