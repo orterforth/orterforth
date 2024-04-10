@@ -32,9 +32,13 @@ run: $(SYSTEM)\orterforth.exe $(DR0) $(DR1) .phony
 test: $(SYSTEM)\orterforth.exe forth\test.img .phony
 	@echo EMPTY-BUFFERS 1 LOAD | $(SYSTEM)\orterforth.exe forth\test.img
 
-$(SYSTEM)\disc.exe: disc.c
+$(SYSTEM)\disc.exe: $(SYSTEM)\disc.obj
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fe$@ $**
+
+$(SYSTEM)\disc.obj: disc.c orter/io.h orter/pty.h orter/serial.h orter/tcp.h persci.h
+	@$(MAKESYSTEMDIR)
+	$(CC) $(CFLAGS) /Fo$@ -c disc.c
 
 $(SYSTEM)\inst.obj: inst.c inst.h model.inc rf.h system.inc
 	@$(MAKESYSTEMDIR)
@@ -44,11 +48,15 @@ $(SYSTEM)\io.obj: io.c rf.h system.inc
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c io.c
 
+$(SYSTEM)\main.obj: main.c rf.h system.inc inst.h persci.h model.inc
+	@$(MAKESYSTEMDIR)
+	$(CC) $(CFLAGS) /Fo$@ -c main.c
+
 $(SYSTEM)\orter.exe: orter\main.c $(SYSTEM)\orter_hex.obj $(SYSTEM)\orter_io.obj $(SYSTEM)\orter_m100.obj
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fe$@ $**
 
-$(SYSTEM)\orterforth.exe: main.c $(SYSTEM)\inst.obj $(SYSTEM)\io.obj $(SYSTEM)\persci.obj $(SYSTEM)\rf.obj $(SYSTEM)\system.obj
+$(SYSTEM)\orterforth.exe: $(SYSTEM)\inst.obj $(SYSTEM)\io.obj $(SYSTEM)\main.obj $(SYSTEM)\persci.obj $(SYSTEM)\rf.obj $(SYSTEM)\system.obj
 	$(CC) $(CFLAGS) /Fe$@ $**
 
 $(SYSTEM)\orter_bbc.obj: orter\bbc.c orter\bbc.h orter\io.h
