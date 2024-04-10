@@ -124,16 +124,16 @@ endif
 
 # z88dk library based
 ifeq ($(SPECTRUMOPTION),assembly-z88dk)
-SPECTRUMDEPS += spectrum/rf_z80.lib
-SPECTRUMLIBS += -lspectrum/rf_z80 -lrs232if1
+SPECTRUMDEPS += spectrum/io.lib spectrum/rf_z80.lib
+SPECTRUMLIBS += -lspectrum/io -lspectrum/rf_z80 -lrs232if1
 SPECTRUMORIGIN := 0x9080
 SPECTRUMZCCOPTS += -DRF_ASSEMBLY -DRF_ASSEMBLY_Z88DK
 endif
 
 # z88dk / pure C based
 ifeq ($(SPECTRUMOPTION),default)
-SPECTRUMDEPS += spectrum/rf.lib
-SPECTRUMLIBS += -lspectrum/rf -lrs232if1
+SPECTRUMDEPS += spectrum/io.lib spectrum/rf.lib
+SPECTRUMLIBS += -lspectrum/io -lspectrum/rf -lrs232if1
 SPECTRUMORIGIN := 0x9C00
 endif
 
@@ -215,6 +215,10 @@ spectrum/%.fifo : | spectrum
 
 	mkfifo $@
 
+spectrum/%.lib : %.c rf.h target/spectrum/spectrum.inc | spectrum
+
+	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
+
 spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
 	$(ORTER) spectrum header $< 3 32768 0 > $@
@@ -239,7 +243,7 @@ spectrum/inst.bin spectrum/inst_INST.bin : \
 		-o $@ \
 		z80_memory.asm main.c
 
-spectrum/inst.lib : inst.c rf.h | spectrum
+spectrum/inst.lib : inst.c rf.h target/spectrum/spectrum.inc | spectrum
 
 	zcc $(SPECTRUMZCCOPTS) -x -o $@ $< \
 		--codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
@@ -309,10 +313,6 @@ ifneq ($(SPECTRUMINSTMACHINE),superzazu)
 	@$(STOPDISC)
 endif
 	@$(COMPLETEDR1FILE)
-
-spectrum/rf.lib : rf.c rf.h | spectrum
-
-	zcc $(SPECTRUMZCCOPTS) -x -o $@ $<
 
 spectrum/rf_z80.lib : rf_z80.asm | spectrum
 
