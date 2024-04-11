@@ -9,7 +9,7 @@ ifneq ($(OPTION),)
 C64OPTION := $(OPTION)
 endif
 endif
-C64ORIGIN := 0x2300
+C64ORIGIN := 0x2340
 C64UP2400 := tools/github.com/nanoflite/c64-up2400-cc65
 C64VICEOPTS := \
 	-kernal roms/c64p/901227-02.u4 -basic roms/c64p/901226-01.u3 -chargen roms/c64p/901225-01.u5 \
