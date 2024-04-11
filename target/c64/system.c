@@ -1,18 +1,13 @@
-/* SYSTEM BINDINGS */
-
-
 #include <cbm.h>
 #include <serial.h>
 #include <stdint.h>
-
-#include "../../rf.h"
 
 static const struct ser_params serial_params = {
     SER_BAUD_2400,
     SER_BITS_8,
     SER_STOP_1,
     SER_PAR_NONE,
-    SER_HS_NONE
+    SER_HS_HW
 };
 
 extern char c64_serial;
@@ -28,7 +23,7 @@ void rf_init(void)
 void rf_console_put(uint8_t c)
 {
   /* PETSCII swap case */
-  if (((c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z')) {
+  if (((c & 0xDF) >= 0x41 && (c & 0xDF) <= 0x5A)) {
     c ^= 0x20;
   }
   /* BS */
@@ -59,7 +54,7 @@ uint8_t rf_console_get(void)
   *((uint8_t *) 207) = 0;
 
   /* PETSCII correct case */
-  if (c >= 'A' && c <= 'Z') {
+  if (c >= 0x41 && c <= 0x5A) {
     c ^= 0x20;
   }
 
@@ -74,7 +69,7 @@ uint8_t rf_console_qterm(void)
 
 void rf_console_cr(void)
 {
-  cbm_k_bsout('\r');
+  cbm_k_bsout(0x0D);
 }
 
 uint8_t rf_serial_get(void)
