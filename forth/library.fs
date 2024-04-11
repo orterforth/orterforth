@@ -256,20 +256,20 @@ example DEFINITIONS HEX
 mandelbrot DECIMAL ;S
 ( Pascal's Triangle                                    pascal )
 example DEFINITIONS DECIMAL
-HERE 100 cs ALLOT CONSTANT buf
-: init buf SWAP cs ERASE 1 buf ! ;
+18 CONSTANT size
+HERE size cs ALLOT CONSTANT buf
+: init buf size cs ERASE 1 buf ! ;
 : .line CR buf SWAP 0 DO DUP @ . cl + LOOP DROP ;
 : next
-  buf SWAP 1 - cs buf + DO
-    I @ I cl + +!
-  -1 cs +LOOP ;
-: pascal
-  18 init
-  1 .line
-  18 1 DO
-    I next I 1+ .line
-  LOOP ;
+  DUP cs buf + SWAP 0 DO
+    DUP cl - DUP @ ROT +! LOOP DROP ;
+: pascal init size 1 DO I .line I next LOOP ;
+
 pascal ;S
+
+
+
+
 (                                                       about )
 0 WARNING ! HEX
 CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
