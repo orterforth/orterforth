@@ -182,11 +182,12 @@ void rf_code_xploo(void)
   RF_START;
   {
     intptr_t n = (intptr_t) RF_SP_POP;
-    intptr_t index = RF_RP_POP;
-    intptr_t limit = RF_RP_POP;
+    intptr_t index = (intptr_t) RF_RP_POP;
+    intptr_t limit = (intptr_t) RF_RP_POP;
 
     index += n;
-    if ((n > 0 && (index < limit)) || (index > limit)) {
+
+    if (((n > 0) && (index < limit)) || ((n < 0) && (index > limit))) {
       RF_RP_PUSH(limit);
       RF_RP_PUSH(index);
       rf_branch();
