@@ -146,17 +146,17 @@ FORGET t-xloop
 : t-xploo ROT >R SWAP >R (+LOOP) [ 4 cs , ] 99 ;S R> R>
   DROP ;
  6  0  2 t-xploo  2 t c ." [ 6  0]  2 (+LOOP) -- [ 6  2]" CR
+ 6  4  2 t-xploo 99 t c ." [ 6  4]  2 (+LOOP) -- []" CR
+ 6  4  4 t-xploo 99 t c ." [ 6  4]  4 (+LOOP) -- []" CR
  6  2 -2 t-xploo 99 t c ." [ 6  2] -2 (+LOOP) -- []" CR
 -6  0 -2 t-xploo -2 t c ." [-6  0] -2 (+LOOP) -- [ 6 -2]" CR
 -6 -4 -2 t-xploo 99 t c ." [-6 -4] -2 (+LOOP  -- []" CR
 -6 -6 -2 t-xploo 99 t c ." [-6 -6] -2 (+LOOP) -- []" CR
 FORGET t-xploo
-
 6 0 (DO) R> 0 t R> 6 t c ." 6 0 (DO) -- [6 0]" CR
 
 123 >R I 123 t c R> DROP ." I -- I" CR
 456 >R R 456 t c R> DROP ." R -- R" CR
-
 -->
 ( DIGIT                                                  test )
 DECIMAL
