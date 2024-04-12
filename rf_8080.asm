@@ -1,4 +1,6 @@
-; Modified for orterforth integration in 2024
+; Modified for orterforth integration in 2024. In particular
+; for 8085, undocumented opcodes are used and minor operational
+; changes (DE not incremented to W+1) made accordingly.
 
 SECTION code_user
 
