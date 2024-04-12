@@ -58,4 +58,4 @@ pico/orterforth.uf2 : \
 	system.inc
 
 	rm -rf pico/orterforth.*
-	cd pico && PICO_SDK_PATH=~/pico-sdk make
+	cd pico && PICO_SDK_PATH=~/pico/pico-sdk make
