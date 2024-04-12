@@ -19,6 +19,11 @@
 
 #define RF_INST_SAVE
 
+/* defined in io.c */
+#define RF_TARGET_CODE_DCHAR
+#define RF_TARGET_CODE_BREAD
+#define RF_TARGET_CODE_BWRIT
+
 #ifdef RF_ASSEMBLY
 #define RF_TARGET_FP
 #define RF_TARGET_IP

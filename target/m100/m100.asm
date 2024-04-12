@@ -5,8 +5,8 @@ sera:   DEFB    0               ; buffer read index
 
 SECTION code_user
 
-PUBLIC _rf_serial_init
-_rf_serial_init:
+PUBLIC _rf_init
+_rf_init:
         MVI     A,$25           ; RS232 not modem
         OUT     $BA
         MVI     A,28            ; 8N1
@@ -41,6 +41,13 @@ _rf_console_qterm:
         RNZ
         INR     L
         RET
+
+PUBLIC _rf_console_cr
+_rf_console_cr:
+        MVI     A,$0D           ; CR
+        CALL    $4B44           ; CHROUT
+        MVI     A,$0A           ; LF
+        JP      $4B44           ; CHROUT
 
                                 ; serial interrupt handler 6.5
 
@@ -124,8 +131,8 @@ put1:   IN      $BB             ; wait for CTS
         OUT     $C8
         RET
 
-PUBLIC _rf_serial_fin
-_rf_serial_fin:
+PUBLIC _rf_fin
+_rf_fin:
         LXI     H,$F5FC         ; restore interrupt vector
         MVI     M,$C9
         INX     H

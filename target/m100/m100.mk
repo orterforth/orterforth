@@ -8,8 +8,8 @@ M100OPTION := $(OPTION)
 endif
 endif
 
-M100DEPS := main.c m100/m100.lib m100/rf.lib m100/system.lib m100/inst.lib
-M100LIBS := -lm100/m100 -lm100/rf -lm100/system -lm100/inst
+M100DEPS := main.c m100/io.lib m100/m100.lib m100/rf.lib m100/inst.lib
+M100LIBS := -lm100/io -lm100/m100 -lm100/rf -lm100/inst
 M100ORG := 45000
 M100ORIGIN := 0xC880
 # POKE is to reset the RS232 interrupt handler; now load loader at 9600 baud, 8N1, XON/XOFF
@@ -89,6 +89,10 @@ m100/inst.lib : inst.c inst.h rf.h target/m100/m100.inc | m100
 
 	zcc $(M100ZCCOPTS) -x -o $@ $<
 
+m100/io.lib : io.c rf.h target/m100/m100.inc | m100
+
+	zcc $(M100ZCCOPTS) -x -o $@ $<
+
 m100/m100.lib : target/m100/m100.asm | m100
 
 	zcc $(M100ZCCOPTS) -x -o $@ $<
@@ -119,9 +123,5 @@ m100/rf.lib : rf.c rf.h target/m100/m100.inc | m100
 	zcc $(M100ZCCOPTS) -x -o $@ $<
 
 m100/rf_8080.lib : rf_8080.asm | m100
-
-	zcc $(M100ZCCOPTS) -x -o $@ $<
-
-m100/system.lib : target/m100/system.c rf.h target/m100/m100.inc | m100
 
 	zcc $(M100ZCCOPTS) -x -o $@ $<
