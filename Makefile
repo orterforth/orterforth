@@ -80,6 +80,7 @@ STARTDISCTCP := $(STARTDISC) tcp 5705
 SYSTEMDEPS := \
 	$(SYSTEM)/inst.o \
 	$(SYSTEM)/io.o \
+	$(SYSTEM)/main.o \
 	$(SYSTEM)/persci.o \
 	$(SYSTEM)/system.o
 
@@ -123,7 +124,7 @@ SYSTEMDEPS += $(SYSTEM)/rf.o
 endif
 
 # local system executable
-$(ORTERFORTH) : $(SYSTEMDEPS) main.c
+$(ORTERFORTH) : $(SYSTEMDEPS)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
@@ -153,11 +154,15 @@ $(SYSTEM)-run : $(ORTERFORTH) $(DR0) $(DR1)
 
 	@$^
 
-$(SYSTEM)/inst.o : inst.c model.inc rf.h system.inc persci.h | $(SYSTEM)
+$(SYSTEM)/inst.o : inst.c inst.h rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 $(SYSTEM)/io.o : io.c rf.h system.inc | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+$(SYSTEM)/main.o : main.c inst.h model.inc persci.h rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
