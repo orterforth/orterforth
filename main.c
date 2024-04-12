@@ -33,7 +33,7 @@ int main(void)
 
     /* now "eject" the inst disc */
 #ifdef RF_INST_LOCAL_DISC
-    rf_persci_eject(0);
+    if (rf_persci_eject(0)) return 1;
 #endif
   }
 

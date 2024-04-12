@@ -90,13 +90,13 @@ int rf_persci_insert_bytes(int drive, const uint8_t *bytes)
   return 0;
 }
 
-void rf_persci_eject(int drive)
+int rf_persci_eject(int drive)
 {
   int ret;
 
   /* drive 0-3 only */
   if ((ret = validate_drive_no(drive))) {
-    exit(ret);
+    return ret;
   }
   /* close the file */
   if (files[drive]) {
@@ -112,6 +112,8 @@ void rf_persci_eject(int drive)
   discs[drive] = 0;
   /* mark ejected */
   rf_persci_ejected = 1;
+
+  return 0;
 }
 
 /* BUFFER */

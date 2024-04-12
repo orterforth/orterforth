@@ -16,7 +16,7 @@ int rf_persci_insert(int drive, char *filename);
 
 int rf_persci_insert_bytes(int drive, const uint8_t *bytes);
 
-void rf_persci_eject(int drive);
+int rf_persci_eject(int drive);
 
 int rf_persci_getc(void);
 
