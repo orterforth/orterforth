@@ -6,6 +6,14 @@
 
 #include "persci.h"
 
+/* ASCII C0 CONTROLS */
+
+#define SOH 1
+#define EOT 4
+#define ENQ 5
+#define ACK 6
+#define NAK 21
+
 /* DRIVES */
 
 static FILE *files[4] = { 0, 0, 0, 0 };
@@ -158,7 +166,7 @@ static void rf_persci_error(const char *message)
 {
   /* send error */
   rf_persci_reset();
-  rf_persci_w(RF_ASCII_NAK);
+  rf_persci_w(NAK);
   rf_persci_ws(message);
   rf_persci_ws(" ERROR\r\n\004");
 
@@ -171,7 +179,7 @@ static void rf_persci_error_on_drive(const char *message, uint8_t drive)
 {
   /* send error */
   rf_persci_reset();
-  rf_persci_w(RF_ASCII_NAK);
+  rf_persci_w(NAK);
   rf_persci_ws(message);
   rf_persci_ws(" ERROR ON DRIVE #");
   rf_persci_w(48 + drive);
@@ -219,7 +227,7 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
 
   /* start response */
   rf_persci_reset();
-  rf_persci_w(RF_ASCII_SOH);
+  rf_persci_w(SOH);
 
   /* read from memory */
   p = discs[drive] + offset(track, sector);
@@ -228,8 +236,8 @@ static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
   }
 
   /* ACK EOT */
-  rf_persci_w(RF_ASCII_ACK);
-  rf_persci_w(RF_ASCII_EOT);
+  rf_persci_w(ACK);
+  rf_persci_w(EOT);
 
   /* set state */
   rf_persci_state = RF_PERSCI_STATE_INPUT;
@@ -249,8 +257,8 @@ static void rf_persci_output(uint8_t track, uint8_t sector, uint8_t drive)
 
   /* ENQ EOT */
   rf_persci_reset();
-  rf_persci_w(RF_ASCII_ENQ);
-  rf_persci_w(RF_ASCII_EOT);
+  rf_persci_w(ENQ);
+  rf_persci_w(EOT);
 
   /* set state */
   rf_persci_state = RF_PERSCI_STATE_OUTPUT;
@@ -294,7 +302,7 @@ static void rf_persci_write(void)
   size_t len;
 
   /* get size of data */
-  for (len = 0; rf_persci_r() != RF_ASCII_EOT; ++len) {
+  for (len = 0; rf_persci_r() != EOT; ++len) {
   }
   /* get location */
   off = offset(rf_persci_track, rf_persci_sector);
@@ -328,8 +336,8 @@ static void rf_persci_write(void)
 
   /* ACK EOT */
   rf_persci_reset();
-  rf_persci_w(RF_ASCII_ACK);
-  rf_persci_w(RF_ASCII_EOT);
+  rf_persci_w(ACK);
+  rf_persci_w(EOT);
 
   /* update state */
   rf_persci_state = RF_PERSCI_STATE_WRITTEN;
@@ -393,7 +401,7 @@ static void rf_persci_command(void)
       }
       drive = rf_persci_read_int();
       /* EOT */
-      if (!rf_persci_expect(RF_ASCII_EOT)) {
+      if (!rf_persci_expect(EOT)) {
         break;
       }
 
@@ -477,7 +485,7 @@ int rf_persci_putc(char c)
   rf_persci_w(c);
 
   /* on EOT, operate */
-  if (c == RF_ASCII_EOT) {
+  if (c == EOT) {
     rf_persci_serve();
   }
 

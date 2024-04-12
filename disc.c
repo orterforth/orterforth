@@ -9,6 +9,8 @@
 #include "orter/tcp.h"
 #include "persci.h"
 
+#define EOT 4
+
 #define CHECK(exit, function) exit = (function); if (exit) return exit;
 
 #define RF_BBLK 128
@@ -101,7 +103,7 @@ static void disc_log_input(char c)
     fputs("\033[0;33m", stderr);
     log_io = 0;
   }
-  fputc(c == RF_ASCII_EOT ? '\n' : c, stderr);
+  fputc(c == EOT ? '\n' : c, stderr);
 }
 
 static void disc_log_output(char c)
@@ -110,7 +112,7 @@ static void disc_log_output(char c)
     fputs("\033[0m", stderr);
     log_io = 1;
   }
-  fputc(c == RF_ASCII_EOT ? '\n' : c, stderr);
+  fputc(c == EOT ? '\n' : c, stderr);
 }
 
 /* Server loop */
@@ -163,7 +165,7 @@ static void process_simple(void)
     if (disc_put(c) == -1) {
       break;
     }
-    if (c == RF_ASCII_EOT) {
+    if (c == EOT) {
       break;
     }
   }
@@ -177,7 +179,7 @@ static void process_simple(void)
     if (orter_io_pipe_put(&out, c) == -1) {
       break;
     }
-    if (c == RF_ASCII_EOT) {
+    if (c == EOT) {
       break;
     }
   }
@@ -265,7 +267,7 @@ static void process_mux(void)
     if (orter_io_pipe_put(&out, c | 0x80) == -1) {
       break;
     }
-    if (c == RF_ASCII_EOT) {
+    if (c == EOT) {
       break;
     }
   }
