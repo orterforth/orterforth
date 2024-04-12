@@ -11,7 +11,7 @@ endif
 M100DEPS := main.c m100/io.lib m100/m100.lib m100/inst.lib
 M100LIBS := -lm100/io -lm100/m100 -lm100/inst
 M100ORG := 45000
-M100ORIGIN := 0xC880
+M100ORIGIN := 0xC8C0
 # POKE is to reset the RS232 interrupt handler; now load loader at 9600 baud, 8N1, XON/XOFF
 M100PROMPT := $(PROMPT) 'On the target type POKE 62972,201 <enter> RUN "COM:88N1E" <enter>'
 # -d 0.001 ensures any TX FIFO does not fill up faster than data transfer
