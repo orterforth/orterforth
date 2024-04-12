@@ -8,12 +8,12 @@ Z88OPTION := $(OPTION)
 endif
 endif
 
-Z88DEPS := z88/inst.lib z88/system.lib main.c
+Z88DEPS := z88/inst.lib z88/io.lib z88/system.lib main.c
 Z88IMPEXPORT := \
 	$(PROMPT) "On the Z88 go to: Imp-Export and R)eceive file" && \
 	$(INFO) "Importing file" && \
 	$(ORTER) serial -e 15 $(SERIALPORT) $(SERIALBAUD) <
-Z88LIBS := -lm -lz88/inst -lz88/system
+Z88LIBS := -lm -lz88/inst -lz88/io -lz88/system
 # PAGE
 Z88ORG := 0x2300
 Z88ORIGIN := 0x3E00
@@ -70,7 +70,11 @@ z88/inst.bin z88/inst.map : $(Z88DEPS)
 
 	zcc $(Z88ZCCOPTS) $(Z88LIBS) -m -o z88/inst.bin main.c
 
-z88/inst.lib : inst.c rf.h | z88
+z88/inst.lib : inst.c rf.h target/z88/z88.inc | z88
+
+	zcc $(Z88ZCCOPTS) -x -o $@ $<
+
+z88/io.lib : io.c rf.h target/z88/z88.inc | z88
 
 	zcc $(Z88ZCCOPTS) -x -o $@ $<
 
@@ -89,7 +93,7 @@ z88/orterforth.hex : z88/inst.imp z88/inst.bin model.img
 	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 
-z88/rf.lib : rf.c rf.h target/z88/system.inc | z88
+z88/rf.lib : rf.c rf.h target/z88/z88.inc | z88
 
 	zcc $(Z88ZCCOPTS) -x -o $@ $<
 
@@ -97,6 +101,6 @@ z88/rf_z80.lib : rf_z80.asm | z88
 
 	zcc $(Z88ZCCOPTS) -x -o $@ $<
 
-z88/system.lib : target/z88/system.c rf.h | z88
+z88/system.lib : target/z88/system.c | z88
 
 	zcc $(Z88ZCCOPTS) -x -o $@ $<
