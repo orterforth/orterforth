@@ -26,7 +26,7 @@ int main(void)
   if (!rf_installed) {
     /* "insert" the inst disc */
 #ifdef RF_INST_LOCAL_DISC
-    rf_persci_insert_bytes(0, model_img);
+    if (rf_persci_insert_bytes(0, model_img)) return 1;
 #endif
 
     rf_inst();

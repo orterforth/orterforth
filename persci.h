@@ -5,6 +5,7 @@
 
 /* ASCII CONTROL CHARS */
 
+/* TODO remove, define locally in disc.c and persci.c */
 #define RF_ASCII_SOH 1
 #define RF_ASCII_EOT 4
 #define RF_ASCII_ENQ 5
@@ -13,7 +14,7 @@
 
 int rf_persci_insert(int drive, char *filename);
 
-void rf_persci_insert_bytes(int drive, const uint8_t *bytes);
+int rf_persci_insert_bytes(int drive, const uint8_t *bytes);
 
 void rf_persci_eject(int drive);
 

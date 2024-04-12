@@ -76,16 +76,18 @@ int rf_persci_insert(int drive, char *filename)
   return 0;
 }
 
-void rf_persci_insert_bytes(int drive, const uint8_t *bytes)
+int rf_persci_insert_bytes(int drive, const uint8_t *bytes)
 {
   int ret;
 
   /* drive 0-3 only */
   if ((ret = validate_drive_no(drive))) {
-    exit(ret);
+    return ret;
   }
   /* point at byte array */
   discs[drive] = (uint8_t *) bytes;
+
+  return 0;
 }
 
 void rf_persci_eject(int drive)
