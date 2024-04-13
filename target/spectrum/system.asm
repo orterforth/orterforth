@@ -89,27 +89,15 @@ key2:   BIT     1,E             ; test caps lock
         JR      NC,key3
         AND     5FH             ; make upper case
         JR      key10
-key3:   CP      0C6H            ; AND (symbol shift + Y)
-        JR      NZ,key4
-        LD      A,5BH           ; [
-key4:   CP      0C5H            ; OR (symbol shift + U)
-        JR      NZ,key5
-        LD      A,5DH           ; ]
-key5:   CP      0E2H            ; STOP (symbol shift + A)
-        JR      NZ,key6
-        LD      A,7EH           ; ~
-key6:   CP      0C3H            ; NOT (symbol shift + S)
-        JR      NZ,key7
-        LD      A,7CH           ; |
-key7:   CP      0CDH            ; STEP (symbol shift + D)
-        JR      NZ,key8
-        LD      A,5CH           ; \
-key8:   CP      0CCH            ; TO (symbol shift + F)
-        JR      NZ,key9
-        LD      A,7BH           ; {
-key9:   CP      0CBH            ; THEN (symbol shift + G)
-        JR      NZ,key10
-        LD      A,7DH           ; }
+key3:   LD      HL,key11        ; chars normally from extended mode
+        LD      B,7
+key4:   CP      (HL)            ; read the original code
+        INC     HL
+        JR      Z,key6          ; found a mapping
+        INC     HL      
+        DJNZ    key4
+        JR      key10           ; found no mapping
+key6:   LD      A,(HL)          ; read the mapped code
 key10:  AND     7FH             ; now we have the code
         LD      H,0
         LD      L,A
@@ -136,6 +124,21 @@ ELSE
         PUSH    HL
         JP      (IX)
 ENDIF
+
+key11:  DEFB    0C6H            ; AND (symbol shift + Y)
+        DEFB    5BH             ; [
+        DEFB    0C5H            ; OR (symbol shift + U)
+        DEFB    5DH             ; ]
+        DEFB    0E2H            ; STOP (symbol shift + A)
+        DEFB    7EH             ; ~
+        DEFB    0C3H            ; NOT (symbol shift + S)
+        DEFB    7CH             ; |
+        DEFB    0CDH            ; STEP (symbol shift + D)
+        DEFB    5CH             ; \
+        DEFB    0CCH            ; TO (symbol shift + F)
+        DEFB    7BH             ; {
+        DEFB    0CBH            ; THEN (symbol shift + G)
+        DEFB    7DH             ; }
 
 PUBLIC _rf_code_cr              ;CR
 
