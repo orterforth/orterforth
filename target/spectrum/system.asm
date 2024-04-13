@@ -133,7 +133,8 @@ ENDIF
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      _rf_z80_hpush
+        PUSH    HL
+        JP      (IX)
 ENDIF
 
 PUBLIC _rf_code_cr              ;CR
@@ -160,7 +161,8 @@ _rf_code_qterm:
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      _rf_z80_hpush
+        PUSH    HL
+        JP      (IX)
 ENDIF
 
 PUBLIC _rf_code_bwrit           ;BLOCK-WRITE
@@ -220,7 +222,8 @@ dchar2: PUSH    HL              ; push flag
 IFDEF USEIY
         JP      (IY)
 ELSE
-        JP      _rf_z80_hpush
+        PUSH    HL
+        JP      (IX)
 ENDIF
 
 PUBLIC _rf_code_bread           ;BLOCK-READ
