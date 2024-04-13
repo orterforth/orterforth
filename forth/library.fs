@@ -274,34 +274,34 @@ pascal ;S
 0 WARNING ! HEX
 CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
 : d36. BASE @ >R 24 BASE ! D. R> BASE ! ;
-." Version        : " 4 lit@ 100 /MOD .. 2E EMIT ..
-5 lit@ 7F AND EMIT CR
-." Platform       : " 14 lit@ 13 lit@ d36. CR
-." CPU            : " 12 lit@ 11 lit@ d36. CR
-." Cell size      : " cl . ." bytes" CR
+
+: vers. 4 lit@ 100 /MOD .. 2E EMIT .. 5 lit@ EMIT ;
+
 : endn 5 lit@ 0200 AND IF ." Little" ELSE ." Big" ENDIF ;
-." Byte order     : " endn ." -endian" CR
+
 : addr 5 lit@ 0100 AND IF ." Word" ELSE ." Byte" ENDIF ;
-." CPU Addressing : " addr CR : ad. 0 cl DUP + D.R ;
-." Origin         : " 0 +ORIGIN ad. CR
-." DP             : " DP @ ad. CR
-." SP             : " SP@ ad. CR -->
+: ad. 0 cl DUP + D.R ;
+: voc. 2 cs + NFA CFA NFA ID. ;
+: about
+  ." Version    : " vers. CR
+  ." Platform   : " 14 lit@ 13 lit@ d36. CR
+-->
 (                                                             )
-." TIB            : " TIB @ ad. CR
-." CONTEXT        : " CONTEXT @ 2 cs + NFA CFA NFA ID. CR
-." CURRENT        : " CURRENT @ 2 cs + NFA CFA NFA ID. CR
-FORGET lit@
+  ." CPU        : " 12 lit@ 11 lit@ d36. CR
+  ." Cell size  : " cl . ." bytes" CR
+  ." Byte order : " endn ." -endian" CR
+  ." Addressing : " addr CR
+  ." Origin     : " 0 +ORIGIN ad. CR
+  ." DP         : " DP @ ad. CR
+  ." SP         : " SP@ ad. CR 
+  ." TIB        : " TIB @ ad. CR
+  ." USER       : " TIB 5 cs - ad. CR
+  ." FIRST      : " FIRST ad. CR
+  ." LIMIT      : " LIMIT ad. CR
+  ." CONTEXT    : " CONTEXT @ voc. CR
+  ." CURRENT    : " CURRENT @ voc. CR ;
+about
 ;S
-
-
-
-
-
-
-
-
-
-
 ( string handling: ", copy                                str )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
