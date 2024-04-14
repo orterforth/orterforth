@@ -96,9 +96,11 @@ _rf_code_bread:
         LD      B,$80           ; loop for 128 bytes
 bread1: CALL    discr           ; read a byte
         LD      (HL),A          ; write byte to addr
+        CP      $04             ; see if EOT
+        JR      Z,bread2        ; finish if so
         INC     HL              ; advance addr
         DJNZ    bread1          ; loop back for more bytes
-        POP     BC              ; restore IP
+bread2: POP     BC              ; restore IP
         JP      (IX)
 
 PUBLIC _rf_code_bwrit
