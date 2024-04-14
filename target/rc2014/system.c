@@ -7,6 +7,16 @@ void rf_init(void)
 {
 }
 
+uint8_t rf_serial_get(void)
+{
+  return rf_mux_serial_get();
+}
+
+void rf_serial_put(uint8_t b)
+{
+  rf_mux_serial_put(b);
+}
+
 void rf_disc_read(char *c, unsigned char len)
 {
   rf_mux_disc_read(c, len);
@@ -24,7 +34,7 @@ void rf_code_dchar(void)
     char a, c;
 
     a = (char) (*(rf_sp++));
-    rf_disc_read(&c, 1);
+    c = rf_serial_get();
     *(--rf_sp) = (c == a);
     *(--rf_sp) = (c);
   }
@@ -34,21 +44,33 @@ void rf_code_dchar(void)
 void rf_code_bread(void)
 {
   RF_START;
-  rf_disc_read((char *) (*(rf_sp++)), RF_BBLK);
+  {
+    uint8_t len = RF_BBLK;
+    uint8_t *p = (uint8_t *) (*(rf_sp++));
+
+    /* read into the buffer, break on EOT */
+    for (; len; --len) {
+      if ((*(p++) = rf_serial_get()) == 0x04) {
+        break;
+      }
+    }
+  }
   RF_JUMP_NEXT;
 }
-
-static char eot = 0x04;
 
 void rf_code_bwrit(void)
 {
   RF_START;
   {
-    uint8_t a = (uint8_t) (*(rf_sp++));
-    char *b = (char *) (*(rf_sp++));
+    uint8_t len = (uint8_t) (*(rf_sp++));
+    uint8_t *b = (uint8_t *) (*(rf_sp++));
 
-    rf_disc_write(b, a);
-    rf_disc_write(&eot, 1);
+    /* write from buffer */
+    for (; len; --len) {
+      rf_serial_put(*(b++));
+    }
+    /* write EOT */
+    rf_serial_put(0x04);
   }
   RF_JUMP_NEXT;
 }
