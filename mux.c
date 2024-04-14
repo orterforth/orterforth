@@ -12,23 +12,25 @@
 #define RF_SLEEP(a) z80_delay_ms(a);
 #endif
 
+void rf_console_put(uint8_t b)
+{
+  /* keep 7 bits, write char, wait if serial disconnected */
+  while (putchar(b & 0x7F) == -1) {
+    RF_SLEEP(1000);
+  }
+
+  /* backspace erase */
+  if (b == 0x08) {
+    putchar(' ');
+    putchar(b);
+  }
+}
+
 void rf_code_emit(void)
 {
   RF_START;
   {
-    /* pop char, keep 7 bits */
-    int c = *(rf_sp++) & 0x7F;
-    
-    /* write char, wait if serial disconnected */
-    while (putchar(c) == -1) {
-      RF_SLEEP(1000);
-    }
-
-    /* backspace erase */
-    if (c == 0x08) {
-      putchar(' ');
-      putchar(c);
-    }
+    rf_console_put(*(rf_sp++));
 
     /* advance OUT */
     RF_USER_OUT++;
@@ -36,43 +38,56 @@ void rf_code_emit(void)
   RF_JUMP_NEXT;
 }
 
+uint8_t rf_console_get(void)
+{
+  int c;
+
+  /* read char, skip disc input, wait if serial disconnected */
+  while ((c = getchar()) == -1 || c & 0x80) {
+    if (c == -1) {
+      RF_SLEEP(1000);
+    }
+  }
+
+  /* LF to CR */
+  if (c == 10) {
+    c = 13;
+  }
+
+  /* push char, keep 7 bits */
+  return (c & 0x7F);
+}
+
 void rf_code_key(void)
 {
   RF_START;
   {
-    int c;
-
-    /* read char, skip disc input, wait if serial disconnected */
-    while ((c = getchar()) == -1 || c & 0x80) {
-      if (c == -1) {
-        RF_SLEEP(1000);
-      }
-    }
-
-    /* LF to CR */
-    if (c == 10) {
-      c = 13;
-    }
-
-    /* push char, keep 7 bits */
-    *(--rf_sp) = (c & 0x7F);
+    *(--rf_sp) = rf_console_get();
   }
   RF_JUMP_NEXT;
+}
+
+uint8_t rf_console_qterm(void)
+{
+  return 0;
 }
 
 void rf_code_qterm(void)
 {
   RF_START;
-  *(--rf_sp) = (0);
+  *(--rf_sp) = rf_console_qterm();
   RF_JUMP_NEXT;
+}
+
+void rf_console_cr(void)
+{
+  rf_console_put(0x0A);
 }
 
 void rf_code_cr(void)
 {
   RF_START;
-  while (putchar(10) == -1) {
-    RF_SLEEP(1000);
-  }
+  rf_console_cr();
   RF_JUMP_NEXT;
 }
 
