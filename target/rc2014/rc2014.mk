@@ -80,11 +80,6 @@ rc2014 :
 .PHONY : rc2014-build
 rc2014-build : rc2014/orterforth.ihx
 
-.PHONY : rc2014-clean
-rc2014-clean :
-
-	rm -rf rc2014/*
-
 .PHONY : rc2014-connect
 rc2014-connect : | $(DISC) $(DR0) $(DR1)
 
