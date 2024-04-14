@@ -17,16 +17,6 @@ void rf_serial_put(uint8_t b)
   rf_mux_serial_put(b);
 }
 
-void rf_disc_read(char *c, unsigned char len)
-{
-  rf_mux_disc_read(c, len);
-}
-
-void rf_disc_write(char *c, unsigned char len)
-{
-  rf_mux_disc_write(c, len);
-}
-
 void rf_code_dchar(void)
 {
   RF_START;

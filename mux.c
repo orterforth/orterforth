@@ -12,7 +12,7 @@
 #define RF_SLEEP(a) z80_delay_ms(a);
 #endif
 
-void rf_console_put(uint8_t b)
+void __FASTCALL__ rf_console_put(uint8_t b)
 {
   /* keep 7 bits, write char, wait if serial disconnected */
   while (putchar(b & 0x7F) == -1) {
@@ -105,7 +105,7 @@ uint8_t rf_mux_serial_get(void)
   return c & 0x7F;
 }
 
-void rf_mux_serial_put(uint8_t b)
+void __FASTCALL__ rf_mux_serial_put(uint8_t b)
 {
   /* write char, set bit 7, wait if serial disconnected */
   while (putchar(b | 0x80) == -1) {
