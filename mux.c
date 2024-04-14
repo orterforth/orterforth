@@ -76,33 +76,38 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
-void rf_mux_disc_read(char *p, unsigned char len)
+uint8_t rf_mux_serial_get(void)
 {
   int c;
 
-  for (; len; len--) {
-
-    /* read char, skip keyboard input, wait if serial disconnected */
-    while ((c = getchar()) == -1 || !(c & 0x80)) {
-      if (c == -1) {
-        RF_SLEEP(1000);
-      }
+  /* read char, skip keyboard input, wait if serial disconnected */
+  while ((c = getchar()) == -1 || !(c & 0x80)) {
+    if (c == -1) {
+      RF_SLEEP(1000);
     }
+  }
 
-    /* write char, keep 7 bits */
-    *(p++) = c & 0x7F;
+  return c & 0x7F;
+}
+
+void rf_mux_serial_put(uint8_t b)
+{
+  /* write char, set bit 7, wait if serial disconnected */
+  while (putchar(b | 0x80) == -1) {
+    RF_SLEEP(1000);
+  }
+}
+
+void rf_mux_disc_read(char *p, unsigned char len)
+{
+  for (; len; len--) {
+    *(p++) = rf_mux_serial_get();
   }
 }
 
 void rf_mux_disc_write(char *p, unsigned char len)
 {
   for (; len; len--) {
-
-    /* write char, set bit 7, wait if serial disconnected */
-    while (putchar(*p | 0x80) == -1) {
-      RF_SLEEP(1000);
-    }
-
-    p++;
+    rf_mux_serial_put(*(p++));
   }
 }

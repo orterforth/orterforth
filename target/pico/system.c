@@ -35,27 +35,37 @@ void rf_init(void)
 
 extern uint8_t rf_persci_ejected;
 
-void rf_disc_read(char *p, uint8_t len)
+static uint8_t rf_serial_get(void)
 {
   if (!rf_persci_ejected) {
-    for (; len; --len) {
-      *(p++) = rf_persci_getc();
+    return rf_persci_getc();
+  } else {
+    return rf_mux_serial_get();
+  }
+}
+
+void rf_disc_read(char *p, uint8_t len)
+{
+  for (; len; --len) {
+    *(p++) = rf_serial_get();
+  }
+}
+
+static void __FASTCALL__ rf_serial_put(uint8_t b)
+{
+  if (!rf_persci_ejected) {
+    if (rf_persci_putc(b) == -1) {
+      error("rf_persci_putc invalid state\n");
     }
   } else {
-    rf_mux_disc_read(p, len);
+    rf_mux_serial_put(b);
   }
 }
 
 void rf_disc_write(char *p, uint8_t len)
 {
-  if (!rf_persci_ejected) {
-    for (; len; --len) {
-      if (rf_persci_putc(*(p++)) == -1) {
-        error("rf_persci_putc invalid state\n");
-      }
-    }
-  } else {
-    rf_mux_disc_write(p, len);
+  for (; len; --len) {
+    rf_serial_put(*(p++));
   }
 }
 
