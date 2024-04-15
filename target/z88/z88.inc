@@ -18,10 +18,6 @@
 /* LOMEM */
 #define RF_LIMIT 0xB000
 
-#define RF_TARGET_CODE_BREAD
-#define RF_TARGET_CODE_BWRIT
-#define RF_TARGET_CODE_DCHAR
-
 #ifdef RF_ASSEMBLY
 #define RF_TARGET_FP
 #define RF_TARGET_IP

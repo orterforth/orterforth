@@ -88,11 +88,6 @@ LIMIT at the end of memory, by default much of the memory map
 */
 #define RF_LIMIT ((char *) rf_origin + RF_MEMORY_SIZE)
 
-/* defined in io.c rather than rf.c */
-#define RF_TARGET_CODE_DCHAR
-#define RF_TARGET_CODE_BREAD
-#define RF_TARGET_CODE_BWRIT
-
 /*
 Define this to flag that assembly code definitions are provided.
 This will omit the C code definitions from the build so that

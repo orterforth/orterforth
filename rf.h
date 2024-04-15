@@ -471,6 +471,8 @@ void rf_code_cold(void);
 
 void rf_code_stod(void);
 
+/* CONSOLE */
+
 void rf_code_emit(void);
 
 void rf_code_key(void);

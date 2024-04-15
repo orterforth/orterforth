@@ -32,11 +32,6 @@
 /* origin passed in command line, follows the C code */
 /*#define RF_ORIGIN xxxx*/
 
-/* now defined in io.c */
-#define RF_TARGET_CODE_DCHAR
-#define RF_TARGET_CODE_BREAD
-#define RF_TARGET_CODE_BWRIT
-
 /* no assembly definitions */
 
 #endif
@@ -122,9 +117,6 @@
 #define RF_TARGET_CODE_DODOE
 #define RF_TARGET_CODE_COLD
 #define RF_TARGET_CODE_STOD
-#define RF_TARGET_CODE_DCHAR
-#define RF_TARGET_CODE_BREAD
-#define RF_TARGET_CODE_BWRIT
 #define RF_TARGET_CODE_MON
 #define RF_TARGET_CODE_CL
 #define RF_TARGET_CODE_CS
