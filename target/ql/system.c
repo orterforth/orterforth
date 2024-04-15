@@ -112,16 +112,6 @@ void rf_code_cr(void)
   RF_JUMP_NEXT;
 }
 
-static void rf_disc_read(char *p, uint8_t len)
-{
-  io_fstrg(ser, TIMEOUT_FOREVER, p, len);
-}
-
-static void rf_disc_write(char *p, uint8_t len)
-{
-  io_sstrg(ser, TIMEOUT_FOREVER, p, len);
-}
-
 void rf_code_dchar(void)
 {
   RF_START;
@@ -129,7 +119,7 @@ void rf_code_dchar(void)
     char a, c;
 
     a = (char) RF_SP_POP;
-    rf_disc_read(&c, 1);
+    io_fstrg(ser, TIMEOUT_FOREVER, &c, 1);
     RF_SP_PUSH(c == a);
     RF_SP_PUSH(c);
   }
@@ -139,7 +129,7 @@ void rf_code_dchar(void)
 void rf_code_bread(void)
 {
   RF_START;
-  rf_disc_read((char *) RF_SP_POP, RF_BBLK);
+  io_fstrg(ser, TIMEOUT_FOREVER, (char *) RF_SP_POP, RF_BBLK);
   RF_JUMP_NEXT;
 }
 
@@ -152,8 +142,8 @@ void rf_code_bwrit(void)
     uint8_t a = (uint8_t) RF_SP_POP;
     char *b = (char *) RF_SP_POP;
 
-    rf_disc_write(b, a);
-    rf_disc_write(&eot, 1);
+    io_sstrg(ser, TIMEOUT_FOREVER, b, a);
+    io_sstrg(ser, TIMEOUT_FOREVER, &eot, 1);
   }
   RF_JUMP_NEXT;
 }
