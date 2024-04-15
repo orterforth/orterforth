@@ -39,6 +39,34 @@ rf_start:
         STR     R3, [R0]
         BX      LR              @ carry on in C
 
+        .data
+
+        .p2align 2
+        .global rf_fp
+rf_fp:  .long 0
+
+        .p2align 2
+        .global rf_ip
+rf_ip:  .long 0
+
+        .p2align 2
+        .global rf_rp
+rf_rp:  .long 0
+
+        .p2align 2
+        .global rf_sp
+rf_sp:  .long 0
+
+        .p2align 2
+        .global rf_up
+rf_up:  .long 0
+
+        .p2align 2
+        .global rf_w
+rf_w:   .long 0
+
+        .text
+
         .align 4
 fpp:    .word rf_fp
 ipp:    .word rf_ip

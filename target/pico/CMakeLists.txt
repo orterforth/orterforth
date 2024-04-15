@@ -34,11 +34,12 @@ add_library(io OBJECT ../../io.c $<TARGET_OBJECTS:rf>)
 add_library(mux OBJECT ../../mux.c $<TARGET_OBJECTS:rf>)
 # Disc controller, for inst on startup
 add_library(persci OBJECT ../../persci.c)
-# Forth primitives in C
-add_library(rf OBJECT ../../rf.c)
-# Forth primitives in ARM Cortex M0+ assembly code
 if(RF_ASSEMBLY)
-    add_library(rf_armv6m OBJECT ../../rf_armv6-m.s)
+    # Forth primitives in ARM Cortex M0+ assembly code
+    add_library(rf OBJECT ../../rf_armv6-m.s)
+else()
+    # Forth primitives in C
+    add_library(rf OBJECT ../../rf.c)
 endif(RF_ASSEMBLY)
 # Pico-specific operations
 add_library(system OBJECT system.c $<TARGET_OBJECTS:mux> $<TARGET_OBJECTS:persci>)
@@ -52,7 +53,6 @@ add_executable(${PROJECT_NAME}
     $<TARGET_OBJECTS:mux>
     $<TARGET_OBJECTS:persci>
     $<TARGET_OBJECTS:rf>
-    $<TARGET_OBJECTS:rf_armv6m>
     $<TARGET_OBJECTS:system>
 )
 else()
