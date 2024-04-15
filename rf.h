@@ -481,10 +481,6 @@ void rf_code_cr(void);
 
 /* DISC */
 
-void rf_disc_read(char *c, uint8_t len);
-
-void rf_disc_write(char *p, uint8_t len);
-
 void rf_code_bread(void);
 
 void rf_code_bwrit(void);

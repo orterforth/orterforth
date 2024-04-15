@@ -1153,48 +1153,6 @@ void rf_code_cold(void)
 }
 #endif
 
-#ifndef RF_TARGET_CODE_DCHAR
-void rf_code_dchar(void)
-{
-  RF_START;
-  {
-    char a, c;
-
-    a = (char) RF_SP_POP;
-    rf_disc_read(&c, 1);
-    RF_SP_PUSH(c == a);
-    RF_SP_PUSH(c);
-  }
-  RF_JUMP_NEXT;
-}
-#endif
-
-#ifndef RF_TARGET_CODE_BREAD
-void rf_code_bread(void)
-{
-  RF_START;
-  rf_disc_read((char *) RF_SP_POP, RF_BBLK);
-  RF_JUMP_NEXT;
-}
-#endif
-
-#ifndef RF_TARGET_CODE_BWRIT
-static char eot = 0x04;
-
-void rf_code_bwrit(void)
-{
-  RF_START;
-  {
-    uint8_t a = (uint8_t) RF_SP_POP;
-    char *b = (char *) RF_SP_POP;
-
-    rf_disc_write(b, a);
-    rf_disc_write(&eot, 1);
-  }
-  RF_JUMP_NEXT;
-}
-#endif
-
 #ifndef RF_TARGET_CODE_MON
 void rf_code_mon(void)
 {
