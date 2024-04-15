@@ -28,6 +28,8 @@ endif(RF_ASSEMBLY)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=orterforth.map")
 # Install process
 add_library(inst OBJECT ../../inst.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:persci>)
+# I/O primitives
+add_library(io OBJECT ../../io.c $<TARGET_OBJECTS:rf>)
 # Multiplex console and disc over serial
 add_library(mux OBJECT ../../mux.c $<TARGET_OBJECTS:rf>)
 # Disc controller, for inst on startup
@@ -38,14 +40,15 @@ add_library(rf OBJECT ../../rf.c)
 if(RF_ASSEMBLY)
     add_library(rf_armv6m OBJECT ../../rf_armv6-m.s)
 endif(RF_ASSEMBLY)
-# Pico-specific Forth primitives
-add_library(system OBJECT system.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:persci>)
+# Pico-specific operations
+add_library(system OBJECT system.c $<TARGET_OBJECTS:mux> $<TARGET_OBJECTS:persci>)
 
 # Tell CMake where to find the executable source file
 if(RF_ASSEMBLY)
 add_executable(${PROJECT_NAME} 
     ../../main.c
     $<TARGET_OBJECTS:inst>
+    $<TARGET_OBJECTS:io>
     $<TARGET_OBJECTS:mux>
     $<TARGET_OBJECTS:persci>
     $<TARGET_OBJECTS:rf>
@@ -56,6 +59,7 @@ else()
 add_executable(${PROJECT_NAME} 
     ../../main.c
     $<TARGET_OBJECTS:inst>
+    $<TARGET_OBJECTS:io>
     $<TARGET_OBJECTS:mux>
     $<TARGET_OBJECTS:persci>
     $<TARGET_OBJECTS:rf>

@@ -2,7 +2,6 @@
 
 /*#include "pico/stdlib.h"*/
 #include "../../mux.h"
-#include "../../rf.h"
 #include "../../persci.h"
 
 /* use heap memory */
@@ -35,7 +34,7 @@ void rf_init(void)
 
 extern uint8_t rf_persci_ejected;
 
-static uint8_t rf_serial_get(void)
+uint8_t rf_serial_get(void)
 {
   if (!rf_persci_ejected) {
     return rf_persci_getc();
@@ -44,14 +43,7 @@ static uint8_t rf_serial_get(void)
   }
 }
 
-void rf_disc_read(char *p, uint8_t len)
-{
-  for (; len; --len) {
-    *(p++) = rf_serial_get();
-  }
-}
-
-static void __FASTCALL__ rf_serial_put(uint8_t b)
+void rf_serial_put(uint8_t b)
 {
   if (!rf_persci_ejected) {
     if (rf_persci_putc(b) == -1) {
@@ -59,13 +51,6 @@ static void __FASTCALL__ rf_serial_put(uint8_t b)
     }
   } else {
     rf_mux_serial_put(b);
-  }
-}
-
-void rf_disc_write(char *p, uint8_t len)
-{
-  for (; len; --len) {
-    rf_serial_put(*(p++));
   }
 }
 

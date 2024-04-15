@@ -45,6 +45,7 @@ pico/orterforth.uf2 : \
 	pico/Makefile \
 	inst.c \
 	inst.h \
+	io.c \
 	main.c \
 	model.inc \
 	mux.c \

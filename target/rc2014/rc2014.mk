@@ -62,8 +62,8 @@ RC2014SYSTEMDEPS := target/rc2014/system.asm
 RC2014ZCCOPTS += -DRF_ASSEMBLY
 endif
 ifeq ($(RC2014OPTION),default)
-RC2014DEPS += rc2014/mux.lib rc2014/rf.lib
-RC2014LIBS += -lrc2014/mux -lrc2014/rf
+RC2014DEPS += rc2014/io.lib rc2014/mux.lib rc2014/rf.lib
+RC2014LIBS += -lrc2014/io -lrc2014/mux -lrc2014/rf
 RC2014ORIGIN := 0xAB00
 RC2014SYSTEMDEPS := target/rc2014/system.c mux.h rf.h $(RC2014INC)
 endif
@@ -142,6 +142,10 @@ rc2014/inst_CODE.bin rc2014/inst_INST.bin : \
 	main.c | rc2014
 
 	zcc $(RC2014ZCCOPTS) $(RC2014LIBS) -o rc2014/inst z80_memory.asm main.c
+
+rc2014/io.lib : io.c rf.h $(RC2014INC) | rc2014
+
+	zcc $(RC2014ZCCOPTS) -x -o $@ $<
 
 rc2014/mux.lib : mux.c mux.h rf.h $(RC2014INC) | rc2014
 

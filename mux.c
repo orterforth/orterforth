@@ -26,18 +26,6 @@ void __FASTCALL__ rf_console_put(uint8_t b)
   }
 }
 
-void rf_code_emit(void)
-{
-  RF_START;
-  {
-    rf_console_put(*(rf_sp++));
-
-    /* advance OUT */
-    RF_USER_OUT++;
-  }
-  RF_JUMP_NEXT;
-}
-
 uint8_t rf_console_get(void)
 {
   int c;
@@ -58,37 +46,14 @@ uint8_t rf_console_get(void)
   return (c & 0x7F);
 }
 
-void rf_code_key(void)
-{
-  RF_START;
-  {
-    *(--rf_sp) = rf_console_get();
-  }
-  RF_JUMP_NEXT;
-}
-
 uint8_t rf_console_qterm(void)
 {
   return 0;
 }
 
-void rf_code_qterm(void)
-{
-  RF_START;
-  *(--rf_sp) = rf_console_qterm();
-  RF_JUMP_NEXT;
-}
-
 void rf_console_cr(void)
 {
   rf_console_put(0x0A);
-}
-
-void rf_code_cr(void)
-{
-  RF_START;
-  rf_console_cr();
-  RF_JUMP_NEXT;
 }
 
 uint8_t rf_mux_serial_get(void)
