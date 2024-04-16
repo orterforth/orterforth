@@ -104,9 +104,9 @@ DECIMAL
 14 loader mandelbrot 16 loader pascal     17 loader about
 19 loader primes
 : help
-  ." about collatz fac fib hw mandelbrot pascal rev roman" CR ;
+  ." about collatz fac fib hw mandelbrot "
+  ." pascal primes rev roman" CR ;
 FORTH DEFINITIONS ;S
-
 
 
 
@@ -303,6 +303,7 @@ CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
 about
 ;S
 ( Sieve of Eratosthenes from rosettacode.org           primes )
+example DEFINITIONS DECIMAL
 : prime? ( n -- ? ) HERE + C@ 0= ;
 : composite! ( n -- ) HERE + 1 SWAP C! ;
 : sieve ( n -- )
@@ -317,7 +318,6 @@ about
 : primes CR 1000 sieve CR ;
 primes
 ;S
-
 ( string handling: ", copy                                str )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
