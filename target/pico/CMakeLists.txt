@@ -29,7 +29,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=orterforth.map")
 # Install process
 add_library(inst OBJECT ../../inst.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:persci>)
 # I/O primitives
-add_library(io OBJECT ../../io.c $<TARGET_OBJECTS:rf>)
+add_library(io OBJECT ../../io.c $<TARGET_OBJECTS:rf> $<TARGET_OBJECTS:system>)
 # Multiplex console and disc over serial
 add_library(mux OBJECT ../../mux.c $<TARGET_OBJECTS:rf>)
 # Disc controller, for inst on startup
@@ -45,7 +45,6 @@ endif(RF_ASSEMBLY)
 add_library(system OBJECT system.c $<TARGET_OBJECTS:mux> $<TARGET_OBJECTS:persci>)
 
 # Tell CMake where to find the executable source file
-if(RF_ASSEMBLY)
 add_executable(${PROJECT_NAME} 
     ../../main.c
     $<TARGET_OBJECTS:inst>
@@ -55,17 +54,6 @@ add_executable(${PROJECT_NAME}
     $<TARGET_OBJECTS:rf>
     $<TARGET_OBJECTS:system>
 )
-else()
-add_executable(${PROJECT_NAME} 
-    ../../main.c
-    $<TARGET_OBJECTS:inst>
-    $<TARGET_OBJECTS:io>
-    $<TARGET_OBJECTS:mux>
-    $<TARGET_OBJECTS:persci>
-    $<TARGET_OBJECTS:rf>
-    $<TARGET_OBJECTS:system>
-)
-endif(RF_ASSEMBLY)
 
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${PROJECT_NAME})
