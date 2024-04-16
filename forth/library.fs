@@ -95,17 +95,17 @@ DECLARE VOCABULARY
 
 
 ( examples index                                      example )
-FORTH DEFINITIONS DECIMAL
+FORTH DEFINITIONS
 VOCABULARY example IMMEDIATE example DEFINITIONS
+DECIMAL
 : loader <BUILDS , DOES> DUP CFA NFA 32 TOGGLE @ LOAD ;
  7 loader hw          8 loader collatz     9 loader fib
 10 loader fac        11 loader rev        12 loader roman
 14 loader mandelbrot 16 loader pascal     17 loader about
+19 loader primes
 : help
   ." about collatz fac fib hw mandelbrot pascal rev roman" CR ;
 FORTH DEFINITIONS ;S
-
-
 
 
 
@@ -175,7 +175,7 @@ fac ;S
 
 
 ( Reverse a string                                        rev )
-DECIMAL 19 LOAD                ( load str vocabulary          )
+DECIMAL 20 LOAD                ( load str vocabulary          )
 example DEFINITIONS
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
@@ -223,7 +223,7 @@ FORGET place                    ( redefining I causes probs   )
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
-DECIMAL 23 LOAD ( sys vocabulary )
+DECIMAL 24 LOAD ( sys vocabulary )
 example DEFINITIONS HEX
 : mandelbrot
     CR
@@ -302,6 +302,22 @@ CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
   ." CURRENT    : " CURRENT @ voc. CR ;
 about
 ;S
+( Sieve of Eratosthenes from rosettacode.org           primes )
+: prime? ( n -- ? ) HERE + C@ 0= ;
+: composite! ( n -- ) HERE + 1 SWAP C! ;
+: sieve ( n -- )
+  HERE OVER ERASE
+  2 BEGIN OVER OVER DUP * > WHILE
+    DUP prime? IF
+      OVER OVER DUP * DO
+        I composite! DUP +LOOP
+    THEN 1+
+  REPEAT DROP
+  ." Primes: " 2 DO I prime? IF I . THEN LOOP ;
+: primes CR 1000 sieve CR ;
+primes
+;S
+
 ( string handling: ", copy                                str )
 FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
