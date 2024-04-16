@@ -1,5 +1,3 @@
-/* SYSTEM BINDINGS */
-
 #include "mux.h"
 
 void rf_init(void)
