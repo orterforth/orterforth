@@ -18,7 +18,7 @@ int (*_conread)() = 0;
 void (*_consetup)() = 0;
 
 /* used by rf_m68k.s */
-char *rf_origin = RF_ORIGIN;
+char *rf_origin = (char *) RF_ORIGIN;
 
 int main(int argc, char *argv[]);
 
