@@ -18,7 +18,7 @@ C64VICEOPTS := \
 ifeq ($(C64OPTION),assembly)
 C64CC65OPTS += -DRF_ASSEMBLY
 C64DEPS += c64/rf_6502.o
-C64ORIGIN := 0x1740
+C64ORIGIN := 0x1680
 endif
 ifeq ($(C64OPTION),default)
 C64DEPS += c64/rf.o
