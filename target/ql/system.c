@@ -58,7 +58,7 @@ void rf_code_emit(void)
 {
   RF_START;
   {
-    uint8_t c = RF_SP_POP & 0x7F;
+    uint8_t c = (*(rf_sp++)) & 0x7F;
 
     /* move cursor for backspace */
     if (c == 8) {
@@ -93,7 +93,7 @@ void rf_code_key(void)
     k &= 0x7F;
 
     /* return key */
-    RF_SP_PUSH((uintptr_t) k);
+    *(--rf_sp) = ((uintptr_t) k);
   }
   RF_JUMP_NEXT;
 }
@@ -101,7 +101,7 @@ void rf_code_key(void)
 void rf_code_qterm(void)
 {
   RF_START;
-  RF_SP_PUSH(keyrow(1) == 8);
+  *(--rf_sp) = (keyrow(1) == 8);
   RF_JUMP_NEXT;
 }
 
@@ -118,10 +118,10 @@ void rf_code_dchar(void)
   {
     char a, c;
 
-    a = (char) RF_SP_POP;
+    a = (char) (*(rf_sp++));
     io_fstrg(ser, TIMEOUT_FOREVER, &c, 1);
-    RF_SP_PUSH(c == a);
-    RF_SP_PUSH(c);
+    *(--rf_sp) = (c == a);
+    *(--rf_sp) = (c);
   }
   RF_JUMP_NEXT;
 }
@@ -129,7 +129,7 @@ void rf_code_dchar(void)
 void rf_code_bread(void)
 {
   RF_START;
-  io_fstrg(ser, TIMEOUT_FOREVER, (char *) RF_SP_POP, RF_BBLK);
+  io_fstrg(ser, TIMEOUT_FOREVER, (char *) (*(rf_sp++)), RF_BBLK);
   RF_JUMP_NEXT;
 }
 
@@ -139,8 +139,8 @@ void rf_code_bwrit(void)
 {
   RF_START;
   {
-    uint8_t a = (uint8_t) RF_SP_POP;
-    char *b = (char *) RF_SP_POP;
+    uint8_t a = (uint8_t) (*(rf_sp++));
+    char *b = (char *) (*(rf_sp++));
 
     io_sstrg(ser, TIMEOUT_FOREVER, b, a);
     io_sstrg(ser, TIMEOUT_FOREVER, &eot, 1);

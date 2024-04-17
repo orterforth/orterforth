@@ -72,6 +72,34 @@ _rf_code_mon:
         move.l  #0, _rf_fp
         rts
 
+        .sect data
+
+        .align 2
+        .extern _rf_fp
+_rf_fp: dc.l    0
+
+        .align 2
+        .extern _rf_ip
+_rf_ip: dc.l    0
+
+        .align 2
+        .extern _rf_rp
+_rf_rp: dc.l    0
+
+        .align 2
+        .extern _rf_sp
+_rf_sp: dc.l    0
+
+        .align 2
+        .extern _rf_up
+_rf_up: dc.l    0
+
+        .align 2
+        .extern _rf_w
+_rf_w:  dc.l    0
+
+        .sect text
+
 *  OPT <OPTIONS> 
 * NAM  "68000 FIG-FORTH 1.0 DECEMBER 1982"
 *

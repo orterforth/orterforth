@@ -23,7 +23,7 @@ endif
 endif
 
 ifeq ($(QLOPTION),assembly)
-QLDEPS := ql/rf.o ql/rf_m68k.o ql/system.o ql/main.o
+QLDEPS := ql/rf_m68k.o ql/system.o ql/main.o
 QLORIGIN := 184320 # 0x2D000
 QLQCCOPTS += -D RF_ASSEMBLY
 endif
