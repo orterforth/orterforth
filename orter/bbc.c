@@ -38,24 +38,22 @@ static void carrier(uint16_t cycles)
   orter_io_put_16le(cycles);
 }
 
+static void data_crc(uint8_t *data, uint16_t len)
+{
+  fwrite(data, 1, len, stdout);
+  orter_io_put_16be(crc(data, len));
+}
+
 static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 {
   uint8_t data[65536];
   size_t s;
   int block_nr = 0;
 
-  /* header */
+  /* header, v0.1 */
   fwrite("UEF File!\x00\x01\x00", 1, 12, stdout);
-
-  /* carrier tone */
-  carrier(1500);
-
-  /*  */
-  chunk(0x0100, 1);
-  fputc(0xdc, stdout);
-
-  /* carrier tone */
-  carrier(1500);
+  /* 5 seconds */
+  carrier(12000);
 
   /* read whole file */
   s = fread(data, 1, 65536, stdin);
@@ -77,34 +75,33 @@ static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
     chunk(0x0100, lenhdr + lenblk + 5);
     fputc('*', stdout);
 
-    /* header */
+    /* header: */
     /* name */
     memcpy(header, name, lenname);
     ptr[0] = 0;
     /* load, exec */
-    orter_io_set_32le(load, ptr + 1);
-    orter_io_set_32le(exec, ptr + 5);
+    orter_io_set_32le(0xFFFF0000 | (uint32_t) load, ptr + 1);
+    orter_io_set_32le(0xFFFF0000 | (uint32_t) exec, ptr + 5);
     /* block no, block len */
     orter_io_set_16le(block_nr, ptr + 9);
     orter_io_set_16le(lenblk, ptr + 11);
     /* flag, spare */
-    ptr[13] = ((j == s) ? 0x80 : 0);
+    ptr[13] = ((j == s) ? 0x80 : 0x00);
     orter_io_set_32le(0, ptr + 14);
 
-    fwrite(header, 1, lenhdr, stdout);
-    orter_io_put_16be(crc(header, lenhdr));
+    /* write header and data */
+    data_crc(header, lenhdr);
+    data_crc(block, lenblk);
 
-    /* data */
-    fwrite(block, 1, lenblk, stdout);
-    orter_io_put_16be(crc(block, lenblk));
-
-    /* carrier tone */
-    carrier(600);
+    /* 0.6 seconds */
+    carrier(1440);
 
     block_nr++;
   }
 
-  /* integer gap */
+  /* 5 seconds */
+  carrier(12000);
+  /* gap 0.25 seconds */
   chunk(0x0112, 2);
   orter_io_put_16le(600);
 
