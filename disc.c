@@ -238,12 +238,12 @@ static void process_mux(void)
   while (orter_io_pipe_left(&mux_out) && (c = orter_io_pipe_get(&in)) != -1) {
 
     if (c & 0x80) {
-      /* disc */
+      /* write to disc, clear bit 7 */
       if (disc_put(c & 0x7F) == -1) {
         break;
       }
     } else {
-      /* console */
+      /* write to console, bit 7 is clear */
       if (orter_io_pipe_put(&mux_out, c) == -1) {
         break;
       }
@@ -253,17 +253,16 @@ static void process_mux(void)
   /* read from stdin */
   while (orter_io_pipe_left(&out) && (c = orter_io_pipe_get(&mux_in)) != -1) {
 
-    if (orter_io_pipe_put(&out, c) == -1) {
+    /* write to serial, clear bit 7 */
+    if (orter_io_pipe_put(&out, c & 0x7F) == -1) {
       break;
-    };
+    }
   }
 
   /* read from disc */
-  while (orter_io_pipe_left(&out)) {
+  while (orter_io_pipe_left(&out) && (c = disc_get()) != -1) {
 
-    if ((c = disc_get()) == -1) {
-      break;
-    }
+    /* write to serial, set bit 7 */
     if (orter_io_pipe_put(&out, c | 0x80) == -1) {
       break;
     }
