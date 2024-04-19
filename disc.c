@@ -134,9 +134,7 @@ static int disc_get(void)
 {
   int c;
 
-  c = rf_persci_getc();
-  if (c == -1) return c;
-  if (log) {
+  if ((c = rf_persci_getc()) != -1 && log) {
     disc_log_output(c);
   }
   return c;
@@ -146,11 +144,8 @@ static int disc_put(int c)
 {
   int r;
 
-  r = rf_persci_putc(c);
-  if (r == -1) return r;
-  if (log) {
-    disc_log_input(c);
-  }
+  if ((r = rf_persci_putc(c)) == -1) return r;
+  if (log) disc_log_input(c);
   return c;
 }
 
@@ -204,7 +199,7 @@ static int disc_pty(int argc, char **argv)
 {
   int exit = 0;
 
-  /* open serial port */
+  /* open pty */
   CHECK(exit, orter_pty_open(argv[2]));
 
   /* run */
