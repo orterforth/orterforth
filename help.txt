@@ -6,11 +6,16 @@ Windows), call:
 
  make
 
+(NB on Windows you will need to use a Native Tools Command
+Prompt. The file make.bat invokes NMAKE.)
+
 To build a version implemented in assembly, for performance,
 call:
 
  make clean                     ( to remove the default build )
  make OPTION=assembly
+
+(Not currently implemented on Windows.)
 
 The target executable is built at the location:
 
@@ -23,9 +28,6 @@ where <os>   is e.g.: cygwin, darwin, linux, windows
 To run the local system build call:
 
  make run
-
-NB on Windows you will need to use a Native Tools Command
-Prompt. The file make.bat invokes NMAKE.
 
 BUILDING FOR RETRO PLATFORMS
 ============================
@@ -49,9 +51,12 @@ where <target> is one of:
 
   bbc
   c64
+  dragon
   m100
   pico
   ql
   rc2014
   spectrum
   z88
+
+(These retro builds are not currently implemented on Windows.)
