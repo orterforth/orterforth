@@ -102,11 +102,10 @@ rf_code_cs:
         .global rf_code_ln
 rf_code_ln:
         LDR     R0, [R8]
-        TST     R0, #3
-        BEQ     ln1
-        AND     R0, R0, #-4
-        ADD     R0, R0, #4
-ln1:    STR     R0, [R8]
+        SUB     R0, R0, #1
+        ORR     R0, R0, #3
+        ADD     R0, R0, #1
+        STR     R0, [R8]
 #       B       NEXT
         LDR     R3, [R10], #4
         LDR     R0, [R3]
