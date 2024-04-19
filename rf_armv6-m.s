@@ -136,14 +136,11 @@ rf_code_cs:
         .code 16
 rf_code_ln:
         LDR     R0, [R5]
+        SUBS    R0, R0, #1
         MOVS    R1, #3
-        ANDS    R1, R0, R1
-        BEQ     ln1
-        MOVS    R1, #4
-        NEGS    R1, R1
-        ANDS    R0, R0, R1
-        ADDS    R0, R0, #4
-ln1:    STR     R0, [R5]
+        ORRS    R0, R1
+        ADDS    R0, R0, #1
+        STR     R0, [R5]
 #       B       NEXT
         LDM     R6!, {R3}
         LDR     R0, [R3]
