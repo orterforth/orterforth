@@ -114,11 +114,10 @@ rf_code_cs:
         .global rf_code_ln
 rf_code_ln:
         LDR     X0, [X14]
-        TST     X0, #7
-        BEQ     ln1
-        AND     X0, X0, #-8
-        ADD     X0, X0, #8
-ln1:  # B       APUSH
+        SUB     X0, X0, #1
+        ORR     X0, X0, #7
+        ADD     X0, X0, #1
+#       B       APUSH
         STR     X0, [X14]
         LDR     X3, [X15], #8
         LDR     X0, [X3]

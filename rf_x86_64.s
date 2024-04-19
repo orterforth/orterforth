@@ -98,7 +98,7 @@ _rf_code_ln:
         DEC     RAX
         OR      RAX,7
         INC     RAX
-LN1:  # JMP     APUSH
+#       JMP     APUSH
         PUSH    RAX
         LODSQ
         MOV     RDX,RAX
