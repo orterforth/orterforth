@@ -99,11 +99,14 @@ _rf_code_cs:
 rf_code_ln:
 _rf_code_ln:
         POP     EAX
-        TEST    EAX,3
-        JZ      LN1
-        AND     EAX,-4
-        ADD     EAX,4
-LN1:    # JMP   APUSH
+#        TEST    EAX,3
+#        JZ      LN1
+#        AND     EAX,-4
+#        ADD     EAX,4
+        DEC     EAX
+        OR      EAX,3
+        INC     EAX
+#       JMP     APUSH
         PUSH    EAX
         LODSD
         MOV     EDX,EAX
