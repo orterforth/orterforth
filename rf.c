@@ -1175,10 +1175,7 @@ void rf_code_cs(void)
 {
   RF_START;
   {
-    uintptr_t a;
-
-    a = RF_SP_POP;
-    RF_SP_PUSH(RF_WORD_SIZE * a);
+    *rf_sp *= RF_WORD_SIZE;
   }
   RF_JUMP_NEXT;
 }
@@ -1190,13 +1187,9 @@ void rf_code_ln(void)
   RF_START;
 #ifdef RF_ALIGN
   {
-    uintptr_t a;
-
-    a = RF_SP_POP;
-    while (a % RF_ALIGN) {
-      ++a;
-    }
-    RF_SP_PUSH(a);
+    --(*rf_sp);
+    *rf_sp |= (RF_ALIGN - 1);
+    ++(*rf_sp);
   }
 #endif
   RF_JUMP_NEXT;
