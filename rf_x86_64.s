@@ -95,11 +95,10 @@ _rf_code_cs:
 rf_code_ln:
 _rf_code_ln:
         POP     RAX
-        TEST    RAX,7
-        JZ      LN1
-        AND     RAX,-8
-        ADD     RAX,8
-LN1:    # JMP   APUSH
+        DEC     RAX
+        OR      RAX,7
+        INC     RAX
+LN1:  # JMP     APUSH
         PUSH    RAX
         LODSQ
         MOV     RDX,RAX
