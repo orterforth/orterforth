@@ -56,11 +56,10 @@ _rf_code_cs:
         .align 2
         .extern _rf_code_ln
 _rf_code_ln:
-        move.l  (a3), d0
-        btst    #0, d0
-        beq     ln1
-        add.l   #1, (a3)
-ln1: ;  bra     _rf_next
+        subq.l  #1, (a3)
+        or.l    #1, (a3)
+        addq.l  #1, (a3)
+;       bra     _rf_next
         move.l  (a4)+, a5
         move.l  (a5)+, a0
         jmp     (a0)
