@@ -54,7 +54,7 @@ pico/orterforth.uf2 : \
 	persci.h \
 	rf.c \
 	rf.h \
-	rf_armv6-m.s \
+	rf_armm0.s \
 	target/pico/system.c \
 	system.inc
 

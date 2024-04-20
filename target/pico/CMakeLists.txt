@@ -36,7 +36,7 @@ add_library(mux OBJECT ../../mux.c $<TARGET_OBJECTS:rf>)
 add_library(persci OBJECT ../../persci.c)
 if(RF_ASSEMBLY)
     # Forth primitives in ARM Cortex M0+ assembly code
-    add_library(rf OBJECT ../../rf_armv6-m.s)
+    add_library(rf OBJECT ../../rf_armm0.s)
 else()
     # Forth primitives in C
     add_library(rf OBJECT ../../rf.c)
