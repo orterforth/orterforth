@@ -13,6 +13,8 @@ You will need:
 
 To build, call:
 
+ make TARGET=spectrum SPECTRUMMACHINE=real (on a physical
+                      machine connected via Interface 1 RS-232)
  make TARGET=spectrum (to build using superzazu's emulator)
  make TARGET=spectrum SPECTRUMINSTMACHINE=fuse
                       (to build in Fuse)
