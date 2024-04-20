@@ -48,17 +48,17 @@ static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 {
   uint8_t data[65536];
   size_t s;
-  int block_nr = 0;
+  uint16_t block_nr = 0;
+
+  /* read whole file */
+  s = fread(data, 1, 65536, stdin);
 
   /* header, v0.1 */
   fwrite("UEF File!\x00\x01\x00", 1, 12, stdout);
   /* 5 seconds */
   carrier(12000);
 
-  /* read whole file */
-  s = fread(data, 1, 65536, stdin);
-
-  while ((block_nr << 8) < (int) s) {
+  while (((size_t) block_nr << 8) < s) {
     /* determine block */
     uint16_t i = block_nr << 8;
     uint16_t j = MIN((size_t) i + 256, s);
