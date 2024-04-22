@@ -41,7 +41,7 @@ BBCROMS := \
 ifeq ($(BBCOPTION),assembly)
 	BBCCC65OPTS += -DRF_ASSEMBLY
 	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
-	BBCORIGIN := 2100
+	BBCORIGIN := 2000
 endif
 # default C code
 ifeq ($(BBCOPTION),default)
@@ -53,17 +53,16 @@ ifeq ($(BBCOPTION),tape)
 	BBCDEPS += bbc/rf_6502.o bbc/system_asm.o
 	BBCLOADINGMETHOD := tape
 # starts FIRST at 0x0E00, ORG at 0x1220
-	BBCORG := 1220
-	BBCORIGIN := 1C00
+	# BBCORG := 1220
+	# BBCORIGIN := 1B00
 # starts FIRST at 0x0B00, ORG at 0x0F20
 # if 0x0B00 onwards not used then MODE 0, 1, 2 are available
-	# BBCORG := 0F20
-	# BBCORIGIN := 1900
+	BBCORG := 0F20
+	BBCORIGIN := 1800
 endif
 # cc65 pass org and origin
 BBCCC65OPTS += -DRF_ORG='0x$(BBCORG)' -DRF_ORIGIN='0x$(BBCORIGIN)'
-# apparently bbc.lib must be the last dep
-BBCDEPS += bbc/bbc.lib
+BBCDEPS += bbc/crt0.o
 
 ifeq ($(BBCLOADINGMETHOD),disk)
 	BBCINSTMEDIA = bbc/inst.ssd
@@ -162,12 +161,6 @@ bbc/%.uef : bbc/% | $(ORTER)
 bbc/%.wav : bbc/%.uef | tools/github.com/haerfest/uef/uef2wave.py
 
 	python3 tools/github.com/haerfest/uef/uef2wave.py < $< > $@.io
-	mv $@.io $@
-
-bbc/bbc.lib : bbc/crt0.o
-
-	cp $$(sh target/bbc/find-apple2.lib.sh) $@.io
-	ar65 a $@.io bbc/crt0.o
 	mv $@.io $@
 
 bbc/boot : | bbc

@@ -1,11 +1,9 @@
 ;.import initlib, donelib
-.import callmain	
+.import _main
 .importzp sp
 
 .export __STARTUP__ : absolute = 1
 		
-.include "zeropage.inc"
-
 EVNTV  =$0220
 OSBYTE =$FFF4
 
@@ -41,7 +39,7 @@ __Cstart:
        TSX                      ; save S
        STX s_save
 
-       JSR callmain             ; call C
+       JSR _main                ; call C
 
 dox:   TAX                      ; return exit code in user flag
        LDY #$00
@@ -78,11 +76,6 @@ hand:  PHP
        RTS
 hand1: PLP                      ; else forward to saved handler
        JMP (EVNTVS)
-
-.export initmainargs
-
-initmainargs:
-       RTS                      ; dummy initmainargs
 
 .bss
 
