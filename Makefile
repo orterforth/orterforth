@@ -223,6 +223,8 @@ help : $(TARGET)-help
 
 include orter/orter.mk
 
+include target/amiga/amiga.mk
+
 include target/apple2/apple2.mk
 
 include target/bbc/bbc.mk
