@@ -29,7 +29,7 @@ BBCOPTION := $(OPTION)
 endif
 endif
 BBCORG := 1720
-BBCORIGIN := 2F00
+BBCORIGIN := 2E80
 BBCROMS := \
 	roms/bbcb/basic2.rom \
 	roms/bbcb/dnfs120.rom \
