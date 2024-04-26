@@ -32,7 +32,7 @@ _rf_console_get:
 PUBLIC _rf_console_put
 _rf_console_put:
         MOV     A,L
-        JP      $4B44           ; CHROUT
+        JMP     $4B44           ; CHROUT
 
 PUBLIC _rf_console_qterm
 _rf_console_qterm:
@@ -47,7 +47,7 @@ _rf_console_cr:
         MVI     A,$0D           ; CR
         CALL    $4B44           ; CHROUT
         MVI     A,$0A           ; LF
-        JP      $4B44           ; CHROUT
+        JMP     $4B44           ; CHROUT
 
                                 ; serial interrupt handler 6.5
 
