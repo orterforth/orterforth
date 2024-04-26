@@ -4,6 +4,7 @@
 *.io
 *.pid
 *.rom
+/amiga/
 /apple2/
 /bbc/
 /c64/
