@@ -90,7 +90,7 @@ m100/inst.co : $(M100DEPS)
 
 	zcc $(M100ZCCOPTS) $(M100LIBS) -create-app -m -o $@ $<
 
-m100/inst.lib : inst.c inst.h rf.h target/m100/m100.inc | m100
+m100/inst.lib : inst.c rf.h target/m100/m100.inc | m100
 
 	zcc $(M100ZCCOPTS) -x -o $@ $<
 

@@ -1,4 +1,3 @@
-#include "inst.h"
 #include "rf.h"
 
 /* if we delay start of inst to allow disc server to start */

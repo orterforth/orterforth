@@ -1,7 +1,6 @@
 /* ORTERFORTH */
 
 #include "rf.h"
-#include "inst.h"
 #ifdef RF_INST_LOCAL_DISC
 /* disc controller in process */
 #include "persci.h"
@@ -9,6 +8,9 @@
 const
 #include "model.inc"
 #endif
+
+/* install function */
+void rf_inst(void);
 
 /* indicates whether installation has been completed */
 char rf_installed = 0;

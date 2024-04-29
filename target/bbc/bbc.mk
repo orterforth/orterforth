@@ -192,7 +192,7 @@ bbc/io.s : io.c rf.h target/bbc/bbc.inc | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 
-bbc/main.s : main.c inst.h rf.h target/bbc/bbc.inc | bbc
+bbc/main.s : main.c rf.h target/bbc/bbc.inc | bbc
 
 	cc65 $(BBCCC65OPTS) -o $@ $<
 

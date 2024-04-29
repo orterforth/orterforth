@@ -64,7 +64,7 @@ c64/inst.prg : $(C64DEPS) | c64
 
 	cl65 -O -t c64 -C target/c64/c64.cfg -o $@ -m c64/inst.map $^
 
-c64/inst.s : inst.c inst.h rf.h target/c64/c64.inc | c64
+c64/inst.s : inst.c rf.h target/c64/c64.inc | c64
 
 	cc65 $(C64CC65OPTS) \
 		--bss-name INST \
@@ -77,7 +77,7 @@ c64/io.s : io.c rf.h target/c64/c64.inc | c64
 
 	cc65 $(C64CC65OPTS) -o $@ $<
 
-c64/main.s : main.c inst.h rf.h target/c64/c64.inc | c64
+c64/main.s : main.c rf.h target/c64/c64.inc | c64
 
 	cc65 $(C64CC65OPTS) -o $@ $<
 

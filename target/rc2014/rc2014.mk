@@ -128,7 +128,7 @@ rc2014/inst.ihx : rc2014/inst-2.bin
 		--org $(RC2014ORG) \
 		--output $@
 
-rc2014/inst.lib : inst.c inst.h rf.h $(RC2014INC) | rc2014
+rc2014/inst.lib : inst.c rf.h $(RC2014INC) | rc2014
 
 	zcc $(RC2014ZCCOPTS) -x -o $@ $< \
 		--codeseg=INST \

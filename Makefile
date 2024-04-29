@@ -154,7 +154,7 @@ $(SYSTEM)-run : $(ORTERFORTH) $(DR0) $(DR1)
 
 	@$^
 
-$(SYSTEM)/inst.o : inst.c inst.h rf.h system.inc | $(SYSTEM)
+$(SYSTEM)/inst.o : inst.c rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -162,7 +162,7 @@ $(SYSTEM)/io.o : io.c rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-$(SYSTEM)/main.o : main.c inst.h model.inc persci.h rf.h system.inc | $(SYSTEM)
+$(SYSTEM)/main.o : main.c model.inc persci.h rf.h system.inc | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

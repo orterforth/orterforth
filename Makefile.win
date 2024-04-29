@@ -40,7 +40,7 @@ $(SYSTEM)\disc.obj: disc.c orter/io.h orter/pty.h orter/serial.h orter/tcp.h per
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c disc.c
 
-$(SYSTEM)\inst.obj: inst.c inst.h model.inc rf.h system.inc
+$(SYSTEM)\inst.obj: inst.c model.inc rf.h system.inc
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c inst.c
 
@@ -48,7 +48,7 @@ $(SYSTEM)\io.obj: io.c rf.h system.inc
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c io.c
 
-$(SYSTEM)\main.obj: main.c rf.h system.inc inst.h persci.h model.inc
+$(SYSTEM)\main.obj: main.c rf.h system.inc persci.h model.inc
 	@$(MAKESYSTEMDIR)
 	$(CC) $(CFLAGS) /Fo$@ -c main.c
 

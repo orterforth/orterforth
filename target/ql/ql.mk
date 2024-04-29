@@ -113,7 +113,7 @@ ql/link.o : link.c rf.h target/ql/ql.inc | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
-ql/main.o : main.c rf.h target/ql/ql.inc inst.h | ql
+ql/main.o : main.c rf.h target/ql/ql.inc | ql
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
