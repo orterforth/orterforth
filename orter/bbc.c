@@ -44,11 +44,17 @@ static void data_crc(uint8_t *data, uint16_t len)
   orter_io_put_16be(crc(data, len));
 }
 
+static uint8_t data[65536];
+
+static uint8_t hdr[32];
+
 static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 {
-  uint8_t data[65536];
+  uint16_t namelen = MIN(10, strlen(name));
+  uint8_t *ptr = hdr + namelen;
+  uint16_t hdrlen = 18 + namelen;
   size_t s;
-  uint16_t block_nr = 0;
+  uint16_t blkno = 0;
 
   /* read whole file */
   s = fread(data, 1, 65536, stdin);
@@ -58,45 +64,37 @@ static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
   /* 5 seconds */
   carrier(12000);
 
-  while (((size_t) block_nr << 8) < s) {
-    /* determine block */
-    uint16_t i = block_nr << 8;
-    uint16_t j = MIN((size_t) i + 256, s);
-    uint8_t *block = &data[i];
-    uint16_t lenblk = j - i;
+  /* set name, load, exec, spare */
+  memcpy(hdr, name, namelen);
+  ptr[0] = 0;
+  orter_io_set_32le(0xFFFF0000 | (uint32_t) load, ptr + 1);
+  orter_io_set_32le(0xFFFF0000 | (uint32_t) exec, ptr + 5);
+  orter_io_set_32le(0, ptr + 14);
 
-    /* construct data header */
-    uint8_t header[32];
-    uint16_t lenname = MIN(10, strlen(name));
-    uint8_t *ptr = header + lenname;
-    uint16_t lenhdr = 18 + lenname;
+  while (((size_t) blkno << 8) < s) {
+    /* determine block */
+    uint16_t i = blkno << 8;
+    uint16_t j = MIN((size_t) i + 256, s);
+    uint8_t *blk = data + i;
+    uint16_t blklen = j - i;
 
     /* start block */
-    chunk(0x0100, lenhdr + lenblk + 5);
-    fputc('*', stdout);
+    chunk(0x0100, hdrlen + blklen + 5);
+    putchar('*');
 
-    /* header: */
-    /* name */
-    memcpy(header, name, lenname);
-    ptr[0] = 0;
-    /* load, exec */
-    orter_io_set_32le(0xFFFF0000 | (uint32_t) load, ptr + 1);
-    orter_io_set_32le(0xFFFF0000 | (uint32_t) exec, ptr + 5);
-    /* block no, block len */
-    orter_io_set_16le(block_nr, ptr + 9);
-    orter_io_set_16le(lenblk, ptr + 11);
-    /* flag, spare */
+    /* set block no, block len, flag */
+    orter_io_set_16le(blkno, ptr + 9);
+    orter_io_set_16le(blklen, ptr + 11);
     ptr[13] = ((j == s) ? 0x80 : 0x00);
-    orter_io_set_32le(0, ptr + 14);
 
     /* write header and data */
-    data_crc(header, lenhdr);
-    data_crc(block, lenblk);
+    data_crc(hdr, hdrlen);
+    data_crc(blk, blklen);
 
     /* 0.6 seconds */
     carrier(1440);
 
-    block_nr++;
+    blkno++;
   }
 
   /* 5 seconds */
