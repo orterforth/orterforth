@@ -13,6 +13,7 @@
 /cygwin-*/
 /darwin-*/
 /dragon/
+/generated/
 /history/
 /linux-*/
 /m100/
@@ -30,6 +31,7 @@
 /spectrum/
 /todo.txt
 /windows-*/
+/work/
 /z88/
 /zx81/
 /tools/bin2cas.pl
