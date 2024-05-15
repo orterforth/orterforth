@@ -85,6 +85,10 @@ ql/%.bas.ser : target/ql/%.bas
 	printf '\032' >> $@.io
 	mv $@.io $@
 
+ql/%.o : %.c rf.h target/ql/ql.inc | ql
+
+	qcc $(QLQCCOPTS) -o $@ -c $<
+
 ql/hw.ser : ql/hw
 
 	$(ORTER) ql serial-xtcc $< > $@
@@ -101,21 +105,9 @@ ql/inst : ql/inst.o $(QLDEPS)
 
 	qld -ms -o $@ $^
 
-ql/inst.o : inst.c rf.h target/ql/ql.inc | ql
-
-	qcc $(QLQCCOPTS) -o $@ -c $<
-
 ql/inst.ser : ql/inst | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
-
-ql/link.o : link.c rf.h target/ql/ql.inc | ql
-
-	qcc $(QLQCCOPTS) -o $@ -c $<
-
-ql/main.o : main.c rf.h target/ql/ql.inc | ql
-
-	qcc $(QLQCCOPTS) -o $@ -c $<
 
 ql/orterforth : ql/link.o $(QLDEPS)
 
@@ -154,10 +146,6 @@ ql/orterforth.bin.ser : ql/orterforth.bin | $(ORTER)
 ql/orterforth.ser : ql/orterforth | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
-
-ql/rf.o : rf.c rf.h target/ql/ql.inc | ql
-
-	qcc $(QLQCCOPTS) -o $@ -c $<
 
 ql/rf_m68k.o : rf_m68k.s | ql
 
