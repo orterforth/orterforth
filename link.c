@@ -59,7 +59,7 @@ static rf_code_t codes[] = {
   rf_code_dchar,
   rf_code_bwrit,
   rf_code_bread,
-  rf_code_mon,
+  rf_code_mon
 };
 
 extern char rf_installed;
