@@ -1,5 +1,5 @@
 # C compiler options
-CFLAGS += -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
+CFLAGS += -O0 -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
 
 # global defaults
 INFO           := printf '* \033[1;33m%s\033[0;0m\n'
@@ -88,17 +88,6 @@ SYSTEMDEPS := \
 .PHONY : default
 default : build
 
-# local system disc server executable
-$(DISC) : \
-	$(SYSTEM)/orter_io.o \
-	$(SYSTEM)/orter_pty.o \
-	$(SYSTEM)/orter_serial.o \
-	$(SYSTEM)/orter_tcp.o \
-	$(SYSTEM)/persci.o \
-	disc.c
-
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lutil
-
 # === LOCAL SYSTEM ===
 
 # SYSTEMOPTION := assembly
@@ -123,6 +112,17 @@ ifeq ($(SYSTEMOPTION),default)
 SYSTEMDEPS += $(SYSTEM)/rf.o
 endif
 
+# local system disc server executable
+$(DISC) : \
+	$(SYSTEM)/orter_io.o \
+	$(SYSTEM)/orter_pty.o \
+	$(SYSTEM)/orter_serial.o \
+	$(SYSTEM)/orter_tcp.o \
+	$(SYSTEM)/persci.o \
+	disc.c
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lutil
+
 # local system executable
 $(ORTERFORTH) : $(SYSTEMDEPS)
 
@@ -139,14 +139,6 @@ $(SYSTEM)-build : \
 	$(DISC) \
 	$(ORTER) \
 	$(ORTERFORTH)
-
-# clean
-.PHONY : $(TARGET)-clean
-$(TARGET)-clean :
-
-	rm -rf $(TARGET)/*
-	rm -f model.img
-	rm -f model.inc
 
 # build and run
 .PHONY : $(SYSTEM)-run
@@ -182,9 +174,13 @@ $(SYSTEM)/system.o : system.c rf.h system.inc persci.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
-# audio for tape load
-.PHONY : audio
-audio : $(TARGET)/orterforth.wav
+# clean
+.PHONY : $(TARGET)-clean
+$(TARGET)-clean :
+
+	rm -rf $(TARGET)/*
+	rm -f model.img
+	rm -f model.inc
 
 # help
 .PHONY : $(TARGET)-help
@@ -198,6 +194,10 @@ $(TARGET)-help :
 	$(DISC) create < $< > $@.io
 	mv $@.io $@
 
+# audio for tape load
+.PHONY : audio
+audio : $(TARGET)/orterforth.wav
+
 # build
 .PHONY : build
 build : $(TARGET)-build
@@ -206,20 +206,75 @@ build : $(TARGET)-build
 .PHONY : clean
 clean : $(TARGET)-clean
 
-# empty disc image to use as default DR1
-forth/data.img :
-
-	touch $@
-
 # run disc on physical serial port
 .PHONY : disc
 disc : $(DISC) $(DR0) $(DR1)
 
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
 
+# empty disc image to use as default DR1
+forth/data.img :
+
+	touch $@
+
 # help
 .PHONY : help
 help : $(TARGET)-help
+
+# install to local
+.PHONY : install
+install : $(ORTER) $(ORTERFORTH)
+
+	cp "$(ORTER)" /usr/local/bin/orter
+	cp "$(ORTERFORTH)" /usr/local/bin/orterforth
+
+# symlink to local
+.PHONY : link
+link : $(ORTER) $(ORTERFORTH)
+
+	ln -fs "$$(pwd)/$(ORTER)" /usr/local/bin/orter
+	ln -fs "$$(pwd)/$(ORTERFORTH)" /usr/local/bin/orterforth
+
+# disc image to C include
+model.inc : model.img | $(ORTER)
+
+	# xxd -i $< > $@.io
+	$(ORTER) hex include model_img < $< > $@.io
+	mv $@.io $@
+
+# general rule for missing ROM files
+roms/% :
+
+	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
+
+# run
+.PHONY : run
+run : $(TARGET)-run
+
+# run working script
+.PHONY : script
+script : work/script.sh
+
+	@[ -f $< ] && sh $<
+
+# basic test
+.PHONY : test
+test : $(ORTERFORTH) forth/test.img
+
+	@echo 'EMPTY-BUFFERS 1 LOAD MON' | $(ORTERFORTH) forth/test.img
+
+# uninstall from local
+.PHONY : uninstall
+uninstall :
+
+	rm -f /usr/local/bin/orter
+	rm -f /usr/local/bin/orterforth
+
+work/script.sh :
+
+	@echo "Create the file $@ for your working script and run it using: make script"
+
+# === OTHER TARGET PLATFORMS ===
 
 include orter/orter.mk
 
@@ -250,56 +305,3 @@ include target/spectrum/spectrum.mk
 include target/z88/z88.mk
 
 include target/zx81/zx81.mk
-
-# symlink to local
-.PHONY : link
-link : $(ORTER) $(ORTERFORTH)
-
-	ln -fs "$$(pwd)/$(ORTER)" /usr/local/bin/orter
-	ln -fs "$$(pwd)/$(ORTERFORTH)" /usr/local/bin/orterforth
-
-# install to local
-.PHONY : install
-install : $(ORTER) $(ORTERFORTH)
-
-	cp "$(ORTER)" /usr/local/bin/orter
-	cp "$(ORTERFORTH)" /usr/local/bin/orterforth
-
-# disc image to C include
-model.inc : model.img | $(ORTER)
-
-	# xxd -i $< > $@.io
-	$(ORTER) hex include model_img < $< > $@.io
-	mv $@.io $@
-
-# general rule for missing ROM files
-roms/% :
-
-	@[ -f $@ ] || (echo "ROM file required: $@" && exit 1)
-
-# run
-.PHONY : run
-run : $(TARGET)-run
-
-# run working script
-.PHONY : script
-script : scripts/script.sh
-
-	@[ -f $< ] && sh $<
-
-scripts/script.sh :
-
-	@echo "Create the file $@ for your working script and run it using: make script"
-
-# basic test
-.PHONY : test
-test : $(ORTERFORTH) forth/test.img
-
-	@echo 'EMPTY-BUFFERS 1 LOAD MON' | $(ORTERFORTH) forth/test.img
-
-# uninstall from local
-.PHONY : uninstall
-uninstall :
-
-	rm -f /usr/local/bin/orter
-	rm -f /usr/local/bin/orterforth
