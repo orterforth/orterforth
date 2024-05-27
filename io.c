@@ -71,10 +71,14 @@ void rf_code_bread(void)
   {
     uint8_t len = RF_BBLK;
     uint8_t *p = (uint8_t *) (*(rf_sp++));
+    uint8_t b;
 
     /* read into the buffer, break on EOT */
     for (; len; --len) {
-      if ((*(p++) = rf_serial_get()) == 0x04) {
+      /* NB in Cygwin 64 gcc assigning directly to *p affected RBP
+         and broke x86_64 assembly stack frame manipulation */
+      b = rf_serial_get();
+      if ((*(p++) = b) == (uint8_t) 0x04) {
         break;
       }
     }
@@ -94,7 +98,7 @@ void rf_code_bwrit(void)
       rf_serial_put(*(b++));
     }
     /* write EOT */
-    rf_serial_put(0x04);
+    rf_serial_put((uint8_t) 0x04);
   }
   RF_JUMP_NEXT;
 }
