@@ -143,6 +143,21 @@ typedef unsigned long uintptr_t;
 #define RF_CPU_LO 0x009F7800
 #endif
 
+/* VBCC */
+
+#ifdef __VBCC__
+#define RF_WORD_SIZE 4
+#define RF_ALIGN 2
+#define RF_BE
+#include <stdint.h>
+/* AMIGA */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x011050EA
+/* 68000 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x009F7800
+#endif
+
 /* modern platforms */
 
 #ifdef _M_IX86
