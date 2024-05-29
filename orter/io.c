@@ -387,6 +387,28 @@ void orter_io_put_32le(uint32_t u)
   orter_io_put_16le((uint16_t) (u >> 16));
 }
 
+uint16_t orter_io_get_16le(uint8_t *p)
+{
+  uint16_t u;
+
+  u = *p;
+  u |= (uint32_t) *(++p) << 8;
+
+  return u;
+}
+
+uint32_t orter_io_get_32le(uint8_t *p)
+{
+  uint32_t u;
+
+  u = *p;
+  u |= (uint32_t) *(++p) << 8;
+  u |= (uint32_t) *(++p) << 16;
+  u |= (uint32_t) *(++p) << 24;
+
+  return u;
+}
+
 uint32_t orter_io_get_32be(uint8_t *p)
 {
   uint32_t u;
