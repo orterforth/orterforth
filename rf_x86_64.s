@@ -17,7 +17,7 @@ _rf_trampoline:
         PUSH    RBX                     # Windows ABI, caller save
         PUSH    RSI
         PUSH    RDI
-        SUB     RSP,40                  # Windows ABI, shadow space
+        SUB     RSP,40                  # Windows ABI, 16-byte align + shadow space
         MOV     RAX,_rf_origin[RIP]
         MOV     RDX,80[RAX]             # R0 to RP
         MOV     _rf_rp[RIP],RDX
