@@ -814,8 +814,8 @@ rf_code_zequ:
         LDR     R0, [R8], #4
         ORRS    R0, R0          @ DO TEST
         MOV     R0, #1          @ TRUE
-        BEQ     ZEQU1           @ ITS ZERO
-        SUB     R0, R0, #1      @ FALSE
+        SUBNE   R0, R0, #1      @ ITS ZERO
+                                @ FALSE
 ZEQU1:  # B       APUSH
         STR     R0, [R8, #-4]!
         LDR     R3, [R10], #4
@@ -833,8 +833,7 @@ rf_code_zless:
         LDR     R0, [R8], #4
         ORRS    R0, R0          @ SET FLAGS
         MOV     R0, #1          @ TRUE
-        BMI     ZLESS1
-        SUB     R0, R0, #1      @ FLASE
+        SUBPL   R0, R0, #1      @ FLASE
 ZLESS1: # B       APUSH
         STR     R0, [R8, #-4]!
         LDR     R3, [R10], #4
@@ -1169,8 +1168,8 @@ rf_code_stod:
         LDR     R3, [R8], #4    @ S1
         SUB     R0, R0, R0      @ AX = 0
         ORRS    R3, R3          @ SET FLAGS
-        BPL     STOD1           @ POSITIVE NUMBER
-        SUB     R0, R0, #1      @ NEGITIVE NUMBER
+        SUBMI   R0, R0, #1      @ POSITIVE NUMBER
+                                @ NEGITIVE NUMBER
 STOD1:  # B       DPUSH
         STMDB   R8!, {R0, R3}
         LDR     R3, [R10], #4
