@@ -2,6 +2,8 @@
 
 C64CC65OPTS := -O -t c64
 C64DEPS := c64/io.o c64/main.o c64/inst.o c64/system.o c64/c64-up2400.o
+C64MEDIAEXT := prg
+# C64MEDIAEXT := tap
 # C64OPTION := assembly
 C64OPTION := default
 ifeq ($(TARGET),c64)
@@ -18,7 +20,7 @@ C64VICEOPTS := \
 ifeq ($(C64OPTION),assembly)
 C64CC65OPTS += -DRF_ASSEMBLY
 C64DEPS += c64/rf_6502.o
-C64ORIGIN := 0x1680
+C64ORIGIN := 0x16C0
 endif
 ifeq ($(C64OPTION),default)
 C64DEPS += c64/rf.o
@@ -34,32 +36,32 @@ c64 :
 c64-build : c64/orterforth.prg
 
 .PHONY : c64-hw
-c64-hw : c64/hw.prg
+c64-hw : c64/hw.$(C64MEDIAEXT)
 
 	x64 $(C64VICEOPTS) +warp -autostartprgmode 1 -autostart $<
 
 .PHONY : c64-run
-c64-run : c64/orterforth.prg $(DR0) $(DR1)
+c64-run : c64/orterforth.$(C64MEDIAEXT) $(DR0) $(DR1)
 
 	@$(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
 	@x64 $(C64VICEOPTS) +warp -autostartprgmode 1 -autostart $<
 
-# general assemble rule
 c64/%.o : c64/%.s
 
 	ca65 -t c64 -o $@ $<
 
-# serial driver
+c64/%.tap : c64/%.prg | tools/github.com/reidrac/mkc64tap/mkc64tap.py
+
+	python2 tools/github.com/reidrac/mkc64tap/mkc64tap.py --output $@ $<
+
 c64/c64-up2400.s : $(C64UP2400)/driver/c64-up2400.ser | c64
 
 	co65 --code-label _c64_serial -o $@ $<
   
-# Hello World
 c64/hw.prg : hw.c | c64
 
 	cl65 -O -t c64 -o $@ $^
 
-# inst binary
 c64/inst.prg : $(C64DEPS) | c64
 
 	cl65 -O -t c64 -C target/c64/c64.cfg -o $@ -m c64/inst.map $^
@@ -86,7 +88,7 @@ c64/orterforth : c64/orterforth.hex | $(ORTER)
 	$(ORTER) hex read < $< > $@.io
 	mv $@.io $@
 
-c64/orterforth.hex : c64/inst.prg model.img | $(DISC)
+c64/orterforth.hex : c64/inst.$(C64MEDIAEXT) model.img | $(DISC)
 
 	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' c64/inst.map)" | cut -c '33-36') - 0x801 ))
 	@$(EMPTYDR1FILE) $@.io
@@ -126,3 +128,7 @@ $(C64UP2400)/driver/c64-up2400.s :
 $(C64UP2400)/driver/c64-up2400.ser : $(C64UP2400)/driver/c64-up2400.s
 
 	cd $(C64UP2400) && make
+
+tools/github.com/reidrac/mkc64tap/mkc64tap.py :
+
+	git submodule update --init tools/github.com/reidrac/mkc64tap

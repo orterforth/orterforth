@@ -13,3 +13,6 @@
 [submodule "tools/github.com/nanoflite/c64-up2400-cc65"]
 	path = tools/github.com/nanoflite/c64-up2400-cc65
 	url = https://github.com/nanoflite/c64-up2400-cc65.git
+[submodule "tools/github.com/reidrac/mkc64tap"]
+	path = tools/github.com/reidrac/mkc64tap
+	url = https://github.com/reidrac/mkc64tap.git
