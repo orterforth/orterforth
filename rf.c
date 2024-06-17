@@ -91,9 +91,9 @@ void rf_code_lit(void)
 {
   RF_START;
   {
-    uintptr_t a = *(RF_IP_GET);
+    uintptr_t a = *rf_ip;
     RF_SP_PUSH(a);
-    RF_IP_INC;
+    rf_ip++;
   }
   RF_JUMP_NEXT;
 }
@@ -103,8 +103,8 @@ void rf_code_lit(void)
 void rf_next(void)
 {
   RF_START;
-  rf_w = (rf_code_t *) *(RF_IP_GET);
-  RF_IP_INC;
+  rf_w = (rf_code_t *) *rf_ip;
+  rf_ip++;
   RF_JUMP(*rf_w);
 }
 #endif
@@ -140,7 +140,7 @@ void rf_code_zbran(void)
 {
   RF_START;
   if (RF_SP_POP) {
-    RF_IP_INC;
+    rf_ip++;
   } else {
     rf_branch();
   }
@@ -165,7 +165,7 @@ void rf_code_xloop(void)
       RF_RP_PUSH(index);
       rf_branch();
     } else {
-      RF_IP_INC;
+      rf_ip++;
     }
   }
   RF_JUMP_NEXT;
@@ -192,7 +192,7 @@ void rf_code_xploo(void)
       RF_RP_PUSH(index);
       rf_branch();
     } else {
-      RF_IP_INC;
+      rf_ip++;
     }
   }
   RF_JUMP_NEXT;
@@ -202,8 +202,8 @@ void rf_code_xploo(void)
 #ifdef RF_BRANCH
 static void rf_branch(void)
 {
-  uintptr_t offset = (uintptr_t) *(RF_IP_GET);
-  RF_IP_SET((uintptr_t *) (((char *) RF_IP_GET) + offset));
+  uintptr_t offset = *rf_ip;
+  rf_ip = (uintptr_t *) (((uint8_t *) rf_ip) + offset);
 }
 #endif
 
@@ -232,11 +232,11 @@ void rf_code_dodoe(void)
     /* execute the words after DOES> (addr in the PFA): */
 
     /* push IP onto RP */
-    RF_RP_PUSH((uintptr_t) RF_IP_GET);
+    RF_RP_PUSH((uintptr_t) rf_ip);
 
     /* fetch first param *(W + 1) as new IP */
     p1 = (uintptr_t *) rf_w + 1;
-    RF_IP_SET((uintptr_t *) (*p1));
+    rf_ip = (uintptr_t *) (*p1);
 
     /* push second param addr (W + 2) onto SP */
     p2 = (uintptr_t *) rf_w + 2;
@@ -721,7 +721,7 @@ void rf_code_rpsto(void)
 void rf_code_semis(void)
 {
   RF_START;
-  RF_IP_SET((uintptr_t *) RF_RP_POP);
+  rf_ip = (uintptr_t *) RF_RP_POP;
   RF_JUMP_NEXT;
 }
 #endif
@@ -1054,8 +1054,8 @@ void rf_code_cstor(void)
 void rf_code_docol(void)
 {
   RF_START;
-  RF_RP_PUSH((uintptr_t) RF_IP_GET);
-  RF_IP_SET((uintptr_t *) rf_w + 1);
+  RF_RP_PUSH((uintptr_t) rf_ip);
+  rf_ip = (uintptr_t *) rf_w + 1;
   RF_JUMP_NEXT;
 }
 #endif
@@ -1139,7 +1139,7 @@ static void rf_cold(void)
   /* jump to RP! then to ABORT - PFA set at inst time */
   /* 'T ABORT 100 /MOD # LDA, IP 1+ STA, */
   /* # LDA, IP STA, */
-  RF_IP_SET((uintptr_t *) origin[22]);
+  rf_ip = (uintptr_t *) origin[22];
 
   /* 6C # LDA, W 1 - STA,  */
   /* 'T RP! JMP, ( RUN )  */

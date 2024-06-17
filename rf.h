@@ -354,12 +354,9 @@ void __FASTCALL__ rf_rp_push(uintptr_t a);
 /* IP */
 extern uintptr_t *rf_ip;
 
-#define RF_IP_GET rf_ip
-#define RF_IP_INC { rf_ip++; }
-#define RF_IP_SET(a) { rf_ip = (a); }
-
 /* W */
 typedef void (*rf_code_t)(void);
+
 extern rf_code_t *rf_w;
 
 /* UP */
