@@ -178,7 +178,7 @@ $(SYSTEM)/system.o : system.c rf.h system.inc persci.h | $(SYSTEM)
 .PHONY : $(TARGET)-clean
 $(TARGET)-clean :
 
-	rm -rf $(TARGET)/*
+	rm -rf ./$(TARGET)/*
 	rm -f model.img
 	rm -f model.inc
 
