@@ -69,7 +69,7 @@ void rf_code_emit(void)
       io_sbyte(con, TIMEOUT_FOREVER, c);
     }
 
-    RF_USER_OUT++;
+    rf_up[13]++;
   }
   RF_JUMP_NEXT;
 }

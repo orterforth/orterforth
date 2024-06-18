@@ -304,11 +304,6 @@ typedef unsigned long uintptr_t;
 #define RF_S1 (RF_S0 - (RF_STACK_SIZE * RF_WORD_SIZE))
 #endif
 
-/* USER VARIABLES */
-
-#define RF_USER_OUT_IDX 13
-#define RF_USER_OUT rf_up[RF_USER_OUT_IDX]
-
 /* FORTH MACHINE */
 
 /* SP */
