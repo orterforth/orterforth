@@ -472,6 +472,8 @@ void rf_code_cold(void);
 
 void rf_code_stod(void);
 
+void rf_code_mon(void);
+
 /* CONSOLE */
 
 void rf_code_emit(void);
@@ -497,7 +499,5 @@ void rf_code_cl(void);
 void rf_code_cs(void);
 
 void rf_code_ln(void);
-
-void rf_code_mon(void);
 
 #endif /* RF_H_ */
