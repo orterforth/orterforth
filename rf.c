@@ -251,7 +251,7 @@ void rf_code_rr(void)
 {
   RF_START;
   {
-    uintptr_t i = (uintptr_t) *(RF_RP_GET);
+    uintptr_t i = (uintptr_t) *rf_rp;
     RF_SP_PUSH(i);
   }
   RF_JUMP_NEXT;
@@ -692,7 +692,7 @@ void rf_code_spat(void)
   {
     uintptr_t sp;
 
-    sp = (uintptr_t) RF_SP_GET;
+    sp = (uintptr_t) rf_sp;
     RF_SP_PUSH(sp);
   }
   RF_JUMP_NEXT;
@@ -703,7 +703,7 @@ void rf_code_spat(void)
 void rf_code_spsto(void)
 {
   RF_START;
-  RF_SP_SET((uintptr_t *) rf_up[3]);
+  rf_sp = (uintptr_t *) rf_up[3];
   RF_JUMP_NEXT;
 }
 #endif
@@ -712,7 +712,7 @@ void rf_code_spsto(void)
 void rf_code_rpsto(void)
 {
   RF_START;
-  RF_RP_SET((uintptr_t *) rf_up[4]);
+  rf_rp = (uintptr_t *) rf_up[4];
   RF_JUMP_NEXT;
 }
 #endif

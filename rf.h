@@ -314,9 +314,6 @@ typedef unsigned long uintptr_t;
 /* SP */
 extern uintptr_t *rf_sp;
 
-#define RF_SP_GET rf_sp
-#define RF_SP_SET(a) { rf_sp = (a); }
-
 #ifdef RF_INLINE_SP
 /* inline SP operations */
 #define RF_SP_POP (*(rf_sp++))
@@ -333,9 +330,6 @@ void __FASTCALL__ rf_sp_push(uintptr_t a);
 
 /* RP */
 extern uintptr_t *rf_rp;
-
-#define RF_RP_GET rf_rp
-#define RF_RP_SET(a) { rf_rp = (a); }
 
 #ifdef RF_INLINE_RP
 /* inline RP operations */
