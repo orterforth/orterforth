@@ -11,11 +11,7 @@ trampoline1:
         move.l  _rf_fp, a0
         cmp.l   #0, a0
         beq     trampoline2
-        move.l  _rf_rp, a1
-        move.l  _rf_sp, a3
-        move.l  _rf_ip, a4
-        move.l  _rf_up, a6
-        move.l  _rf_w, a5
+        movem.l _rf_rp, a1/a3/a4/a5/a6
         addq.l  #4, a5
         jsr     (a0)
         bra     trampoline1
@@ -26,11 +22,8 @@ trampoline2:
         .align 2
         .extern _rf_start
 _rf_start:
-        move.l  a1, _rf_rp
-        move.l  a3, _rf_sp
-        move.l  a4, _rf_ip
         subq.l  #4, a5
-        move.l  a5, _rf_w
+        movem.l a1/a3/a4/a5, _rf_rp
         rts
 
         .align 2
@@ -74,28 +67,20 @@ _rf_code_mon:
         .sect data
 
         .align 2
-        .extern _rf_fp
-_rf_fp: dc.l    0
-
-        .align 2
-        .extern _rf_ip
-_rf_ip: dc.l    0
-
-        .align 2
         .extern _rf_rp
-_rf_rp: dc.l    0
-
-        .align 2
+_rf_rp: dc.l    0               ; use movem.l to load and store these
         .extern _rf_sp
 _rf_sp: dc.l    0
-
-        .align 2
+        .extern _rf_ip
+_rf_ip: dc.l    0
+        .extern _rf_w
+_rf_w:  dc.l    0
         .extern _rf_up
 _rf_up: dc.l    0
 
         .align 2
-        .extern _rf_w
-_rf_w:  dc.l    0
+        .extern _rf_fp
+_rf_fp: dc.l    0
 
         .sect text
 
