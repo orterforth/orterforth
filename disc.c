@@ -324,6 +324,21 @@ static int disc_standard(int argc, char **argv)
   return exit;
 }
 
+static int disc_tcp_client(int argc, char **argv)
+{
+  int exit = 0;
+
+  /* open socket */
+  CHECK(exit, orter_tcp_client_open(atoi(argv[3])));
+
+  /* run */
+  exit = serve_with_fds(orter_tcp_fd, orter_tcp_fd, argv[4], argc > 5 ? argv[5] : 0);
+
+  /* close and exit */
+  orter_tcp_close();
+  return exit;
+}
+
 static int disc_tcp(int argc, char **argv)
 {
   int exit = 0;
@@ -366,6 +381,11 @@ int main(int argc, char *argv[])
   /* Console */
   if (argc == 2 || argc == 3) {
     return disc_standard(argc, argv);
+  }
+
+  /* TCP client */
+  if ((argc == 5 || argc == 6) && !strcmp("tcp", argv[1]) && !strcmp("client", argv[2])) {
+    return disc_tcp_client(argc, argv);
   }
 
   /* TCP */

@@ -150,6 +150,7 @@ typedef unsigned long uintptr_t;
 #define RF_ALIGN 2
 #define RF_BE
 #include <stdint.h>
+#define RF_TARGET_INC "target/amiga/amiga.inc"
 /* AMIGA */
 #define RF_TARGET_HI 0x00000000
 #define RF_TARGET_LO 0x011050EA
