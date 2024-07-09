@@ -11,7 +11,7 @@ amiga :
 	mkdir $@
 
 .PHONY : amiga-build
-amiga-build : amiga/hw
+amiga-build : amiga/inst.adf
 
 .PHONY : amiga-hw
 amiga-hw : amiga/hw.adf
