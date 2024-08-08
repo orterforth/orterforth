@@ -43,7 +43,7 @@ c64-hw : c64/hw.$(C64MEDIAEXT)
 .PHONY : c64-run
 c64-run : c64/orterforth.$(C64MEDIAEXT) $(DR0) $(DR1)
 
-	@$(START) disc.pid $(DISC) tcp 25232 $(DR0) $(DR1)
+	@$(START) disc.pid $(DISC) tcp server 25232 $(DR0) $(DR1)
 	@x64 $(C64VICEOPTS) +warp -autostartprgmode 1 -autostart $<
 
 c64/%.o : c64/%.s
@@ -93,7 +93,7 @@ c64/orterforth.hex : c64/inst.$(C64MEDIAEXT) model.img | $(DISC)
 	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' c64/inst.map)" | cut -c '33-36') - 0x801 ))
 	@$(EMPTYDR1FILE) $@.io
 	@$(INFO) 'Starting disc'
-	@$(START) disc.pid $(DISC) tcp 25232 model.img $@.io
+	@$(START) disc.pid $(DISC) tcp server 25232 model.img $@.io
 	@$(INFO) 'Starting Vice'
 	@$(START) vice.pid x64 $(C64VICEOPTS) -warp -autostartprgmode 1 -autostart $<
 	@$(WAITUNTILSAVED) $@.io
@@ -115,6 +115,10 @@ c64/rf.s : rf.c rf.h target/c64/c64.inc | c64
 c64/rf_6502.o : rf_6502.s | c64
 
 	ca65 -DORIG='$(C64ORIGIN)' -DTOS=\$$60 -o $@ $<
+
+c64/system.o : target/c64/system.s | c64
+
+	ca65 -o $@ $<
 
 c64/system.s : target/c64/system.c rf.h target/c64/c64.inc | c64
 

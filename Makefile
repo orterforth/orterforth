@@ -74,7 +74,7 @@ ORTERFORTH := $(SYSTEM)/orterforth
 
 # scripts for disc
 STARTDISC := $(STARTDISCMSG) && $(START) disc.pid $(DISC)
-STARTDISCTCP := $(STARTDISC) tcp 5705
+STARTDISCTCP := $(STARTDISC) tcp server 5705
 
 # local system object files
 SYSTEMDEPS := \

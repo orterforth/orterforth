@@ -339,15 +339,15 @@ static int disc_tcp_client(int argc, char **argv)
   return exit;
 }
 
-static int disc_tcp(int argc, char **argv)
+static int disc_tcp_server(int argc, char **argv)
 {
   int exit = 0;
 
   /* open socket */
-  CHECK(exit, orter_tcp_open(atoi(argv[2])));
+  CHECK(exit, orter_tcp_open(atoi(argv[3])));
 
   /* run */
-  exit = serve_with_fds(orter_tcp_fd, orter_tcp_fd, argv[3], argc > 4 ? argv[4] : 0);
+  exit = serve_with_fds(orter_tcp_fd, orter_tcp_fd, argv[4], argc > 5 ? argv[5] : 0);
 
   /* close and exit */
   orter_tcp_close();
@@ -388,9 +388,9 @@ int main(int argc, char *argv[])
     return disc_tcp_client(argc, argv);
   }
 
-  /* TCP */
-  if ((argc == 4 || argc == 5) && !strcmp("tcp", argv[1])) {
-    return disc_tcp(argc, argv);
+  /* TCP server */
+  if ((argc == 5 || argc == 6) && !strcmp("tcp", argv[1]) && !strcmp("server", argv[2])) {
+    return disc_tcp_server(argc, argv);
   }
 #endif
 
@@ -398,10 +398,11 @@ int main(int argc, char *argv[])
   fputs("Usage: disc create   Convert text file (stdin) into Forth block format (stdout)\n", stderr);
 #ifndef _WIN32
   fputs("       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
-  fputs("       disc pty <link> <dr0> <dr1>           Run disc controller over pty and create symlink\n", stderr);
-  fputs("       disc serial <name> <baud> <dr0> <dr1> Run disc controller over physical serial port\n"
-        "       disc tcp <port> <dr0> <dr1>           Run disc controller over tcp port\n", stderr);
-  fputs("       disc <dr0> <dr1>                      Run disc controller over stdin/stdout\n", stderr);
+  fputs("       disc pty <link> <dr0> <dr1>           Open pty and create symlink\n", stderr);
+  fputs("       disc serial <name> <baud> <dr0> <dr1> Run over serial port\n"
+        "       disc tcp client <port> <dr0> <dr1>    Open tcp client\n"
+        "       disc tcp server <port> <dr0> <dr1>    Bind to tcp server port\n", stderr);
+  fputs("       disc <dr0> <dr1>                      Run over stdin/stdout\n", stderr);
 #endif
   return 1;
 }
