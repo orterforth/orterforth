@@ -16,6 +16,3 @@
 
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
-
-/* end of disc buffers - leave space for C stack in high memory */
-#define RF_LIMIT 0xFF00

@@ -1,19 +1,21 @@
 # === RC2014 ===
 
-RC2014DEPS := rc2014/inst.lib rc2014/system.lib
-RC2014HEXLOAD := rc2014/hexload-ack.bas
-RC2014INC := target/rc2014/rc2014.inc
-RC2014INSTOFFSET := 0x5000
-RC2014LIBS := -lrc2014/inst -lrc2014/system
-RC2014ORG := 0x9000
-
 RC2014OPTION := assembly
-#RC2014OPTION := default
+# RC2014OPTION := default
 ifeq ($(TARGET),rc2014)
 ifneq ($(OPTION),)
 RC2014OPTION := $(OPTION)
 endif
 endif
+
+RC2014ROM := basic
+# RC2014ROM := scm
+
+RC2014DEPS := rc2014/inst.lib rc2014/system.lib
+RC2014HEXLOAD := rc2014/hexload-ack.bas
+RC2014INC := target/rc2014/rc2014.inc
+RC2014INSTOFFSET := 0x5000
+RC2014LIBS := -lrc2014/inst -lrc2014/system
 
 ifeq ($(OPER),cygwin)
 RC2014SERIALPORT := /dev/ttyS2
@@ -25,10 +27,11 @@ ifeq ($(OPER),linux)
 RC2014SERIALPORT := /dev/ttyUSB0
 endif
 
+RC2014PROMPT := $(PROMPT) "On the RC2014: connect serial and press reset"
+
 # ensure RC2014 is reset before starting
 RC2014RESET := \
-	$(PROMPT) "On the RC2014: connect serial and press reset" && \
-	$(INFO) 'Resetting' && \
+	$(RC2014PROMPT) && $(INFO) 'Resetting' && \
 	sh target/rc2014/reset.sh | $(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200
 
 # load modified hexload.bas
@@ -41,30 +44,56 @@ RC2014LOADIHEX := \
 	$(INFO) 'Loading IHEX' && \
 	$(ORTER) serial -a $(RC2014SERIALPORT) 115200 <
 
-RC2014LOAD := $(RC2014RESET) && $(RC2014LOADLOADER) && $(RC2014LOADIHEX)
+ifeq ($(RC2014ROM),basic)
+RC2014LIMIT = 0xFF00
+RC2014LOAD = $(RC2014RESET) && $(RC2014LOADLOADER) && $(RC2014LOADIHEX) $<
+RC2014ORG := 0x9000
+endif
+ifeq ($(RC2014ROM),scm)
+RC2014LIMIT = 0xFB00
+RC2014LOAD = $(RC2014PROMPT) && $(INFO) 'Loading' && ((sleep 2 && printf 'MON\n' && sleep 1 && cat $< && sleep 12 && printf 'G 8000\n' && sleep 1) | $(ORTER) serial -o onlcrx -o odelbs $(RC2014SERIALPORT) 115200)
+RC2014ORG := 0x8000
+endif
 
 RC2014CONNECT := $(INFO) 'Starting disc with console mux' && \
 	$(DISC) mux $(RC2014SERIALPORT) 115200 $(DR0) $(DR1)
 
 RC2014ZCCOPTS := \
 	+rc2014 -subtype=basic -clib=new -m \
+	-pragma-output:CRT_ORG_CODE=$(RC2014ORG) \
 	-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
+	-DRF_LIMIT=$(RC2014LIMIT) \
 	-DRF_ORG=$(RC2014ORG) \
 	-Ca-DCRT_ITERM_TERMINAL_FLAGS=0x0000 \
 	-Ca-DRF_INST_OFFSET=$(RC2014INSTOFFSET) \
+	-Ca-DRF_LIMIT=$(RC2014LIMIT) \
 	-Ca-DRF_ORG=$(RC2014ORG)
+
+ifeq ($(RC2014ROM),scm)
+RC2014ZCCOPTS += -pragma-output:REGISTER_SP=0xFC00
+endif
 
 ifeq ($(RC2014OPTION),assembly)
 RC2014DEPS += rc2014/rf_z80.lib
 RC2014LIBS += -lrc2014/rf_z80
+ifeq ($(RC2014ROM),basic)
 RC2014ORIGIN := 0x9CC0
+endif
+ifeq ($(RC2014ROM),scm)
+RC2014ORIGIN := 0x8CC0
+endif
 RC2014SYSTEMDEPS := target/rc2014/system.asm
 RC2014ZCCOPTS += -DRF_ASSEMBLY
 endif
 ifeq ($(RC2014OPTION),default)
 RC2014DEPS += rc2014/io.lib rc2014/mux.lib rc2014/rf.lib
 RC2014LIBS += -lrc2014/io -lrc2014/mux -lrc2014/rf
+ifeq ($(RC2014ROM),basic)
 RC2014ORIGIN := 0xAB00
+endif
+ifeq ($(RC2014ROM),scm)
+RC2014ORIGIN := 0x9B00
+endif
 RC2014SYSTEMDEPS := target/rc2014/system.c mux.h rf.h $(RC2014INC)
 endif
 
@@ -91,10 +120,11 @@ rc2014-hw : rc2014/hw.ihx | $(RC2014HEXLOAD) $(ORTER)
 	@$(RC2014LOAD) $<
 	@$(ORTER) serial -o onlcrx -o odelbs $(RC2014SERIALPORT) 115200
 
+
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC) $(DR0) $(DR1)
 
-	@$(RC2014LOAD) $<
+	@$(RC2014LOAD)
 	@$(RC2014CONNECT)
 
 # modify hexload.bas to send ACK once when run and once when hex load complete
@@ -109,7 +139,7 @@ rc2014/hw.ihx : hw.c | rc2014
 # start with an empty bin file to build the multi segment bin
 rc2014/inst-0.bin : | rc2014
 
-	z88dk-appmake +rom --romsize 0x7000 --filler 0 --output $@
+	z88dk-appmake +rom --romsize 0x6000 --filler 0 --output $@
 
 # add main code at start
 rc2014/inst-1.bin : rc2014/inst-0.bin rc2014/inst_CODE.bin
@@ -159,7 +189,8 @@ rc2014/orterforth : rc2014/orterforth.hex | $(ORTER)
 rc2014/orterforth.hex : rc2014/inst.ihx model.img | $(RC2014HEXLOAD) $(DISC) $(ORTER)
 
 	@$(CHECKMEMORY) $(RC2014ORG) $(RC2014ORIGIN) $$($(STAT) rc2014/inst_CODE.bin)
-	@$(RC2014LOAD) $<
+	@$(RC2014LOAD)
+
 	@$(EMPTYDR1FILE) $@.io
 # Linux (though not Darwin) reads EOF from stdin if run in background
 # so pipe no bytes into stdin to keep disc from detecting EOF and terminating
