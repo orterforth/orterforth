@@ -11,8 +11,5 @@
 /* pause before beginning inst, to allow disc server to start */
 #define RF_INST_WAIT
 
-/* stay quiet during inst (for now) */
-#define RF_INST_SILENT
-
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
