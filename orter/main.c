@@ -4,10 +4,9 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #ifndef _WIN32
 #include "bbc.h"
-#endif
-#ifndef _WIN32
 #include "hex.h"
 #include "m100.h"
 #include "pty.h"
@@ -16,6 +15,7 @@
 #include "spectrum.h"
 #include "z88.h"
 #endif
+
 static int usage(void)
 {
   fprintf(stderr, "Usage: orter <subcommand> ...\n");
