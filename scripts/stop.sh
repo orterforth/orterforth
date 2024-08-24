@@ -10,10 +10,14 @@ set -eu
 PIDFILE="$1"
 
 if [ -f "$PIDFILE" ]; then
-  # stop existing processes in pidfile
+  # SIGTERM
   kill $(cat "$PIDFILE") 2> /dev/null || true
-  sleep 1
-  kill -9 $(cat "$PIDFILE") 2> /dev/null || true
+  if ps -p $(cat "$PIDFILE") > /dev/null
+  then
+    # SIGKILL
+    sleep 1
+    kill -9 $(cat "$PIDFILE") 2> /dev/null || true
+  fi
 
   # remove pidfile
   rm "$PIDFILE" || true
