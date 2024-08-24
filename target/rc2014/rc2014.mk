@@ -51,7 +51,7 @@ RC2014ORG := 0x9000
 endif
 ifeq ($(RC2014ROM),scm)
 RC2014LIMIT = 0xFB00
-RC2014LOAD = $(RC2014PROMPT) && $(INFO) 'Loading' && ((sleep 2 && printf 'MON\n' && sleep 1 && cat $< && sleep 12 && printf 'G 8000\n' && sleep 1) | $(ORTER) serial -o onlcrx -o odelbs $(RC2014SERIALPORT) 115200)
+RC2014LOAD = $(RC2014PROMPT) && $(INFO) 'Loading' && (printf 'MON\r' && sleep 1 && cat $< && sleep 12 && printf 'G 8000\r') | $(ORTER) serial $(RC2014SERIALPORT) 115200
 RC2014ORG := 0x8000
 endif
 
@@ -117,9 +117,8 @@ rc2014-connect : | $(DISC) $(DR0) $(DR1)
 .PHONY : rc2014-hw
 rc2014-hw : rc2014/hw.ihx | $(RC2014HEXLOAD) $(ORTER)
 
-	@$(RC2014LOAD) $<
+	@$(RC2014LOAD)
 	@$(ORTER) serial -o onlcrx -o odelbs $(RC2014SERIALPORT) 115200
-
 
 .PHONY : rc2014-run
 rc2014-run : rc2014/orterforth.ihx | $(RC2014HEXLOAD) $(ORTER) $(DISC) $(DR0) $(DR1)
@@ -134,7 +133,7 @@ $(RC2014HEXLOAD) : tools/github.com/RC2014Z80/RC2014/BASIC-Programs/hexload/hexl
 
 rc2014/hw.ihx : hw.c | rc2014
 
-	zcc +rc2014 -subtype=basic -m hw.c -o rc2014/hw -create-app
+	zcc $(RC2014ZCCOPTS) hw.c -o rc2014/hw -create-app
 
 # start with an empty bin file to build the multi segment bin
 rc2014/inst-0.bin : | rc2014
