@@ -19,11 +19,14 @@ _rf_code_emit:
         AND     L
         CP      $08             ; BS erase
         JP      NZ,EMIT1
-        RST     $0008
+;       RST     $0008
+        CALL    tx
         LD      A,$20
-        RST     $0008
+;       RST     $0008
+        CALL    tx
         LD      A,$08
-EMIT1:  RST     $0008           ; output char
+EMIT1: ;RST     $0008           ; output char
+        CALL    tx
         LD      HL,(_rf_up)     ; increment OUT
         LD      DE,$001A
         ADD     HL,DE
@@ -36,7 +39,8 @@ EMIT1:  RST     $0008           ; output char
 PUBLIC _rf_code_key
 
 _rf_code_key:
-        RST     $0010           ; expect bit 7 reset
+;       RST     $0010           ; expect bit 7 reset
+        CALL    rx
         AND     A
         JP      M,_rf_code_key
         LD      H,$00
@@ -51,21 +55,21 @@ PUBLIC _rf_code_cr
 
 _rf_code_cr:
         LD      A,$0A           ; LF
-        RST     $0008
+;       RST     $0008
+        CALL    tx
         JP      (IX)
 
 PUBLIC _rf_code_qterm
 
 _rf_code_qterm:
         LD      HL,$0000
-; BASIC ROM only
 ;       RST     $0018           ; poll key
 ;       OR      A
-; poll hardware directly
         IN      A,($80)
         BIT     0,A
         JP      Z,_rf_z80_hpush ; no key pressed
-        RST     $0010           ; get key
+;       RST     $0010           ; get key
+        CALL    rx
         CP      $1B             ; ESC (Escape)
         JP      Z,qterm1
         CP      $03             ; ETX (Ctrl-C)
@@ -73,7 +77,8 @@ _rf_code_qterm:
 qterm1: INC     L
         JP      (IY)
 
-discr:  RST     $0010           ; expect bit 7 set
+discr: ;RST     $0010           ; expect bit 7 set
+        CALL    rx
         AND     A
         JP      P,discr
         AND     $7F             ; reset it
@@ -116,10 +121,26 @@ _rf_code_bwrit:
         LD      B,E             ; loop for len
 bwrit1: LD      A,(HL)          ; read a byte from addr
         OR      $80             ; set bit 7
-        RST     $0008           ; write byte
+;       RST     $0008           ; write byte
+        CALL    tx
         INC     HL              ; advance addr
         DJNZ    bwrit1          ; loop back for more bytes
         LD      A,$84           ; EOT + bit 7
-        RST     $0008           ; write byte
+;       RST     $0008           ; write byte
+        CALL    tx
         POP     BC              ; restore IP
         JP      (IX)
+
+tx:     LD      E,A
+txbusy: IN      A,($80)
+        BIT     1,A
+        JR      Z,txbusy
+        LD      A,E
+        OUT     ($81),A
+        RET
+
+rx:     IN      A,($80)
+        BIT     0,A
+        JR      Z,rx
+        IN      A,($81)
+        RET
