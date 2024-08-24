@@ -85,6 +85,7 @@ qterm1:LDX XSAVE
        JMP PUSH0A
 
 .export _rf_code_cr
+
 _rf_code_cr:
 ;
 ;        XCR displays a CR and LF to terminal
