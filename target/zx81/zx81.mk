@@ -48,6 +48,10 @@ zx81/%.tzx : zx81/%.P | $(SYSTEM)/zx81putil
 
 	$(SYSTEM)/zx81putil -tzx $<
 
+zx81/%.wav : zx81/%.P | $(SYSTEM)/zx81putil
+
+	$(SYSTEM)/zx81putil -p2w $<
+
 zx81/hw.bin zx81/hw.P : hw.c
 
 	zcc $(ZX81ZCCOPTS) -lm -create-app -o zx81/hw.bin $<
