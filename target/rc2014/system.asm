@@ -58,8 +58,12 @@ PUBLIC _rf_code_qterm
 
 _rf_code_qterm:
         LD      HL,$0000
-        RST     $0018           ; poll key
-        OR      A
+; BASIC ROM only
+;       RST     $0018           ; poll key
+;       OR      A
+; poll hardware directly
+        IN      A,($80)
+        BIT     0,A
         JP      Z,_rf_z80_hpush ; no key pressed
         RST     $0010           ; get key
         CP      $1B             ; ESC (Escape)
