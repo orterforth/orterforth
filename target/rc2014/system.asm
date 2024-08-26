@@ -19,11 +19,23 @@ _rf_code_emit:
         AND     L
         CP      $08             ; BS erase
         JP      NZ,EMIT1
+IFDEF BASIC
         RST     $0008
+ELSE
+        CALL    tx
+ENDIF
         LD      A,$20
+IFDEF BASIC
         RST     $0008
+ELSE
+        CALL    tx
+ENDIF
         LD      A,$08
+IFDEF BASIC
 EMIT1:  RST     $0008           ; output char
+ELSE
+EMIT1:  CALL    tx
+ENDIF
         LD      HL,(_rf_up)     ; increment OUT
         LD      DE,$001A
         ADD     HL,DE
@@ -36,7 +48,11 @@ EMIT1:  RST     $0008           ; output char
 PUBLIC _rf_code_key
 
 _rf_code_key:
+IFDEF BASIC
         RST     $0010           ; expect bit 7 reset
+ELSE
+        CALL    rx
+ENDIF
         AND     A
         JP      M,_rf_code_key
         LD      H,$00
@@ -51,7 +67,11 @@ PUBLIC _rf_code_cr
 
 _rf_code_cr:
         LD      A,$0A           ; LF
+IFDEF BASIC
         RST     $0008
+ELSE
+        CALL    tx
+ENDIF
         JP      (IX)
 
 PUBLIC _rf_code_qterm
@@ -66,7 +86,11 @@ ELSE
         BIT     0,A
 ENDIF
         JP      Z,_rf_z80_hpush ; no key pressed
+IFDEF BASIC
         RST     $0010           ; get key
+ELSE
+        CALL    rx
+ENDIF
         CP      $1B             ; ESC (Escape)
         JP      Z,qterm1
         CP      $03             ; ETX (Ctrl-C)
@@ -74,7 +98,11 @@ ENDIF
 qterm1: INC     L
         JP      (IY)
 
+IFDEF BASIC
 discr:  RST     $0010           ; expect bit 7 set
+ELSE
+discr:  CALL    rx
+ENDIF
         AND     A
         JP      P,discr
         AND     $7F             ; reset it
@@ -117,10 +145,32 @@ _rf_code_bwrit:
         LD      B,E             ; loop for len
 bwrit1: LD      A,(HL)          ; read a byte from addr
         OR      $80             ; set bit 7
+IFDEF BASIC
         RST     $0008           ; write byte
+ELSE
+        CALL    tx
+ENDIF
         INC     HL              ; advance addr
         DJNZ    bwrit1          ; loop back for more bytes
         LD      A,$84           ; EOT + bit 7
+IFDEF BASIC
         RST     $0008           ; write byte
+ELSE
+        CALL    tx
+ENDIF
         POP     BC              ; restore IP
         JP      (IX)
+
+rx:     IN      A,($80)
+        RRCA
+        JP      NC,rx
+        IN      A,($81)
+        RET
+
+tx:     LD      E,A
+tx1:    IN      A,($80)
+        AND     $02
+        JP      Z,tx1
+        LD      A,E
+        OUT     ($81),A
+        RET
