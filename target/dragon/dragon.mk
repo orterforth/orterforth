@@ -1,19 +1,15 @@
 # === Dragon 32/64 ===
 
-DRAGONCMOCOPTS := --dragon -Werror
-DRAGONDEPS := dragon/inst.o
+# relink code compiled without inst at final location
+# DRAGONLINK := false
 DRAGONLINK := true
-DRAGONLINKDEPS := dragon/link.o
-DRAGONMACHINE := xroar
-DRAGONORG := 0x0600
-ifeq ($(DRAGONLINK),true)
-DRAGONORIGIN := 0x1D00
-else
-DRAGONORIGIN := 0x3180
-endif
-DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
-DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
+# real or emulator
+# DRAGONMACHINE := mame
+# DRAGONMACHINE := real
+DRAGONMACHINE := xroar
+
+# C or 6809 assembly option
 DRAGONOPTION := assembly
 # DRAGONOPTION := default
 ifeq ($(TARGET),dragon)
@@ -21,6 +17,22 @@ ifneq ($(OPTION),)
 DRAGONOPTION := $(OPTION)
 endif
 endif
+
+DRAGONCMOCOPTS := --dragon -Werror
+DRAGONDEPS := dragon/inst.o
+DRAGONINSTMEDIA := dragon/inst.cas
+DRAGONLINKDEPS := dragon/link.o
+DRAGONMEDIA := dragon/orterforth.cas
+DRAGONORG := 0x0600
+ifeq ($(DRAGONLINK),true)
+DRAGONORIGIN := 0x1D00
+DRAGONPARTS := dragon/link dragon/spacer dragon/installed
+else
+DRAGONORIGIN := 0x3180
+DRAGONPARTS := dragon/installed
+endif
+DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
+DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
 ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
@@ -37,13 +49,9 @@ DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/system.o
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)
-
 ifeq ($(DRAGONLINK),true)
 	DRAGONCMOCOPTS += -DRF_INST_LINK
 endif
-
-DRAGONMEDIA := dragon/orterforth.cas
-DRAGONINSTMEDIA := dragon/inst.cas
 
 ifeq ($(DRAGONMACHINE),mame)
 	DRAGONMAMEWARNINGS := \
@@ -129,6 +137,10 @@ dragon/%.cas : dragon/%.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
+dragon/%.o : %.c rf.h target/dragon/dragon.inc | dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+
 dragon/%.wav : dragon/%.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
@@ -144,10 +156,6 @@ ifeq ($(DRAGONLINK),true)
 else
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 endif
-
-dragon/inst.o : inst.c rf.h target/dragon/dragon.inc | dragon
-
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 dragon/installed : dragon/installed.hex | $(ORTER)
 
@@ -167,10 +175,6 @@ endif
 	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 
-dragon/io.o : io.c rf.h target/dragon/dragon.inc | dragon
-
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
-
 dragon/link : dragon/link.bin
 
 	# link bin, minus its own header
@@ -180,15 +184,7 @@ dragon/link.bin : $(DRAGONLINKDEPS) main.c
 
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 
-dragon/link.o : link.c rf.h target/dragon/dragon.inc | dragon
-
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
-
-ifeq ($(DRAGONLINK),true)
-dragon/orterforth : dragon/link dragon/spacer dragon/installed
-else
-dragon/orterforth : dragon/installed
-endif
+dragon/orterforth : $(DRAGONPARTS)
 
 	cat $^ > $@
 
@@ -196,10 +192,6 @@ dragon/orterforth.bin : dragon/orterforth
 
 	$(ORTER) dragon bin header 2 $(DRAGONORG) $$($(STAT) $<) $(DRAGONORG) > $@
 	cat $< >> $@
-
-dragon/rf.o : rf.c rf.h target/dragon/dragon.inc | dragon
-
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 dragon/rf_6809.o : rf_6809.s | dragon
 
