@@ -161,6 +161,7 @@ ENDIF
         POP     BC              ; restore IP
         JP      (IX)
 
+IFNDEF BASIC
 rx:     IN      A,($80)
         RRCA
         JP      NC,rx
@@ -174,3 +175,4 @@ tx1:    IN      A,($80)
         LD      A,E
         OUT     ($81),A
         RET
+ENDIF
