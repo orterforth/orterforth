@@ -32,7 +32,7 @@ RC2014PROMPT := $(PROMPT) "On the RC2014: connect serial and press reset"
 # ensure RC2014 is reset before starting
 RC2014RESET := \
 	$(RC2014PROMPT) && $(INFO) 'Resetting' && \
-	sh target/rc2014/reset.sh | $(ORTER) serial -o onlcrx -a $(RC2014SERIALPORT) 115200
+	sh target/rc2014/reset.sh | $(ORTER) serial -a $(RC2014SERIALPORT) 115200
 
 # load modified hexload.bas
 RC2014LOADLOADER := \
