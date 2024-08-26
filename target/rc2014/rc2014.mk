@@ -69,6 +69,9 @@ RC2014ZCCOPTS := \
 	-Ca-DRF_LIMIT=$(RC2014LIMIT) \
 	-Ca-DRF_ORG=$(RC2014ORG)
 
+ifeq ($(RC2014ROM),basic)
+RC2014ZCCOPTS += -Ca-DBASIC
+endif
 ifeq ($(RC2014ROM),scm)
 RC2014ZCCOPTS += -pragma-output:REGISTER_SP=0xFC00
 endif

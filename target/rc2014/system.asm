@@ -58,8 +58,13 @@ PUBLIC _rf_code_qterm
 
 _rf_code_qterm:
         LD      HL,$0000
-        IN      A,($80)         ; poll key
+IFDEF BASIC
+        RST     $0018           ; poll key (BASIC ROM)
+        OR      A
+ELSE
+        IN      A,($80)         ; poll key (ACIA directly)
         BIT     0,A
+ENDIF
         JP      Z,_rf_z80_hpush ; no key pressed
         RST     $0010           ; get key
         CP      $1B             ; ESC (Escape)
@@ -82,7 +87,7 @@ _rf_code_dchar:
         POP     HL              ; get expected byte
         CP      L               ; set flag if expected
         LD      HL,$0001
-        JR      Z,dchar2
+        JP      Z,dchar2
         DEC     L
 dchar2: PUSH    HL              ; push flag
         LD      L,A             ; now push byte
@@ -97,7 +102,7 @@ _rf_code_bread:
 bread1: CALL    discr           ; read a byte
         LD      (HL),A          ; write byte to addr
         CP      $04             ; see if EOT
-        JR      Z,bread2        ; finish if so
+        JP      Z,bread2        ; finish if so
         INC     HL              ; advance addr
         DJNZ    bread1          ; loop back for more bytes
 bread2: POP     BC              ; restore IP
