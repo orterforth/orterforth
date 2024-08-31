@@ -51,7 +51,7 @@ RC2014ORG := 0x9000
 endif
 ifeq ($(RC2014ROM),scm)
 RC2014LIMIT = 0xFB00
-RC2014LOAD = $(RC2014PROMPT) && $(INFO) 'Loading' && (printf 'MON\r' && sleep 1 && cat $< && sleep 12 && printf 'G 8000\r') | $(ORTER) serial $(RC2014SERIALPORT) 115200
+RC2014LOAD = $(RC2014PROMPT) && $(INFO) 'Loading' && (cat $< && sleep 10 && printf 'G 8000\r' && sleep 1) | $(ORTER) serial $(RC2014SERIALPORT) 115200
 RC2014ORG := 0x8000
 endif
 
