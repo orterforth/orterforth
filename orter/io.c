@@ -251,7 +251,7 @@ void orter_io_pipe_write_init(orter_io_pipe_t *pipe, int out)
   orter_io_pipe_init(pipe, -1, out);
 }
 
-void orter_io_pipe_move(orter_io_pipe_t *pipe)
+static void orter_io_pipe_move(orter_io_pipe_t *pipe)
 {
   bufread(&pipe->in, pipe->buf, &pipe->off, &pipe->len);
   bufwrite(pipe->out, pipe->buf, &pipe->off, &pipe->len);
@@ -259,7 +259,7 @@ void orter_io_pipe_move(orter_io_pipe_t *pipe)
 
 static int orter_io_nfds;
 
-void orter_io_select_zero(void)
+static void orter_io_select_zero(void)
 {
   FD_ZERO(&orter_io_readfds);
   FD_ZERO(&orter_io_writefds);
@@ -267,7 +267,7 @@ void orter_io_select_zero(void)
   orter_io_nfds = 0;
 }
 
-void orter_io_pipe_fdset(orter_io_pipe_t *pipe)
+static void orter_io_pipe_fdset(orter_io_pipe_t *pipe)
 {
   /* if no bytes pending, select input */
   if (pipe->in != -1 && !pipe->len) {
@@ -294,7 +294,7 @@ void orter_io_pipe_fdset(orter_io_pipe_t *pipe)
   }
 }
 
-int orter_io_select(void)
+static int orter_io_select(void)
 {
   struct timespec timeout;
   int result;

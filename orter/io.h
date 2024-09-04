@@ -47,18 +47,6 @@ void orter_io_pipe_read_init(orter_io_pipe_t *pipe, int in);
 /* set up pipe sink */
 void orter_io_pipe_write_init(orter_io_pipe_t *pipe, int out);
 
-/* add to fd sets based on buffer state */
-void orter_io_pipe_fdset(orter_io_pipe_t *pipe);
-
-/* read and write with flow control */
-void orter_io_pipe_move(orter_io_pipe_t *pipe);
-
-/* zero fd sets */
-void orter_io_select_zero(void);
-
-/* carry out select on fd sets */
-int orter_io_select(void);
-
 /* operate pipes until end or interrupted */
 int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void));
 
