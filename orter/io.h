@@ -14,9 +14,6 @@ typedef struct orter_io_pipe_t {
     int out;
 } orter_io_pipe_t;
 
-/* exit code to return after cleanup */
-extern int orter_io_exit;
-
 /* flag for cleanup and exit */
 extern int orter_io_finished;
 

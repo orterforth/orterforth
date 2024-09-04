@@ -27,7 +27,7 @@ static struct termios in_attr_save;
 static int            in_attr_saved = 0;
 
 /* exit code to return after cleanup */
-int orter_io_exit = 0;
+static int orter_io_exit = 0;
 
 /* flag for cleanup and exit */
 int orter_io_finished = 0;
@@ -339,6 +339,7 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
   signal(SIGSYS, handler);
 
   /* main loop */
+  orter_io_exit = 0;
   orter_io_finished = 0;
   while (!orter_io_finished) {
 

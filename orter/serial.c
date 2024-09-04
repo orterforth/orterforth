@@ -336,7 +336,6 @@ void process(void)
     /* -a */
     if (c == 6 && ack) {
       orter_io_finished = 1;
-      orter_io_exit = 0;
     }
     /* -o ixon */
     if (c == 0x11 && ixon) {
@@ -359,7 +358,6 @@ void process(void)
   if (eof && !ack) {
     if (!wai || time(0) >= wai_timer) {
       orter_io_finished = 1;
-      orter_io_exit = 0;
     }
   }
 }
@@ -401,10 +399,10 @@ int orter_serial(int argc, char **argv)
   orter_io_pipe_write_init(&out2, 1);
 
   /* run */
-  orter_io_pipe_loop(pipes, 4, process);
+  exit = orter_io_pipe_loop(pipes, 4, process);
 
   /* done */
   restore();
-  return orter_io_exit;
+  return exit;
 }
 
