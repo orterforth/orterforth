@@ -67,6 +67,15 @@ void rf_console_put(uint8_t c)
     ConsIO->io_Length  = 1;
     ConsIO->io_Command = CMD_WRITE;
     DoIO((struct IORequest *) ConsIO);
+
+    if (c == 0x08) {
+        rf_console_put(0x20);
+        c = 0x08;
+        ConsIO->io_Data    = (APTR) &c;
+        ConsIO->io_Length  = 1;
+        ConsIO->io_Command = CMD_WRITE;
+        DoIO((struct IORequest *) ConsIO);
+    }
 }
 
 uint8_t rf_console_get(void)
