@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <stdlib.h>
 
 #include <exec/types.h>
 #include <exec/memory.h>
@@ -13,6 +12,8 @@
 #include <clib/intuition_protos.h>
 
 #include <intuition/intuition.h>
+
+#include "../../rf.h"
 
 char *rf_origin = 0;
 
@@ -43,7 +44,7 @@ static uint8_t          b;
 void rf_init(void)
 {
     /* memory */
-    rf_origin = malloc(131072);
+    rf_origin = AllocMem(RF_MEMORY_SIZE, MEMF_ANY);
 
     /* console */
     ConsoleMP = CreatePort("RKM.Console",0);
@@ -117,4 +118,5 @@ void rf_fin(void)
     DeleteMsgPort(SerialMP);
     CloseDevice((struct IORequest *) ConsIO);
     DeleteMsgPort(ConsoleMP);
+    FreeMem(rf_origin, RF_MEMORY_SIZE);
 }
