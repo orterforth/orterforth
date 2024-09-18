@@ -21,14 +21,16 @@ amiga-hw : amiga/hw.adf
 	@fs-uae --amiga-model=A500+ --floppy-drive-1=$<
 
 .PHONY : amiga-hw
-amiga-run : amiga/inst.adf model.img
+amiga-run : amiga/inst.adf model.img | $(DISC) $(DR0) $(DR1)
 
 	@$(INFO) "Starting FS-UAE"
 	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$< --serial-port=tcp://127.0.0.1:5705
-	@sleep 5
-	@$(INFO) "Running disc"
+	@sleep 3
+	@$(STARTDISC) tcp client 5705 model.img
 	@$(WARN) "Open Shell and execute df1:inst"
-	@$(DISC) tcp client 5705 model.img amiga/orterforth.img
+	@$(PROMPT) "To load discs $(DR0) $(DR1), wait for inst to complete"
+	@$(STOPDISC)
+	@$(DISC) tcp client 5705 $(DR0) $(DR1)
 
 amiga/amiga.o : target/amiga/amiga.c rf.h target/amiga/amiga.inc | amiga
 
@@ -47,7 +49,7 @@ amiga/hw.o : hw.c | amiga
 
 	$(AMIGAVC) -c $< -o $@
 
-amiga/inst : amiga/main.o amiga/amiga.o amiga/rf.o amiga/inst.o amiga/inst.o amiga/io.o
+amiga/inst : amiga/amiga.o amiga/inst.o amiga/io.o amiga/main.o amiga/rf.o
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 

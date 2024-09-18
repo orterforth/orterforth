@@ -1,24 +1,57 @@
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <exec/io.h>
+#include <exec/ports.h>
+#include <devices/conunit.h>
 #include <devices/serial.h>
 
 #include <clib/exec_protos.h>
 #include <clib/alib_protos.h>
+#include <clib/intuition_protos.h>
+
+#include <intuition/intuition.h>
 
 char *rf_origin = 0;
 
+static struct MsgPort  *ConsoleMP;
+static struct IOStdReq *ConsIO;
+static struct Window   *win = 0;
+static struct NewWindow nw = {
+    10, 10,
+    620, 180,
+    -1, -1,
+    CLOSEWINDOW,
+    WINDOWDEPTH|WINDOWSIZING|WINDOWDRAG|WINDOWCLOSE|SIMPLE_REFRESH|ACTIVATE,
+    0,
+    0,
+    "orterforth",
+    0,
+    0,
+    100, 45,
+    640, 200,
+    WBENCHSCREEN
+};
+
 static struct MsgPort  *SerialMP;
 static struct IOExtSer *SerialIO;
+
+static uint8_t          b;
 
 void rf_init(void)
 {
     /* memory */
     rf_origin = malloc(131072);
+
+    /* console */
+    ConsoleMP = CreatePort("RKM.Console",0);
+    ConsIO = (struct IOStdReq *) CreateExtIO(ConsoleMP, sizeof(struct IOStdReq));
+    win = OpenWindow(&nw);
+    ConsIO->io_Data = (APTR) win;
+    ConsIO->io_Length = sizeof(struct Window);
+    OpenDevice("console.device", CONU_CHARMAP, (struct IORequest *) ConsIO, CONFLAG_DEFAULT);
 
     /* serial port */
     SerialMP = CreatePort(0, 0);
@@ -29,12 +62,18 @@ void rf_init(void)
 
 void rf_console_put(uint8_t c)
 {
-    putchar(c);
+    ConsIO->io_Data    = (APTR) &c;
+    ConsIO->io_Length  = 1;
+    ConsIO->io_Command = CMD_WRITE;
+    DoIO((struct IORequest *) ConsIO);
 }
 
 uint8_t rf_console_get(void)
 {
-    uint8_t b = getchar();
+    ConsIO->io_Data    = (APTR) &b;
+    ConsIO->io_Length  = 1;
+    ConsIO->io_Command = CMD_READ;
+    DoIO((struct IORequest *) ConsIO);
 
     /* LF -> CR */
     if (b == 10) {
@@ -51,33 +90,31 @@ uint8_t rf_console_qterm(void)
 
 void rf_console_cr(void)
 {
-    putchar('\n');
+    rf_console_put('\n');
 }
 
 uint8_t rf_serial_get(void)
 {
-    uint8_t b;
-
     SerialIO->IOSer.io_Length   = 1;
     SerialIO->IOSer.io_Data     = (APTR) &b;
     SerialIO->IOSer.io_Command  = CMD_READ;
-
-    DoIO((struct IORequest *)SerialIO);
+    DoIO((struct IORequest *) SerialIO);
 
     return b;
 }
 
-void rf_serial_put(uint8_t b)
+void rf_serial_put(uint8_t c)
 {
     SerialIO->IOSer.io_Length   = 1;
-    SerialIO->IOSer.io_Data     = (APTR) &b;
+    SerialIO->IOSer.io_Data     = (APTR) &c;
     SerialIO->IOSer.io_Command  = CMD_WRITE;
-
-    DoIO((struct IORequest *)SerialIO);
+    DoIO((struct IORequest *) SerialIO);
 }
 
 void rf_fin(void)
 {
-    CloseDevice((struct IORequest *)SerialIO);
+    CloseDevice((struct IORequest *) SerialIO);
     DeleteMsgPort(SerialMP);
+    CloseDevice((struct IORequest *) ConsIO);
+    DeleteMsgPort(ConsoleMP);
 }
