@@ -32,5 +32,5 @@ printf '\r'
 sleep 1
 
 # send ACK back, then the client will exit
-printf 'print chr$(6)\r'
+printf 'print chr$(6);\r'
 sleep 1
