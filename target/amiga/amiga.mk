@@ -17,19 +17,21 @@ amiga-build : amiga/inst.adf
 amiga-hw : amiga/hw.adf
 
 	@$(INFO) "Starting FS-UAE"
+	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$<
 	@$(WARN) "Open Shell and execute df1:hw"
-	@fs-uae --amiga-model=A500+ --floppy-drive-1=$<
 
-.PHONY : amiga-hw
+.PHONY : amiga-run
 amiga-run : amiga/inst.adf model.img | $(DISC) $(DR0) $(DR1)
 
 	@$(INFO) "Starting FS-UAE"
 	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$< --serial-port=tcp://127.0.0.1:5705
 	@sleep 3
 	@$(STARTDISC) tcp client 5705 model.img
+	@$(WARN) "NB set serial handshaking to None"
 	@$(WARN) "Open Shell and execute df1:inst"
 	@$(PROMPT) "To load discs $(DR0) $(DR1), wait for inst to complete"
 	@$(STOPDISC)
+	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) tcp client 5705 $(DR0) $(DR1)
 
 amiga/amiga.o : target/amiga/amiga.c rf.h target/amiga/amiga.inc | amiga
