@@ -1,3 +1,8 @@
+# AMIGALOADINGMETHOD=disk
+AMIGALOADINGMETHOD=serial
+# AMIGAMACHINE=fsuae
+AMIGAMACHINE=real
+
 AMIGAVBCCHOME=/opt/vbcc/sdk
 AMIGAVBCCOPTS=-L$(AMIGAVBCCHOME)/NDK_3.9/Include/linker_libs \
 	-I$(AMIGAVBCCHOME)/NDK_3.9/Include/include_h \
@@ -14,17 +19,46 @@ amiga :
 amiga-build : amiga/inst.adf
 
 .PHONY : amiga-hw
-amiga-hw : amiga/hw.adf
+amiga-hw : amiga/hw amiga/hw.adf | amiga/long $(ORTER)
 
+ifeq ($(AMIGALOADINGMETHOD),disk)
+ifeq ($(AMIGAMACHINE),fsuae)
 	@$(INFO) "Starting FS-UAE"
-	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$<
+	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$<.adf
 	@$(WARN) "Open Shell and execute df1:hw"
+endif
+ifeq ($(AMIGAMACHINE),real)
+	@$(WARN) "Physical disk load not supported"
+	@exit 1
+endif
+endif
+ifeq ($(AMIGALOADINGMETHOD),serial)
+ifeq ($(AMIGAMACHINE),fsuae)
+	@$(WARN) "FS-UAE serial load not supported"
+	@exit 1
+endif
+ifeq ($(AMIGAMACHINE),real)
+	@$(WARN) "NB set serial handshaking to RTS/CTS"
+	@$(PROMPT) "Open Shell and type: TYPE SER: > RAM:receive.rexx"
+	@$(INFO) "Sending receive.rexx"
+	@(cat target/amiga/receive.rexxlong && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(PROMPT) "Type Ctrl+C"
+	@$(INFO) "Breaking serial send"
+	@cat target/amiga/receive.rexxlong | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(PROMPT) "Type: rx RAM:receive - Filename? ram:hw - Bytes? $$($(STAT) $<)"
+	@$(INFO) "Sending $<"
+	@(cat $< amiga/long && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(PROMPT) "Type: ram:hw"
+endif
+endif
 
 .PHONY : amiga-run
-amiga-run : amiga/inst.adf model.img | $(DISC) $(DR0) $(DR1)
+amiga-run : amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(DR0) $(DR1)
 
+ifeq ($(AMIGALOADINGMETHOD),disk)
+ifeq ($(AMIGAMACHINE),fsuae)
 	@$(INFO) "Starting FS-UAE"
-	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$< --serial-port=tcp://127.0.0.1:5705
+	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
 	@sleep 3
 	@$(STARTDISC) tcp client 5705 model.img
 	@$(WARN) "NB set serial handshaking to None"
@@ -33,6 +67,36 @@ amiga-run : amiga/inst.adf model.img | $(DISC) $(DR0) $(DR1)
 	@$(STOPDISC)
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) tcp client 5705 $(DR0) $(DR1)
+endif
+ifeq ($(AMIGAMACHINE),real)
+	@$(WARN) "Physical disk load not supported"
+	@exit 1
+endif
+endif
+ifeq ($(AMIGALOADINGMETHOD),serial)
+ifeq ($(AMIGAMACHINE),fsuae)
+	@$(WARN) "FS-UAE serial load not supported"
+	@exit 1
+endif
+ifeq ($(AMIGAMACHINE),real)
+	@$(WARN) "NB set serial handshaking to RTS/CTS"
+	@$(PROMPT) "Open Shell and type: TYPE SER: > RAM:receive.rexx"
+	@$(INFO) "Sending receive.rexx"
+	@(cat target/amiga/receive.rexxlong && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(PROMPT) "Type Ctrl+C"
+	@$(INFO) "Breaking serial send"
+	@cat target/amiga/receive.rexxlong | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(PROMPT) "Type: rx RAM:receive - Filename? ram:inst - Bytes? $$($(STAT) $<)"
+	@$(INFO) "Sending $<"
+	@(cat $< amiga/long && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img amiga/orterforth.img
+	@$(PROMPT) "Type: ram:inst"
+	@$(PROMPT) "To load discs $(DR0) $(DR1), wait for inst to complete"
+	@$(STOPDISC)
+	@$(INFO) "Starting disc $(DR0) $(DR1)"
+	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
+endif
+endif
 
 amiga/amiga.o : target/amiga/amiga.c rf.h target/amiga/amiga.inc | amiga
 
@@ -67,6 +131,10 @@ amiga/inst.o : inst.c rf.h target/amiga/amiga.inc | amiga
 amiga/io.o : io.c rf.h target/amiga/amiga.inc | amiga
 
 	$(AMIGAVC) -c $< -o $@
+
+amiga/long :
+
+	for run in {1..50}; do printf '\0\0\x03\xF2' >> $@ ; done
 
 amiga/main.o : main.c rf.h target/amiga/amiga.inc | amiga
 
