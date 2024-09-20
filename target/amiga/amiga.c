@@ -126,6 +126,7 @@ void rf_fin(void)
     CloseDevice((struct IORequest *) SerialIO);
     DeleteMsgPort(SerialMP);
     CloseDevice((struct IORequest *) ConsIO);
+    CloseWindow(win);
     DeleteMsgPort(ConsoleMP);
     FreeMem(rf_origin, RF_MEMORY_SIZE);
 }
