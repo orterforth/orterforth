@@ -1,7 +1,12 @@
-# AMIGALOADINGMETHOD=disk
-AMIGALOADINGMETHOD=serial
-# AMIGAMACHINE=fsuae
-AMIGAMACHINE=real
+AMIGALOADINGMETHOD=disk
+# AMIGALOADINGMETHOD=serial
+AMIGAMACHINE=fsuae
+# AMIGAMACHINE=real
+# AMIGAMODEL=A500
+AMIGAMODEL=A500+
+
+AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
+	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
 
 AMIGAVBCCHOME=/opt/vbcc/sdk
 AMIGAVBCCOPTS=-L$(AMIGAVBCCHOME)/NDK_3.9/Include/linker_libs \
@@ -23,8 +28,7 @@ amiga-hw : amiga/hw amiga/hw.adf | amiga/long $(ORTER)
 
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),fsuae)
-	@$(INFO) "Starting FS-UAE"
-	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$<.adf
+	@$(AMIGASTARTFSUAE)
 	@$(WARN) "Open Shell and execute df1:hw"
 endif
 ifeq ($(AMIGAMACHINE),real)
@@ -53,12 +57,11 @@ endif
 endif
 
 .PHONY : amiga-run
-amiga-run : amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(DR0) $(DR1)
+amiga-run : amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(DR0) $(DR1) $(ORTER)
 
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),fsuae)
-	@$(INFO) "Starting FS-UAE"
-	@$(START) fsuae.pid fs-uae --amiga-model=A500+ --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
+	@$(AMIGASTARTFSUAE)
 	@sleep 3
 	@$(STARTDISC) tcp client 5705 model.img
 	@$(WARN) "NB set serial handshaking to None"
