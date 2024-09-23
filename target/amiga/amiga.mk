@@ -5,6 +5,17 @@ AMIGAMACHINE=fsuae
 # AMIGAMODEL=A500
 AMIGAMODEL=A500+
 
+AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
+	$(PROMPT) "Open Shell and type: TYPE SER: > RAM:receive.rexx" && \
+	$(INFO) "Sending receive.rexx" && \
+	(cat target/amiga/receive.rexxlong && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD) && \
+	$(PROMPT) "Type Ctrl+C" && \
+	$(INFO) "Breaking serial send" && \
+	cat target/amiga/receive.rexxlong | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD) && \
+	$(PROMPT) "Type: rx RAM:receive - Filename? ram:$(<F) - Bytes? $$($(STAT) $<)" && \
+	$(INFO) "Sending $<" && \
+	(cat $< amiga/long && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
 	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
 
@@ -42,17 +53,8 @@ ifeq ($(AMIGAMACHINE),fsuae)
 	@exit 1
 endif
 ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "NB set serial handshaking to RTS/CTS"
-	@$(PROMPT) "Open Shell and type: TYPE SER: > RAM:receive.rexx"
-	@$(INFO) "Sending receive.rexx"
-	@(cat target/amiga/receive.rexxlong && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
-	@$(PROMPT) "Type Ctrl+C"
-	@$(INFO) "Breaking serial send"
-	@cat target/amiga/receive.rexxlong | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
-	@$(PROMPT) "Type: rx RAM:receive - Filename? ram:hw - Bytes? $$($(STAT) $<)"
-	@$(INFO) "Sending $<"
-	@(cat $< amiga/long && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
-	@$(PROMPT) "Type: ram:hw"
+	@$(AMIGALOADSERIAL)
+	@$(WARN) "To run type: ram:hw"
 endif
 endif
 
@@ -82,19 +84,11 @@ ifeq ($(AMIGAMACHINE),fsuae)
 	@exit 1
 endif
 ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "NB set serial handshaking to RTS/CTS"
-	@$(PROMPT) "Open Shell and type: TYPE SER: > RAM:receive.rexx"
-	@$(INFO) "Sending receive.rexx"
-	@(cat target/amiga/receive.rexxlong && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
-	@$(PROMPT) "Type Ctrl+C"
-	@$(INFO) "Breaking serial send"
-	@cat target/amiga/receive.rexxlong | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
-	@$(PROMPT) "Type: rx RAM:receive - Filename? ram:inst - Bytes? $$($(STAT) $<)"
-	@$(INFO) "Sending $<"
-	@(cat $< amiga/long && sleep 10) | $(ORTER) serial $(SERIALPORT) $(SERIALBAUD)
+	@$(AMIGALOADSERIAL)
+	@$(EMPTYDR1FILE) amiga/orterforth.img
 	@$(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img amiga/orterforth.img
-	@$(PROMPT) "Type: ram:inst"
-	@$(PROMPT) "To load discs $(DR0) $(DR1), wait for inst to complete"
+	@$(WARN) "Type: ram:inst"
+	@$(PROMPT) "Wait for inst to complete"
 	@$(STOPDISC)
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
