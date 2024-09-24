@@ -15,10 +15,10 @@ endif
 AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 	$(PROMPT) "Open Shell and type: TYPE SER: > RAM:receive.rexx" && \
 	$(INFO) "Sending receive.rexx" && \
-	(cat target/amiga/receive.rexxlong && sleep 10) | $(ORTER) $(AMIGASERIALOPTS) && \
+	(cat target/amiga/receive.rexx amiga/long && sleep 10) | $(ORTER) $(AMIGASERIALOPTS) && \
 	$(PROMPT) "Type Ctrl+C" && \
 	$(INFO) "Breaking serial send" && \
-	cat target/amiga/receive.rexxlong | $(ORTER) $(AMIGASERIALOPTS) && \
+	cat amiga/long | $(ORTER) $(AMIGASERIALOPTS) && \
 	$(PROMPT) "Type: rx RAM:receive - Filename? ram:$(<F) - Bytes? $$($(STAT) $<)" && \
 	$(INFO) "Sending $<" && \
 	(cat $< amiga/long && sleep 10) | $(ORTER) $(AMIGASERIALOPTS)
@@ -128,7 +128,7 @@ amiga/io.o : io.c rf.h target/amiga/amiga.inc | amiga
 
 amiga/long :
 
-	for run in {1..50}; do printf '\0\0\x03\xF2' >> $@ ; done
+	for i in $$(seq 0 63) ; do printf '\0\0\003\362' >> $@ ; done
 
 amiga/main.o : main.c rf.h target/amiga/amiga.inc | amiga
 
