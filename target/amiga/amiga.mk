@@ -21,7 +21,7 @@ AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 	cat amiga/long | $(ORTER) $(AMIGASERIALOPTS) && \
 	$(PROMPT) "Type: rx RAM:receive - Filename? ram:$(<F) - Bytes? $$($(STAT) $<)" && \
 	$(INFO) "Sending $<" && \
-	(cat $< amiga/long amiga/long amiga/long amiga/long && sleep 2) | $(ORTER) $(AMIGASERIALOPTS)
+	(cat $< amiga/long && sleep 10) | $(ORTER) $(AMIGASERIALOPTS)
 
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
 	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
@@ -56,7 +56,8 @@ endif
 endif
 ifeq ($(AMIGALOADINGMETHOD),serial)
 ifeq ($(AMIGAMACHINE),fsuae)
-	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
+	@$(WARN) "FS-UAE serial load not supported"
+	@exit 1
 endif
 	@$(AMIGALOADSERIAL)
 	@$(WARN) "Type: ram:hw"
@@ -79,7 +80,8 @@ endif
 endif
 ifeq ($(AMIGALOADINGMETHOD),serial)
 ifeq ($(AMIGAMACHINE),fsuae)
-	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
+	@$(WARN) "FS-UAE serial load not supported"
+	@exit 1
 endif
 	@$(AMIGALOADSERIAL)
 	@$(WARN) "Type: ram:inst"
@@ -126,7 +128,7 @@ amiga/io.o : io.c rf.h target/amiga/amiga.inc | amiga
 
 amiga/long :
 
-	for i in $$(seq 0 127) ; do printf '\0\0\003\362' >> $@ ; done
+	for i in $$(seq 0 63) ; do printf '\0\0\003\362' >> $@ ; done
 
 amiga/main.o : main.c rf.h target/amiga/amiga.inc | amiga
 
