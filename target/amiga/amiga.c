@@ -19,10 +19,10 @@ char *rf_origin = 0;
 
 static struct MsgPort  *ConsoleMP;
 static struct IOStdReq *ConsIO;
-static struct Window   *win = 0;
+static struct Window   *win;
 static struct NewWindow nw = {
-    10, 10,
-    620, 180,
+    0, 0,
+    640, 200,
     -1, -1,
     CLOSEWINDOW,
     WINDOWDEPTH|WINDOWSIZING|WINDOWDRAG|WINDOWCLOSE|SIMPLE_REFRESH|ACTIVATE,
@@ -38,6 +38,7 @@ static struct NewWindow nw = {
 
 static struct MsgPort  *SerialMP;
 static struct IOExtSer *SerialIO;
+static struct IOStdReq *IOSer;
 
 static uint8_t          b;
 
@@ -58,6 +59,7 @@ void rf_init(void)
     SerialMP = CreatePort(0, 0);
     SerialIO = (struct IOExtSer *) CreateExtIO(SerialMP, sizeof(struct IOExtSer));
     SerialIO->io_SerFlags = SERF_SHARED;
+    IOSer = &SerialIO->IOSer;
     OpenDevice(SERIALNAME, 0L, (struct IORequest *) SerialIO, 0);
 }
 
@@ -105,9 +107,9 @@ void rf_console_cr(void)
 
 uint8_t rf_serial_get(void)
 {
-    SerialIO->IOSer.io_Length   = 1;
-    SerialIO->IOSer.io_Data     = (APTR) &b;
-    SerialIO->IOSer.io_Command  = CMD_READ;
+    IOSer->io_Length   = 1;
+    IOSer->io_Data     = (APTR) &b;
+    IOSer->io_Command  = CMD_READ;
     DoIO((struct IORequest *) SerialIO);
 
     return b;
@@ -115,9 +117,9 @@ uint8_t rf_serial_get(void)
 
 void rf_serial_put(uint8_t c)
 {
-    SerialIO->IOSer.io_Length   = 1;
-    SerialIO->IOSer.io_Data     = (APTR) &c;
-    SerialIO->IOSer.io_Command  = CMD_WRITE;
+    IOSer->io_Length   = 1;
+    IOSer->io_Data     = (APTR) &c;
+    IOSer->io_Command  = CMD_WRITE;
     DoIO((struct IORequest *) SerialIO);
 }
 
