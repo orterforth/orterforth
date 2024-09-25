@@ -91,20 +91,12 @@ endif
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)
 
-amiga/amiga.o : target/amiga/amiga.c rf.h target/amiga/amiga.inc | amiga
+amiga/%.adf : amiga/%
 
-	$(AMIGAVC) -c $< -o $@
+	xdftool $@ format $(<F)
+	xdftool $@ write $< $(<F)
 
-amiga/hw : amiga/hw.o
-
-	$(AMIGAVC) $< -lamiga -lauto -o $@
-
-amiga/hw.adf : amiga/hw
-
-	xdftool $@ format hw
-	xdftool $@ write $< hw
-
-amiga/hw.o : hw.c | amiga
+amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga
 
 	$(AMIGAVC) -c $< -o $@
 
@@ -115,31 +107,18 @@ amiga/%.rexx : amiga/% target/amiga/receive.rexx
 	printf "size = $$($(STAT) $<)\n" >> $@
 	cat target/amiga/receive.rexx >> $@
 
+amiga/amiga.o : target/amiga/amiga.c rf.h target/amiga/amiga.inc | amiga
+
+	$(AMIGAVC) -c $< -o $@
+
+amiga/hw : amiga/hw.o
+
+	$(AMIGAVC) $< -lamiga -lauto -o $@
+
 amiga/inst : amiga/amiga.o amiga/inst.o amiga/io.o amiga/main.o amiga/rf.o
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
-amiga/inst.adf : amiga/inst
-
-	xdftool $@ format inst
-	xdftool $@ write $< inst
-
-amiga/inst.o : inst.c rf.h target/amiga/amiga.inc | amiga
-
-	$(AMIGAVC) -c $< -o $@
-
-amiga/io.o : io.c rf.h target/amiga/amiga.inc | amiga
-
-	$(AMIGAVC) -c $< -o $@
-
 amiga/long :
 
 	for i in $$(seq 0 127) ; do printf '\0\0\003\362' >> $@ ; done
-
-amiga/main.o : main.c rf.h target/amiga/amiga.inc | amiga
-
-	$(AMIGAVC) -c $< -o $@
-
-amiga/rf.o : rf.c rf.h target/amiga/amiga.inc | amiga
-
-	$(AMIGAVC) -c $< -o $@
