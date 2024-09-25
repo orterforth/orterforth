@@ -1,7 +1,7 @@
 /* receive.rexx
 ** Written by Wolfgang Stoeggl (1998, 2004) */
-say 'Filename?'; pull file
-say 'Bytes?'; pull size
+/*say 'Filename?'; pull file*/
+/*say 'Bytes?'; pull size*/
 say 'Now send the file!'
 open('1','ser:')
 open('2',file,'W')

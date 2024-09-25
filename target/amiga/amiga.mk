@@ -13,13 +13,13 @@ AMIGASERIALOPTS=serial $(SERIALPORT) $(SERIALBAUD)
 endif
 
 AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
-	$(PROMPT) "Open Shell and type: TYPE SER: > RAM:receive.rexx" && \
-	$(INFO) "Sending receive.rexx" && \
-	(cat target/amiga/receive.rexx amiga/long && sleep 10) | $(ORTER) $(AMIGASERIALOPTS) && \
+	$(PROMPT) "Open Shell and type: type ser: > ram:$(<F).rexx" && \
+	$(INFO) "Sending $<.rexx" && \
+	(cat $<.rexx amiga/long && sleep 10) | $(ORTER) $(AMIGASERIALOPTS) && \
 	$(PROMPT) "Type Ctrl+C" && \
 	$(INFO) "Breaking serial send" && \
 	cat amiga/long | $(ORTER) $(AMIGASERIALOPTS) && \
-	$(PROMPT) "Type: rx RAM:receive - Filename? ram:$(<F) - Bytes? $$($(STAT) $<)" && \
+	$(PROMPT) "Type: rx ram:$(<F)" && \
 	$(INFO) "Sending $<" && \
 	(cat $< amiga/long amiga/long amiga/long amiga/long && sleep 2) | $(ORTER) $(AMIGASERIALOPTS)
 
@@ -42,10 +42,11 @@ amiga :
 amiga-build : amiga/inst.adf
 
 .PHONY : amiga-hw
-amiga-hw : amiga/hw amiga/hw.adf | amiga/long $(ORTER)
+amiga-hw : amiga/hw amiga/hw.adf amiga/hw.rexx | amiga/long $(ORTER)
 
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
+	@sleep 3
 endif
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
@@ -63,7 +64,7 @@ endif
 endif
 
 .PHONY : amiga-run
-amiga-run : amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(DR0) $(DR1) $(ORTER)
+amiga-run : amiga/inst amiga/inst.adf amiga/inst.rexx model.img | amiga/long $(DISC) $(DR0) $(DR1) $(ORTER)
 
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
@@ -106,6 +107,13 @@ amiga/hw.adf : amiga/hw
 amiga/hw.o : hw.c | amiga
 
 	$(AMIGAVC) -c $< -o $@
+
+amiga/%.rexx : amiga/% target/amiga/receive.rexx
+
+	printf "/* $(@F) modified with pre-set values */\n" > $@
+	printf "file = 'ram:$(<F)'\n" >> $@
+	printf "size = $$($(STAT) $<)\n" >> $@
+	cat target/amiga/receive.rexx >> $@
 
 amiga/inst : amiga/amiga.o amiga/inst.o amiga/io.o amiga/main.o amiga/rf.o
 
