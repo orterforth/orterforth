@@ -2,10 +2,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "io.h"
 #include "tcp.h"
 
 static int orter_tcp_sock_fd = -1;
@@ -145,4 +147,46 @@ int orter_tcp_open(int port)
   }
 
   return 0;
+}
+
+static orter_io_pipe_t orter_tcp_pipe[2];
+static orter_io_pipe_t *pipes[2];
+
+static void process(void)
+{
+  /* stop on input EOF */
+  if (orter_tcp_pipe[0].in == -1 && !orter_tcp_pipe[0].len) {
+    orter_io_finished = 1;
+  }
+}
+
+int orter_tcp_client(int port)
+{
+  int r;
+
+  pipes[0] = &orter_tcp_pipe[0];
+  pipes[1] = &orter_tcp_pipe[1];
+  if ((r = orter_io_std_open())) {
+    return r;
+  }
+  if ((r = orter_tcp_client_open(port))) {
+    orter_io_std_close();
+    return r;
+  }
+  orter_io_pipe_init(&orter_tcp_pipe[0], 0, orter_tcp_fd);
+  orter_io_pipe_init(&orter_tcp_pipe[1], orter_tcp_fd, 1);
+  r = orter_io_pipe_loop(pipes, 2, process);
+  orter_tcp_close();
+  orter_io_std_close();
+  return r;
+}
+
+int orter_tcp(int argc, char *argv[])
+{
+  if (argc == 4 && !strcmp("client", argv[2])) {
+    return orter_tcp_client(atoi(argv[3]));
+  }
+
+  /* TODO usage */
+  return 1;
 }

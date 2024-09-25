@@ -34,7 +34,7 @@ int orter_io_finished = 0;
 
 /* select handling */
 #ifndef _WIN32
-static fd_set orter_io_readfds, orter_io_writefds, orter_io_exceptfds;
+static fd_set orter_io_readfds, orter_io_writefds;
 #endif
 
 /* signal handler */
@@ -263,7 +263,6 @@ static void orter_io_select_zero(void)
 {
   FD_ZERO(&orter_io_readfds);
   FD_ZERO(&orter_io_writefds);
-  FD_ZERO(&orter_io_exceptfds);
   orter_io_nfds = 0;
 }
 
@@ -272,9 +271,6 @@ static void orter_io_pipe_fdset(orter_io_pipe_t *pipe)
   /* if no bytes pending, select input */
   if (pipe->in != -1 && !pipe->len) {
     FD_SET(pipe->in, &orter_io_readfds);
-/*
-    FD_SET(pipe->in, &orter_io_exceptfds);
-*/
     /* advance nfds */
     if (orter_io_nfds <= pipe->in) {
       orter_io_nfds = pipe->in + 1;
@@ -284,9 +280,6 @@ static void orter_io_pipe_fdset(orter_io_pipe_t *pipe)
   /* if some bytes pending, select output */
   if (pipe->out != -1 && pipe->len) {
     FD_SET(pipe->out, &orter_io_writefds);
-/*
-    FD_SET(pipe->out, &orter_io_exceptfds);
-*/
     /* advance nfds */
     if (orter_io_nfds <= pipe->out) {
       orter_io_nfds = pipe->out + 1;
@@ -304,7 +297,7 @@ static int orter_io_select(void)
   timeout.tv_nsec = 0;
 
   /* select */
-  result = pselect(orter_io_nfds, &orter_io_readfds, &orter_io_writefds, &orter_io_exceptfds, &timeout, 0);
+  result = pselect(orter_io_nfds, &orter_io_readfds, &orter_io_writefds, 0, &timeout, 0);
   if (result < 0) {
     switch (errno) {
       case EINTR:

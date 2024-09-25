@@ -13,6 +13,7 @@
 #include "ql.h"
 #include "serial.h"
 #include "spectrum.h"
+#include "tcp.h"
 #include "z88.h"
 #endif
 
@@ -29,6 +30,7 @@ static int usage(void)
   fprintf(stderr, "             ql ...\n");
   fprintf(stderr, "             serial ...\n");
   fprintf(stderr, "             spectrum ...\n");
+  fprintf(stderr, "             tcp ...\n");
   fprintf(stderr, "             z88 ...\n");
 
   return 1;
@@ -69,6 +71,9 @@ int main(int argc, char *argv[])
     }
     if (!strcmp("spectrum", arg)) {
       return orter_spectrum(argc, argv);
+    }
+    if (!strcmp("tcp", arg)) {
+      return orter_tcp(argc, argv);
     }
     if (!strcmp("z88", arg)) {
       return orter_z88(argc, argv);

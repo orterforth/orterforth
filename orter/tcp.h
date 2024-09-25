@@ -9,4 +9,6 @@ int orter_tcp_open(int port);
 
 int orter_tcp_close(void);
 
+int orter_tcp(int argc, char *argv[]);
+
 #endif /* ORTER_TCP_H_ */

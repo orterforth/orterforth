@@ -307,7 +307,7 @@ static void opts(int argc, char **argv)
   }
 }
 
-void process(void)
+static void process(void)
 {
   int c;
 
