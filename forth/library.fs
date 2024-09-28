@@ -248,10 +248,10 @@ example DEFINITIONS HEX
             LOOP
             DROP DROP DROP DROP
             EMIT                ( * or space                  )
-        [ 400 3 * sys columns 2 - / ] ( compute step from cols)
-        LITERAL +LOOP
+        400 3 * sys columns 2 - / ( compute step from cols    )
+        +LOOP
         CR DROP                 ( end of line                 )
-    [ 466 2+ 2 * sys rows / ] LITERAL +LOOP ;
+    466 2+ 2 * sys rows / +LOOP ;
 
 mandelbrot DECIMAL ;S
 ( Pascal's Triangle                                    pascal )
@@ -387,14 +387,14 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : D= SWAP >R = SWAP R> = AND ;  ( compare double numbers      )
 : tg 20 cs +ORIGIN @ 19 cs +ORIGIN @ ;
 : only tg D= 0= IF [COMPILE] --> ENDIF ;
-36 BASE ! BBC. DECIMAL only
-40 CONSTANT columns 25 CONSTANT rows
-: cls 12 EMIT ;
+36 BASE ! BBC. HEX only
+: mode 0355 C@ ;
+HERE 50 C, 28 C, 14 C, 50 C, 28 C, 14 C, 28 C, 28 C,
+20 C, 20 C, 20 C, 19 C, 20 C, 20 C, 19 C, 19 C, CONSTANT tbl
+: columns tbl mode + C@ ; : rows tbl 8 + mode + C@ ;
+: cls 0C EMIT ;
+DECIMAL
 ;S
-
-
-
-
 
 
 ;S
