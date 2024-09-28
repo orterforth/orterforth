@@ -95,9 +95,9 @@ DECLARE VOCABULARY
 
 
 ( examples index                                      example )
-FORTH DEFINITIONS
-VOCABULARY example IMMEDIATE example DEFINITIONS
-DECIMAL
+FORTH DEFINITIONS VOCABULARY example IMMEDIATE
+example DEFINITIONS DECIMAL
+
 : loader <BUILDS , DOES> DUP CFA NFA 32 TOGGLE @ LOAD ;
  7 loader hw          8 loader collatz     9 loader fib
 10 loader fac        11 loader rev        12 loader roman
@@ -106,7 +106,7 @@ DECIMAL
 : help
   ." about collatz fac fib hw mandelbrot "
   ." pascal primes rev roman" CR ;
-FORTH DEFINITIONS ;S
+FORTH DEFINITIONS DECIMAL ;S
 
 
 
@@ -176,7 +176,7 @@ fac ;S
 
 ( Reverse a string                                        rev )
 DECIMAL 20 LOAD                ( load str vocabulary          )
-example DEFINITIONS
+example DEFINITIONS DECIMAL
 : s1 str " Hello World, this is a string." ;
 s1 C@ str new CONSTANT s2
 : reverse                      ( s1 s2 --                     )
@@ -226,7 +226,7 @@ FORGET place                    ( redefining I causes probs   )
 DECIMAL 24 LOAD ( sys vocabulary )
 example DEFINITIONS HEX
 : mandelbrot
-    CR
+    sys cls
     466 DUP MINUS DO            ( y axis                      )
         I
         400 DUP DUP + MINUS DO  ( x axis                      )
@@ -389,8 +389,8 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : only tg D= 0= IF [COMPILE] --> ENDIF ;
 36 BASE ! BBC. DECIMAL only
 40 CONSTANT columns 25 CONSTANT rows
+: cls 12 EMIT ;
 ;S
-
 
 
 
@@ -401,9 +401,9 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 ( Commodore 64                                                )
 36 BASE ! C64. DECIMAL only
 40 CONSTANT columns 25 CONSTANT rows
-;S
-
-
+HEX
+: cls 0400 03E8 BLANKS D800 03E8 0286 C@ FILL 13 EMIT ;
+DECIMAL ;S
 
 
 
@@ -417,9 +417,9 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 ( Dragon                                                      )
 36 BASE ! DRAGON. DECIMAL only
 32 CONSTANT columns 16 CONSTANT rows
-;S
-
-
+HEX
+: cls 0400 0200 60 FILL 0400 0088 ! ;
+DECIMAL ;S
 
 
 
@@ -433,12 +433,12 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 ( Spectrum                                                    )
 36 BASE ! SPECTR. DECIMAL only
 32 CONSTANT columns 24 CONSTANT rows
+HEX
+: cls 4000 1800 ERASE
+  5800 0400 5C8D C@ FILL
+  16 EMIT 0 EMIT 0 EMIT ;
+DECIMAL
 ;S
-
-
-
-
-
 
 
 
@@ -449,8 +449,8 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 ( default                                                     )
 DECIMAL
 80 CONSTANT columns 24 CONSTANT rows
+: cls 27 EMIT ." [2J" 27 EMIT ." [H" ;
 ;S
-
 
 
 
