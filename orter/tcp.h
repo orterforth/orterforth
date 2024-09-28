@@ -5,7 +5,7 @@ extern int orter_tcp_fd;
 
 int orter_tcp_client_open(int port);
 
-int orter_tcp_open(int port);
+int orter_tcp_server_open(int port);
 
 int orter_tcp_close(void);
 

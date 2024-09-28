@@ -85,7 +85,7 @@ int orter_tcp_close(void)
   return ret;
 }
 
-int orter_tcp_open(int port)
+int orter_tcp_server_open(int port)
 {
   int exit = 0;
   int optval = 1;
@@ -187,6 +187,7 @@ int orter_tcp(int argc, char *argv[])
     return orter_tcp_client(atoi(argv[3]));
   }
 
-  /* TODO usage */
+  /* usage */
+  fprintf(stderr, "Usage: orter tcp client <port>\n");
   return 1;
 }

@@ -344,7 +344,7 @@ static int disc_tcp_server(int argc, char **argv)
   int exit = 0;
 
   /* open socket */
-  CHECK(exit, orter_tcp_open(atoi(argv[3])));
+  CHECK(exit, orter_tcp_server_open(atoi(argv[3])));
 
   /* run */
   exit = serve_with_fds(orter_tcp_fd, orter_tcp_fd, argv[4], argc > 5 ? argv[5] : 0);
