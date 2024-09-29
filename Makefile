@@ -1,5 +1,5 @@
 # C compiler options
-CFLAGS += -O0 -Wall -Werror -std=c89 -ansi -Wpedantic -Wextra
+CFLAGS += -O0 -Wall -Werror -std=c89 -Wpedantic -Wextra
 
 # global defaults
 INFO           := printf '* \033[1;33m%s\033[0;0m\n'
