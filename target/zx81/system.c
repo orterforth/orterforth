@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 void rf_init(void)
 {
-  /* observe a successful start */
-  fputc_cons('A');
 }
 
 void __FASTCALL__ rf_console_put(uint8_t b)
@@ -14,7 +13,14 @@ void __FASTCALL__ rf_console_put(uint8_t b)
 
 uint8_t rf_console_get(void)
 {
-  return fgetc_cons();
+  int b = fgetc_cons();
+  /* LF to CR */
+  if (b == 10) b = 13;
+  /* UC for now */
+  if (b >= 'a' && b <= 'z') {
+    b ^= 0x20;
+  }
+  return b;
 }
 
 uint8_t rf_console_qterm(void)
@@ -24,17 +30,19 @@ uint8_t rf_console_qterm(void)
 
 void rf_console_cr(void)
 {
-  fputc_cons(10);
+  fputc_cons('\n');
 }
 
 void __FASTCALL__ rf_serial_put(uint8_t b)
 {
-  fputc_cons(b);
+  /* dummy OUT op - custom emulation */
+  outp(0x99, b);
 }
 
 uint8_t rf_serial_get(void)
 {
-  return fgetc_cons();
+  /* dummy IN op - custom emulation */
+  return inp(0x99);
 }
 
 void rf_fin(void)
