@@ -1,3 +1,6 @@
+/* invert lower case not upper case */
+#pragma output ZX_CHAR_XLATE_MODE=1
+
 /* ZX81 */
 #define RF_TARGET_HI 0x0019
 #define RF_TARGET_LO 0x92f1
@@ -14,3 +17,6 @@
 
 /* Leave room for stack etc */
 #define RF_LIMIT 0x7F80
+
+/* Rubout */
+#define RF_BS 0x0C

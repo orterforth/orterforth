@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -8,18 +7,26 @@ void rf_init(void)
 
 void __FASTCALL__ rf_console_put(uint8_t b)
 {
+  /* FF to BS */
+  if (b == 0x0C) {
+    fputc_cons(0x08);
+    fputc_cons(0x20);
+    fputc_cons(0x08);
+    return;
+  }
   fputc_cons(b);
 }
 
 uint8_t rf_console_get(void)
 {
-  int b = fgetc_cons();
-  /* LF to CR */
+  uint8_t b;
+
+  fputc_cons('c');
+  fputc_cons(0x08);
+  b = fgetc_cons();
+  fputc_cons(0x20);
+  fputc_cons(0x08);
   if (b == 10) b = 13;
-  /* UC for now */
-  if (b >= 'a' && b <= 'z') {
-    b ^= 0x20;
-  }
   return b;
 }
 
