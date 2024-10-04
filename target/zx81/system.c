@@ -14,6 +14,7 @@ void __FASTCALL__ rf_console_put(uint8_t b)
     fputc_cons(0x08);
     return;
   }
+
   fputc_cons(b);
 }
 
@@ -21,12 +22,17 @@ uint8_t rf_console_get(void)
 {
   uint8_t b;
 
+  /* draw cursor */
   fputc_cons('c');
   fputc_cons(0x08);
+  /* fetch byte */
   b = fgetc_cons();
+  /* erase cursor */
   fputc_cons(0x20);
   fputc_cons(0x08);
+  /* LF to CR */
   if (b == 10) b = 13;
+
   return b;
 }
 
@@ -42,14 +48,15 @@ void rf_console_cr(void)
 
 void __FASTCALL__ rf_serial_put(uint8_t b)
 {
-  /* dummy OUT op - custom emulation */
-  outp(0x99, b);
+
+  while (!(*((uint8_t *) 12045) & 0x10)) { }
+  *((uint8_t *) 12040) = b;
 }
 
 uint8_t rf_serial_get(void)
 {
-  /* dummy IN op - custom emulation */
-  return inp(0x99);
+  while (!(*((uint8_t *) 12045) & 0x08)) { }
+  return *((uint8_t *) 12044);
 }
 
 void rf_fin(void)
