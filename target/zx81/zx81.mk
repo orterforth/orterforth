@@ -20,7 +20,7 @@ zx81 :
 zx81-build : zx81/inst.tzx
 
 ZX81ORG := 0x4082
-ZX81ORIGIN := 0x5520
+ZX81ORIGIN := 0x5510
 
 ZX81ZCCOPTS := +zx81 \
 	-lm81_tiny \
@@ -101,8 +101,9 @@ ifeq ($(ZX81MACHINE),jtyone)
 	@exit 1
 endif
 ifeq ($(ZX81MACHINE),real)
-	@# 794 bytes is difference between E_LINE and D_FILE, may need more
-	@$(CHECKMEMORY) $(ZX81ORG) $(ZX81ORIGIN) $$(($$($(STAT) zx81/inst.bin) + 794))
+	@# 810 bytes is 16 bytes for <0x76> 2 RAND USR VAL "15614" <0x76>,
+	@# + difference between E_LINE and D_FILE,
+	@$(CHECKMEMORY) $(ZX81ORG) $(ZX81ORIGIN) $$(($$($(STAT) zx81/inst.bin) + 810))
 	@$(PROMPT) 'Type LOAD ""'
 	@$(PLAY) zx81/inst.wav
 	@$(EMPTYDR1FILE) $@.io
