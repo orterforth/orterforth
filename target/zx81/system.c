@@ -23,15 +23,26 @@ void __FASTCALL__ rf_console_put(uint8_t b)
   fputc_cons(b);
 }
 
+static uint8_t cursor = 'c';
+
 uint8_t rf_console_get(void)
 {
   uint8_t b;
 
-  /* draw cursor */
-  fputc_cons('c');
-  fputc_cons(0x08);
-  /* fetch byte */
-  b = fgetc_cons();
+  /* draw cursor, fetch byte, toggle caps lock */
+  for (;;) {
+    fputc_cons(cursor);
+    fputc_cons(0x08);
+    b = fgetc_cons();
+    if (b != 6) break;
+    cursor ^= 0x0F;
+  }
+  /* to lower case */
+  if (cursor == 'l' && ((b - 'A') < 26)) {
+    b ^= 0x20;
+  }
+  /* LF to CR */
+  if (b == 10) b = 13;
   /* erase cursor */
   fputc_cons(0x20);
   fputc_cons(0x08);
