@@ -44,8 +44,7 @@ static useconds_t     delay = 0;
 static int            stop = 0;
 
 /* exit after EOF timer */
-static char           wai = 0;
-static int            wai_wait = 1;
+static int            wai_wait = 0;
 static time_t         wai_timer = 0;
 
 /* EOF flag */
@@ -270,7 +269,6 @@ static void opts(int argc, char **argv)
         delay = (1000000.0F * strtof(optarg, 0));
         break;
       case 'e':
-        wai = 1;
         wai_wait = atoi(optarg);
         break;
       case 'h': usage(); break;
@@ -347,16 +345,21 @@ static void process(void)
     orter_io_pipe_put(&out2, c);
   }
 
+  /* -a */
+  if (ack) {
+    return;
+  }
+
   /* start EOF timer */
-  if (!eof && in.in == -1) {
+  if (!eof && in.in == -1 && in.len == 0) {
     eof = 1;
     wai_timer = time(0) + wai_wait;
   }
 
   /* terminate after EOF */
   /* immediately or after timer */
-  if (eof && !ack) {
-    if (!wai || time(0) >= wai_timer) {
+  if (eof) {
+    if (!wai_wait || time(0) >= wai_timer) {
       orter_io_finished = 1;
     }
   }
