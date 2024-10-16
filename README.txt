@@ -46,17 +46,18 @@ https://github.com/orterforth/orterforth/discussions
 https://github.com/orterforth/orterforth/issues
 
 
-FORTH IN C
+THE INSTALLATION PROCESS
 
-A typical Forth implementation rests on a number of base words
-implemented in native machine code. Higher-level words,
-implemented in terms of these words, make up the rest of the
-Forth vocabulary.
+orterforth is bootstrapped from Forth source code derived from
+the Installation Manual, loaded from an emulated disc drive.
+The original code is modified to allow for different platforms' 
+processor architectures, cell sizes, I/O, memory layouts, and
+so on.
 
-The Installation Manual contains source code that uses an
-assembler (implemented in Forth) to assemble 6502 native code
-immediately following each base word in memory. The word's code
-field address (CFA) points at this code.
+The original source code uses an assembler (implemented in
+Forth) to assemble 6502 native code immediately following each
+base word in memory. The word's code field address (CFA) points
+at this code.
 
 Instead of this, orterforth has platform-independent 
 implementations of each base word in C. The CFA is set to point
@@ -68,36 +69,25 @@ subroutine calls. Because C does not properly allow such jumps,
 orterforth emulates them using a trampoline - a loop that 
 successively calls function pointers.
 
-
-THE INSTALLATION PROCESS
-
-orterforth is bootstrapped from Forth source code derived from
-the Installation Manual, loaded from an emulated disc drive.
-The code is modified to allow for different platforms' 
-processor architectures, cell sizes, I/O, memory layouts, and
-so on.
-
-On historical platforms, when install is complete, the memory
-map containing the installation and the required native code
-is saved to the emulated disc drive. (This is in a hex format
+To create binaries for historical platforms, the completed
+memory map containing the installation and required native code
+is saved to the emulated disc drive. This is in a hex format
 to avoid issues with control characters used by the disc
-controller.)
-
-This is then used to create completed installation binaries.
+controller.
 
 (On modern platforms, this whole installation process takes
 place on startup every time the program is launched - the 
 installation code and disc contents are part of the binary.)
 
-To save space, the original installation code is loaded into a
-memory location outside this area and does not form part of the
-final binary.
+This bootstrapping process is itself implemented in C and
+Forth. To save space, the bootstrap code is loaded into a
+separate memory location and does not form part of the final
+binary.
 
 When installation is complete, or when the final binary is
-loaded, Forth starts with an interactive prompt.
-
-The emulated disc drive is available to the user to load
-programs in the same way it was used for install.
+loaded, Forth starts with an interactive prompt. The emulated
+disc drive is available to the user to load programs and data
+in the same way it was used for install.
 
 
 THE DISC CONTROLLER
