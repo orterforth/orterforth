@@ -446,27 +446,27 @@ DECIMAL
 
 
 ;S
+( ZX81                                                        )
+36 BASE ! ZX81. DECIMAL only
+32 CONSTANT columns 24 CONSTANT rows
+HEX
+CREATE cls
+  C5 C, FD C, E5 C,  ( push bc iy   )
+  FD C, 21 C, 4000 , ( ld iy, $4000 )
+  CD C, 0A2A ,       ( call CLS     )
+  FD C, E1 C, C1 C,  ( pop iy bc    )
+  FD C, E9 C,        ( NEXT         )
+  SMUDGE
+DECIMAL
+
+
+
+;S
 ( default                                                     )
 DECIMAL
 80 CONSTANT columns 24 CONSTANT rows
 : cls 27 EMIT ." [2J" 27 EMIT ." [H" ;
 ;S
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
