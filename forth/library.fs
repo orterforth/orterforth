@@ -446,6 +446,22 @@ DECIMAL
 
 
 ;S
+( Z88                                                         )
+36 BASE ! Z88. DECIMAL only
+94 CONSTANT columns 8 CONSTANT rows
+: cls 12 EMIT ;
+;S
+
+
+
+
+
+
+
+
+
+
+;S
 ( ZX81                                                        )
 36 BASE ! ZX81. DECIMAL only
 32 CONSTANT columns 24 CONSTANT rows
@@ -457,7 +473,7 @@ CREATE cls
   FD C, E1 C, C1 C,  ( pop iy bc    )
   FD C, E9 C,        ( NEXT         )
   SMUDGE
-DECIMAL
+DECIMAL ;S
 
 
 
@@ -467,22 +483,6 @@ DECIMAL
 80 CONSTANT columns 24 CONSTANT rows
 : cls 27 EMIT ." [2J" 27 EMIT ." [H" ;
 ;S
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
