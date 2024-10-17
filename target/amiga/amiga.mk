@@ -149,8 +149,9 @@ amiga/rf_m68k.o : amiga/rf_m68k.s
 
 amiga/rf_m68k.s : rf_m68k.s | amiga
 
-	cp $< $@
-	sed -i 's/\.sect .*text/section "CODE",code/' $@
-	sed -i 's/\.sect .*data/section "DATA",data/' $@
-	sed -i 's/\.align 2/cnop 0,4/' $@
-	sed -i 's/\.extern/public/' $@
+	cp $< $@.io
+	sed -i 's/\.sect .*text/section "CODE",code/' $@.io
+	sed -i 's/\.sect .*data/section "DATA",data/' $@.io
+	sed -i 's/\.align 2/cnop 0,4/' $@.io
+	sed -i 's/\.extern/public/' $@.io
+	mv $@.io $@
