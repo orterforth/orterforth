@@ -4,6 +4,21 @@ AMIGAMACHINE=fsuae
 # AMIGAMACHINE=real
 # AMIGAMODEL=A500
 AMIGAMODEL=A500+
+AMIGAOPTION=assembly
+# AMIGAOPTION=default
+ifeq ($(TARGET),amiga)
+ifneq ($(OPTION),)
+AMIGAOPTION := $(OPTION)
+endif
+endif
+
+AMIGADEPS := amiga/amiga.o amiga/inst.o amiga/io.o amiga/main.o
+ifeq ($(AMIGAOPTION),assembly)
+AMIGADEPS += amiga/rf_m68k.o
+endif
+ifeq ($(AMIGAOPTION),default)
+AMIGADEPS += amiga/rf.o
+endif
 
 ifeq ($(AMIGAMACHINE),fsuae)
 AMIGASERIALOPTS=tcp client 5705
@@ -30,6 +45,9 @@ AMIGAVBCCHOME=/opt/vbcc/sdk
 AMIGAVBCCOPTS=-L$(AMIGAVBCCHOME)/NDK_3.9/Include/linker_libs \
 	-I$(AMIGAVBCCHOME)/NDK_3.9/Include/include_h \
 	+kick13
+ifeq ($(AMIGAOPTION),assembly)
+AMIGAVBCCOPTS += -DRF_ASSEMBLY
+endif
 AMIGAVC=PATH=$(AMIGAVBCCHOME)/vbcc/bin:$$PATH \
 	VBCC=$(AMIGAVBCCHOME)/vbcc \
 	vc $(AMIGAVBCCOPTS)
@@ -85,8 +103,9 @@ endif
 	@$(AMIGALOADSERIAL)
 	@$(WARN) "Type: ram:inst"
 endif
-	@$(STARTDISC) $(AMIGASERIALOPTS) model.img
-	@$(PROMPT) "Wait for inst to complete"
+	@$(EMPTYDR1FILE) amiga/orterforth.img
+	@$(STARTDISC) $(AMIGASERIALOPTS) model.img amiga/orterforth.img
+	@$(WAITUNTILSAVED) amiga/orterforth.img
 	@$(STOPDISC)
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)
@@ -115,10 +134,23 @@ amiga/hw : amiga/hw.o
 
 	$(AMIGAVC) $< -lamiga -lauto -o $@
 
-amiga/inst : amiga/amiga.o amiga/inst.o amiga/io.o amiga/main.o amiga/rf.o
+amiga/inst : $(AMIGADEPS)
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
 amiga/long :
 
+	# repeat HUNK_END and use this to flush serial buffer
 	for i in $$(seq 0 127) ; do printf '\0\0\003\362' >> $@ ; done
+
+amiga/rf_m68k.o : amiga/rf_m68k.s
+
+	$(AMIGAVC) -c $< -o $@
+
+amiga/rf_m68k.s : rf_m68k.s | amiga
+
+	cp $< $@
+	sed -i 's/\.sect .*text/section "CODE",code/' $@
+	sed -i 's/\.sect .*data/section "DATA",data/' $@
+	sed -i 's/\.align 2/cnop 0,4/' $@
+	sed -i 's/\.extern/public/' $@

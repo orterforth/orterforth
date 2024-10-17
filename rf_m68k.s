@@ -6,62 +6,62 @@
         .align 2
         .extern _rf_trampoline
 _rf_trampoline:
-        move.l  a6, -(sp)
+        move.l  a6,-(sp)
 trampoline1:
-        move.l  _rf_fp, a0
-        cmp.l   #0, a0
+        move.l  _rf_fp,a0
+        cmp.l   #0,a0
         beq     trampoline2
-        movem.l _rf_rp, a1/a3/a4/a5/a6
-        addq.l  #4, a5
+        movem.l _rf_rp,a1/a3/a4/a5/a6
+        addq.l  #4,a5
         jsr     (a0)
         bra     trampoline1
 trampoline2:
-        move.l  (sp)+, a6
+        move.l  (sp)+,a6
         rts
 
         .align 2
         .extern _rf_start
 _rf_start:
-        subq.l  #4, a5
-        movem.l a1/a3/a4/a5, _rf_rp
+        subq.l  #4,a5
+        movem.l a1/a3/a4/a5,_rf_rp
         rts
 
         .align 2
         .extern _rf_code_cl
 _rf_code_cl:
-        move.l  #4, -(a3)
+        move.l  #4,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_cs
 _rf_code_cs:
-        move.l  (a3), d0
-        lsl.l   #2, d0
-        move.l  d0, (a3)
+        move.l  (a3),d0
+        lsl.l   #2,d0
+        move.l  d0,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_ln
 _rf_code_ln:
-        subq.l  #1, (a3)
-        or.l    #1, (a3)
-        addq.l  #1, (a3)
+        subq.l  #1,(a3)
+        or.l    #1,(a3)
+        addq.l  #1,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_mon
 _rf_code_mon:
         jsr     _rf_start
-        move.l  #0, _rf_fp
+        move.l  #0,_rf_fp
         rts
 
         .sect data
@@ -220,30 +220,30 @@ _rf_fp: dc.l    0
         .align 2
         .extern _rf_code_lit
 _rf_code_lit:           ; (S1) <- ((IP))
-        move.l  (a4)+, -(a3)
+        move.l  (a4)+,-(a3)
 
         .align 2
         .extern _rf_next
 _rf_next:
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_exec
 _rf_code_exec:
-        move.l  (a3)+, a5
-        move.l  (a5)+, a0
+        move.l  (a3)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_bran
 _rf_code_bran:          ; (IP) <- (IP) + ((IP))
-        move.l  (a4), d0
-        add.l   d0, a4
+        move.l  (a4),d0
+        add.l   d0,a4
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
@@ -251,73 +251,73 @@ _rf_code_bran:          ; (IP) <- (IP) + ((IP))
 _rf_code_zbran:
         tst.l   (a3)+
         beq     _rf_code_bran
-        addq.l  #4, a4
+        addq.l  #4,a4
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_xloop
 _rf_code_xloop:
-        addq.l  #1, (a1) ; Increment current count
-XLOO2:  move.l  4(a1), d0 ; Limit = current?
-        cmp.l   (a1), d0 ; Is better way?
+        addq.l  #1,(a1) ; Increment current count
+XLOO2:  move.l  4(a1),d0 ; Limit = current?
+        cmp.l   (a1),d0 ; Is better way?
         bhi     XLOO3   ; Branch if limit>current
-XLOO5:  add.l   #4, a4  ; Clean up and leave
-        add.l   #8, a1
+XLOO5:  add.l   #4,a4  ; Clean up and leave
+        add.l   #8,a1
         bra     XLOO4
-XLOO3:  add.l   (a4), a4
+XLOO3:  add.l   (a4),a4
 XLOO4: ;bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_xploo
 _rf_code_xploo:
-        move.l  (a3)+, d0
-        add.l   d0, (a1)
+        move.l  (a3)+,d0
+        add.l   d0,(a1)
         tst.l   d0      ; NEGATIVE INCREMENT?
         bpl     XLOO2   ; POS INC
-        move.l  4(a1), d0
-        cmp.l   (a1), d0
+        move.l  4(a1),d0
+        cmp.l   (a1),d0
         bge     XLOO5   ; DONE
         bra     XLOO3   ; CONTINUE
 *
         .align 2
         .extern _rf_code_xdo
 _rf_code_xdo:
-        move.l  (a3)+, d0
-        move.l  (a3)+, -(a1)
-        move.l  d0, -(a1)
+        move.l  (a3)+,d0
+        move.l  (a3)+,-(a1)
+        move.l  d0,-(a1)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_digit
 _rf_code_digit:
-        move.l  (a3)+, d1 ; Load base into D1
-        move.l  (a3), d0 ; Load ASCII into D2
-        sub.l   #$30, d0 ; '0'
+        move.l  (a3)+,d1 ; Load base into D1
+        move.l  (a3),d0 ; Load ASCII into D2
+        sub.l   #$30,d0 ; '0'
         bcs     BADDIG
-        cmp.l   #9, d0
+        cmp.l   #9,d0
         ble     BASECK
-        cmp.l   #17, d0
+        cmp.l   #17,d0
         blt     BADDIG
-	sub.l   #$07, d0
+	sub.l   #$07,d0
 *       DC.W    $0440   ; TO FORCE NON QUICK SUB
 *       DC.W    $0007   ;   FOLLOWING MANTEI CLOSELY 
-BASECK: cmp.l   d1, d0
+BASECK: cmp.l   d1,d0
         bge     BADDIG
-        move.l  d0, (a3) ; Return binary on stack
-        move.l  #1, -(a3) ; & gooddigit flag
+        move.l  d0,(a3) ; Return binary on stack
+        move.l  #1,-(a3) ; & gooddigit flag
         bra     DIGIT1
-BADDIG: move.l  #0, (a3)
-DIGIT1: move.l  (a4)+, a5
-        move.l  (a5)+, a0
+BADDIG: move.l  #0,(a3)
+DIGIT1: move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
@@ -448,7 +448,7 @@ _rf_code_ustar:
         .extern _rf_code_uslas
 _rf_code_uslas:
         movem.l (a3)+,d0-d2
-        move.l  #0x80000000, d3
+        move.l  #$80000000,d3
         moveq.l #0,d4
         cmp.l   d0,d1
         blo     umdiv1
@@ -475,104 +475,104 @@ umdiv3: move.l  d1,-(a3)
         .align 2
         .extern _rf_code_andd
 _rf_code_andd:
-        move.l  (a3)+, d0
-        and.l   d0, (a3)
+        move.l  (a3)+,d0
+        and.l   d0,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_orr
 _rf_code_orr:
-        move.l  (a3)+, d0
-        or.l    d0, (a3)
+        move.l  (a3)+,d0
+        or.l    d0,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_xorr
 _rf_code_xorr:
-        move.l  (a3)+, d0
-        eor.l   d0, (a3)
+        move.l  (a3)+,d0
+        eor.l   d0,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_spat
 _rf_code_spat:
-        move.l  a3, d0
-        move.l  d0, -(a3)
+        move.l  a3,d0
+        move.l  d0,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_spsto
 _rf_code_spsto:
-        move.l  12(a6), a3
+        move.l  12(a6),a3
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_rpsto
 _rf_code_rpsto:
-        move.l  16(a6), a1
+        move.l  16(a6),a1
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_semis
 _rf_code_semis:
-        move.l  (a1)+, a4
+        move.l  (a1)+,a4
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_leave
 _rf_code_leave:
-        move.l  (a1), 4(a1)
+        move.l  (a1),4(a1)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_tor
 _rf_code_tor:
-        move.l  (a3)+, -(a1)
+        move.l  (a3)+,-(a1)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_fromr
 _rf_code_fromr:
-        move.l  (a1)+, -(a3)
+        move.l  (a1)+,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_rr
 _rf_code_rr:
-        move.l  (a1), -(a3)
+        move.l  (a1),-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
@@ -580,10 +580,10 @@ _rf_code_rr:
 _rf_code_zequ:
         tst.l   (a3)
         seq     3(a3)
-        and.l   #1, (a3)
+        and.l   #1,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
@@ -591,20 +591,20 @@ _rf_code_zequ:
 _rf_code_zless:
         tst.l   (a3)
         smi     3(a3)
-        and.l   #1, (a3)
+        and.l   #1,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_plus
 _rf_code_plus:
-        move.l  (a3)+, d0
-        add.l   d0, (a3)
+        move.l  (a3)+,d0
+        add.l   d0,(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
@@ -612,24 +612,24 @@ _rf_code_plus:
 _rf_code_minus:
         neg.l   (a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_dplus
 _rf_code_dplus:
-        move.l  (a3)+, d0
-        move.l  (a3)+, d1
-        move.l  (a3)+, d2
-        move.l  (a3)+, d3
-        add.l   d3, d1
-        addx.l  d2, d0
-        move.l  d1, -(a3)
-        move.l  d0, -(a3)
+        move.l  (a3)+,d0
+        move.l  (a3)+,d1
+        move.l  (a3)+,d2
+        move.l  (a3)+,d3
+        add.l   d3,d1
+        addx.l  d2,d0
+        move.l  d1,-(a3)
+        move.l  d0,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
@@ -638,117 +638,117 @@ _rf_code_dminu:
         neg.l   4(a3)
         negx.l  (a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_over
 _rf_code_over:
-        move.l  4(a3), d0
-        move.l  d0, -(a3)
+        move.l  4(a3),d0
+        move.l  d0,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_drop
 _rf_code_drop:
-        addq.l  #4, a3
+        addq.l  #4,a3
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_swap
 _rf_code_swap:
-        move.l  (a3)+, d0
-        move.l  (a3), d1
-        move.l  d0, (a3)
-        move.l  d1, -(a3)
+        move.l  (a3)+,d0
+        move.l  (a3),d1
+        move.l  d0,(a3)
+        move.l  d1,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_dup
 _rf_code_dup:
-        move.l  (a3), d0
-        move.l  d0, -(a3)
+        move.l  (a3),d0
+        move.l  d0,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_pstor
 _rf_code_pstor:
-        move.l  (a3)+, a0
-        move.l  (a3)+, d0
-        add.l   d0, (a0)
+        move.l  (a3)+,a0
+        move.l  (a3)+,d0
+        add.l   d0,(a0)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_toggl
 _rf_code_toggl:
-        move.l  (a3)+, d0
-        move.l  (a3)+, a0
-        eor.b   d0, (a0)
+        move.l  (a3)+,d0
+        move.l  (a3)+,a0
+        eor.b   d0,(a0)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_at
 _rf_code_at:
-        move.l  (a3), a0
-        move.l  (a0), (a3)
+        move.l  (a3),a0
+        move.l  (a0),(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_cat
 _rf_code_cat:
-        move.l  (a3), a0
-        move.l  #0, (a3)
-        move.b  (a0), 3(a3)
+        move.l  (a3),a0
+        move.l  #0,(a3)
+        move.b  (a0),3(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_store
 _rf_code_store:
-        move.l  (a3)+, a0
-        move.l  (a3)+, (a0)
-;       move.b  (a3)+, (a0)+
-;       move.b  (a3)+, (a0)+
-;       move.b  (a3)+, (a0)+
-;       move.b  (a3)+, (a0)
+        move.l  (a3)+,a0
+        move.l  (a3)+,(a0)
+;       move.b  (a3)+,(a0)+
+;       move.b  (a3)+,(a0)+
+;       move.b  (a3)+,(a0)+
+;       move.b  (a3)+,(a0)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_cstor
 _rf_code_cstor:
-        move.l  (a3)+, a0
-        addq.l  #3, a3
-        move.b  (a3)+, (a0)
+        move.l  (a3)+,a0
+        addq.l  #3,a3
+        move.b  (a3)+,(a0)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
@@ -756,78 +756,78 @@ _rf_code_cstor:
 _rf_code_stod:
         tst.l   (a3)
         bmi     STOD1
-        move.l  #0, -(a3)
+        move.l  #0,-(a3)
         bra     STOD2
-STOD1:  move.l  #-1, -(a3)
+STOD1:  move.l  #-1,-(a3)
 STOD2:  ;bra    _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_dovar
 _rf_code_dovar:
-        move.l  a5, -(a3)
+        move.l  a5,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_docon
 _rf_code_docon:
-        move.l  (a5), -(a3)
+        move.l  (a5),-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_douse
 _rf_code_douse:
-        move.l  (a5), d0
-        add.l   a6, d0
-        move.l  d0, -(a3)
+        move.l  (a5),d0
+        add.l   a6,d0
+        move.l  d0,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 *
         .align 2
         .extern _rf_code_docol
 _rf_code_docol:
-        move.l  a4, -(a1)
-        move.l  a5, a4
+        move.l  a4,-(a1)
+        move.l  a5,a4
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_dodoe
 _rf_code_dodoe:
-        move.l  a4, -(a1)
-        move.l  (a5)+, a4
-        move.l  a5, -(a3)
+        move.l  a4,-(a1)
+        move.l  (a5)+,a4
+        move.l  a5,-(a3)
 ;       bra     _rf_next
-        move.l  (a4)+, a5
-        move.l  (a5)+, a0
+        move.l  (a4)+,a5
+        move.l  (a5)+,a0
         jmp     (a0)
 
         .align 2
         .extern _rf_code_cold
 _rf_code_cold:
-        move.l  _rf_origin, a0
-        move.l  0x18(a0), d0    ; FORTH
-        move.l  0x54(a0), a2
-        move.l  d0, (a2)
-        move.l  0x20(a0), a6    ; UP
-        move.l  a6, _rf_up
-        move.l  a6, a2          ; USER
-        moveq.l #11, d0
-        lea.l   0x18(a0), a0
+        move.l  _rf_origin,a0
+        move.l  $18(a0),d0      ; FORTH
+        move.l  $54(a0),a2
+        move.l  d0,(a2)
+        move.l  $20(a0),a6      ; UP
+        move.l  a6,_rf_up
+        move.l  a6,a2           ; USER
+        moveq.l #11,d0
+        lea.l   $18(a0),a0
         bra     cold2
-cold1:  move.l  (a0)+, (a2)+
-cold2:  dbf     d0, cold1
-        move.l  0x14(a0), a4    ; ABORT
+cold1:  move.l  (a0)+,(a2)+
+cold2:  dbf     d0,cold1
+        move.l  $14(a0),a4      ; ABORT
         bra     _rf_code_rpsto  ; RP!
