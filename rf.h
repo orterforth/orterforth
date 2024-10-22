@@ -149,7 +149,9 @@ typedef unsigned long uintptr_t;
 #define RF_WORD_SIZE 4
 #define RF_ALIGN 2
 #define RF_BE
+#define RF_DOUBLE_ARITH
 #include <stdint.h>
+typedef uint64_t rf_double_t;
 #define RF_TARGET_INC "target/amiga/amiga.inc"
 /* AMIGA */
 #define RF_TARGET_HI 0x00000000
