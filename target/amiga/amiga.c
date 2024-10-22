@@ -1,17 +1,12 @@
 #include <stdint.h>
 
-#include <exec/types.h>
-#include <exec/memory.h>
-#include <exec/io.h>
-#include <exec/ports.h>
 #include <devices/conunit.h>
+#include <devices/keyboard.h>
 #include <devices/serial.h>
 
 #include <clib/exec_protos.h>
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
-
-#include <intuition/intuition.h>
 
 #include "../../rf.h"
 
@@ -25,7 +20,7 @@ static struct NewWindow nw = {
     640, 200,
     -1, -1,
     CLOSEWINDOW,
-    WINDOWDEPTH|WINDOWSIZING|WINDOWDRAG|WINDOWCLOSE|SIMPLE_REFRESH|ACTIVATE,
+    WINDOWDEPTH|WINDOWDRAG|WINDOWCLOSE|SIMPLE_REFRESH|ACTIVATE,
     0,
     0,
     "orterforth",
@@ -35,6 +30,14 @@ static struct NewWindow nw = {
     640, 200,
     WBENCHSCREEN
 };
+
+#define MATRIX_SIZE 16L
+
+extern struct Library  *SysBase;
+static struct IOStdReq *KeyIO;
+static struct MsgPort  *KeyMP;
+static uint8_t         keyMatrix[16];
+static uint8_t         keyIOLength;
 
 static struct MsgPort  *SerialMP;
 static struct IOExtSer *SerialIO;
@@ -53,7 +56,13 @@ void rf_init(void)
     win = OpenWindow(&nw);
     ConsIO->io_Data = (APTR) win;
     ConsIO->io_Length = sizeof(struct Window);
-    OpenDevice("console.device", CONU_CHARMAP, (struct IORequest *) ConsIO, CONFLAG_DEFAULT);
+    OpenDevice("console.device", CONU_STANDARD, (struct IORequest *) ConsIO, CONFLAG_DEFAULT);
+
+    /* keyboard */
+    KeyMP = CreatePort(0, 0);
+    KeyIO = (struct IOStdReq *) CreateExtIO(KeyMP, sizeof(struct IOStdReq));
+    OpenDevice("keyboard.device", NULL, (struct IORequest *) KeyIO, NULL);
+    keyIOLength = SysBase->lib_Version >= 36 ? MATRIX_SIZE : 13;
 
     /* serial port */
     SerialMP = CreatePort(0, 0);
@@ -97,7 +106,12 @@ uint8_t rf_console_get(void)
 
 uint8_t rf_console_qterm(void)
 {
-    return 0;
+    KeyIO->io_Data    = (APTR) &keyMatrix;
+    KeyIO->io_Length  = keyIOLength;
+    KeyIO->io_Command = KBD_READMATRIX;
+    DoIO((struct IORequest *) KeyIO);
+    /* ESC, key code 0x45 */
+    return (keyMatrix[8] & 0x20) != 0;
 }
 
 void rf_console_cr(void)
@@ -111,7 +125,6 @@ uint8_t rf_serial_get(void)
     IOSer->io_Data     = (APTR) &b;
     IOSer->io_Command  = CMD_READ;
     DoIO((struct IORequest *) SerialIO);
-
     return b;
 }
 
@@ -127,6 +140,11 @@ void rf_fin(void)
 {
     CloseDevice((struct IORequest *) SerialIO);
     DeleteMsgPort(SerialMP);
+
+    CloseDevice((struct IORequest *) KeyIO);
+    DeleteExtIO((struct IORequest *) KeyIO);
+    DeletePort(KeyMP);
+
     CloseDevice((struct IORequest *) ConsIO);
     CloseWindow(win);
     DeleteMsgPort(ConsoleMP);
