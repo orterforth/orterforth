@@ -389,12 +389,12 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : only tg D= 0= IF [COMPILE] --> ENDIF ;
 36 BASE ! BBC. HEX only
 : mode 0355 C@ ;
-HERE 50 C, 28 C, 14 C, 50 C, 28 C, 14 C, 28 C, 28 C,
-20 C, 20 C, 20 C, 19 C, 20 C, 20 C, 19 C, 19 C, CONSTANT tbl
-: columns tbl mode + C@ ; : rows tbl 8 + mode + C@ ;
+: columns 030A C@ 0308 C@ - 1+ ; : rows 0309 C@ 030B C@ - 1+ ;
 : cls 0C EMIT ;
 DECIMAL
 ;S
+
+
 
 
 ;S
