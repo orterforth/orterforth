@@ -263,8 +263,9 @@ _rf_code_xloop:
         addq.l  #1,(a1) ; Increment current count
 XLOO2:  move.l  4(a1),d0 ; Limit = current?
         cmp.l   (a1),d0 ; Is better way?
-        bhi     XLOO3   ; Branch if limit>current
-XLOO5:  add.l   #4,a4  ; Clean up and leave
+;       bhi     XLOO3   ; Branch if limit>current
+        bgt     XLOO3
+XLOO5:  add.l   #4,a4   ; Clean up and leave
         add.l   #8,a1
         bra     XLOO4
 XLOO3:  add.l   (a4),a4
