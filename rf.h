@@ -143,6 +143,17 @@ typedef unsigned long uintptr_t;
 #define RF_CPU_LO 0x009F7800
 #endif
 
+/* CC6303 */
+
+#ifdef CC6303
+#define RF_WORD_SIZE 2
+#define RF_BE
+#define RF_DOUBLE_ARITH
+#include <stdint.h>
+typedef uint32_t rf_double_t;
+#define RF_TARGET_INC "target/hx20/hx20.inc"
+#endif
+
 /* VBCC */
 
 #ifdef __VBCC__
