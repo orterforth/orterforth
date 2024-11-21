@@ -44,9 +44,8 @@ static int validate_drive_no(int drive)
   return 0;
 }
 
-int rf_persci_insert(int drive, char *filename)
+static int validate_drive_empty(int drive)
 {
-  FILE *ptr;
   int ret;
 
   /* drive 0-3 only */
@@ -57,6 +56,19 @@ int rf_persci_insert(int drive, char *filename)
   if (files[drive]) {
     fprintf(stderr, "persci: file already open: drive %d\n", drive);
     return 1;
+  }
+
+  return 0;
+}
+
+int rf_persci_insert(int drive, char *filename)
+{
+  FILE *ptr;
+  int ret;
+
+  /* empty drive 0-3 only */
+  if ((ret = validate_drive_empty(drive))) {
+    return ret;
   }
   /* open disc file */
   if (!(ptr = fopen(filename, "r+b"))) {
@@ -76,6 +88,8 @@ int rf_persci_insert(int drive, char *filename)
   if (ferror(ptr)) {
     ret = errno;
     fprintf(stderr, "persci: fread failed: %s drive=%d\n", strerror(ret), drive);
+    free(discs[drive]);
+    discs[drive] = 0;
     fclose(ptr);
     return ret;
   }
@@ -88,8 +102,8 @@ int rf_persci_insert_bytes(int drive, const uint8_t *bytes)
 {
   int ret;
 
-  /* drive 0-3 only */
-  if ((ret = validate_drive_no(drive))) {
+  /* empty drive 0-3 only */
+  if ((ret = validate_drive_empty(drive))) {
     return ret;
   }
   /* point at byte array */
