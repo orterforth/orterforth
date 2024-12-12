@@ -3,11 +3,11 @@ Building for the Raspberry Pi Pico
 
 You will need:
 
- * CMake                 : https://cmake.org/
- * Raspberry Pi Pico SDK :
+ * CMake                       : https://cmake.org/
+ * Raspberry Pi Pico SDK 2.1.0 :
    https://github.com/raspberrypi/pico-sdk
    and its dependencies (Makefile expects PICO_SDK_PATH to be
-   located at: ~/pico/pico-sdk)
+   located at: ~/.pico-sdk/sdk/2.1.0)
 
 To build, call:
 
