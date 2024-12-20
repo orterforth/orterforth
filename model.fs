@@ -1705,27 +1705,27 @@ CONSTANT tbl -->
     ' USER 2 cs + ,
     ' DOES> 5 cs + ,
     DP ! ENDIF ;                ( restore DP                  )
+link FORGET link                ( now write link table        )
 FIRST cl + CONSTANT buf buf VARIABLE ptr
 : hd DUP 10 - 0< IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
 : hbl buf ptr ! DUP 64 + SWAP DO I C@ 0 16 U/ hd hd LOOP ;
-2000 VARIABLE blk               ( first block of DR1          )
 -->
 ( SAVE INSTALLATION TO DR1 AS HEX                  orterforth )
+2000 VARIABLE blk               ( first block of DR1          )
 : start 14 ic IF 8 ic ELSE 13 ic ENDIF ; ( org or origin      )
 : end tbl 14 ic IF 64 cs + ENDIF ;       ( here or after link )
 : save                          ( --                          )
   15 ic IF                      ( only if save enabled:       )
-    link                        ( write link table            )
     end start DO                ( write blocks of hex         )
       I hbl buf blk @ 0 R/W
       1 blk +!
-    64 +LOOP
+      64 +LOOP
     buf 128 90 FILL             ( write a block of 'Z's       )
-    buf blk @ 0 R/W
-  ENDIF ;
+    buf blk @ 0 R/W ENDIF ;
 
 0 ' cl LFA !                    ( break inst dictionary link  )
 save FORGET tbl ;S              ( now save, if enabled; done! )
+
 ( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
 
 ( additional boot-up literals                                 )
