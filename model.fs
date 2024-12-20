@@ -1692,19 +1692,19 @@ CODE R/W
 13 cd ' EMIT CFA !              ( set EMIT CFA from silent    )
 1 12 ic C!                      ( installed flag = 1          )
 
-HERE 64 cs ALLOT                ( make room for link table    )
--->
+HERE 64 cs 14 ic * ALLOT        ( make room for link table    )
+CONSTANT tbl -->
 ( CREATE LINK TABLE                                orterforth )
 : link                          ( --                          )
   14 ic IF                      ( only if link enabled:       )
+    HERE tbl DP !               ( save and set DP             )
     59 0 DO I cd , LOOP         ( table of code addresses     )
     ' : 9 cs + ,                ( end of table has 5 refs in  )
     ' CONSTANT 4 cs + ,         ( word bodies                 )
     ' VARIABLE 2 cs + ,
     ' USER 2 cs + ,
     ' DOES> 5 cs + ,
-    -64 cs ALLOT                ( move DP back before table   )
-  ENDIF ;
+    DP ! ENDIF ;                ( restore DP                  )
 FIRST cl + CONSTANT buf buf VARIABLE ptr
 : hd DUP 10 - 0< IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
 : hbl buf ptr ! DUP 64 + SWAP DO I C@ 0 16 U/ hd hd LOOP ;
@@ -1712,7 +1712,7 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
 -->
 ( SAVE INSTALLATION TO DR1 AS HEX                  orterforth )
 : start 14 ic IF 8 ic ELSE 13 ic ENDIF ; ( org or origin      )
-: end HERE 14 ic IF 64 cs + ENDIF ;      ( here or after link )
+: end tbl 14 ic IF 64 cs + ENDIF ;       ( here or after link )
 : save                          ( --                          )
   15 ic IF                      ( only if save enabled:       )
     link                        ( write link table            )
@@ -1723,9 +1723,9 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
     buf 128 90 FILL             ( write a block of 'Z's       )
     buf blk @ 0 R/W
   ENDIF ;
-DP !                            ( move DP back before table   )
+
 0 ' cl LFA !                    ( break inst dictionary link  )
-save ;S                         ( now save, if enabled; done! )
+save FORGET tbl ;S              ( now save, if enabled; done! )
 ( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
 
 ( additional boot-up literals                                 )
