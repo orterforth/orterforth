@@ -430,6 +430,22 @@ DECIMAL ;S
 
 
 ;S
+( QL                                                          )
+36 BASE ! QL. DECIMAL only
+85 CONSTANT columns 25 CONSTANT rows
+HEX
+: cls ; ( TODO need to access CON object )
+DECIMAL ;S
+
+
+
+
+
+
+
+
+
+;S
 ( Spectrum                                                    )
 36 BASE ! SPECTR. DECIMAL only
 32 CONSTANT columns 24 CONSTANT rows
@@ -483,22 +499,6 @@ DECIMAL
 80 CONSTANT columns 24 CONSTANT rows
 : cls 27 EMIT ." [2J" 27 EMIT ." [H" ;
 ;S
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
