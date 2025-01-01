@@ -481,8 +481,7 @@ void rf_inst(void)
     "DUP BLOCK-READ ?DISC "
     "SWAP FIRST ! ;S");
   /* load and launch the outer interpreter */
-  rf_inst_compile(
-    ":inst");
+  /*rf_inst_compile(":inst");*/ /* dict header not required */
   origin[22] = (uintptr_t) *rf_inst_dp;
   rf_inst_compile(
     "SP! "
