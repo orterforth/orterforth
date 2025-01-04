@@ -61,12 +61,18 @@ void rf_code_emit(void)
     uint8_t c = (*(rf_sp++)) & 0x7F;
 
     /* move cursor for backspace */
-    if (c == 8) {
+    switch (c) {
+    case 8:
       sd_pcol(con, TIMEOUT_FOREVER);
       io_sbyte(con, TIMEOUT_FOREVER, ' ');
       sd_pcol(con, TIMEOUT_FOREVER);
-    } else {
+      break;
+    case 12:
+      sd_clear(con, TIMEOUT_FOREVER);
+      break;
+    default:
       io_sbyte(con, TIMEOUT_FOREVER, c);
+      break;
     }
 
     rf_up[13]++;

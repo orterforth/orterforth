@@ -434,7 +434,7 @@ DECIMAL ;S
 36 BASE ! QL. DECIMAL only
 85 CONSTANT columns 25 CONSTANT rows
 HEX
-: cls ; ( TODO need to access CON object )
+: cls 0C EMIT ; ( EMIT calls SD.CLEAR )
 DECIMAL ;S
 
 
