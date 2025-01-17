@@ -90,6 +90,8 @@ ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
 	@sleep 3
 	@$(WARN) "NB set serial handshaking to None"
+	@$(WARN) "Open Shell and execute: copy df1: to ram: <enter>"
+	@$(WARN) "                        ram:orterforth <enter>"
 endif
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)

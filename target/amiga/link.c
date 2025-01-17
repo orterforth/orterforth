@@ -78,10 +78,10 @@ void rf_inst(void)
   uintptr_t *rr;
 
   /* read file */
-  f = Open("df1:orterforth.bin", MODE_OLDFILE);
+  f = Open("ram:orterforth.bin", MODE_OLDFILE);
   pp = rf_origin;
-  while (Read(f, pp, 256) == 256) {
-      pp += 256;
+  while (Read(f, pp, 1024) == 1024) {
+      pp += 1024;
   }
   Close(f);
 
