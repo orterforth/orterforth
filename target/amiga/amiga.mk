@@ -41,6 +41,8 @@ AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
 	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
 
+AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh fsuae.pid
+
 AMIGAVBCCHOME=/opt/vbcc/sdk
 AMIGAVBCCOPTS=-L$(AMIGAVBCCHOME)/NDK_3.9/Include/linker_libs \
 	-I$(AMIGAVBCCHOME)/NDK_3.9/Include/include_h \
@@ -82,31 +84,13 @@ endif
 endif
 
 .PHONY : amiga-run
-amiga-run : amiga/inst amiga/inst.adf amiga/inst.rexx model.img | amiga/long $(DISC) $(DR0) $(DR1) $(ORTER)
+amiga-run : amiga/orterforth amiga/orterforth.adf | $(DISC) $(DR0) $(DR1)
 
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
 	@sleep 3
 	@$(WARN) "NB set serial handshaking to None"
 endif
-ifeq ($(AMIGALOADINGMETHOD),disk)
-ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "Physical disk load not supported"
-	@exit 1
-endif
-	@$(WARN) "Open Shell and execute df1:inst"
-endif
-ifeq ($(AMIGALOADINGMETHOD),serial)
-ifeq ($(AMIGAMACHINE),fsuae)
-	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
-endif
-	@$(AMIGALOADSERIAL)
-	@$(WARN) "Type: ram:inst"
-endif
-	@$(EMPTYDR1FILE) amiga/orterforth.img
-	@$(STARTDISC) $(AMIGASERIALOPTS) model.img amiga/orterforth.img
-	@$(WAITUNTILSAVED) amiga/orterforth.img
-	@$(STOPDISC)
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)
 
@@ -116,6 +100,10 @@ amiga/%.adf : amiga/%
 	xdftool $@ write $< $(<F)
 
 amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga
+
+	$(AMIGAVC) -c $< -o $@
+
+amiga/link.o : target/amiga/link.c rf.h target/amiga/amiga.inc | amiga
 
 	$(AMIGAVC) -c $< -o $@
 
@@ -142,6 +130,49 @@ amiga/long :
 
 	# repeat HUNK_END and use this to flush serial buffer
 	for i in $$(seq 0 127) ; do printf '\0\0\003\362' >> $@ ; done
+
+amiga/orterforth : amiga/amiga.o amiga/io.o amiga/link.o amiga/main.o amiga/rf.o
+
+	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
+
+amiga/orterforth.adf : amiga/orterforth amiga/orterforth.bin
+
+	xdftool $@ format orterforth
+	xdftool $@ write amiga/orterforth orterforth
+	xdftool $@ write amiga/orterforth.bin orterforth.bin
+
+amiga/orterforth.bin : amiga/orterforth.img
+
+	$(ORTER) hex read < $< > $@
+
+amiga/orterforth.img : amiga/inst amiga/inst.adf amiga/inst.rexx model.img | amiga/long $(DISC) $(ORTER)
+
+ifeq ($(AMIGAMACHINE),fsuae)
+	@$(AMIGASTARTFSUAE)
+	@sleep 3
+	@$(WARN) "NB set serial handshaking to None"
+endif
+ifeq ($(AMIGALOADINGMETHOD),disk)
+ifeq ($(AMIGAMACHINE),real)
+	@$(WARN) "Physical disk load not supported"
+	@exit 1
+endif
+	@$(WARN) "Open Shell and execute df1:inst"
+endif
+ifeq ($(AMIGALOADINGMETHOD),serial)
+ifeq ($(AMIGAMACHINE),fsuae)
+	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
+endif
+	@$(AMIGALOADSERIAL)
+	@$(WARN) "Type: ram:inst"
+endif
+	@$(EMPTYDR1FILE) amiga/orterforth.img
+	@$(STARTDISC) $(AMIGASERIALOPTS) model.img amiga/orterforth.img
+	@$(WAITUNTILSAVED) amiga/orterforth.img
+	@$(STOPDISC)
+ifeq ($(AMIGAMACHINE),fsuae)
+	@$(AMIGASTOPFSUAE)
+endif
 
 amiga/rf_m68k.o : amiga/rf_m68k.s
 

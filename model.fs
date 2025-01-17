@@ -1691,9 +1691,9 @@ CODE R/W
 
 13 cd ' EMIT CFA !              ( set EMIT CFA from silent    )
 1 12 ic C!                      ( installed flag = 1          )
-
-HERE 64 cs 14 ic * ALLOT        ( make room for link table    )
-CONSTANT tbl -->
+: save3 15 ic 3 = IF 109 LOAD R> DROP ;S ENDIF ; save3
+FORGET save3 HERE 64 cs 14 ic * ALLOT CONSTANT tbl
+-->
 ( CREATE LINK TABLE                                orterforth )
 : link                          ( --                          )
   14 ic IF                      ( only if link enabled:       )
@@ -1739,3 +1739,86 @@ CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)
 CODE cs 1 cd HERE cl - !        ( multiply by cell size      *)
 CODE ln 2 cd HERE cl - !        ( align as CPU requires      *)
 ;S
+
+
+
+( SAVE IN RELOCATABLE FORMAT                       orterforth )
+HEX : cd cd ; 0 ' cl LFA !
+0 +ORIGIN VARIABLE ptr                      ( start at ORIGIN )
+HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
+: hd DUP 0A - 0< IF 30 ELSE 37 ENDIF + idx @ C! 1 idx +! ;
+07D0 VARIABLE blk                        ( first block of DR1 )
+: flush buf blk @ 0 R/W buf idx ! 1 blk +! ;
+: c. ( DUP 0 <# # # #> TYPE SPACE )               ( send byte )
+  0 10 U/ hd hd idx @ buf - 80 = IF flush ENDIF ;
+: w. SP@ cl 0 DO DUP C@ c. 1+ LOOP DROP DROP ;    ( send word )
+: absw 21 c. ptr @ @ w. cl ptr +! ;                ( abs word )
+: relw 41 c. ptr @ @ 0 +ORIGIN - w. cl ptr +! ;    ( rel word )
+: link 61 c. 3B 0 DO                           ( link to code )
+  ptr @ @ I cd = IF I w. LEAVE ENDIF LOOP cl ptr +! ;
+: absb DUP 80 + c. 0 DO ptr @ C@ c. 1 ptr +! LOOP ; ( abs byt )
+-->
+( SAVE IN RELOCATABLE FORMAT                       orterforth )
+( boot-up literals                                            )
+absw link absw absw                    ( vectors to COLD WARM )
+absw absw relw absw                    ( USRVER ATTR FORTH BS )
+relw relw relw relw                          ( USER S0 R0 TIB )
+absw absw relw relw relw    ( WIDTH WARNING FENCE DP VOC-LINK )
+( extra literals                                              )
+absw absw absw absw                              ( target cpu )
+relw relw absw                              ( ABORT FORTH ext )
+( definition header handling                                  )
+: nfa ptr @ DUP 1 TRAVERSE 1+ SWAP - absb ; ( NF as abs bytes )
+: lfa ptr @ @ IF relw ELSE absw ENDIF ;      ( LF as rel word )
+: cfa link ;                                     ( CF as link )
+: in BEGIN OVER OVER @ = IF ( find item in 0 terminated array )
+  DROP ;S ENDIF DUP cl + SWAP @ 0= UNTIL DROP DROP 0 ;
+-->
+( SAVE IN RELOCATABLE FORMAT                       orterforth )
+( table of constants/variables/literals etc to use rel word   )
+HERE ' FIRST , ' LIMIT , ' +ORIGIN cl + , ' ?STACK cl + ,
+' ?STACK 8 cs + , ' USE , ' PREV , ' R/W cl + ,
+0 , CONSTANT rels
+( table of literals to use link                               )
+HERE ' : 9 cs + , ' CONSTANT 4 cs + , ' VARIABLE 2 cs + ,
+' USER 2 cs + , ' DOES> 5 cs + , 0 , CONSTANT lnks
+( table of code words that take an arg                        )
+HERE ' LIT CFA , ' BRANCH CFA , ' 0BRANCH CFA ,
+' (LOOP) CFA , 0 , CONSTANT witharg
+( write code followed by arg - use relw or link if needed     )
+: arg relw ptr @ lnks in IF
+  link ELSE
+  ptr @ rels in IF relw ELSE absw ENDIF ENDIF ;
+-->
+( SAVE IN RELOCATABLE FORMAT                       orterforth )
+( handlers for colon defns, consts, vars, user vars, DOES>    )
+: docol BEGIN
+    ptr @ @ @ 1B cd =                            ( stop on ;S )
+    ptr @ @ DUP ' (.") CFA = IF                  ( string arg )
+      DROP relw ptr @ C@ 1+ ln absb ELSE
+      DUP ' COMPILE CFA = IF DROP relw relw ELSE    ( cfa arg )
+      witharg in IF arg ELSE relw ENDIF ENDIF ENDIF UNTIL ;
+: docon ptr @ rels in IF relw ELSE absw ENDIF ;
+: douse absw ;
+: dodoe relw nfa relw lfa ;         ( assume FORTH VOCABULARY )
+
+
+
+
+-->
+( SAVE IN RELOCATABLE FORMAT                       orterforth )
+( handle a definition of any type                             )
+: defn nfa lfa                                  ( NFA LFA CFA )
+  ptr @ @ cfa
+  DUP 30 cd = IF DROP docol ;S ENDIF                    ( PFA )
+  DUP 31 cd = IF DROP docon ;S ENDIF
+  DUP 32 cd = IF DROP docon ;S ENDIF
+  DUP 33 cd = IF DROP douse ;S ENDIF
+  34 cd = IF dodoe ;S ENDIF ;
+: defns 0 DO defn LOOP ;
+( finish saving, write 0x00 and block of Z                    )
+: end 0 c. flush buf 80 5A FILL buf blk @ 0 R/W CR ;
+
+( defns, disc command buf, more defs up to MON, end           )
+0BD defns 0A absb 21 defns end
+DECIMAL FORGET save3 ;S

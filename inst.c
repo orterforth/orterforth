@@ -407,7 +407,15 @@ static uintptr_t rf_inst_constants[] = {
   0,
 #endif
 #ifdef RF_INST_SAVE
+#ifdef RF_INST_RELOC
+  3,
+#else
+#ifdef RF_INST_LINK
+  2,
+#else
   1,
+#endif
+#endif
 #else
   0,
 #endif

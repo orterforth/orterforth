@@ -9,3 +9,7 @@ extern char *rf_origin;
 #define RF_BS 0x00000008
 
 #define RF_INST_DYNAMIC
+
+#define RF_INST_SAVE
+
+#define RF_INST_RELOC
