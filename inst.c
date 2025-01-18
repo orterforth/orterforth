@@ -162,10 +162,6 @@ static void __FASTCALL__ rf_inst_compile(const char *source)
 
     /* interpret what we have */
     switch (*name) {
-      case '%':
-      /* make immediate */
-      *rf_inst_latest ^= 0x40;
-      break;
       case ':':
       /* create colon definition */
       rf_inst_code(++name, rf_code_docol);
