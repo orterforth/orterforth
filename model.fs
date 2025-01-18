@@ -1599,9 +1599,9 @@ HERE LIT 1 - LIT 128 TOGGLE CURRENT @ @ , CURRENT @ ! HERE cl
 :LOAD BLK @ >R IN @ >R LIT 0 IN ! LIT 8 U* DROP BLK ! INTERPRET
 R> IN ! R> BLK ! ;S
 
-:[ % LIT 0 STATE ! ;S
 
-:QUIT  [ LIT 9 ic LIT 10 ic OVER - LIT 0 FILL LIT 101 LOAD MON
+:QUIT  LIT 0 STATE ! LIT 9 ic LIT 10 ic OVER - LIT 0 FILL
+       LIT 101 LOAD MON
 
 
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs LIT 8 ic + @
@@ -1615,6 +1615,9 @@ R> IN ! R> BLK ! ;S
 ( fig source has created the required definitions. Finally    )
 ( we modify a few settings.                                   )
 CURRENT @ @ 1+ 88 TOGGLE
+CREATE [ 48 cd HERE cl - ! -FIND LIT DROP DROP cl - , 0 ,
+-FIND STATE DROP DROP cl - , -FIND ! DROP DROP cl - ,
+-FIND ;S DROP DROP cl - , CURRENT @ @ 96 TOGGLE
 CREATE : 48 cd HERE cl - ! 192 STATE !
   CREATE 192 STATE ! 48 cd HERE cl - !
   ;S [ CURRENT @ @ 96 TOGGLE
@@ -1626,9 +1629,6 @@ CREATE : 48 cd HERE cl - ! 192 STATE !
 ( need --> in order to progress to next screen                )
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
 -->
-
-
-
 
 ( FORWARD REFERENCES AND INST TIME EXECUTED WORDS  orterforth )
 ( forward reference words - not executed so definitions empty )
