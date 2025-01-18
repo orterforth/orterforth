@@ -384,10 +384,11 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 ;S
 ( system dependent operations: BBC                        sys )
 FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
-: D= SWAP >R = SWAP R> = AND ;  ( compare double numbers      )
-: tg 20 cs +ORIGIN @ 19 cs +ORIGIN @ ;
-: only tg D= 0= IF [COMPILE] --> ENDIF ;
-DECIMAL 36 BASE ! BBC. HEX only
+: only
+  BL WORD BASE @ 36 BASE ! HERE NUMBER ROT BASE !
+  19 cs +ORIGIN @ = SWAP 20 cs +ORIGIN @ = AND
+  0= IF [COMPILE] --> ENDIF ;
+only BBC HEX
 : mode 0355 C@ ;
 : columns 030A C@ 0308 C@ - 1+ ; : rows 0309 C@ 030B C@ - 1+ ;
 : cls 0C EMIT ;
@@ -397,9 +398,8 @@ DECIMAL
 
 
 
-;S
 ( Commodore 64                                                )
-DECIMAL 36 BASE ! C64. DECIMAL only
+only C64
 40 CONSTANT columns 25 CONSTANT rows
 HEX
 : cls 0400 03E8 BLANKS D800 03E8 0286 C@ FILL 13 EMIT ;
@@ -415,7 +415,7 @@ DECIMAL ;S
 
 ;S
 ( Dragon                                                      )
-DECIMAL 36 BASE ! DRAGON. DECIMAL only
+only DRAGON
 32 CONSTANT columns 16 CONSTANT rows
 HEX
 : cls 0400 0200 60 FILL 0400 0088 ! ;
@@ -431,7 +431,7 @@ DECIMAL ;S
 
 ;S
 ( QL                                                          )
-DECIMAL 36 BASE ! QL. DECIMAL only
+only QL
 85 CONSTANT columns 25 CONSTANT rows
 HEX
 : cls 0C EMIT ; ( EMIT calls SD.CLEAR )
@@ -447,7 +447,7 @@ DECIMAL ;S
 
 ;S
 ( Spectrum                                                    )
-DECIMAL 36 BASE ! SPECTR. DECIMAL only
+only SPECTR
 32 CONSTANT columns 24 CONSTANT rows
 HEX
 : cls 4000 1800 ERASE
@@ -463,7 +463,7 @@ DECIMAL
 
 ;S
 ( Z88                                                         )
-DECIMAL 36 BASE ! Z88. DECIMAL only
+only Z88
 94 CONSTANT columns 8 CONSTANT rows
 : cls 12 EMIT ;
 ;S
@@ -479,7 +479,7 @@ DECIMAL 36 BASE ! Z88. DECIMAL only
 
 ;S
 ( ZX81                                                        )
-DECIMAL 36 BASE ! ZX81. DECIMAL only
+only ZX81
 32 CONSTANT columns 24 CONSTANT rows
 HEX
 CREATE cls
