@@ -205,7 +205,7 @@ DECIMAL    ;S
 0001   ,        ( INITIAL WARNING = 1 )
 0200   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
-0000   ,        ( COLD START VALUE FOR VOC-LINK ) 6C LOAD -->
+0000   ,        ( COLD START VALUE FOR VOC-LINK ) 6D LOAD -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
 3 cd HERE cl - !
@@ -1691,9 +1691,25 @@ CODE R/W
 
 13 cd ' EMIT CFA !              ( set EMIT CFA from silent    )
 1 12 ic C!                      ( installed flag = 1          )
-: save3 15 ic 3 = IF 109 LOAD R> DROP ;S ENDIF ; save3
-FORGET save3 HERE 64 cs 14 ic * ALLOT CONSTANT tbl
 -->
+
+
+( SAVE OPTIONS                                     orterforth )
+: save0 15 ic 0= IF 0 ' cl LFA ! R> DROP ;S ENDIF ; ( no save )
+save0 FORGET save0
+HERE 64 cs 14 ic * ALLOT CONSTANT tbl            ( link table )
+: save1 15 ic 3 < IF 107 LOAD R> DROP ;S ENDIF ; ( save/link? )
+save1 FORGET tbl
+: save3 15 ic 3 = IF 110 LOAD R> DROP ;S ENDIF ; ( save/reloc )
+save3 FORGET save3
+;S
+
+
+
+
+
+
+
 ( CREATE LINK TABLE                                orterforth )
 : link                          ( --                          )
   14 ic IF                      ( only if link enabled:       )
@@ -1743,7 +1759,7 @@ CODE ln 2 cd HERE cl - !        ( align as CPU requires      *)
 
 
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
-HEX : cd cd ; 0 ' cl LFA !
+HEX : cd cd ; 0 ' cl LFA !    ( break inst dict link, keep cd )
 0 +ORIGIN VARIABLE ptr                      ( start at ORIGIN )
 HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
 : hd DUP 0A - 0< IF 30 ELSE 37 ENDIF + idx @ C! 1 idx +! ;
