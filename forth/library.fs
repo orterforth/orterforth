@@ -387,7 +387,7 @@ FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : D= SWAP >R = SWAP R> = AND ;  ( compare double numbers      )
 : tg 20 cs +ORIGIN @ 19 cs +ORIGIN @ ;
 : only tg D= 0= IF [COMPILE] --> ENDIF ;
-36 BASE ! BBC. HEX only
+DECIMAL 36 BASE ! BBC. HEX only
 : mode 0355 C@ ;
 : columns 030A C@ 0308 C@ - 1+ ; : rows 0309 C@ 030B C@ - 1+ ;
 : cls 0C EMIT ;
@@ -399,7 +399,7 @@ DECIMAL
 
 ;S
 ( Commodore 64                                                )
-36 BASE ! C64. DECIMAL only
+DECIMAL 36 BASE ! C64. DECIMAL only
 40 CONSTANT columns 25 CONSTANT rows
 HEX
 : cls 0400 03E8 BLANKS D800 03E8 0286 C@ FILL 13 EMIT ;
@@ -415,7 +415,7 @@ DECIMAL ;S
 
 ;S
 ( Dragon                                                      )
-36 BASE ! DRAGON. DECIMAL only
+DECIMAL 36 BASE ! DRAGON. DECIMAL only
 32 CONSTANT columns 16 CONSTANT rows
 HEX
 : cls 0400 0200 60 FILL 0400 0088 ! ;
@@ -431,7 +431,7 @@ DECIMAL ;S
 
 ;S
 ( QL                                                          )
-36 BASE ! QL. DECIMAL only
+DECIMAL 36 BASE ! QL. DECIMAL only
 85 CONSTANT columns 25 CONSTANT rows
 HEX
 : cls 0C EMIT ; ( EMIT calls SD.CLEAR )
@@ -447,7 +447,7 @@ DECIMAL ;S
 
 ;S
 ( Spectrum                                                    )
-36 BASE ! SPECTR. DECIMAL only
+DECIMAL 36 BASE ! SPECTR. DECIMAL only
 32 CONSTANT columns 24 CONSTANT rows
 HEX
 : cls 4000 1800 ERASE
@@ -463,7 +463,7 @@ DECIMAL
 
 ;S
 ( Z88                                                         )
-36 BASE ! Z88. DECIMAL only
+DECIMAL 36 BASE ! Z88. DECIMAL only
 94 CONSTANT columns 8 CONSTANT rows
 : cls 12 EMIT ;
 ;S
@@ -479,7 +479,7 @@ DECIMAL
 
 ;S
 ( ZX81                                                        )
-36 BASE ! ZX81. DECIMAL only
+DECIMAL 36 BASE ! ZX81. DECIMAL only
 32 CONSTANT columns 24 CONSTANT rows
 HEX
 CREATE cls
