@@ -1606,7 +1606,7 @@ R> IN ! R> BLK ! ;S
 
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs LIT 8 ic + @
        DUP CONTEXT ! CURRENT ! QUIT
-:X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
+:X     LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
        R> DROP ;S
 ( FORTH SOURCE STARTS HERE - DEFINING WORDS        orterforth )
 ( Code to load the fig-Forth Model source follows. Some words )
@@ -1614,7 +1614,7 @@ R> IN ! R> BLK ! ;S
 ( Some contain forward references which are resolved once the )
 ( fig source has created the required definitions. Finally    )
 ( we modify a few settings.                                   )
-CURRENT @ @ 1+ 88 TOGGLE
+CURRENT @ @ DUP 64 TOGGLE 1+ 88 TOGGLE
 CREATE [ 48 cd HERE cl - ! -FIND LIT DROP DROP cl - , 0 ,
 -FIND STATE DROP DROP cl - , -FIND ! DROP DROP cl - ,
 -FIND ;S DROP DROP cl - , CURRENT @ @ 96 TOGGLE
