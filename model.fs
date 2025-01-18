@@ -1601,9 +1601,9 @@ R> IN ! R> BLK ! ;S
 
 :[ % LIT 0 STATE ! ;S
 
+:QUIT  [ LIT 9 ic LIT 10 ic OVER - LIT 0 FILL LIT 101 LOAD MON
 
-:QUIT  [ CURRENT @ @ 1+ LIT 88 TOGGLE
-       LIT 9 ic LIT 10 ic OVER - LIT 0 FILL LIT 101 LOAD MON
+
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs LIT 8 ic + @
        DUP CONTEXT ! CURRENT ! QUIT
 :X %   LIT 1 BLK +! LIT 0 IN ! BLK @ LIT 7 AND 0= 0BRANCH ^3
@@ -1614,6 +1614,7 @@ R> IN ! R> BLK ! ;S
 ( Some contain forward references which are resolved once the )
 ( fig source has created the required definitions. Finally    )
 ( we modify a few settings.                                   )
+CURRENT @ @ 1+ 88 TOGGLE
 CREATE : 48 cd HERE cl - ! 192 STATE !
   CREATE 192 STATE ! 48 cd HERE cl - !
   ;S [ CURRENT @ @ 96 TOGGLE
@@ -1625,7 +1626,6 @@ CREATE : 48 cd HERE cl - ! 192 STATE !
 ( need --> in order to progress to next screen                )
 : --> 0 IN ! 8 BLK @ 7 AND - BLK +! ; IMMEDIATE
 -->
-
 
 
 
