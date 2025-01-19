@@ -14,6 +14,11 @@ To build, call:
  make TARGET=pico                 (for default C version)
  make TARGET=pico OPTION=assembly (for asm version)
 
+For Pico 2, use:
+
+ make TARGET=pico PICOBOARD=pico2
+ make TARGET=pico PICOBOARD=pico2 OPTION=assembly
+
 Target file is:
 
  pico/orterforth.uf2
