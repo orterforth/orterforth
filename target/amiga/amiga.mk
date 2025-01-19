@@ -1,3 +1,5 @@
+# === Commodore Amiga ===
+
 AMIGALOADINGMETHOD=disk
 # AMIGALOADINGMETHOD=serial
 AMIGAMACHINE=fsuae
@@ -12,7 +14,7 @@ AMIGAOPTION := $(OPTION)
 endif
 endif
 
-AMIGADEPS := amiga/amiga.o amiga/inst.o amiga/io.o amiga/main.o
+AMIGADEPS := amiga/amiga.o amiga/io.o amiga/main.o
 ifeq ($(AMIGAOPTION),assembly)
 AMIGADEPS += amiga/rf_m68k.o
 endif
@@ -124,7 +126,7 @@ amiga/hw : amiga/hw.o
 
 	$(AMIGAVC) $< -lamiga -lauto -o $@
 
-amiga/inst : $(AMIGADEPS)
+amiga/inst : $(AMIGADEPS) amiga/inst.o
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
@@ -133,7 +135,7 @@ amiga/long :
 	# repeat HUNK_END and use this to flush serial buffer
 	for i in $$(seq 0 127) ; do printf '\0\0\003\362' >> $@ ; done
 
-amiga/orterforth : amiga/amiga.o amiga/io.o amiga/link.o amiga/main.o amiga/rf.o
+amiga/orterforth : $(AMIGADEPS) amiga/link.o
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
