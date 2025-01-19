@@ -1,0 +1,28 @@
+Building for the Commodore Amiga
+================================
+
+You will need:
+
+* vbcc      http://www.compilers.de/vbcc.html
+* FS-UAE    https://fs-uae.net/ including Amiga Kickstart ROM
+            and Workbench floppy image
+* Amiga NDK
+* xdftool   https://github.com/cnvogelg/amitools
+
+To build, call:
+
+ make TARGET=amiga                   (using FS-UAE)
+ make TARGET=amiga AMIGAMACHINE=real (on a physical
+                                     machine connected via
+                                     serial port)
+
+The target files will be built in the respective named 
+directory, e.g.:
+
+ amiga/orterforth     (the Amiga executable)
+ amiga/orterforth.adf (the disk image)
+ amiga/orterforth.bin (the relocatable installation)
+
+To run in FS-UAE, call:
+
+ make run TARGET=amiga
