@@ -107,10 +107,6 @@ amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga
 
 	$(AMIGAVC) -c $< -o $@
 
-amiga/link.o : target/amiga/link.c rf.h target/amiga/amiga.inc | amiga
-
-	$(AMIGAVC) -c $< -o $@
-
 amiga/%.rexx : amiga/% target/amiga/receive.rexx
 
 	printf "/* $(@F) modified with pre-set values */\n" > $@
@@ -130,7 +126,11 @@ amiga/inst : $(AMIGADEPS) amiga/inst.o
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
-amiga/long :
+amiga/link.o : target/amiga/link.c rf.h target/amiga/amiga.inc | amiga
+
+	$(AMIGAVC) -c $< -o $@
+
+amiga/long : | amiga
 
 	# repeat HUNK_END and use this to flush serial buffer
 	for i in $$(seq 0 127) ; do printf '\0\0\003\362' >> $@ ; done
