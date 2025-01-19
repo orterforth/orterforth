@@ -1,8 +1,11 @@
 # === Raspberry Pi Pico ===
 
+PICOBOARD=pico
+# PICOBOARD=pico_w
+# PICOBOARD=pico2
+# PICOBOARD=pico2_w
+# PICOOPTION := assembly
 PICOOPTION := default
-#PICOOPTION := assembly
-# PICOOPTION := default
 ifeq ($(TARGET),pico)
 ifneq ($(OPTION),)
 PICOOPTION := $(OPTION)
@@ -39,7 +42,7 @@ pico-run : | $(ORTER) $(DISC) $(DR0) $(DR1)
 
 pico/Makefile : target/pico/CMakeLists.txt | pico
 
-	cd pico && PICO_SDK_PATH=~/.pico-sdk/sdk/2.1.0 cmake -DPICO_BOARD=pico2 $(PICOCMAKEOPTION) ../target/pico
+	cd pico && PICO_SDK_PATH=~/.pico-sdk/sdk/2.1.0 cmake -DPICO_BOARD=$(PICOBOARD) $(PICOCMAKEOPTION) ../target/pico
 
 pico/orterforth.uf2 : \
 	pico/Makefile \
