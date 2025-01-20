@@ -29,6 +29,13 @@ ifeq ($(AMIGAMACHINE),real)
 AMIGASERIALOPTS=serial $(SERIALPORT) $(SERIALBAUD)
 endif
 
+ifeq ($(AMIGAMODEL),A500)
+AMIGAWORKBENCH=workbench1.3.adf
+endif
+ifeq ($(AMIGAMODEL),A500+)
+AMIGAWORKBENCH=workbench2.05.adf
+endif
+
 AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 	$(PROMPT) "Open Shell and type: type ser: > ram:$(<F).rexx" && \
 	$(INFO) "Sending $<.rexx" && \
@@ -41,7 +48,7 @@ AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 	(cat $< amiga/long amiga/long amiga/long amiga/long && sleep 2) | $(ORTER) $(AMIGASERIALOPTS)
 
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
-	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
+	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
 
 AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh fsuae.pid
 
