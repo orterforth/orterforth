@@ -102,10 +102,19 @@ ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
 	@sleep 3
 	@$(WARN) "NB set serial handshaking to None"
+endif
+ifeq ($(AMIGALOADINGMETHOD),disk)
+ifeq ($(AMIGAMACHINE),real)
+	@$(WARN) "Physical disk load not supported"
+	@exit 1
+endif
 	@$(WARN) "Open Shell and execute: copy df1: to ram: <enter>"
 	@$(WARN) "                        ram:orterforth <enter>"
 endif
-ifeq ($(AMIGAMACHINE),real)
+ifeq ($(AMIGALOADINGMETHOD),serial)
+ifeq ($(AMIGAMACHINE),fsuae)
+	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
+endif
 	@$(PROMPT) "Open Shell and type: type ser: > ram:orterforth.rexx"
 	@$(INFO) "Sending amiga/orterforth.rexx"
 	@(cat amiga/orterforth.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
@@ -113,7 +122,7 @@ ifeq ($(AMIGAMACHINE),real)
 	@$(PROMPT) "Type: rx ram:orterforth"
 	@$(INFO) "Sending amiga/orterforth"
 	@(cat amiga/orterforth amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
-	@$(PROMPT) "Open Shell and type: type ser: > ram:bin.rexx"
+	@$(PROMPT) "Type: type ser: > ram:bin.rexx"
 	@$(INFO) "Sending amiga/orterforth.bin.rexx"
 	@(cat amiga/orterforth.bin.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
 	@$(AMIGASERIALBREAK)
@@ -129,6 +138,13 @@ amiga/%.adf : amiga/%
 
 	xdftool $@ format $(<F)
 	xdftool $@ write $< $(<F)
+
+amiga/%.bas : amiga/% target/amiga/receive.bas
+
+	printf "' $(@F) modified with pre-set values\n" > $@
+	printf "file"'$$'" = "'"'"ram:$(<F)"'"'"\n" >> $@
+	printf "size& = $$($(STAT) $<)\n" >> $@
+	cat target/amiga/receive.bas >> $@
 
 amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga
 
