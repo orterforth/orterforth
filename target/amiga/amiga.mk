@@ -29,23 +29,26 @@ ifeq ($(AMIGAMACHINE),real)
 AMIGASERIALOPTS=serial $(SERIALPORT) $(SERIALBAUD)
 endif
 
+AMIGASERIAL := $(ORTER) $(AMIGASERIALOPTS)
+AMIGASERIALBREAK := \
+	$(PROMPT) "Type Ctrl+C" && \
+	$(INFO) "Breaking serial send" && \
+	cat amiga/long | $(AMIGASERIAL)
+
 ifeq ($(AMIGAMODEL),A500)
 AMIGAWORKBENCH=workbench1.3.adf
 endif
 ifeq ($(AMIGAMODEL),A500+)
-AMIGAWORKBENCH=workbench2.05.adf
-endif
-
 AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 	$(PROMPT) "Open Shell and type: type ser: > ram:$(<F).rexx" && \
 	$(INFO) "Sending $<.rexx" && \
-	(cat $<.rexx amiga/long && sleep 10) | $(ORTER) $(AMIGASERIALOPTS) && \
-	$(PROMPT) "Type Ctrl+C" && \
-	$(INFO) "Breaking serial send" && \
-	cat amiga/long | $(ORTER) $(AMIGASERIALOPTS) && \
+	(cat $<.rexx amiga/long && sleep 10) | $(AMIGASERIAL) && \
+	$(AMIGASERIALBREAK) && \
 	$(PROMPT) "Type: rx ram:$(<F)" && \
 	$(INFO) "Sending $<" && \
-	(cat $< amiga/long amiga/long amiga/long amiga/long && sleep 2) | $(ORTER) $(AMIGASERIALOPTS)
+	(cat $< amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
+AMIGAWORKBENCH=workbench2.05.adf
+endif
 
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
 	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
@@ -93,7 +96,7 @@ endif
 endif
 
 .PHONY : amiga-run
-amiga-run : amiga/orterforth amiga/orterforth.adf | $(DISC) $(DR0) $(DR1)
+amiga-run : amiga/orterforth amiga/orterforth.adf amiga/orterforth.bin amiga/orterforth.bin.rexx amiga/orterforth.rexx | amiga/long $(DISC) $(DR0) $(DR1)
 
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
@@ -101,6 +104,23 @@ ifeq ($(AMIGAMACHINE),fsuae)
 	@$(WARN) "NB set serial handshaking to None"
 	@$(WARN) "Open Shell and execute: copy df1: to ram: <enter>"
 	@$(WARN) "                        ram:orterforth <enter>"
+endif
+ifeq ($(AMIGAMACHINE),real)
+	@$(PROMPT) "Open Shell and type: type ser: > ram:orterforth.rexx"
+	@$(INFO) "Sending amiga/orterforth.rexx"
+	@(cat amiga/orterforth.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
+	@$(AMIGASERIALBREAK)
+	@$(PROMPT) "Type: rx ram:orterforth"
+	@$(INFO) "Sending amiga/orterforth"
+	@(cat amiga/orterforth amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
+	@$(PROMPT) "Open Shell and type: type ser: > ram:bin.rexx"
+	@$(INFO) "Sending amiga/orterforth.bin.rexx"
+	@(cat amiga/orterforth.bin.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
+	@$(AMIGASERIALBREAK)
+	@$(PROMPT) "Type: rx ram:bin"
+	@$(INFO) "Sending amiga/orterforth.bin"
+	@(cat amiga/orterforth.bin amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
+	@$(WARN) "Now type: ram:orterforth <enter>"
 endif
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)
