@@ -8,6 +8,7 @@ AMIGAMACHINE=fsuae
 AMIGAMODEL=A500+
 AMIGAOPTION=assembly
 # AMIGAOPTION=default
+
 ifeq ($(TARGET),amiga)
 ifneq ($(OPTION),)
 AMIGAOPTION := $(OPTION)
@@ -51,7 +52,7 @@ AMIGAWORKBENCH=workbench2.05.adf
 endif
 
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
-	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-1=$<.adf --serial-port=tcp://127.0.0.1:5705
+	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-0=extras1.3.adf --serial-port=tcp://127.0.0.1:5705
 
 AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh fsuae.pid
 
@@ -95,8 +96,18 @@ endif
 	@$(WARN) "Type: ram:hw"
 endif
 
+ifeq ($(AMIGALOADINGMETHOD),disk)
+AMIGAINSTDEPS := amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(ORTER)
+AMIGARUNDEPS := amiga/orterforth amiga/orterforth.adf | $(DISC) $(DR0) $(DR1)
+AMIGASTARTFSUAE += --floppy-drive-1=$<.adf
+endif
+ifeq ($(AMIGALOADINGMETHOD),serial)
+AMIGAINSTDEPS := amiga/inst amiga/inst.bas amiga/inst.rexx model.img | amiga/long $(DISC) $(ORTER)
+AMIGARUNDEPS := amiga/orterforth amiga/orterforth.bin amiga/orterforth.bin.bas amiga/orterforth.bin.rexx amiga/orterforth.bas amiga/orterforth.rexx | amiga/long $(DISC) $(DR0) $(DR1)
+endif
+
 .PHONY : amiga-run
-amiga-run : amiga/orterforth amiga/orterforth.adf amiga/orterforth.bin amiga/orterforth.bin.rexx amiga/orterforth.rexx | amiga/long $(DISC) $(DR0) $(DR1)
+amiga-run : $(AMIGARUNDEPS)
 
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
@@ -115,6 +126,24 @@ ifeq ($(AMIGALOADINGMETHOD),serial)
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
 endif
+ifeq ($(AMIGAMODEL),A500)
+	@$(PROMPT) "Open Shell and type: type ser: to ram:orterforth.bas"
+	@$(INFO) "Sending amiga/orterforth.bas"
+	@(cat amiga/orterforth.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
+	@$(AMIGASERIALBREAK)
+	@$(PROMPT) "Insert Extras disk and type: amigabasic ram:orterforth.bas"
+	@$(INFO) "Sending amiga/orterforth"
+	@(cat amiga/orterforth amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
+	@$(PROMPT) "Type: type ser: > ram:bin.bas"
+	@$(INFO) "Sending amiga/orterforth.bin.bas"
+	@(cat amiga/orterforth.bin.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
+	@$(AMIGASERIALBREAK)
+	@$(PROMPT) "Type: amigabasic ram:bin.bas"
+	@$(INFO) "Sending amiga/orterforth.bin"
+	@(cat amiga/orterforth.bin amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
+	@$(WARN) "Now type: ram:orterforth <enter>"
+endif
+ifeq ($(AMIGAMODEL),A500+)
 	@$(PROMPT) "Open Shell and type: type ser: > ram:orterforth.rexx"
 	@$(INFO) "Sending amiga/orterforth.rexx"
 	@(cat amiga/orterforth.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
@@ -131,6 +160,7 @@ endif
 	@(cat amiga/orterforth.bin amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
 	@$(WARN) "Now type: ram:orterforth <enter>"
 endif
+endif
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)
 
@@ -145,6 +175,13 @@ amiga/%.bas : amiga/% target/amiga/receive.bas
 	printf "file"'$$'" = "'"'"ram:$(<F)"'"'"\n" >> $@
 	printf "size& = $$($(STAT) $<)\n" >> $@
 	cat target/amiga/receive.bas >> $@
+
+amiga/%.ihx : amiga/%
+
+	z88dk-appmake +hex \
+		--binfile $< \
+		--org 0 \
+		--output $@
 
 amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga
 
@@ -192,7 +229,7 @@ amiga/orterforth.bin : amiga/orterforth.img
 
 	$(ORTER) hex read < $< > $@
 
-amiga/orterforth.img : amiga/inst amiga/inst.adf amiga/inst.rexx model.img | amiga/long $(DISC) $(ORTER)
+amiga/orterforth.img : $(AMIGAINSTDEPS)
 
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(AMIGASTARTFSUAE)
