@@ -5,6 +5,7 @@
 /* sleep */
 
 #ifdef PICO
+#include "pico/stdlib.h"
 #define RF_SLEEP(a) sleep_ms(a);
 #endif
 #ifdef __RC2014
