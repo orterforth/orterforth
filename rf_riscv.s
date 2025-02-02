@@ -44,6 +44,7 @@ rf_up:
 	.size	rf_fp, 4
 rf_fp:
 	.zero	4
+
 	.text
 	.align	1
 	.globl	rf_trampoline
@@ -63,7 +64,14 @@ rf_trampoline:
 	.cfi_def_cfa 8, 0
 	.loc 1 67 9
 	j	.L2
+
 .L3:
+
+        lui     a5, %hi(rf_ip)      # IP into S11
+        lw      s11, %lo(rf_ip)(a5)
+        lui     a5, %hi(rf_w)       # IP into S11
+        lw      s8, %lo(rf_w)(a5)
+
 	.loc 1 73 5
 	lui	a5,%hi(rf_fp)
 	lw	a5,%lo(rf_fp)(a5)
@@ -74,6 +82,7 @@ rf_trampoline:
 	lui	a5,%hi(rf_fp)
 	lw	a5,%lo(rf_fp)(a5)
 	bne	a5,zero,.L3
+
 	.loc 1 75 1
 	nop
 	nop
@@ -88,34 +97,46 @@ rf_trampoline:
 	.cfi_endproc
 .LFE0:
 	.size	rf_trampoline, .-rf_trampoline
-	.align	1
-	.globl	rf_start
-	.type	rf_start, @function
+
+        .align 1
+        .globl rf_start
+        .type rf_start, @function
 rf_start:
 .LFB1:
-	.loc 1 79 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 84 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
+        .loc 1 79 1
+        .cfi_startproc
+#       addi    sp, sp, -16
+        .cfi_def_cfa_offset 16
+#       sw      ra, 12(sp)
+#       sw      s0, 8(sp)
+        .cfi_offset 1, -4
+        .cfi_offset 8, -8
+#       addi    s0, sp, 16
+        .cfi_def_cfa 8, 0
+        .loc 1 84 1
+#       nop
+
+        lui     a5, %hi(rf_ip)
+        sw      s11, %lo(rf_ip)(a5) # S11 into IP
+        lui     a5, %hi(rf_w)
+        sw      s8, %lo(rf_w)(a5)   # S8 into W
+
+
+#       lw      ra, 12(sp)
+        .cfi_restore 1
+#       lw      s0, 8(sp)
+        .cfi_restore 8
+        .cfi_def_cfa 2, 16
+#       addi    sp, sp, 16
+        .cfi_def_cfa_offset 0
+        jr      ra
+        .cfi_endproc
 .LFE1:
-	.size	rf_start, .-rf_start
+        .size rf_start, .-rf_start
+
+
+
+
 	.align	1
 	.globl	rf_code_lit
 	.type	rf_code_lit, @function
@@ -175,57 +196,79 @@ rf_code_lit:
 	.cfi_endproc
 .LFE2:
 	.size	rf_code_lit, .-rf_code_lit
-	.align	1
-	.globl	rf_next
-	.type	rf_next, @function
+
+
+
+        .align 1
+        .globl rf_next
+        .type rf_next, @function
 rf_next:
 .LFB3:
-	.loc 1 104 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 105 3
-	call	rf_start
-	.loc 1 106 24
-	lui	a5,%hi(rf_ip)
-	lw	a5,%lo(rf_ip)(a5)
-	lw	a5,0(a5)
-	.loc 1 106 10
-	mv	a4,a5
-	.loc 1 106 8
-	lui	a5,%hi(rf_w)
-	sw	a4,%lo(rf_w)(a5)
-	.loc 1 107 8
-	lui	a5,%hi(rf_ip)
-	lw	a5,%lo(rf_ip)(a5)
-	addi	a4,a5,4
-	lui	a5,%hi(rf_ip)
-	sw	a4,%lo(rf_ip)(a5)
-	.loc 1 108 3
-	lui	a5,%hi(rf_w)
-	lw	a5,%lo(rf_w)(a5)
-	lw	a4,0(a5)
-	lui	a5,%hi(rf_fp)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 109 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
+NEXT:   lw      s8, (s11)       # AX<- (IP)
+                                # (W) <- (IP)
+        addi    s11, s11, 4
+#
+# -----------------------------------------
+#
+NEXT1:  lw      a5, (s8)        # TO 'CFA'
+        jr      a5
+
+
+
+
+# 	.loc 1 104 1
+# 	.cfi_startproc
+# 	addi	sp,sp,-16
+# 	.cfi_def_cfa_offset 16
+# 	sw	ra,12(sp)
+# 	sw	s0,8(sp)
+# 	.cfi_offset 1, -4
+# 	.cfi_offset 8, -8
+# 	addi	s0,sp,16
+
+# 	.cfi_def_cfa 8, 0
+# 	.loc 1 105 3
+# 	call	rf_start
+
+# 	.loc 1 106 24
+# 	lui	a5,%hi(rf_ip)
+# 	lw	a5,%lo(rf_ip)(a5)
+# 	lw	a5,0(a5)
+# 	.loc 1 106 10
+# 	mv	a4,a5
+# 	.loc 1 106 8
+# 	lui	a5,%hi(rf_w)
+# 	sw	a4,%lo(rf_w)(a5)
+# 	.loc 1 107 8
+# 	lui	a5,%hi(rf_ip)
+# 	lw	a5,%lo(rf_ip)(a5)
+# 	addi	a4,a5,4
+# 	lui	a5,%hi(rf_ip)
+# 	sw	a4,%lo(rf_ip)(a5)
+# 	.loc 1 108 3
+# 	lui	a5,%hi(rf_w)
+# 	lw	a5,%lo(rf_w)(a5)
+# 	lw	a4,0(a5)
+# 	lui	a5,%hi(rf_fp)
+# 	sw	a4,%lo(rf_fp)(a5)
+
+# 	.loc 1 109 1
+# 	nop
+# 	lw	ra,12(sp)
+# 	.cfi_restore 1
+# 	lw	s0,8(sp)
+# 	.cfi_restore 8
+# 	.cfi_def_cfa 2, 16
+# 	addi	sp,sp,16
+# 	.cfi_def_cfa_offset 0
+# 	jr	ra
+# 	.cfi_endproc
 .LFE3:
 	.size	rf_next, .-rf_next
+
+
+
+
 	.align	1
 	.globl	rf_code_exec
 	.type	rf_code_exec, @function
