@@ -1,3 +1,9 @@
+# Adapted from the original document in 2025:
+# https://www.forth.org/fig-forth/fig-forth_8086-8088_ver_10.pdf
+# to create a RISC-V port and integrate into orterforth. Some
+# info in the comments no longer applies as a result.
+
+
 	.file	"rf.c"
 	.option nopic
 	.attribute arch, "rv32i2p1_m2p0_a2p1_c2p0_zicsr2p0_zifencei2p0_zba1p0_zbb1p0_zbkb1p0_zbs1p0"
@@ -137,6 +143,199 @@ rf_start:
 .LFE1:
         .size rf_start, .-rf_start
 
+
+# fig-FORTH 8086/8088
+# ASSEMBLY SOURCE LISTING
+
+# RELEASE 1.0
+# WITH COMPILER SECURITY
+# AND
+# VARIABLE LENGTH WORDS
+# MARCH 1981
+# This public domain publication is provided through the courtesy
+# of the FORTH Interest Group, PO Box 8231, San Jose, CA 95155.
+# Further distribution must contain this notice.
+
+# ***************************************
+# ***                                 ***
+# ***    FIG-FORTH for the 8086/88    ***
+# ***                                 ***
+# ***           Version 1.0           ***
+# ***            2/18/81              ***
+# ***                                 ***
+# ***     Contains interface for      ***
+# ***      CP/M-86 (version 1.0)      ***
+# ***                                 ***
+# ***                                 ***
+# ***     Implementation by           ***
+# ***           Thomas Newman         ***
+# ***           27444 Berenda Way     ***
+# ***           Hayward, Ca. 94544    ***
+# ***                                 ***
+# ***************************************
+#
+#
+#
+# NOTE: This version only supports one
+#       memory segment of the 8086 (64k bytes).
+#
+#
+# -----------------------------------------------
+#
+# All publications of the Forth Interest Group
+# are public domain.  They may be further
+# distributed by the inclusion of this credit
+# notice:
+#
+# This publication has been made available by the
+# FORTH INTEREST GROUP (fig)
+# P.O. Box 8231
+# San Jose, CA 95155
+# -----------------------------------------------
+#
+# Acknowledgements:
+#       John Cassady
+#       Kim Harris
+#       George Flammer
+#       Robt. D. Villwock
+#-----------------------------------------------
+
+UP      =       _rf_up
+
+#-----------------------------------------------
+#
+# FORTH REGISTERS
+#
+# FORTH 8086    FORTH PRESERVATION RULES
+# ----- ----    ------------------------
+#
+# IP    SI      INTERPRETER POINTER.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+# W     DX      WORKING REGISTER.
+#               JUMP TO 'DPUSH' WILL
+#               PUSH CONTENTS ONTO THE
+#               PARAMETER STACK BEFORE
+#               EXECUTING 'APUSH'.
+#
+# SP    SP      PARAMETER STACK POINTER.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+# RP    BP      RETURN STACK.
+#               MUST BE PRESERVED
+#               ACROSS FORTH WORDS.
+#
+#       AX      GENERAL REGISTER.
+#               JUMP TO 'APUSH' WILL PUSH
+#               CONTENTS ONTO THE PARAMETER
+#               STACK BEFORE EXECUTING 'NEXT'.
+#
+#       BX      GENERAL PURPOSE REGISTER.
+#
+#       CX      GENERAL PURPOSE REGISTER.
+#
+#       DI      GENERAL PURPOSE REGISTER.
+#
+#       CS      SEGMENT REGISTER.  MUST BE
+#               PRESERVED ACROSS FORTH WORDS.
+#
+#       DS         "    "       "
+#
+#       SS         "    "       "
+#
+#       ES      TEMPORARY SEGMENT REGISTER
+#               ONLY USED BY A FEW WORDS.
+#
+################################################
+
+# *************
+# *           *
+# *   NEXT    *
+# *           *
+# *   DPUSH   *
+# *           *
+# *   APUSH   *
+# *           *
+# *************
+#
+#
+        .align 1
+APUSH:  addi    s10,s10,-4
+        sw      a5,(s10)
+#
+# -----------------------------------------
+#
+# PATCH THE NEXT 3 LOCATIONS
+# (USING A DEBUG MONITOR; I.E. DDT86)
+# WITH  (JMP TNEXT)  FOR TRACING THROUGH
+# HIGH LEVEL FORTH WORDS.
+#
+        .align 1
+        .globl rf_next
+        .type rf_next, @function
+rf_next:
+.LFB3:
+NEXT:   lw      s8,(s11)        # AX<- (IP)
+                                # (W) <- (IP)
+        addi    s11,s11,4
+#
+# -----------------------------------------
+#
+NEXT1:  lw      a5,(s8)         # TO 'CFA'
+        jr      a5
+
+# 	.loc 1 104 1
+# 	.cfi_startproc
+# 	addi	sp,sp,-16
+# 	.cfi_def_cfa_offset 16
+# 	sw	ra,12(sp)
+# 	sw	s0,8(sp)
+# 	.cfi_offset 1, -4
+# 	.cfi_offset 8, -8
+# 	addi	s0,sp,16
+
+# 	.cfi_def_cfa 8, 0
+# 	.loc 1 105 3
+# 	call	rf_start
+
+# 	.loc 1 106 24
+# 	lui	a5,%hi(rf_ip)
+# 	lw	a5,%lo(rf_ip)(a5)
+# 	lw	a5,0(a5)
+# 	.loc 1 106 10
+# 	mv	a4,a5
+# 	.loc 1 106 8
+# 	lui	a5,%hi(rf_w)
+# 	sw	a4,%lo(rf_w)(a5)
+# 	.loc 1 107 8
+# 	lui	a5,%hi(rf_ip)
+# 	lw	a5,%lo(rf_ip)(a5)
+# 	addi	a4,a5,4
+# 	lui	a5,%hi(rf_ip)
+# 	sw	a4,%lo(rf_ip)(a5)
+# 	.loc 1 108 3
+# 	lui	a5,%hi(rf_w)
+# 	lw	a5,%lo(rf_w)(a5)
+# 	lw	a4,0(a5)
+# 	lui	a5,%hi(rf_fp)
+# 	sw	a4,%lo(rf_fp)(a5)
+
+# 	.loc 1 109 1
+# 	nop
+# 	lw	ra,12(sp)
+# 	.cfi_restore 1
+# 	lw	s0,8(sp)
+# 	.cfi_restore 8
+# 	.cfi_def_cfa 2, 16
+# 	addi	sp,sp,16
+# 	.cfi_def_cfa_offset 0
+# 	jr	ra
+# 	.cfi_endproc
+.LFE3:
+        .size rf_next, .-rf_next
+
 #
 # *********************************************
 # ******   DICTIONARY WORDS START HERE   ******
@@ -215,81 +414,6 @@ rf_code_lit:
 
 .LFE2:
         .size rf_code_lit, .-rf_code_lit
-
-        .align 1
-APUSH:  addi    s10,s10,-4
-        sw      a5,(s10)
-#
-# -----------------------------------------
-#
-# PATCH THE NEXT 3 LOCATIONS
-# (USING A DEBUG MONITOR; I.E. DDT86)
-# WITH  (JMP TNEXT)  FOR TRACING THROUGH
-# HIGH LEVEL FORTH WORDS.
-#
-        .align 1
-        .globl rf_next
-        .type rf_next, @function
-rf_next:
-.LFB3:
-NEXT:   lw      s8,(s11)        # AX<- (IP)
-                                # (W) <- (IP)
-        addi    s11,s11,4
-#
-# -----------------------------------------
-#
-NEXT1:  lw      a5,(s8)         # TO 'CFA'
-        jr      a5
-
-# 	.loc 1 104 1
-# 	.cfi_startproc
-# 	addi	sp,sp,-16
-# 	.cfi_def_cfa_offset 16
-# 	sw	ra,12(sp)
-# 	sw	s0,8(sp)
-# 	.cfi_offset 1, -4
-# 	.cfi_offset 8, -8
-# 	addi	s0,sp,16
-
-# 	.cfi_def_cfa 8, 0
-# 	.loc 1 105 3
-# 	call	rf_start
-
-# 	.loc 1 106 24
-# 	lui	a5,%hi(rf_ip)
-# 	lw	a5,%lo(rf_ip)(a5)
-# 	lw	a5,0(a5)
-# 	.loc 1 106 10
-# 	mv	a4,a5
-# 	.loc 1 106 8
-# 	lui	a5,%hi(rf_w)
-# 	sw	a4,%lo(rf_w)(a5)
-# 	.loc 1 107 8
-# 	lui	a5,%hi(rf_ip)
-# 	lw	a5,%lo(rf_ip)(a5)
-# 	addi	a4,a5,4
-# 	lui	a5,%hi(rf_ip)
-# 	sw	a4,%lo(rf_ip)(a5)
-# 	.loc 1 108 3
-# 	lui	a5,%hi(rf_w)
-# 	lw	a5,%lo(rf_w)(a5)
-# 	lw	a4,0(a5)
-# 	lui	a5,%hi(rf_fp)
-# 	sw	a4,%lo(rf_fp)(a5)
-
-# 	.loc 1 109 1
-# 	nop
-# 	lw	ra,12(sp)
-# 	.cfi_restore 1
-# 	lw	s0,8(sp)
-# 	.cfi_restore 8
-# 	.cfi_def_cfa 2, 16
-# 	addi	sp,sp,16
-# 	.cfi_def_cfa_offset 0
-# 	jr	ra
-# 	.cfi_endproc
-.LFE3:
-        .size rf_next, .-rf_next
 
 
 # ***************
