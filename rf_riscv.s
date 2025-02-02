@@ -350,98 +350,122 @@ rf_code_exec:
 .LFE4:
         .size rf_code_exec, .-rf_code_exec
 
-	.align	1
-	.globl	rf_code_bran
-	.type	rf_code_bran, @function
+
+# **************
+# *   BRANCH   *
+# **************
+#
+        .align 1
+        .globl rf_code_bran
+        .type rf_code_bran, @function
 rf_code_bran:
 .LFB5:
-	.loc 1 129 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 130 3
-	call	rf_start
-	.loc 1 131 3
-	call	rf_branch
-	.loc 1 132 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 133 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
+BRAN1:  lw      a5,(s11)
+        add     s11,s11,a5      # (IP) <- (IP) + ((IP))
+        j       NEXT            # JUMP TO OFFSET
+
+
+	# .loc 1 129 1
+	# .cfi_startproc
+	# addi	sp,sp,-16
+	# .cfi_def_cfa_offset 16
+	# sw	ra,12(sp)
+	# sw	s0,8(sp)
+	# .cfi_offset 1, -4
+	# .cfi_offset 8, -8
+	# addi	s0,sp,16
+	# .cfi_def_cfa 8, 0
+	# .loc 1 130 3
+	# call	rf_start
+	# .loc 1 131 3
+	# call	rf_branch
+	# .loc 1 132 3
+	# lui	a5,%hi(rf_fp)
+	# lui	a4,%hi(rf_next)
+	# addi	a4,a4,%lo(rf_next)
+	# sw	a4,%lo(rf_fp)(a5)
+	# .loc 1 133 1
+	# nop
+	# lw	ra,12(sp)
+	# .cfi_restore 1
+	# lw	s0,8(sp)
+	# .cfi_restore 8
+	# .cfi_def_cfa 2, 16
+	# addi	sp,sp,16
+	# .cfi_def_cfa_offset 0
+	# jr	ra
+	# .cfi_endproc
 .LFE5:
 	.size	rf_code_bran, .-rf_code_bran
-	.align	1
-	.globl	rf_code_zbran
-	.type	rf_code_zbran, @function
+
+
+# ***************
+# *   0BRANCH   *
+# ***************
+#
+        .align 1
+        .globl rf_code_zbran
+        .type rf_code_zbran, @function
 rf_code_zbran:
 .LFB6:
-	.loc 1 141 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 142 3
-	call	rf_start
-	.loc 1 143 7
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 143 6
-	beq	a5,zero,.L10
-	.loc 1 144 10
-	lui	a5,%hi(rf_ip)
-	lw	a5,%lo(rf_ip)(a5)
-	addi	a4,a5,4
-	lui	a5,%hi(rf_ip)
-	sw	a4,%lo(rf_ip)(a5)
-	j	.L11
-.L10:
-	.loc 1 146 5
-	call	rf_branch
-.L11:
-	.loc 1 148 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 149 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
+        lw      a5,(s10)        # GET STACK VALUE
+        addi    s10,s10,4
+        beqz    a5,BRAN1        # ZERO?
+                                # YES, BRANCH
+        addi    s11,s11,4       # NO, CONTINUE...
+        j       NEXT
+
+# 	.loc 1 141 1
+# 	.cfi_startproc
+# 	addi	sp,sp,-16
+# 	.cfi_def_cfa_offset 16
+# 	sw	ra,12(sp)
+# 	sw	s0,8(sp)
+# 	.cfi_offset 1, -4
+# 	.cfi_offset 8, -8
+# 	addi	s0,sp,16
+# 	.cfi_def_cfa 8, 0
+# 	.loc 1 142 3
+# 	call	rf_start
+# 	.loc 1 143 7
+# 	lui	a5,%hi(rf_sp)
+# 	lw	a5,%lo(rf_sp)(a5)
+# 	addi	a3,a5,4
+# 	lui	a4,%hi(rf_sp)
+# 	sw	a3,%lo(rf_sp)(a4)
+# 	lw	a5,0(a5)
+# 	.loc 1 143 6
+# 	beq	a5,zero,.L10
+# 	.loc 1 144 10
+# 	lui	a5,%hi(rf_ip)
+# 	lw	a5,%lo(rf_ip)(a5)
+# 	addi	a4,a5,4
+# 	lui	a5,%hi(rf_ip)
+# 	sw	a4,%lo(rf_ip)(a5)
+# 	j	.L11
+# .L10:
+# 	.loc 1 146 5
+# 	call	rf_branch
+# .L11:
+# 	.loc 1 148 3
+# 	lui	a5,%hi(rf_fp)
+# 	lui	a4,%hi(rf_next)
+# 	addi	a4,a4,%lo(rf_next)
+# 	sw	a4,%lo(rf_fp)(a5)
+# 	.loc 1 149 1
+# 	nop
+# 	lw	ra,12(sp)
+# 	.cfi_restore 1
+# 	lw	s0,8(sp)
+# 	.cfi_restore 8
+# 	.cfi_def_cfa 2, 16
+# 	addi	sp,sp,16
+# 	.cfi_def_cfa_offset 0
+# 	jr	ra
+# 	.cfi_endproc
 .LFE6:
 	.size	rf_code_zbran, .-rf_code_zbran
+
 	.align	1
 	.globl	rf_code_xloop
 	.type	rf_code_xloop, @function
