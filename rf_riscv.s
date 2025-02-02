@@ -7,48 +7,48 @@
 .Ltext0:
 	.cfi_sections	.debug_frame
 	.file 0 "pico" "rf.c"
-	.globl	rf_sp
-	.section	.sbss,"aw",@nobits
-	.align	2
-	.type	rf_sp, @object
-	.size	rf_sp, 4
-rf_sp:
-	.zero	4
-	.globl	rf_rp
-	.align	2
-	.type	rf_rp, @object
-	.size	rf_rp, 4
-rf_rp:
-	.zero	4
-	.globl	rf_ip
-	.align	2
-	.type	rf_ip, @object
-	.size	rf_ip, 4
-rf_ip:
-	.zero	4
-	.globl	rf_w
-	.align	2
-	.type	rf_w, @object
-	.size	rf_w, 4
-rf_w:
-	.zero	4
-	.globl	rf_up
-	.align	2
-	.type	rf_up, @object
-	.size	rf_up, 4
-rf_up:
-	.zero	4
-	.globl	rf_fp
-	.align	2
-	.type	rf_fp, @object
-	.size	rf_fp, 4
-rf_fp:
-	.zero	4
 
-	.text
-	.align	1
-	.globl	rf_trampoline
-	.type	rf_trampoline, @function
+        .globl rf_sp
+        .section .sbss,"aw",@nobits
+        .align 2
+        .type rf_sp, @object
+        .size rf_sp, 4
+rf_sp:  .zero 4
+
+        .globl rf_rp
+        .align 2
+        .type rf_rp, @object
+        .size rf_rp, 4
+rf_rp:  .zero 4
+
+        .globl rf_ip
+        .align 2
+        .type rf_ip, @object
+        .size rf_ip, 4
+rf_ip:  .zero 4
+
+        .globl rf_w
+        .align 2
+        .type rf_w, @object
+        .size rf_w, 4
+rf_w:   .zero 4
+
+        .globl rf_up
+        .align 2
+        .type rf_up, @object
+        .size rf_up, 4
+rf_up:  .zero 4
+
+        .globl rf_fp
+        .align 2
+        .type rf_fp, @object
+        .size rf_fp, 4
+rf_fp:  .zero 4
+
+        .text
+        .align 1
+        .globl rf_trampoline
+        .type rf_trampoline, @function
 rf_trampoline:
 .LFB0:
 	.file 1 "rf.c"
@@ -67,12 +67,12 @@ rf_trampoline:
 
 .L3:
 
-        lui     a5, %hi(rf_ip)      # IP into S11
-        lw      s11, %lo(rf_ip)(a5)
-        lui     a5, %hi(rf_sp)      # SP into S10
-        lw      s10, %lo(rf_sp)(a5)
-        lui     a5, %hi(rf_w)       # W into S8
-        lw      s8, %lo(rf_w)(a5)
+        lui     a5,%hi(rf_ip)   # IP into S11
+        lw      s11,%lo(rf_ip)(a5)
+        lui     a5,%hi(rf_sp)   # SP into S10
+        lw      s10,%lo(rf_sp)(a5)
+        lui     a5,%hi(rf_w)    # W into S8
+        lw      s8,%lo(rf_w)(a5)
 
 	.loc 1 73 5
 	lui	a5,%hi(rf_fp)
@@ -118,12 +118,12 @@ rf_start:
         .loc 1 84 1
 #       nop
 
-        lui     a5, %hi(rf_ip)
-        sw      s11, %lo(rf_ip)(a5) # S11 into IP
-        lui     a5, %hi(rf_sp)
-        sw      s10, %lo(rf_sp)(a5) # S10 into SP
-        lui     a5, %hi(rf_w)
-        sw      s8, %lo(rf_w)(a5)   # S8 into W
+        lui     a5,%hi(rf_ip)   # S11 into IP
+        sw      s11,%lo(rf_ip)(a5)
+        lui     a5,%hi(rf_sp)   # S10 into SP
+        sw      s10,%lo(rf_sp)(a5)
+        lui     a5,%hi(rf_w)    # S8 into W
+        sw      s8,%lo(rf_w)(a5)
 
 #       lw      ra, 12(sp)
         .cfi_restore 1
@@ -156,8 +156,8 @@ rf_code_lit:
 	.loc 1 91 1
 	.cfi_startproc
 
-        lw      a5, (s11)       # AX <- LITERAL
-        addi    s11, s11, 4
+        lw      a5,(s11)        # AX <- LITERAL
+        addi    s11,s11,4
         j       APUSH           # TO TOP OF STACK
 
 
@@ -217,8 +217,8 @@ rf_code_lit:
         .size rf_code_lit, .-rf_code_lit
 
         .align 1
-APUSH:  addi    s10, s10, -4
-        sw      a5, (s10)
+APUSH:  addi    s10,s10,-4
+        sw      a5,(s10)
 #
 # -----------------------------------------
 #
@@ -232,13 +232,13 @@ APUSH:  addi    s10, s10, -4
         .type rf_next, @function
 rf_next:
 .LFB3:
-NEXT:   lw      s8, (s11)       # AX<- (IP)
+NEXT:   lw      s8,(s11)        # AX<- (IP)
                                 # (W) <- (IP)
-        addi    s11, s11, 4
+        addi    s11,s11,4
 #
 # -----------------------------------------
 #
-NEXT1:  lw      a5, (s8)        # TO 'CFA'
+NEXT1:  lw      a5,(s8)         # TO 'CFA'
         jr      a5
 
 # 	.loc 1 104 1
@@ -304,8 +304,8 @@ rf_code_exec:
 	.loc 1 114 1
 	.cfi_startproc
 
-        lw      s8, (s10)       # GET CFA
-        addi    s10, s10, 4
+        lw      s8,(s10)        # GET CFA
+        addi    s10,s10,4
         j       NEXT1           # EXECUTE NEXT
 
 	# addi	sp,sp,-16
