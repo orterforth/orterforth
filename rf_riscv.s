@@ -266,6 +266,8 @@ UP      =       _rf_up
 #
 #
         .align 1
+DPUSH:  addi    s10,s10,-4
+        sw      a2,(s10)
 APUSH:  addi    s10,s10,-4
         sw      a5,(s10)
 #
@@ -423,168 +425,41 @@ rf_code_rr:
         j       APUSH           # TO PARAMETER STACK
 	.size	rf_code_rr, .-rf_code_rr
 
-	.align	1
-	.type	rf_digit, @function
-rf_digit:
-.LFB13:
-	.loc 1 262 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	mv	a5,a0
-	mv	a4,a1
-	sb	a5,-17(s0)
-	mv	a5,a4
-	sb	a5,-18(s0)
-	.loc 1 263 5
-	lbu	a5,-18(s0)
-	addi	a5,a5,-48
-	sb	a5,-18(s0)
-	.loc 1 264 6
-	lbu	a4,-18(s0)
-	li	a5,9
-	bleu	a4,a5,.L25
-	.loc 1 265 8
-	lbu	a4,-18(s0)
-	li	a5,16
-	bgtu	a4,a5,.L26
-	.loc 1 266 14
-	li	a5,255
-	j	.L27
-.L26:
-	.loc 1 268 7
-	lbu	a5,-18(s0)
-	addi	a5,a5,-7
-	sb	a5,-18(s0)
-.L25:
-	.loc 1 270 6
-	lbu	a4,-18(s0)
-	lbu	a5,-17(s0)
-	bgeu	a4,a5,.L28
-	.loc 1 271 12
-	lbu	a5,-18(s0)
-	j	.L27
-.L28:
-	.loc 1 274 10
-	li	a5,255
-.L27:
-	.loc 1 275 1
-	mv	a0,a5
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE13:
-	.size	rf_digit, .-rf_digit
-	.align	1
-	.globl	rf_code_digit
-	.type	rf_code_digit, @function
+
+
+# *************
+# *   DIGIT   *
+# *************
+#
+        .align 1
+        .globl rf_code_digit
+        .type rf_code_digit, @function
 rf_code_digit:
-.LFB14:
-	.loc 1 278 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 279 3
-	call	rf_start
-.LBB8:
-	.loc 1 283 19
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 283 7
-	sb	a5,-17(s0)
-	.loc 1 284 19
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 284 7
-	sb	a5,-18(s0)
-	.loc 1 285 9
-	lbu	a4,-18(s0)
-	lbu	a5,-17(s0)
-	mv	a1,a4
-	mv	a0,a5
-	call	rf_digit
-	mv	a5,a0
-	sb	a5,-19(s0)
-	.loc 1 286 8
-	lbu	a4,-19(s0)
-	li	a5,255
-	bne	a4,a5,.L30
-	.loc 1 287 7
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	sw	zero,0(a5)
-	j	.L31
-.L30:
-	.loc 1 289 7
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lbu	a4,-19(s0)
-	sw	a4,0(a5)
-	.loc 1 290 7
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	li	a4,1
-	sw	a4,0(a5)
-.L31:
-.LBE8:
-	.loc 1 293 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 294 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE14:
+        lb      a2,(s10)        # NUMBER BASE
+        addi    s10,s10,4
+        lb      a5,(s10)        # ASCII DIGIT
+        addi    s10,s10,4
+        addi    a5,a5,-'0'
+        bltz    a5,DIGI2        # NUMBER ERROR
+		li      a4,9
+        ble     a5,a4,DIGI1     # NUMBER = 0 THRU 9
+        addi    a5,a5,-7
+		li      a4,10
+        blt     a5,a4,DIGI2     # NUMBER 'A' THRU 'Z' ?
+                                # NO
+#
+DIGI1:  bge     a5,a2,DIGI2     # COMPARE NUMBER TO BASE
+                                # NUMBER ERROR
+                                # ZERO
+        mv      a2,a5           # NEW BINARY NUMBER
+        li      a5,1            # TRUE FLAG
+        j       DPUSH           # ADD TO STACK
+
+# NUMBER ERROR
+#
+DIGI2:  li      a5,0            # FALSE FLAG
+        j       APUSH           # BYE
+
 	.size	rf_code_digit, .-rf_code_digit
 
 
