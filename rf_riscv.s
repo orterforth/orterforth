@@ -291,54 +291,65 @@ NEXT1:  lw      a5, (s8)        # TO 'CFA'
 .LFE3:
         .size rf_next, .-rf_next
 
-	.align	1
-	.globl	rf_code_exec
-	.type	rf_code_exec, @function
+
+# ***************
+# *   EXECUTE   *
+# ***************
+#
+        .align 1
+        .globl  rf_code_exec
+        .type rf_code_exec, @function
 rf_code_exec:
 .LFB4:
 	.loc 1 114 1
 	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 115 3
-	call	rf_start
-	.loc 1 116 24
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 116 10
-	mv	a4,a5
-	.loc 1 116 8
-	lui	a5,%hi(rf_w)
-	sw	a4,%lo(rf_w)(a5)
-	.loc 1 117 3
-	lui	a5,%hi(rf_w)
-	lw	a5,%lo(rf_w)(a5)
-	lw	a4,0(a5)
-	lui	a5,%hi(rf_fp)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 118 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
+
+        lw      s8, (s10)       # GET CFA
+        addi    s10, s10, 4
+        j       NEXT1           # EXECUTE NEXT
+
+	# addi	sp,sp,-16
+	# .cfi_def_cfa_offset 16
+	# sw	ra,12(sp)
+	# sw	s0,8(sp)
+	# .cfi_offset 1, -4
+	# .cfi_offset 8, -8
+	# addi	s0,sp,16
+	# .cfi_def_cfa 8, 0
+	# .loc 1 115 3
+	# call	rf_start
+	# .loc 1 116 24
+	# lui	a5,%hi(rf_sp)
+	# lw	a5,%lo(rf_sp)(a5)
+	# addi	a3,a5,4
+	# lui	a4,%hi(rf_sp)
+	# sw	a3,%lo(rf_sp)(a4)
+	# lw	a5,0(a5)
+	# .loc 1 116 10
+	# mv	a4,a5
+	# .loc 1 116 8
+	# lui	a5,%hi(rf_w)
+	# sw	a4,%lo(rf_w)(a5)
+	# .loc 1 117 3
+	# lui	a5,%hi(rf_w)
+	# lw	a5,%lo(rf_w)(a5)
+	# lw	a4,0(a5)
+	# lui	a5,%hi(rf_fp)
+	# sw	a4,%lo(rf_fp)(a5)
+	# .loc 1 118 1
+	# nop
+	# lw	ra,12(sp)
+	# .cfi_restore 1
+	# lw	s0,8(sp)
+	# .cfi_restore 8
+	# .cfi_def_cfa 2, 16
+	# addi	sp,sp,16
+	# .cfi_def_cfa_offset 0
+	# jr	ra
 	.cfi_endproc
 .LFE4:
-	.size	rf_code_exec, .-rf_code_exec
+        .size rf_code_exec, .-rf_code_exec
+
 	.align	1
 	.globl	rf_code_bran
 	.type	rf_code_bran, @function
