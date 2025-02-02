@@ -77,6 +77,8 @@ rf_trampoline:
         lw      s11,%lo(rf_ip)(a5)
         lui     a5,%hi(rf_sp)   # SP into S10
         lw      s10,%lo(rf_sp)(a5)
+        lui     a5,%hi(rf_rp)   # RP into S9
+        lw      s9,%lo(rf_rp)(a5)
         lui     a5,%hi(rf_w)    # W into S8
         lw      s8,%lo(rf_w)(a5)
 
@@ -128,6 +130,8 @@ rf_start:
         sw      s11,%lo(rf_ip)(a5)
         lui     a5,%hi(rf_sp)   # S10 into SP
         sw      s10,%lo(rf_sp)(a5)
+        lui     a5,%hi(rf_rp)   # S9 into RP
+        sw      s9,%lo(rf_rp)(a5)
         lui     a5,%hi(rf_w)    # S8 into W
         sw      s8,%lo(rf_w)(a5)
 
