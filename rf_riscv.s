@@ -137,69 +137,96 @@ rf_start:
 .LFE1:
         .size rf_start, .-rf_start
 
-
-
-
-	.align	1
-	.globl	rf_code_lit
-	.type	rf_code_lit, @function
+#
+# *********************************************
+# ******   DICTIONARY WORDS START HERE   ******
+# *********************************************
+#
+#
+# ***********
+# *   LIT   *
+# ***********
+#
+        .align 1
+        .globl rf_code_lit
+        .type rf_code_lit, @function
 rf_code_lit:
 .LFB2:
+
 	.loc 1 91 1
 	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 92 3
-	call	rf_start
-.LBB2:
-	.loc 1 94 19
-	lui	a5,%hi(rf_ip)
-	lw	a5,%lo(rf_ip)(a5)
-	.loc 1 94 15
-	lw	a5,0(a5)
-	sw	a5,-20(s0)
-	.loc 1 95 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-20(s0)
-	sw	a4,0(a5)
-	.loc 1 96 10
-	lui	a5,%hi(rf_ip)
-	lw	a5,%lo(rf_ip)(a5)
-	addi	a4,a5,4
-	lui	a5,%hi(rf_ip)
-	sw	a4,%lo(rf_ip)(a5)
-.LBE2:
-	.loc 1 98 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 99 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE2:
-	.size	rf_code_lit, .-rf_code_lit
 
+        lw      a5, (s11)       # AX <- LITERAL
+        addi    s11, s11, 4
+        j       APUSH           # TO TOP OF STACK
+
+
+
+# 	addi	sp,sp,-32
+# 	.cfi_def_cfa_offset 32
+# 	sw	ra,28(sp)
+# 	sw	s0,24(sp)
+# 	.cfi_offset 1, -4
+# 	.cfi_offset 8, -8
+# 	addi	s0,sp,32
+# 	.cfi_def_cfa 8, 0
+# 	.loc 1 92 3
+# 	call	rf_start
+ .LBB2:
+# 	.loc 1 94 19
+# 	lui	a5,%hi(rf_ip)
+# 	lw	a5,%lo(rf_ip)(a5)
+# 	.loc 1 94 15
+# 	lw	a5,0(a5)
+# 	sw	a5,-20(s0)
+# 	.loc 1 95 5
+# 	lui	a5,%hi(rf_sp)
+# 	lw	a5,%lo(rf_sp)(a5)
+# 	addi	a4,a5,-4
+# 	lui	a5,%hi(rf_sp)
+# 	sw	a4,%lo(rf_sp)(a5)
+# 	lui	a5,%hi(rf_sp)
+# 	lw	a5,%lo(rf_sp)(a5)
+# 	lw	a4,-20(s0)
+# 	sw	a4,0(a5)
+# 	.loc 1 96 10
+# 	lui	a5,%hi(rf_ip)
+# 	lw	a5,%lo(rf_ip)(a5)
+# 	addi	a4,a5,4
+# 	lui	a5,%hi(rf_ip)
+# 	sw	a4,%lo(rf_ip)(a5)
+ .LBE2:
+# 	.loc 1 98 3
+# 	lui	a5,%hi(rf_fp)
+# 	lui	a4,%hi(rf_next)
+# 	addi	a4,a4,%lo(rf_next)
+# 	sw	a4,%lo(rf_fp)(a5)
+# 	.loc 1 99 1
+# 	nop
+# 	lw	ra,28(sp)
+# 	.cfi_restore 1
+# 	lw	s0,24(sp)
+# 	.cfi_restore 8
+# 	.cfi_def_cfa 2, 32
+# 	addi	sp,sp,32
+# 	.cfi_def_cfa_offset 0
+# 	jr	ra
+ 	.cfi_endproc
+
+.LFE2:
+        .size rf_code_lit, .-rf_code_lit
+
+        .align 1
+APUSH:  addi    s10, s10, -4
+        sw      a5, (s10)
+#
+# -----------------------------------------
+#
+# PATCH THE NEXT 3 LOCATIONS
+# (USING A DEBUG MONITOR; I.E. DDT86)
+# WITH  (JMP TNEXT)  FOR TRACING THROUGH
+# HIGH LEVEL FORTH WORDS.
+#
         .align 1
         .globl rf_next
         .type rf_next, @function
