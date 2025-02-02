@@ -69,7 +69,9 @@ rf_trampoline:
 
         lui     a5, %hi(rf_ip)      # IP into S11
         lw      s11, %lo(rf_ip)(a5)
-        lui     a5, %hi(rf_w)       # IP into S11
+        lui     a5, %hi(rf_sp)      # SP into S10
+        lw      s10, %lo(rf_sp)(a5)
+        lui     a5, %hi(rf_w)       # W into S8
         lw      s8, %lo(rf_w)(a5)
 
 	.loc 1 73 5
@@ -118,9 +120,10 @@ rf_start:
 
         lui     a5, %hi(rf_ip)
         sw      s11, %lo(rf_ip)(a5) # S11 into IP
+        lui     a5, %hi(rf_sp)
+        sw      s10, %lo(rf_sp)(a5) # S10 into SP
         lui     a5, %hi(rf_w)
         sw      s8, %lo(rf_w)(a5)   # S8 into W
-
 
 #       lw      ra, 12(sp)
         .cfi_restore 1
@@ -197,8 +200,6 @@ rf_code_lit:
 .LFE2:
 	.size	rf_code_lit, .-rf_code_lit
 
-
-
         .align 1
         .globl rf_next
         .type rf_next, @function
@@ -212,9 +213,6 @@ NEXT:   lw      s8, (s11)       # AX<- (IP)
 #
 NEXT1:  lw      a5, (s8)        # TO 'CFA'
         jr      a5
-
-
-
 
 # 	.loc 1 104 1
 # 	.cfi_startproc
@@ -264,10 +262,7 @@ NEXT1:  lw      a5, (s8)        # TO 'CFA'
 # 	jr	ra
 # 	.cfi_endproc
 .LFE3:
-	.size	rf_next, .-rf_next
-
-
-
+        .size rf_next, .-rf_next
 
 	.align	1
 	.globl	rf_code_exec
