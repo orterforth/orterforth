@@ -463,6 +463,28 @@ DIGI2:  li      a5,0            # FALSE FLAG
 	.size	rf_code_digit, .-rf_code_digit
 
 
+# *************
+# *   CMOVE   *
+# *************
+#
+        .align 1
+        .globl rf_code_cmove
+        .type rf_code_cmove, @function
+rf_code_cmove:
+		lw      a4,(s10)        # COUNT
+		lw      a3,4(s10)       # DEST.
+		lw      a2,8(s10)       # SOURCE
+		addi    s10,s10,12
+        beqz    a4,CMOV2
+CMOV1:  lbu     a5,(a2)         # THATS THE MOVE
+        addi    a2,a2,1
+        sb      a5,(a3)
+        addi    a3,a3,1
+        addi    a4,a4,-1
+        bnez    a4,CMOV1
+CMOV2:  j       NEXT
+
+
 	.align	1
 	.globl	rf_code_dodoe
 	.type	rf_code_dodoe, @function
@@ -1127,93 +1149,6 @@ rf_code_encl:
 	.cfi_endproc
 .LFE22:
 	.size	rf_code_encl, .-rf_code_encl
-	.align	1
-	.globl	rf_code_cmove
-	.type	rf_code_cmove, @function
-rf_code_cmove:
-.LFB23:
-	.loc 1 433 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 434 3
-	call	rf_start
-.LBB10:
-	.loc 1 436 23
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	.loc 1 436 15
-	lw	a5,0(a5)
-	sw	a5,-20(s0)
-	.loc 1 437 25
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 437 11
-	sw	a5,-24(s0)
-	.loc 1 438 27
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 438 11
-	sw	a5,-28(s0)
-	.loc 1 440 5
-	j	.L56
-.L57:
-	.loc 1 441 23
-	lw	a4,-28(s0)
-	addi	a5,a4,1
-	sw	a5,-28(s0)
-	.loc 1 441 11
-	lw	a5,-24(s0)
-	addi	a3,a5,1
-	sw	a3,-24(s0)
-	.loc 1 441 17
-	lbu	a4,0(a4)
-	.loc 1 441 15
-	sb	a4,0(a5)
-	.loc 1 440 24 discriminator 2
-	lw	a5,-20(s0)
-	addi	a5,a5,-1
-	sw	a5,-20(s0)
-.L56:
-	.loc 1 440 12 discriminator 1
-	lw	a5,-20(s0)
-	bne	a5,zero,.L57
-.LBE10:
-	.loc 1 444 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 445 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE23:
-	.size	rf_code_cmove, .-rf_code_cmove
 	.align	1
 	.type	rf_double, @function
 rf_double:
