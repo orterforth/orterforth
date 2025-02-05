@@ -38,22 +38,13 @@ rf_fp:  .zero 4
 
         .align 1
         .globl rf_trampoline
-        .type rf_trampoline, @function
 rf_trampoline:
-.LFB0:
-	.file 1 "rf.c"
-	.loc 1 66 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 67 9
-	j	.L2
+        .file 1 "rf.c"
+        addi    sp,sp,-16
+        sw      ra,12(sp)
+        sw      s0,8(sp)
+        addi    s0,sp,16
+        j       .L2
 
 .L3:
 
@@ -65,32 +56,20 @@ rf_trampoline:
         lw      s9,%lo(rf_rp)(a5)
         lui     a5,%hi(rf_w)    # W into S8
         lw      s8,%lo(rf_w)(a5)
-
-	.loc 1 73 5
-	lui	a5,%hi(rf_fp)
-	lw	a5,%lo(rf_fp)(a5)
-	jalr	a5
+        lui     a5,%hi(rf_fp)
+        lw      a5,%lo(rf_fp)(a5)
+        jalr    a5
 .LVL0:
 .L2:
-	.loc 1 67 10
-	lui	a5,%hi(rf_fp)
-	lw	a5,%lo(rf_fp)(a5)
-	bne	a5,zero,.L3
-
-	.loc 1 75 1
-	nop
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE0:
-	.size	rf_trampoline, .-rf_trampoline
+        lui     a5,%hi(rf_fp)
+        lw      a5,%lo(rf_fp)(a5)
+        bne     a5,zero,.L3
+        nop
+        nop
+        lw      ra,12(sp)
+        lw      s0,8(sp)
+        addi    sp,sp,16
+        jr      ra
 
         .align 1
         .globl rf_start
