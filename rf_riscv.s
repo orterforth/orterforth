@@ -425,6 +425,56 @@ PFIN6:  lw      a4,(a4)         # GET LINK FIELD ADDR
         j       APUSH           # DONE (NO MATCH FOUND)
 
 
+# ***************
+# *   ENCLOSE   *
+# ***************
+#
+        .align 1
+        .globl rf_code_encl
+rf_code_encl:
+        lw      a5,(s10)        # S1 - TERMINATOR CHAR.
+        addi    s10,s10,4
+        lw      a4,(s10)        # S2 - TEXT ADDR
+                                # ADDR BACK TO STACK
+        andi    a5,a5,255       # ZERO
+        li      a2,0            # CHAR OFFSET COUNTER
+        addi    a2,a2,-1
+        addi    a4,a4,-1        # ADDR -1
+
+# SCAN TO FIRST NON-TERMINATOR CHAR
+#
+ENCL1:  addi    a4,a4,1         # ADDR +1
+        addi    a2,a2,1         # COUNT +1
+        lbu     a3,(a4)
+        beq     a5,a3,ENCL1     # WAIT FOR NON-TERMINATOR
+        addi    s10,s10,-4
+        sw      a2,(s10)        # OFFSET TO 1ST TEXT CHR
+        bnez    a3,ENCL2        # NULL CHAR?
+                                # NO
+
+# FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
+        mv      a5,a2           # COPY COUNTER
+        addi    a2,a2,1         # +1
+        j       DPUSH
+
+# FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
+#
+ENCL2:  addi    a4,a4,1         # ADDR+1
+        addi    a2,a2,1         # COUNT +1
+        lbu     a3,(a4)         # TERMINATOR CHAR?
+        beq     a5,a3,ENCL4     # YES
+        bnez    a3,ENCL2        # NULL CHAR
+                                # NO, LOOP AGAIN
+
+# FOUND NULL AT END OF TEXT
+#
+ENCL3:  mv      a5,a2           # COUNTERS ARE EQUAL
+        j       DPUSH
+
+# FOUND TERINATOR CHARACTER
+ENCL4:  mv      a5,a2
+        addi    a5,a5,1         # COUNT +1
+        j       DPUSH
 
 
 # *************
@@ -584,262 +634,6 @@ rf_code_dodoe:
 .LFE11:
 	.size	rf_code_dodoe, .-rf_code_dodoe
 
-	.align	1
-	.type	rf_enclose, @function
-rf_enclose:
-.LFB20:
-	.loc 1 370 1
-	.cfi_startproc
-	addi	sp,sp,-64
-	.cfi_def_cfa_offset 64
-	sw	ra,60(sp)
-	sw	s0,56(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,64
-	.cfi_def_cfa 8, 0
-	mv	a5,a0
-	sw	a1,-40(s0)
-	sw	a2,-44(s0)
-	sw	a3,-48(s0)
-	sw	a4,-52(s0)
-	sb	a5,-33(s0)
-	.loc 1 371 9
-	lw	a5,-40(s0)
-	sw	a5,-20(s0)
-	.loc 1 372 11
-	li	a5,-1
-	sb	a5,-21(s0)
-	.loc 1 375 5
-	lw	a5,-20(s0)
-	addi	a5,a5,-1
-	sw	a5,-20(s0)
-.L49:
-	.loc 1 377 5
-	lw	a5,-20(s0)
-	addi	a5,a5,1
-	sw	a5,-20(s0)
-	.loc 1 378 4
-	lbu	a5,-21(s0)
-	addi	a5,a5,1
-	sb	a5,-21(s0)
-	.loc 1 379 11 discriminator 1
-	lw	a5,-20(s0)
-	lbu	a5,0(a5)
-	.loc 1 379 15 discriminator 1
-	lbu	a4,-33(s0)
-	beq	a4,a5,.L49
-	.loc 1 380 6
-	lw	a5,-44(s0)
-	lbu	a4,-21(s0)
-	sb	a4,0(a5)
-	.loc 1 383 7
-	lw	a5,-20(s0)
-	lbu	a5,0(a5)
-	.loc 1 383 5
-	bne	a5,zero,.L50
-	.loc 1 384 8
-	lw	a5,-52(s0)
-	lbu	a4,-21(s0)
-	sb	a4,0(a5)
-	.loc 1 385 4
-	lbu	a5,-21(s0)
-	addi	a5,a5,1
-	sb	a5,-21(s0)
-	.loc 1 386 8
-	lw	a5,-48(s0)
-	lbu	a4,-21(s0)
-	sb	a4,0(a5)
-	.loc 1 387 4
-	j	.L48
-.L50:
-	.loc 1 392 4
-	lw	a5,-20(s0)
-	addi	a5,a5,1
-	sw	a5,-20(s0)
-	.loc 1 393 4
-	lbu	a5,-21(s0)
-	addi	a5,a5,1
-	sb	a5,-21(s0)
-	.loc 1 395 8
-	lw	a5,-20(s0)
-	lbu	a5,0(a5)
-	.loc 1 395 7
-	lbu	a4,-33(s0)
-	bne	a4,a5,.L52
-	.loc 1 396 11
-	lw	a5,-48(s0)
-	lbu	a4,-21(s0)
-	sb	a4,0(a5)
-	.loc 1 397 7
-	lbu	a5,-21(s0)
-	addi	a5,a5,1
-	sb	a5,-21(s0)
-	.loc 1 398 11
-	lw	a5,-52(s0)
-	lbu	a4,-21(s0)
-	sb	a4,0(a5)
-	.loc 1 399 7
-	j	.L48
-.L52:
-	.loc 1 401 11
-	lw	a5,-20(s0)
-	lbu	a5,0(a5)
-	bne	a5,zero,.L50
-	.loc 1 404 6
-	lw	a5,-48(s0)
-	lbu	a4,-21(s0)
-	sb	a4,0(a5)
-	.loc 1 405 6
-	lw	a5,-52(s0)
-	lbu	a4,-21(s0)
-	sb	a4,0(a5)
-.L48:
-	.loc 1 406 1
-	lw	ra,60(sp)
-	.cfi_restore 1
-	lw	s0,56(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 64
-	addi	sp,sp,64
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE20:
-	.size	rf_enclose, .-rf_enclose
-	.align	1
-	.type	rf_encl, @function
-rf_encl:
-.LFB21:
-	.loc 1 409 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 414 14
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 414 5
-	sb	a5,-17(s0)
-	.loc 1 415 20
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 415 9
-	sw	a5,-24(s0)
-	.loc 1 416 3
-	addi	a4,s0,-27
-	addi	a3,s0,-26
-	addi	a2,s0,-25
-	lbu	a5,-17(s0)
-	lw	a1,-24(s0)
-	mv	a0,a5
-	call	rf_enclose
-	.loc 1 417 3
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-24(s0)
-	sw	a4,0(a5)
-	.loc 1 418 3
-	lbu	a3,-25(s0)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	mv	a4,a3
-	sw	a4,0(a5)
-	.loc 1 419 3
-	lbu	a3,-26(s0)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	mv	a4,a3
-	sw	a4,0(a5)
-	.loc 1 420 3
-	lbu	a3,-27(s0)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	mv	a4,a3
-	sw	a4,0(a5)
-	.loc 1 421 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE21:
-	.size	rf_encl, .-rf_encl
-	.align	1
-	.globl	rf_code_encl
-	.type	rf_code_encl, @function
-rf_code_encl:
-.LFB22:
-	.loc 1 424 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 425 3
-	call	rf_start
-	.loc 1 426 3
-	call	rf_encl
-	.loc 1 427 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 428 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE22:
-	.size	rf_code_encl, .-rf_code_encl
 	.align	1
 	.type	rf_double, @function
 rf_double:
