@@ -595,6 +595,18 @@ rf_code_rpsto:
         j       NEXT
 
 
+# **********
+# *   ;S   *
+# **********
+#
+        .align 1
+        .globl rf_code_semis
+rf_code_semis:
+        lw      s11,(s9)        # (IP) <- (R1)
+        addi    s9,s9,4
+        j       NEXT
+
+
 	.align	1
 	.globl	rf_code_dodoe
 	.type	rf_code_dodoe, @function
@@ -1003,53 +1015,6 @@ rf_code_uslas:
 	.size	rf_code_uslas, .-rf_code_uslas
 
 
-	.align	1
-	.globl	rf_code_semis
-	.type	rf_code_semis, @function
-rf_code_semis:
-.LFB36:
-	.loc 1 721 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 722 3
-	call	rf_start
-	.loc 1 723 25
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_rp)
-	sw	a3,%lo(rf_rp)(a4)
-	lw	a5,0(a5)
-	.loc 1 723 11
-	mv	a4,a5
-	.loc 1 723 9
-	lui	a5,%hi(rf_ip)
-	sw	a4,%lo(rf_ip)(a5)
-	.loc 1 724 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 725 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE36:
-	.size	rf_code_semis, .-rf_code_semis
 	.align	1
 	.globl	rf_code_leave
 	.type	rf_code_leave, @function
