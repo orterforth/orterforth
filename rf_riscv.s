@@ -65,22 +65,7 @@ tramp2: lw      ra,12(sp)
 
         .align 1
         .globl rf_start
-        .type rf_start, @function
 rf_start:
-.LFB1:
-        .loc 1 79 1
-        .cfi_startproc
-#       addi    sp, sp, -16
-        .cfi_def_cfa_offset 16
-#       sw      ra, 12(sp)
-#       sw      s0, 8(sp)
-        .cfi_offset 1, -4
-        .cfi_offset 8, -8
-#       addi    s0, sp, 16
-        .cfi_def_cfa 8, 0
-        .loc 1 84 1
-#       nop
-
         lui     a5,%hi(rf_ip)   # S11 into IP
         sw      s11,%lo(rf_ip)(a5)
         lui     a5,%hi(rf_sp)   # S10 into SP
@@ -89,19 +74,7 @@ rf_start:
         sw      s9,%lo(rf_rp)(a5)
         lui     a5,%hi(rf_w)    # S8 into W
         sw      s8,%lo(rf_w)(a5)
-
-#       lw      ra, 12(sp)
-        .cfi_restore 1
-#       lw      s0, 8(sp)
-        .cfi_restore 8
-        .cfi_def_cfa 2, 16
-#       addi    sp, sp, 16
-        .cfi_def_cfa_offset 0
         jr      ra
-        .cfi_endproc
-.LFE1:
-        .size rf_start, .-rf_start
-
 
 # fig-FORTH 8086/8088
 # ASSEMBLY SOURCE LISTING
@@ -235,9 +208,7 @@ APUSH:  addi    s10,s10,-4
 #
         .align 1
         .globl rf_next
-        .type rf_next, @function
 rf_next:
-.LFB3:
 NEXT:   lw      s8,(s11)        # AX<- (IP)
                                 # (W) <- (IP)
         addi    s11,s11,4
@@ -246,8 +217,6 @@ NEXT:   lw      s8,(s11)        # AX<- (IP)
 #
 NEXT1:  lw      a5,(s8)         # TO 'CFA'
         jr      a5
-        .size rf_next, .-rf_next
-
 #
 # *********************************************
 # ******   DICTIONARY WORDS START HERE   ******
@@ -260,12 +229,10 @@ NEXT1:  lw      a5,(s8)         # TO 'CFA'
 #
         .align 1
         .globl rf_code_lit
-        .type rf_code_lit, @function
 rf_code_lit:
         lw      a5,(s11)        # AX <- LITERAL
         addi    s11,s11,4
         j       APUSH           # TO TOP OF STACK
-        .size rf_code_lit, .-rf_code_lit
 
 
 # ***************
@@ -274,12 +241,10 @@ rf_code_lit:
 #
         .align 1
         .globl  rf_code_exec
-        .type rf_code_exec, @function
 rf_code_exec:
         lw      s8,(s10)        # GET CFA
         addi    s10,s10,4
         j       NEXT1           # EXECUTE NEXT
-        .size rf_code_exec, .-rf_code_exec
 
 
 # **************
@@ -288,12 +253,10 @@ rf_code_exec:
 #
         .align 1
         .globl rf_code_bran
-        .type rf_code_bran, @function
 rf_code_bran:
 BRAN1:  lw      a5,(s11)
         add     s11,s11,a5      # (IP) <- (IP) + ((IP))
         j       NEXT            # JUMP TO OFFSET
-	.size	rf_code_bran, .-rf_code_bran
 
 
 # ***************
@@ -302,7 +265,6 @@ BRAN1:  lw      a5,(s11)
 #
         .align 1
         .globl rf_code_zbran
-        .type rf_code_zbran, @function
 rf_code_zbran:
         lw      a5,(s10)        # GET STACK VALUE
         addi    s10,s10,4
@@ -310,7 +272,6 @@ rf_code_zbran:
                                 # YES, BRANCH
         addi    s11,s11,4       # NO, CONTINUE...
         j       NEXT
-	.size	rf_code_zbran, .-rf_code_zbran
 
 
 # **************
@@ -319,7 +280,6 @@ rf_code_zbran:
 #
         .align 1
         .globl rf_code_xloop
-        .type rf_code_xloop, @function
 rf_code_xloop:
         li      a4,1            # INCREMENT
 XLOO1:  lw      a5,(s9)         # INDEX=INDEX+INCR
@@ -334,7 +294,6 @@ XLOO1:  lw      a5,(s9)         # INDEX=INDEX+INCR
         addi    s9,s9,8         # ADJ. RETURN STK
         addi    s11,s11,4       # BYPASS BRANCH OFFSET
         j       NEXT            # CONTINUE...
-	.size	rf_code_xloop, .-rf_code_xloop
 
 
 # ***************
@@ -343,7 +302,6 @@ XLOO1:  lw      a5,(s9)         # INDEX=INDEX+INCR
 #
         .align 1
         .globl rf_code_xploo
-        .type rf_code_xploo, @function
 rf_code_xploo:
         lw      a4,(s10)        # GET LOOP VALUE
         addi    s10,s10,4
@@ -356,7 +314,6 @@ rf_code_xploo:
 #
         .align 1
         .globl rf_code_xdo
-        .type rf_code_xdo, @function
 rf_code_xdo:
         lw      a5,(s10)        # INITIAL INDEX VALUE
         lw      a2,4(s10)       # LIMIT VALUE
@@ -365,7 +322,6 @@ rf_code_xdo:
         sw      a2,4(s9)
         sw      a5,(s9)
         j       NEXT
- 	.size	rf_code_xdo, .-rf_code_xdo
 
 
 # *********
@@ -374,12 +330,9 @@ rf_code_xdo:
 #
         .align 1
         .globl rf_code_rr
-        .type rf_code_rr, @function
 rf_code_rr:
         lw      a5,(s9)         # GET INDEX VALUE
         j       APUSH           # TO PARAMETER STACK
-	.size	rf_code_rr, .-rf_code_rr
-
 
 
 # *************
@@ -388,7 +341,6 @@ rf_code_rr:
 #
         .align 1
         .globl rf_code_digit
-        .type rf_code_digit, @function
 rf_code_digit:
         lb      a2,(s10)        # NUMBER BASE
         addi    s10,s10,4
@@ -415,7 +367,64 @@ DIGI1:  bge     a5,a2,DIGI2     # COMPARE NUMBER TO BASE
 DIGI2:  li      a5,0            # FALSE FLAG
         j       APUSH           # BYE
 
-	.size	rf_code_digit, .-rf_code_digit
+
+# *************
+# *   PFIND   *
+# *************
+#
+        .align 1
+        .globl rf_code_pfind
+rf_code_pfind:
+        lw      a4,(s10)        # NFA
+        lw      a3,4(s10)       # STRING ADDR
+        addi    s10,s10,8
+#
+# SEARCH LOOP
+PFIN1:  mv      a1,a3           # GET ADDR
+        lbu     a5,(a4)         # GET WORD LENGTH
+        mv      a2,a5           # SAVE LENGTH
+        lbu     a0,(a1)
+        xor     a5,a5,a0
+        andi    a5,a5,63        # CHECK LENGTHS
+        bnez    a5,PFIN5        # LENGTHS DIFFER
+#
+# LENGTH MATCH, CHECK EACH CHARACTER IN NAME
+PFIN2:  addi    a4,a4,1
+        addi    a1,a1,1         # NEXT CHAR OF NAME
+        lbu     a5,(a4)
+        lbu     a0,(a1)         # COMPARE NAMES
+        xor     a5,a5,a0
+        andi    a6,a5,127
+        bnez    a6,PFIN5        # NO MATCH
+        andi    a6,a5,128       # THIS WILL TEST BIT-8
+        beqz    a6,PFIN2        # MATCH SO FAR, LOOP
+
+# FOUND END OF NAME (BIT-8 SET); A MATCH
+        addi    a4,a4,9         # BX = PFA
+        addi    s10,s10,-4
+        sw      a4,(s10)        # (S3) <- PFA
+        li      a5,1            # TRUE VALUE
+        andi    a2,a2,255       # CLEAR HIGH LENGTH
+        j       DPUSH
+
+# NO NAME FIELD MATCH, TRY ANOTHER
+#
+# GET NEXT LINK FIELD ADDR (LFA)
+# (ZERO = FIRST WORD OF DICTIONARY)
+#
+PFIN5:  addi    a4,a4,1         # NEXT ADDR
+        andi    a6,a5,128       # END OF NAME
+        bnez    a6,PFIN6
+        lbu     a5,(a4)         # GET NEXT CHAR
+        j       PFIN5           # LOOP UNTIL FOUND
+#
+PFIN6:  lw      a4,(a4)         # GET LINK FIELD ADDR
+                                # START OF DICT. (0)?
+        bnez    a4,PFIN1        # NO, LOOK SOME MORE
+        li      a5,0            # FALSE FLAG
+        j       APUSH           # DONE (NO MATCH FOUND)
+
+
 
 
 # *************
@@ -424,7 +433,6 @@ DIGI2:  li      a5,0            # FALSE FLAG
 #
         .align 1
         .globl rf_code_cmove
-        .type rf_code_cmove, @function
 rf_code_cmove:
 		lw      a4,(s10)        # COUNT
 		lw      a3,4(s10)       # DEST.
@@ -446,7 +454,6 @@ CMOV2:  j       NEXT
 #
         .align 1
         .globl rf_code_andd
-        .type rf_code_andd, @function
 rf_code_andd:
         lw      a5,(s10)
 		addi    s10,s10,4
@@ -455,8 +462,6 @@ rf_code_andd:
         sw      a5,(s10)
         j       NEXT
 
-        .size rf_code_andd, .-rf_code_andd
-
 
 # **********
 # *   OR   *
@@ -464,7 +469,6 @@ rf_code_andd:
 #
         .align 1
         .globl rf_code_orr
-        .type rf_code_orr, @function
 rf_code_orr:
         lw      a5,(s10)
 		addi    s10,s10,4
@@ -473,8 +477,6 @@ rf_code_orr:
         sw      a5,(s10)
         j       NEXT
 
-        .size rf_code_orr, .-rf_code_orr
-
 
 # ***********
 # *   XOR   *
@@ -482,7 +484,6 @@ rf_code_orr:
 #
         .align 1
         .globl rf_code_xorr
-        .type rf_code_xorr, @function
 rf_code_xorr:
         lw      a5,(s10)
 		addi    s10,s10,4
@@ -491,8 +492,6 @@ rf_code_xorr:
         sw      a5,(s10)
         j       NEXT
 
-        .size rf_code_xorr, .-rf_code_xorr
-
 
 # ***********
 # *   SP@   *
@@ -500,7 +499,6 @@ rf_code_xorr:
 #
         .align 1
         .globl rf_code_spat
-        .type rf_code_spat, @function
 rf_code_spat:
         mv      a5,s10
         j       APUSH
@@ -586,334 +584,6 @@ rf_code_dodoe:
 .LFE11:
 	.size	rf_code_dodoe, .-rf_code_dodoe
 
-	.align	1
-	.type	rf_lfa, @function
-rf_lfa:
-.LFB15:
-	.loc 1 299 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	sw	a0,-20(s0)
-	.loc 1 300 9
-	nop
-.L33:
-	.loc 1 300 10 discriminator 1
-	lw	a5,-20(s0)
-	addi	a5,a5,1
-	sw	a5,-20(s0)
-	.loc 1 300 12 discriminator 1
-	lw	a5,-20(s0)
-	lbu	a5,0(a5)
-	.loc 1 300 10 discriminator 1
-	sext.b	a5,a5
-	bge	a5,zero,.L33
-	.loc 1 302 10
-	lw	a5,-20(s0)
-	addi	a5,a5,1
-	sw	a5,-20(s0)
-	lw	a5,-20(s0)
-	.loc 1 303 1
-	mv	a0,a5
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE15:
-	.size	rf_lfa, .-rf_lfa
-	.align	1
-	.type	rf_find, @function
-rf_find:
-.LFB16:
-	.loc 1 306 1
-	.cfi_startproc
-	addi	sp,sp,-48
-	.cfi_def_cfa_offset 48
-	sw	ra,44(sp)
-	sw	s0,40(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,48
-	.cfi_def_cfa 8, 0
-	sw	a0,-36(s0)
-	mv	a5,a1
-	sw	a2,-44(s0)
-	sb	a5,-37(s0)
-	.loc 1 310 9
-	j	.L36
-.L41:
-	.loc 1 312 16
-	lbu	a4,-37(s0)
-	.loc 1 312 20
-	lw	a5,-44(s0)
-	lbu	a5,0(a5)
-	.loc 1 312 25
-	andi	a5,a5,63
-	.loc 1 312 8
-	bne	a4,a5,.L37
-	.loc 1 314 9
-	lw	a5,-44(s0)
-	sw	a5,-24(s0)
-	.loc 1 315 9
-	lw	a5,-36(s0)
-	sw	a5,-20(s0)
-	.loc 1 316 13
-	j	.L38
-.L40:
-	.loc 1 317 13
-	lb	a5,-25(s0)
-	.loc 1 317 12
-	bge	a5,zero,.L38
-	.loc 1 317 30 discriminator 1
-	lw	a5,-44(s0)
-	.loc 1 317 30 is_stmt 0
-	j	.L39
-.L38:
-	.loc 1 316 17 is_stmt 1
-	lw	a5,-20(s0)
-	addi	a4,a5,1
-	sw	a4,-20(s0)
-	.loc 1 316 14
-	lbu	a5,0(a5)
-	mv	a4,a5
-	.loc 1 316 21
-	lw	a5,-24(s0)
-	addi	a5,a5,1
-	sw	a5,-24(s0)
-	.loc 1 316 28
-	lw	a5,-24(s0)
-	lbu	a5,0(a5)
-	sb	a5,-25(s0)
-	.loc 1 316 38
-	lbu	a5,-25(s0)
-	andi	a5,a5,127
-	.loc 1 316 21
-	beq	a4,a5,.L40
-.L37:
-	.loc 1 321 13
-	lw	a0,-44(s0)
-	call	rf_lfa
-	mv	a5,a0
-	.loc 1 321 9 discriminator 1
-	lw	a5,0(a5)
-	sw	a5,-44(s0)
-.L36:
-	.loc 1 310 10
-	lw	a5,-44(s0)
-	bne	a5,zero,.L41
-	.loc 1 325 10
-	li	a5,0
-.L39:
-	.loc 1 326 1
-	mv	a0,a5
-	lw	ra,44(sp)
-	.cfi_restore 1
-	lw	s0,40(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 48
-	addi	sp,sp,48
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE16:
-	.size	rf_find, .-rf_find
-	.align	1
-	.type	rf_pfa, @function
-rf_pfa:
-.LFB17:
-	.loc 1 329 1
-	.cfi_startproc
-	addi	sp,sp,-48
-	.cfi_def_cfa_offset 48
-	sw	ra,44(sp)
-	sw	s0,40(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,48
-	.cfi_def_cfa 8, 0
-	sw	a0,-36(s0)
-	.loc 1 330 19
-	lw	a0,-36(s0)
-	call	rf_lfa
-	sw	a0,-20(s0)
-	.loc 1 331 14
-	lw	a5,-20(s0)
-	addi	a5,a5,8
-	sw	a5,-24(s0)
-	.loc 1 332 10
-	lw	a5,-24(s0)
-	.loc 1 333 1
-	mv	a0,a5
-	lw	ra,44(sp)
-	.cfi_restore 1
-	lw	s0,40(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 48
-	addi	sp,sp,48
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE17:
-	.size	rf_pfa, .-rf_pfa
-	.align	1
-	.type	rf_pfind, @function
-rf_pfind:
-.LFB18:
-	.loc 1 336 1
-	.cfi_startproc
-	addi	sp,sp,-48
-	.cfi_def_cfa_offset 48
-	sw	ra,44(sp)
-	sw	s0,40(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,48
-	.cfi_def_cfa 8, 0
-	sw	a0,-36(s0)
-	sw	a1,-40(s0)
-	.loc 1 340 10
-	lw	a5,-36(s0)
-	lbu	a5,0(a5)
-	sb	a5,-17(s0)
-	.loc 1 341 7
-	lw	a5,-36(s0)
-	addi	a5,a5,1
-	lbu	a4,-17(s0)
-	lw	a2,-40(s0)
-	mv	a1,a4
-	mv	a0,a5
-	call	rf_find
-	sw	a0,-24(s0)
-	.loc 1 342 6
-	lw	a5,-24(s0)
-	beq	a5,zero,.L45
-	.loc 1 343 5
-	lw	a0,-24(s0)
-	call	rf_pfa
-	mv	a3,a0
-	.loc 1 343 5 is_stmt 0 discriminator 1
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	mv	a4,a3
-	sw	a4,0(a5)
-	.loc 1 344 5 is_stmt 1
-	lw	a5,-24(s0)
-	lbu	a3,0(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	mv	a4,a3
-	sw	a4,0(a5)
-	.loc 1 345 12
-	li	a5,1
-	j	.L46
-.L45:
-	.loc 1 347 12
-	li	a5,0
-.L46:
-	.loc 1 349 1
-	mv	a0,a5
-	lw	ra,44(sp)
-	.cfi_restore 1
-	lw	s0,40(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 48
-	addi	sp,sp,48
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE18:
-	.size	rf_pfind, .-rf_pfind
-	.align	1
-	.globl	rf_code_pfind
-	.type	rf_code_pfind, @function
-rf_code_pfind:
-.LFB19:
-	.loc 1 352 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 353 3
-	call	rf_start
-.LBB9:
-	.loc 1 359 25
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 359 11
-	sw	a5,-20(s0)
-	.loc 1 360 25
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 360 11
-	sw	a5,-24(s0)
-	.loc 1 361 9
-	lw	a1,-20(s0)
-	lw	a0,-24(s0)
-	call	rf_pfind
-	sw	a0,-28(s0)
-	.loc 1 362 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-28(s0)
-	sw	a4,0(a5)
-.LBE9:
-	.loc 1 364 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 365 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE19:
-	.size	rf_code_pfind, .-rf_code_pfind
 	.align	1
 	.type	rf_enclose, @function
 rf_enclose:
