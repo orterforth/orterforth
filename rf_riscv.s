@@ -607,6 +607,46 @@ rf_code_semis:
         j       NEXT
 
 
+# *************
+# *   LEAVE   *
+# *************
+#
+        .align 1
+        .globl rf_code_leave
+rf_code_leave:
+        lw      a5,(s9)         # GET INDEX
+        sw      a5,4(s9)        # STORE IT AT LIMIT
+        j       NEXT
+
+
+# **********
+# *   >R   *
+# **********
+#
+        .align 1
+        .globl rf_code_tor
+rf_code_tor:
+        lw      a4,(s10)        # GET STACK PARAMETER
+        addi    s10,s10,4
+        addi    s9,s9,-4
+        sw      a4,(s9)         # ADD TO RETURN STACK
+        j       NEXT
+
+
+# **********
+# *   R>   *
+# **********
+#
+        .align 1
+        .globl rf_code_fromr
+rf_code_fromr:
+        lw      a4,(s9)        # GET RETURN STACK VALUE
+        addi    s9,s9,4
+        addi    s10,s10,-4
+        sw      a4,(s10)       # DELETE FROM STACK
+        j       NEXT
+
+
 	.align	1
 	.globl	rf_code_dodoe
 	.type	rf_code_dodoe, @function
@@ -1014,179 +1054,6 @@ rf_code_uslas:
 .LFE29:
 	.size	rf_code_uslas, .-rf_code_uslas
 
-
-	.align	1
-	.globl	rf_code_leave
-	.type	rf_code_leave, @function
-rf_code_leave:
-.LFB37:
-	.loc 1 730 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 731 3
-	call	rf_start
-.LBB17:
-	.loc 1 735 25
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_rp)
-	sw	a3,%lo(rf_rp)(a4)
-	.loc 1 735 11
-	lw	a5,0(a5)
-	sw	a5,-20(s0)
-	.loc 1 736 12
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	addi	a4,a5,4
-	lui	a5,%hi(rf_rp)
-	sw	a4,%lo(rf_rp)(a5)
-	.loc 1 737 5
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_rp)
-	sw	a4,%lo(rf_rp)(a5)
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	lw	a4,-20(s0)
-	sw	a4,0(a5)
-	.loc 1 738 5
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_rp)
-	sw	a4,%lo(rf_rp)(a5)
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	lw	a4,-20(s0)
-	sw	a4,0(a5)
-.LBE17:
-	.loc 1 740 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 741 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE37:
-	.size	rf_code_leave, .-rf_code_leave
-	.align	1
-	.globl	rf_code_tor
-	.type	rf_code_tor, @function
-rf_code_tor:
-.LFB38:
-	.loc 1 746 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 747 3
-	call	rf_start
-	.loc 1 748 3
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lui	a4,%hi(rf_rp)
-	lw	a4,%lo(rf_rp)(a4)
-	addi	a3,a4,-4
-	lui	a4,%hi(rf_rp)
-	sw	a3,%lo(rf_rp)(a4)
-	lui	a4,%hi(rf_rp)
-	lw	a4,%lo(rf_rp)(a4)
-	lw	a5,0(a5)
-	sw	a5,0(a4)
-	.loc 1 749 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 750 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE38:
-	.size	rf_code_tor, .-rf_code_tor
-	.align	1
-	.globl	rf_code_fromr
-	.type	rf_code_fromr, @function
-rf_code_fromr:
-.LFB39:
-	.loc 1 755 1
-	.cfi_startproc
-	addi	sp,sp,-16
-	.cfi_def_cfa_offset 16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,16
-	.cfi_def_cfa 8, 0
-	.loc 1 756 3
-	call	rf_start
-	.loc 1 757 3
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_rp)
-	sw	a3,%lo(rf_rp)(a4)
-	lui	a4,%hi(rf_sp)
-	lw	a4,%lo(rf_sp)(a4)
-	addi	a3,a4,-4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lui	a4,%hi(rf_sp)
-	lw	a4,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	sw	a5,0(a4)
-	.loc 1 758 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 759 1
-	nop
-	lw	ra,12(sp)
-	.cfi_restore 1
-	lw	s0,8(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 16
-	addi	sp,sp,16
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE39:
-	.size	rf_code_fromr, .-rf_code_fromr
 	.align	1
 	.globl	rf_code_zequ
 	.type	rf_code_zequ, @function
