@@ -498,6 +498,21 @@ CMOV1:  lbu     a5,(a2)         # THATS THE MOVE
 CMOV2:  j       NEXT
 
 
+# **********
+# *   U*   *
+# **********
+#
+        .align 1
+        .globl rf_code_ustar
+rf_code_ustar:
+		lw      a3,(s10)
+		lw      a4,4(s10)
+		addi    s10,s10,8
+        mul     a2,a3,a4
+        mulhu   a5,a3,a4
+        j       DPUSH           # STORE DOUBLE WORD
+
+
 # ***********
 # *   AND   *
 # ***********
@@ -787,89 +802,6 @@ rf_ustar:
 	.cfi_endproc
 .LFE26:
 	.size	rf_ustar, .-rf_ustar
-	.align	1
-	.globl	rf_code_ustar
-	.type	rf_code_ustar, @function
-rf_code_ustar:
-.LFB27:
-	.loc 1 545 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 546 3
-	call	rf_start
-.LBB11:
-	.loc 1 550 9
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	.loc 1 550 7
-	lw	a5,0(a5)
-	sw	a5,-20(s0)
-	.loc 1 551 9
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	.loc 1 551 7
-	lw	a5,0(a5)
-	sw	a5,-24(s0)
-	.loc 1 552 5
-	addi	a4,s0,-32
-	addi	a5,s0,-28
-	mv	a3,a4
-	mv	a2,a5
-	lw	a1,-24(s0)
-	lw	a0,-20(s0)
-	call	rf_ustar
-	.loc 1 553 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-32(s0)
-	sw	a4,0(a5)
-	.loc 1 554 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-28(s0)
-	sw	a4,0(a5)
-.LBE11:
-	.loc 1 556 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 557 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE27:
-	.size	rf_code_ustar, .-rf_code_ustar
 	.align	1
 	.type	rf_uslas, @function
 rf_uslas:
