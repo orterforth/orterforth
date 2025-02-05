@@ -3,55 +3,39 @@
 # to create a RISC-V port and integrate into orterforth. Some
 # info in the comments no longer applies as a result.
 
+        .option nopic
+        .attribute arch, "rv32i2p1_m2p0_a2p1_c2p0_zicsr2p0_zifencei2p0_zba1p0_zbb1p0_zbkb1p0_zbs1p0"
+        .attribute unaligned_access, 0
+        .attribute stack_align, 16
 
-	.file	"rf.c"
-	.option nopic
-	.attribute arch, "rv32i2p1_m2p0_a2p1_c2p0_zicsr2p0_zifencei2p0_zba1p0_zbb1p0_zbkb1p0_zbs1p0"
-	.attribute unaligned_access, 0
-	.attribute stack_align, 16
-	.text
-.Ltext0:
-	.cfi_sections	.debug_frame
-	.file 0 "pico" "rf.c"
+        .section .sbss,"aw",@nobits
 
         .globl rf_sp
-        .section .sbss,"aw",@nobits
         .align 2
-        .type rf_sp, @object
-        .size rf_sp, 4
 rf_sp:  .zero 4
 
         .globl rf_rp
         .align 2
-        .type rf_rp, @object
-        .size rf_rp, 4
 rf_rp:  .zero 4
 
         .globl rf_ip
         .align 2
-        .type rf_ip, @object
-        .size rf_ip, 4
 rf_ip:  .zero 4
 
         .globl rf_w
         .align 2
-        .type rf_w, @object
-        .size rf_w, 4
 rf_w:   .zero 4
 
         .globl rf_up
         .align 2
-        .type rf_up, @object
-        .size rf_up, 4
 rf_up:  .zero 4
 
         .globl rf_fp
         .align 2
-        .type rf_fp, @object
-        .size rf_fp, 4
 rf_fp:  .zero 4
 
         .text
+
         .align 1
         .globl rf_trampoline
         .type rf_trampoline, @function
