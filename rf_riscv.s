@@ -44,10 +44,11 @@ rf_trampoline:
         sw      ra,12(sp)
         sw      s0,8(sp)
         addi    s0,sp,16
-        j       .L2
-
-.L3:
-
+        lui     ra,%hi(tramp1)
+        addi    ra,ra,%lo(tramp1)
+tramp1: lui     a4,%hi(rf_fp)
+        lw      a4,%lo(rf_fp)(a4)
+        beqz    a4,tramp2
         lui     a5,%hi(rf_ip)   # IP into S11
         lw      s11,%lo(rf_ip)(a5)
         lui     a5,%hi(rf_sp)   # SP into S10
@@ -56,17 +57,8 @@ rf_trampoline:
         lw      s9,%lo(rf_rp)(a5)
         lui     a5,%hi(rf_w)    # W into S8
         lw      s8,%lo(rf_w)(a5)
-        lui     a5,%hi(rf_fp)
-        lw      a5,%lo(rf_fp)(a5)
-        jalr    a5
-.LVL0:
-.L2:
-        lui     a5,%hi(rf_fp)
-        lw      a5,%lo(rf_fp)(a5)
-        bne     a5,zero,.L3
-        nop
-        nop
-        lw      ra,12(sp)
+        jr      a4
+tramp2: lw      ra,12(sp)
         lw      s0,8(sp)
         addi    sp,sp,16
         jr      ra
