@@ -673,6 +673,42 @@ rf_code_zless:
 		j       NEXT
 
 
+# *********
+# *   +   *
+# *********
+#
+        .align 1
+        .globl rf_code_plus
+rf_code_plus:
+        lw      a5,(s10)
+		lw      a4,4(s10)
+		addi    s10,s10,8
+		add     a5,a5,a4
+        j       APUSH
+
+
+# **********
+# *   D+   *
+# **********
+#
+# XLW XHW  YLW YHW --> SLW SHW
+# S4  S3   S2  S1      S2  S1
+#
+        .align 1
+        .globl rf_code_dplus
+rf_code_dplus:
+        lw      a5,(s10)        # YHW
+        lw      a4,4(s10)       # YLW
+        lw      a3,8(s10)       # XHW 
+        lw      a2,12(s10)      # XLW
+		addi    s10,s10,16
+        add     a2,a2,a4        # SLW
+		sltu    a4,a2,a4
+        add     a5,a5,a3        # SHW
+		add     a5,a5,a4
+        j       DPUSH
+
+
 	.align	1
 	.globl	rf_code_dodoe
 	.type	rf_code_dodoe, @function
@@ -1081,240 +1117,6 @@ rf_code_uslas:
 	.size	rf_code_uslas, .-rf_code_uslas
 
 
-	.align	1
-	.globl	rf_code_plus
-	.type	rf_code_plus, @function
-rf_code_plus:
-.LFB42:
-	.loc 1 792 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 793 3
-	call	rf_start
-.LBB20:
-	.loc 1 798 9
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 798 7
-	sw	a5,-20(s0)
-	.loc 1 799 9
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 799 7
-	sw	a5,-24(s0)
-	.loc 1 800 5
-	lw	a4,-20(s0)
-	lw	a5,-24(s0)
-	add	a3,a4,a5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	mv	a4,a3
-	sw	a4,0(a5)
-.LBE20:
-	.loc 1 802 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 803 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE42:
-	.size	rf_code_plus, .-rf_code_plus
-	.align	1
-	.type	rf_dplus, @function
-rf_dplus:
-.LFB43:
-	.loc 1 810 1
-	.cfi_startproc
-	addi	sp,sp,-80
-	.cfi_def_cfa_offset 80
-	sw	ra,76(sp)
-	sw	s0,72(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,80
-	.cfi_def_cfa 8, 0
-	sw	a0,-52(s0)
-	sw	a1,-56(s0)
-	sw	a2,-60(s0)
-	sw	a3,-64(s0)
-	sw	a4,-68(s0)
-	sw	a5,-72(s0)
-	.loc 1 815 3
-	addi	a5,s0,-32
-	mv	a2,a5
-	lw	a1,-56(s0)
-	lw	a0,-52(s0)
-	call	rf_double
-	.loc 1 816 3
-	addi	a5,s0,-40
-	mv	a2,a5
-	lw	a1,-64(s0)
-	lw	a0,-60(s0)
-	call	rf_double
-	.loc 1 817 9
-	lw	a2,-32(s0)
-	lw	a3,-28(s0)
-	lw	a0,-40(s0)
-	lw	a1,-36(s0)
-	.loc 1 817 5
-	add	a4,a2,a0
-	mv	a6,a4
-	sltu	a6,a6,a2
-	add	a5,a3,a1
-	add	a3,a6,a5
-	mv	a5,a3
-	sw	a4,-24(s0)
-	sw	a5,-20(s0)
-	.loc 1 818 3
-	lw	a3,-72(s0)
-	lw	a2,-68(s0)
-	lw	a0,-24(s0)
-	lw	a1,-20(s0)
-	call	rf_undouble
-	.loc 1 819 1
-	nop
-	lw	ra,76(sp)
-	.cfi_restore 1
-	lw	s0,72(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 80
-	addi	sp,sp,80
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE43:
-	.size	rf_dplus, .-rf_dplus
-	.align	1
-	.globl	rf_code_dplus
-	.type	rf_code_dplus, @function
-rf_code_dplus:
-.LFB44:
-	.loc 1 831 1
-	.cfi_startproc
-	addi	sp,sp,-48
-	.cfi_def_cfa_offset 48
-	sw	ra,44(sp)
-	sw	s0,40(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,48
-	.cfi_def_cfa 8, 0
-	.loc 1 832 3
-	call	rf_start
-.LBB21:
-	.loc 1 836 10
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	.loc 1 836 8
-	lw	a5,0(a5)
-	sw	a5,-20(s0)
-	.loc 1 837 10
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	.loc 1 837 8
-	lw	a5,0(a5)
-	sw	a5,-24(s0)
-	.loc 1 838 10
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	.loc 1 838 8
-	lw	a5,0(a5)
-	sw	a5,-28(s0)
-	.loc 1 839 10
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	.loc 1 839 8
-	lw	a5,0(a5)
-	sw	a5,-32(s0)
-	.loc 1 840 5
-	addi	a5,s0,-40
-	addi	a4,s0,-36
-	lw	a3,-32(s0)
-	lw	a2,-28(s0)
-	lw	a1,-24(s0)
-	lw	a0,-20(s0)
-	call	rf_dplus
-	.loc 1 841 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-40(s0)
-	sw	a4,0(a5)
-	.loc 1 842 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-36(s0)
-	sw	a4,0(a5)
-.LBE21:
-	.loc 1 844 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 845 1
-	nop
-	lw	ra,44(sp)
-	.cfi_restore 1
-	lw	s0,40(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 48
-	addi	sp,sp,48
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE44:
-	.size	rf_code_dplus, .-rf_code_dplus
 	.align	1
 	.globl	rf_code_minus
 	.type	rf_code_minus, @function
