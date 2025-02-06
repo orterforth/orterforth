@@ -788,6 +788,36 @@ rf_code_dup:
         j       APUSH
 
 
+# **********
+# *   +!   *
+# **********
+#
+        .align 1
+        .globl rf_code_pstor
+rf_code_pstor:
+        lw      a5,(s10)        # ADDRESS
+        lw      a4,4(s10)       # INCREMENT
+        addi    s10,s10,8
+        lw      a3,(a5)
+        add     a3,a3,a4
+        sw      a3,(a5)
+        j       NEXT
+
+
+# **************
+# *   TOGGLE   *
+# **************
+#
+        .align 1
+        .globl rf_code_toggl
+rf_code_toggl:
+        lw      a5,(s10)        # BIT PATTERN
+        lw      a4,4(s10)       # ADDR
+        addi    s10,s10,8
+        lbu     a3,(a4)
+        xor     a3,a3,a5
+        sb      a3,(a4)
+        j       NEXT
 
 
 	.align	1
@@ -1197,134 +1227,6 @@ rf_code_uslas:
 .LFE29:
 	.size	rf_code_uslas, .-rf_code_uslas
 
-
-	.align	1
-	.globl	rf_code_pstor
-	.type	rf_code_pstor, @function
-rf_code_pstor:
-.LFB52:
-	.loc 1 960 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 961 3
-	call	rf_start
-.LBB27:
-	.loc 1 966 26
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 966 10
-	sw	a5,-20(s0)
-	.loc 1 967 20
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 967 7
-	sw	a5,-24(s0)
-	.loc 1 968 5
-	lw	a5,-20(s0)
-	lw	a4,0(a5)
-	.loc 1 968 11
-	lw	a5,-24(s0)
-	add	a4,a4,a5
-	lw	a5,-20(s0)
-	sw	a4,0(a5)
-.LBE27:
-	.loc 1 970 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 971 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE52:
-	.size	rf_code_pstor, .-rf_code_pstor
-	.align	1
-	.globl	rf_code_toggl
-	.type	rf_code_toggl, @function
-rf_code_toggl:
-.LFB53:
-	.loc 1 976 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 977 3
-	call	rf_start
-.LBB28:
-	.loc 1 982 19
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 982 10
-	sb	a5,-17(s0)
-	.loc 1 983 21
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 983 10
-	sw	a5,-24(s0)
-	.loc 1 984 5
-	lw	a5,-24(s0)
-	lbu	a5,0(a5)
-	.loc 1 984 11
-	lbu	a4,-17(s0)
-	xor	a5,a5,a4
-	andi	a4,a5,0xff
-	lw	a5,-24(s0)
-	sb	a4,0(a5)
-.LBE28:
-	.loc 1 986 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 987 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE53:
-	.size	rf_code_toggl, .-rf_code_toggl
 	.align	1
 	.globl	rf_code_at
 	.type	rf_code_at, @function
