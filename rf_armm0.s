@@ -394,9 +394,9 @@ DIGI2:  MOVS    R0, #0          @ FALSE FLAG
         BX      R0
 
 
-# *************
-# *   PFIND   *
-# *************
+# **************
+# *   (FIND)   *
+# **************
 #
         .align 1
         .global rf_code_pfind

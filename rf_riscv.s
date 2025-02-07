@@ -368,9 +368,9 @@ DIGI2:  li      a5,0            # FALSE FLAG
         j       APUSH           # BYE
 
 
-# *************
-# *   PFIND   *
-# *************
+# **************
+# *   (FIND)   *
+# **************
 #
         .align 1
         .globl rf_code_pfind
