@@ -927,85 +927,36 @@ rf_code_douse:
         j       APUSH
 
 
-	.align	1
-	.globl	rf_code_dodoe
-	.type	rf_code_dodoe, @function
+# *************
+# *   DOES>   *
+# *************
+#
+        .align 1
+        .globl rf_code_dodoe
 rf_code_dodoe:
-.LFB11:
-	.loc 1 225 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 226 3
-	call	rf_start
-.LBB6:
-	.loc 1 234 5
-	lui	a5,%hi(rf_ip)
-	lw	a3,%lo(rf_ip)(a5)
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_rp)
-	sw	a4,%lo(rf_rp)(a5)
-	lui	a5,%hi(rf_rp)
-	lw	a5,%lo(rf_rp)(a5)
-	mv	a4,a3
-	sw	a4,0(a5)
-	.loc 1 237 10
-	lui	a5,%hi(rf_w)
-	lw	a5,%lo(rf_w)(a5)
-	.loc 1 237 8
-	addi	a5,a5,4
-	sw	a5,-20(s0)
-	.loc 1 238 28
-	lw	a5,-20(s0)
-	lw	a5,0(a5)
-	.loc 1 238 13
-	mv	a4,a5
-	.loc 1 238 11
-	lui	a5,%hi(rf_ip)
-	sw	a4,%lo(rf_ip)(a5)
-	.loc 1 241 10
-	lui	a5,%hi(rf_w)
-	lw	a5,%lo(rf_w)(a5)
-	.loc 1 241 8
-	addi	a5,a5,8
-	sw	a5,-24(s0)
-	.loc 1 242 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-24(s0)
-	sw	a4,0(a5)
-.LBE6:
-	.loc 1 244 3
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 245 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE11:
-	.size	rf_code_dodoe, .-rf_code_dodoe
+        addi    s9,s9,-4
+        sw      s11,(s9)        # (RP) <- (IP)
+        lw      s11,4(s8)       # NEW CFA
+        addi    s8,s8,8         # PFA
+        addi    s10,s10,-4
+        sw      s8,(s10)        # PFA
+        j       NEXT
+
+
+# ************
+# *   S->D   *
+# ************
+#
+        .align 1
+        .globl rf_code_stod
+rf_code_stod:
+        lw      a2,(s10)        # S1
+                                # AX = 0
+        sltz    a5,a2           # SET FLAGS
+                                # POSITIVE NUMBER
+        neg     a5,a5           # NEGITIVE NUMBER
+STOD1:  j       APUSH
+
 
 	.align	1
 	.type	rf_double, @function
@@ -1334,81 +1285,6 @@ rf_code_uslas:
 .LFE29:
 	.size	rf_code_uslas, .-rf_code_uslas
 
-	.align	1
-	.globl	rf_code_stod
-	.type	rf_code_stod, @function
-rf_code_stod:
-.LFB62:
-	.loc 1 1096 1
-	.cfi_startproc
-	addi	sp,sp,-32
-	.cfi_def_cfa_offset 32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	.cfi_offset 1, -4
-	.cfi_offset 8, -8
-	addi	s0,sp,32
-	.cfi_def_cfa 8, 0
-	.loc 1 1097 3
-	call	rf_start
-.LBB34:
-	.loc 1 1101 9
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a3,a5,4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lw	a5,0(a5)
-	.loc 1 1101 7
-	sw	a5,-20(s0)
-	.loc 1 1102 5
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	addi	a4,a5,-4
-	lui	a5,%hi(rf_sp)
-	sw	a4,%lo(rf_sp)(a5)
-	lui	a5,%hi(rf_sp)
-	lw	a5,%lo(rf_sp)(a5)
-	lw	a4,-20(s0)
-	sw	a4,0(a5)
-	.loc 1 1103 5
-	lw	a5,-20(s0)
-	bge	a5,zero,.L100
-	.loc 1 1103 5 is_stmt 0 discriminator 1
-	li	a5,-1
-	j	.L101
-.L100:
-	.loc 1 1103 5 discriminator 2
-	li	a5,0
-.L101:
-	.loc 1 1103 5 discriminator 4
-	lui	a4,%hi(rf_sp)
-	lw	a4,%lo(rf_sp)(a4)
-	addi	a3,a4,-4
-	lui	a4,%hi(rf_sp)
-	sw	a3,%lo(rf_sp)(a4)
-	lui	a4,%hi(rf_sp)
-	lw	a4,%lo(rf_sp)(a4)
-	sw	a5,0(a4)
-.LBE34:
-	.loc 1 1105 3 is_stmt 1
-	lui	a5,%hi(rf_fp)
-	lui	a4,%hi(rf_next)
-	addi	a4,a4,%lo(rf_next)
-	sw	a4,%lo(rf_fp)(a5)
-	.loc 1 1106 1
-	nop
-	lw	ra,28(sp)
-	.cfi_restore 1
-	lw	s0,24(sp)
-	.cfi_restore 8
-	.cfi_def_cfa 2, 32
-	addi	sp,sp,32
-	.cfi_def_cfa_offset 0
-	jr	ra
-	.cfi_endproc
-.LFE62:
-	.size	rf_code_stod, .-rf_code_stod
 	.align	1
 	.type	rf_cold, @function
 rf_cold:
