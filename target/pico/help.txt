@@ -18,6 +18,9 @@ For Pico 2, use:
 
  make TARGET=pico PICOBOARD=pico2
  make TARGET=pico PICOBOARD=pico2 OPTION=assembly
+  (for ARM asm)
+ make TARGET=pico PICOBOARD=pico2 OPTION=assembly PICOPROC=riscv
+  (for RISC-V asm)
 
 Target file is:
 

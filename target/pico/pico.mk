@@ -11,12 +11,15 @@ ifneq ($(OPTION),)
 PICOOPTION := $(OPTION)
 endif
 endif
+PICOPROC := armm0
 
 PICOCMAKEOPTION := -DRF_ASSEMBLY=OFF
 ifeq ($(PICOOPTION),assembly)
 PICOCMAKEOPTION := -DRF_ASSEMBLY=ON
 endif
-# PICOCMAKEOPTION += -DPICO_PLATFORM=rp2350-riscv
+ifeq ($(PICOPROC),riscv)
+PICOCMAKEOPTION += -DPICO_PLATFORM=rp2350-riscv
+endif
 
 pico :
 
@@ -58,6 +61,7 @@ pico/orterforth.uf2 : \
 	rf.c \
 	rf.h \
 	rf_armm0.s \
+	rf_riscv.s \
 	target/pico/system.c \
 	system.inc
 
