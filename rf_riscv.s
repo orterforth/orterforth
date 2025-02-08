@@ -102,7 +102,13 @@ cold1:  lw      a5,(a2)
         .globl rf_code_cl
 rf_code_cl:
         li      a5,4
-        j       APUSH
+#       j       APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
         .align 1
         .globl rf_code_cs
@@ -110,7 +116,11 @@ rf_code_cs:
         lw      a5,(s10)
         slli    a5,a5,2
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
         .align 1
         .globl rf_code_ln
@@ -120,7 +130,11 @@ rf_code_ln:
         ori     a5,a5,3
         addi    a5,a5,1
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 # fig-FORTH 8086/8088
 # ASSEMBLY SOURCE LISTING
@@ -278,7 +292,13 @@ NEXT1:  lw      a5,(s8)         # TO 'CFA'
 rf_code_lit:
         lw      a5,(s11)        # AX <- LITERAL
         addi    s11,s11,4
-        j       APUSH           # TO TOP OF STACK
+#       j       APUSH           # TO TOP OF STACK
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***************
@@ -290,7 +310,9 @@ rf_code_lit:
 rf_code_exec:
         lw      s8,(s10)        # GET CFA
         addi    s10,s10,4
-        j       NEXT1           # EXECUTE NEXT
+#       j       NEXT1           # EXECUTE NEXT
+        lw      a5,(s8)
+        jr      a5
 
 
 # **************
@@ -302,7 +324,11 @@ rf_code_exec:
 rf_code_bran:
 BRAN1:  lw      a5,(s11)
         add     s11,s11,a5      # (IP) <- (IP) + ((IP))
-        j       NEXT            # JUMP TO OFFSET
+#       j       NEXT            # JUMP TO OFFSET
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***************
@@ -317,7 +343,11 @@ rf_code_zbran:
         beqz    a5,BRAN1        # ZERO?
                                 # YES, BRANCH
         addi    s11,s11,4       # NO, CONTINUE...
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **************
@@ -339,7 +369,11 @@ XLOO1:  lw      a5,(s9)         # INDEX=INDEX+INCR
 # END OF 'DO' LOOP
         addi    s9,s9,8         # ADJ. RETURN STK
         addi    s11,s11,4       # BYPASS BRANCH OFFSET
-        j       NEXT            # CONTINUE...
+#       j       NEXT            # CONTINUE...
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***************
@@ -367,7 +401,11 @@ rf_code_xdo:
         addi    s9,s9,-8
         sw      a2,4(s9)
         sw      a5,(s9)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *********
@@ -378,7 +416,13 @@ rf_code_xdo:
         .globl rf_code_rr
 rf_code_rr:
         lw      a5,(s9)         # GET INDEX VALUE
-        j       APUSH           # TO PARAMETER STACK
+#       j       APUSH           # TO PARAMETER STACK
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *************
@@ -406,12 +450,26 @@ DIGI1:  bge     a5,a2,DIGI2     # COMPARE NUMBER TO BASE
                                 # ZERO
         mv      a2,a5           # NEW BINARY NUMBER
         li      a5,1            # TRUE FLAG
-        j       DPUSH           # ADD TO STACK
+#       j       DPUSH           # ADD TO STACK
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 # NUMBER ERROR
 #
 DIGI2:  li      a5,0            # FALSE FLAG
-        j       APUSH           # BYE
+#       j       APUSH           # BYE
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **************
@@ -451,7 +509,15 @@ PFIN2:  addi    a4,a4,1
         sw      a4,(s10)        # (S3) <- PFA
         li      a5,1            # TRUE VALUE
         andi    a2,a2,255       # CLEAR HIGH LENGTH
-        j       DPUSH
+#       j       DPUSH
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 # NO NAME FIELD MATCH, TRY ANOTHER
 #
@@ -468,7 +534,13 @@ PFIN6:  lw      a4,(a4)         # GET LINK FIELD ADDR
                                 # START OF DICT. (0)?
         bnez    a4,PFIN1        # NO, LOOK SOME MORE
         li      a5,0            # FALSE FLAG
-        j       APUSH           # DONE (NO MATCH FOUND)
+#       j       APUSH           # DONE (NO MATCH FOUND)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***************
@@ -501,7 +573,15 @@ ENCL1:  addi    a4,a4,1         # ADDR +1
 # FOUND NULL BEFORE FIRST NON-TERMINATOR CHAR.
         mv      a5,a2           # COPY COUNTER
         addi    a2,a2,1         # +1
-        j       DPUSH
+#       j       DPUSH
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 # FOUND FIRST TEXT CHAR, COUNT THE CHARACTERS
 #
@@ -515,12 +595,28 @@ ENCL2:  addi    a4,a4,1         # ADDR+1
 # FOUND NULL AT END OF TEXT
 #
 ENCL3:  mv      a5,a2           # COUNTERS ARE EQUAL
-        j       DPUSH
+#       j       DPUSH
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 # FOUND TERINATOR CHARACTER
 ENCL4:  mv      a5,a2
         addi    a5,a5,1         # COUNT +1
-        j       DPUSH
+#       j       DPUSH
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *************
@@ -541,7 +637,11 @@ CMOV1:  lbu     a5,(a2)         # THATS THE MOVE
         addi    a3,a3,1
         addi    a4,a4,-1
         bnez    a4,CMOV1
-CMOV2:  j       NEXT
+CMOV2:  # j     NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -556,7 +656,15 @@ rf_code_ustar:
         addi    s10,s10,8
         mul     a2,a3,a4
         mulhu   a5,a3,a4
-        j       DPUSH           # STORE DOUBLE WORD
+#       j       DPUSH           # STORE DOUBLE WORD
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -594,7 +702,11 @@ UMDIV2: srli    a2,a2,1         # shift mask one bit to the right
 UMDIV3: addi    s10,s10,-8
         sw      a4,4(s10)       # remainder
         sw      a1,(s10)        # quotient
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***********
@@ -609,7 +721,11 @@ rf_code_andd:
         lw      a4,(s10)
         and     a5,a5,a4
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -624,7 +740,11 @@ rf_code_orr:
         lw      a4,(s10)
         or      a5,a5,a4
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***********
@@ -639,7 +759,11 @@ rf_code_xorr:
         lw      a4,(s10)
         xor     a5,a5,a4
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***********
@@ -650,7 +774,13 @@ rf_code_xorr:
         .globl rf_code_spat
 rf_code_spat:
         mv      a5,s10
-        j       APUSH
+#       j       APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***********
@@ -663,7 +793,11 @@ rf_code_spsto:
         lui     a4,%hi(UP)      # USER VAR BASE ADDR
         lw      a4,%lo(UP)(a4)
         lw      s10,12(a4)      # RESET PARAM. STACK PT.
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***********
@@ -676,7 +810,11 @@ rf_code_rpsto:
         lui     a4,%hi(UP)      # (AX) <- USR VAR. BASE
         lw      a4,%lo(UP)(a4)
         lw      s9,16(a4)       # RESET RETURN STACK PT.
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -688,7 +826,11 @@ rf_code_rpsto:
 rf_code_semis:
         lw      s11,(s9)        # (IP) <- (R1)
         addi    s9,s9,4
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *************
@@ -700,7 +842,11 @@ rf_code_semis:
 rf_code_leave:
         lw      a5,(s9)         # GET INDEX
         sw      a5,4(s9)        # STORE IT AT LIMIT
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -714,7 +860,11 @@ rf_code_tor:
         addi    s10,s10,4
         addi    s9,s9,-4
         sw      a4,(s9)         # ADD TO RETURN STACK
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -728,7 +878,11 @@ rf_code_fromr:
         addi    s9,s9,4
         addi    s10,s10,-4
         sw      a4,(s10)       # DELETE FROM STACK
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -741,7 +895,11 @@ rf_code_zequ:
         lw      a5,(s10)
         seqz    a5,a5
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -754,7 +912,11 @@ rf_code_zless:
         lw      a5,(s10)
         sltz    a5,a5
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *********
@@ -768,7 +930,13 @@ rf_code_plus:
         lw      a4,4(s10)
         addi    s10,s10,8
         add     a5,a5,a4
-        j       APUSH
+#       j       APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -790,7 +958,15 @@ rf_code_dplus:
         sltu    a4,a2,a4
         add     a5,a5,a3        # SHW
         add     a5,a5,a4
-        j       DPUSH
+#       j       DPUSH
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *************
@@ -803,7 +979,11 @@ rf_code_minus:
         lw      a5,(s10)
         neg     a5,a5
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **************
@@ -822,7 +1002,15 @@ rf_code_dminu:
         sgtu    a3,a2,a1
         sub     a5,a5,a4        # HIGH WORD
         sub     a5,a5,a3
-        j       DPUSH
+#       j       DPUSH
+        addi    s10,s10,-4
+        sw      a2,(s10)
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ************
@@ -833,7 +1021,13 @@ rf_code_dminu:
         .globl rf_code_over
 rf_code_over:
         lw      a5,4(s10)
-        j       APUSH
+#       j       APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ************
@@ -844,7 +1038,11 @@ rf_code_over:
         .globl rf_code_drop
 rf_code_drop:
         addi    s10,s10,4
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ************
@@ -858,7 +1056,11 @@ rf_code_swap:
         lw      a5,4(s10)
         sw      a2,4(s10)
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ***********
@@ -869,7 +1071,13 @@ rf_code_swap:
         .globl rf_code_dup
 rf_code_dup:
         lw      a5,(s10)
-        j       APUSH
+#       j       APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -885,7 +1093,11 @@ rf_code_pstor:
         lw      a3,(a5)
         add     a3,a3,a4
         sw      a3,(a5)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **************
@@ -901,7 +1113,11 @@ rf_code_toggl:
         lbu     a3,(a4)
         xor     a3,a3,a5
         sb      a3,(a4)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *********
@@ -914,7 +1130,11 @@ rf_code_at:
         lw      a4,(s10)
         lw      a5,(a4)
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -927,7 +1147,11 @@ rf_code_cat:
         lw      a4,(s10)
         lbu     a5,(a4)
         sw      a5,(s10)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *********
@@ -941,7 +1165,11 @@ rf_code_store:
         lw      a4,4(s10)       # DATA
         addi    s10,s10,8
         sw      a4,(a5)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # **********
@@ -955,7 +1183,11 @@ rf_code_cstor:
         lbu     a4,4(s10)       # DATA
         addi    s10,s10,8
         sb      a4,(a5)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *********
@@ -969,7 +1201,11 @@ rf_code_docol:
         addi    s9,s9,-4
         sw      s11,(s9)        # R1 <- (RP)
         mv      s11,s8          # (IP) <- (W)
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ****************
@@ -981,7 +1217,13 @@ rf_code_docol:
 rf_code_docon:
         lw      a5,4(s8)        # PFA
                                 # GET DATA
-        j       APUSH
+#       j       APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ****************
@@ -994,7 +1236,11 @@ rf_code_dovar:
         addi    s8,s8,4         # (DE) <- PFA
         addi    s10,s10,-4
         sw      s8,(s10)        # (S1) <- PFA
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ************
@@ -1008,7 +1254,13 @@ rf_code_douse:
         lui     a5,%hi(rf_up)   # USER VARIABLE ADDR
         lw      a5,%lo(rf_up)(a5)
         add     a5,a5,a4
-        j       APUSH
+#       j       APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # *************
@@ -1024,7 +1276,11 @@ rf_code_dodoe:
         addi    s8,s8,8         # PFA
         addi    s10,s10,-4
         sw      s8,(s10)        # PFA
-        j       NEXT
+#       j       NEXT
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
 
 # ************
@@ -1039,7 +1295,13 @@ rf_code_stod:
         sltz    a5,a2           # SET FLAGS
                                 # POSITIVE NUMBER
         neg     a5,a5           # NEGITIVE NUMBER
-STOD1:  j       APUSH
+STOD1:  # j     APUSH
+        addi    s10,s10,-4
+        sw      a5,(s10)
+        lw      s8,(s11)
+        addi    s11,s11,4
+        lw      a5,(s8)
+        jr      a5
 
         .align 1
         .globl rf_code_mon
