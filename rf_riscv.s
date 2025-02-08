@@ -39,7 +39,6 @@ rf_fp:  .zero 4
         .align 1
         .globl rf_trampoline
 rf_trampoline:
-        .file 1 "rf.c"
         addi    sp,sp,-16
         sw      ra,12(sp)
         sw      s0,8(sp)
@@ -91,9 +90,9 @@ rf_code_cold:
         li      a3,11           # USER variables init
         addi    a2,a2,24
 cold1:  lw      a5,(a2)
-		addi    a2,a2,4
+        addi    a2,a2,4
         sw      a5,(a4)
-		addi    a4,a4,4
+        addi    a4,a4,4
         addi    a3,a3,-1
         bnez    a3,cold1
         lw      s11,20(a2)      # IP init to ABORT
@@ -395,10 +394,10 @@ rf_code_digit:
         addi    s10,s10,4
         addi    a5,a5,-'0'
         bltz    a5,DIGI2        # NUMBER ERROR
-		li      a4,9
+        li      a4,9
         ble     a5,a4,DIGI1     # NUMBER = 0 THRU 9
         addi    a5,a5,-7
-		li      a4,10
+        li      a4,10
         blt     a5,a4,DIGI2     # NUMBER 'A' THRU 'Z' ?
                                 # NO
 #
@@ -531,10 +530,10 @@ ENCL4:  mv      a5,a2
         .align 1
         .globl rf_code_cmove
 rf_code_cmove:
-		lw      a4,(s10)        # COUNT
-		lw      a3,4(s10)       # DEST.
-		lw      a2,8(s10)       # SOURCE
-		addi    s10,s10,12
+        lw      a4,(s10)        # COUNT
+        lw      a3,4(s10)       # DEST.
+        lw      a2,8(s10)       # SOURCE
+        addi    s10,s10,12
         beqz    a4,CMOV2
 CMOV1:  lbu     a5,(a2)         # THATS THE MOVE
         addi    a2,a2,1
@@ -552,9 +551,9 @@ CMOV2:  j       NEXT
         .align 1
         .globl rf_code_ustar
 rf_code_ustar:
-		lw      a3,(s10)
-		lw      a4,4(s10)
-		addi    s10,s10,8
+        lw      a3,(s10)
+        lw      a4,4(s10)
+        addi    s10,s10,8
         mul     a2,a3,a4
         mulhu   a5,a3,a4
         j       DPUSH           # STORE DOUBLE WORD
@@ -584,8 +583,8 @@ UMDIV1: sltz    t0,a3           # double precision shift (modh, modl)
         slli    a3,a3,1
         sltz    t1,a4           # ADD with carry and set flags again !
         slli    a4,a4,1
-		or      a4,a4,t0
-		bnez    t1,UMDIV4
+        or      a4,a4,t0
+        bnez    t1,UMDIV4
                                 # test div - modh
         bgtu    a5,a4,UMDIV2    # div >  modh ?
 UMDIV4: add     a1,a1,a2        # add single pecision mask
@@ -606,7 +605,7 @@ UMDIV3: addi    s10,s10,-8
         .globl rf_code_andd
 rf_code_andd:
         lw      a5,(s10)
-		addi    s10,s10,4
+        addi    s10,s10,4
         lw      a4,(s10)
         and     a5,a5,a4
         sw      a5,(s10)
@@ -621,7 +620,7 @@ rf_code_andd:
         .globl rf_code_orr
 rf_code_orr:
         lw      a5,(s10)
-		addi    s10,s10,4
+        addi    s10,s10,4
         lw      a4,(s10)
         or      a5,a5,a4
         sw      a5,(s10)
@@ -636,7 +635,7 @@ rf_code_orr:
         .globl rf_code_xorr
 rf_code_xorr:
         lw      a5,(s10)
-		addi    s10,s10,4
+        addi    s10,s10,4
         lw      a4,(s10)
         xor     a5,a5,a4
         sw      a5,(s10)
@@ -740,9 +739,9 @@ rf_code_fromr:
         .globl rf_code_zequ
 rf_code_zequ:
         lw      a5,(s10)
-		seqz    a5,a5
-		sw      a5,(s10)
-		j       NEXT
+        seqz    a5,a5
+        sw      a5,(s10)
+        j       NEXT
 
 
 # **********
@@ -753,9 +752,9 @@ rf_code_zequ:
         .globl rf_code_zless
 rf_code_zless:
         lw      a5,(s10)
-		sltz    a5,a5
-		sw      a5,(s10)
-		j       NEXT
+        sltz    a5,a5
+        sw      a5,(s10)
+        j       NEXT
 
 
 # *********
@@ -766,9 +765,9 @@ rf_code_zless:
         .globl rf_code_plus
 rf_code_plus:
         lw      a5,(s10)
-		lw      a4,4(s10)
-		addi    s10,s10,8
-		add     a5,a5,a4
+        lw      a4,4(s10)
+        addi    s10,s10,8
+        add     a5,a5,a4
         j       APUSH
 
 
@@ -786,11 +785,11 @@ rf_code_dplus:
         lw      a4,4(s10)       # YLW
         lw      a3,8(s10)       # XHW 
         lw      a2,12(s10)      # XLW
-		addi    s10,s10,16
+        addi    s10,s10,16
         add     a2,a2,a4        # SLW
-		sltu    a4,a2,a4
+        sltu    a4,a2,a4
         add     a5,a5,a3        # SHW
-		add     a5,a5,a4
+        add     a5,a5,a4
         j       DPUSH
 
 
@@ -802,8 +801,8 @@ rf_code_dplus:
         .globl rf_code_minus
 rf_code_minus:
         lw      a5,(s10)
-		neg     a5,a5
-		sw      a5,(s10)
+        neg     a5,a5
+        sw      a5,(s10)
         j       NEXT
 
 
@@ -816,7 +815,7 @@ rf_code_minus:
 rf_code_dminu:
         lw      a4,(s10)
         lw      a3,4(s10)
-		addi    s10,s10,8
+        addi    s10,s10,8
         sub     a5,a5,a5        # ZERO
         mv      a1,a5
         sub     a2,a1,a3        # MAKE 2'S COMPLEMENT
@@ -939,8 +938,8 @@ rf_code_cat:
         .globl rf_code_store
 rf_code_store:
         lw      a5,(s10)        # ADDR
-		lw      a4,4(s10)       # DATA
-		addi    s10,s10,8
+        lw      a4,4(s10)       # DATA
+        addi    s10,s10,8
         sw      a4,(a5)
         j       NEXT
 
@@ -953,8 +952,8 @@ rf_code_store:
         .globl rf_code_cstor
 rf_code_cstor:
         lw      a5,(s10)        # ADDR
-		lbu     a4,4(s10)       # DATA
-		addi    s10,s10,8
+        lbu     a4,4(s10)       # DATA
+        addi    s10,s10,8
         sb      a4,(a5)
         j       NEXT
 
