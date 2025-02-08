@@ -648,11 +648,11 @@ CMOV2:  # j     NEXT
 rf_code_ustar:
         lw      a3,(s10)
         lw      a4,4(s10)
-        addi    s10,s10,8
+#       addi    s10,s10,8
         mul     a2,a3,a4
         mulhu   a5,a3,a4
 #       j       DPUSH           # STORE DOUBLE WORD
-        addi    s10,s10,-8
+#       addi    s10,s10,-8
         sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
@@ -922,10 +922,11 @@ rf_code_zless:
 rf_code_plus:
         lw      a5,(s10)
         lw      a4,4(s10)
-        addi    s10,s10,8
+#       addi    s10,s10,8
         add     a5,a5,a4
 #       j       APUSH
-        addi    s10,s10,-4
+#       addi    s10,s10,-4
+        addi    s10,s10,4
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -947,13 +948,14 @@ rf_code_dplus:
         lw      a4,4(s10)       # YLW
         lw      a3,8(s10)       # XHW 
         lw      a2,12(s10)      # XLW
-        addi    s10,s10,16
+#       addi    s10,s10,16
         add     a2,a2,a4        # SLW
         sltu    a4,a2,a4
         add     a5,a5,a3        # SHW
         add     a5,a5,a4
 #       j       DPUSH
-        addi    s10,s10,-8
+#       addi    s10,s10,-8
+        addi    s10,s10,8
         sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
@@ -988,7 +990,7 @@ rf_code_minus:
 rf_code_dminu:
         lw      a4,(s10)
         lw      a3,4(s10)
-        addi    s10,s10,8
+#       addi    s10,s10,8
         sub     a5,a5,a5        # ZERO
         mv      a1,a5
         sub     a2,a1,a3        # MAKE 2'S COMPLEMENT
@@ -996,7 +998,7 @@ rf_code_dminu:
         sub     a5,a5,a4        # HIGH WORD
         sub     a5,a5,a3
 #       j       DPUSH
-        addi    s10,s10,-8
+#       addi    s10,s10,-8
         sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
