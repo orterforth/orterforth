@@ -451,9 +451,8 @@ DIGI1:  bge     a5,a2,DIGI2     # COMPARE NUMBER TO BASE
         mv      a2,a5           # NEW BINARY NUMBER
         li      a5,1            # TRUE FLAG
 #       j       DPUSH           # ADD TO STACK
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -510,9 +509,8 @@ PFIN2:  addi    a4,a4,1
         li      a5,1            # TRUE VALUE
         andi    a2,a2,255       # CLEAR HIGH LENGTH
 #       j       DPUSH
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -574,9 +572,8 @@ ENCL1:  addi    a4,a4,1         # ADDR +1
         mv      a5,a2           # COPY COUNTER
         addi    a2,a2,1         # +1
 #       j       DPUSH
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -596,9 +593,8 @@ ENCL2:  addi    a4,a4,1         # ADDR+1
 #
 ENCL3:  mv      a5,a2           # COUNTERS ARE EQUAL
 #       j       DPUSH
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -609,9 +605,8 @@ ENCL3:  mv      a5,a2           # COUNTERS ARE EQUAL
 ENCL4:  mv      a5,a2
         addi    a5,a5,1         # COUNT +1
 #       j       DPUSH
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -657,9 +652,8 @@ rf_code_ustar:
         mul     a2,a3,a4
         mulhu   a5,a3,a4
 #       j       DPUSH           # STORE DOUBLE WORD
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -959,9 +953,8 @@ rf_code_dplus:
         add     a5,a5,a3        # SHW
         add     a5,a5,a4
 #       j       DPUSH
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
@@ -1003,9 +996,8 @@ rf_code_dminu:
         sub     a5,a5,a4        # HIGH WORD
         sub     a5,a5,a3
 #       j       DPUSH
-        addi    s10,s10,-4
-        sw      a2,(s10)
-        addi    s10,s10,-4
+        addi    s10,s10,-8
+        sw      a2,4(s10)
         sw      a5,(s10)
         lw      s8,(s11)
         addi    s11,s11,4
