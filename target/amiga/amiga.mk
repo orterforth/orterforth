@@ -52,9 +52,9 @@ AMIGAWORKBENCH=workbench2.05.adf
 endif
 
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
-	$(START) fsuae.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-0=extras1.3.adf --serial-port=tcp://127.0.0.1:5705
+	$(START) amiga/machine.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-0=extras1.3.adf --serial-port=tcp://127.0.0.1:5705
 
-AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh fsuae.pid
+AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh amiga/machine.pid
 
 AMIGAVBCCHOME=/opt/vbcc/sdk
 AMIGAVBCCOPTS=-L$(AMIGAVBCCHOME)/NDK_3.9/Include/linker_libs \
@@ -71,8 +71,18 @@ amiga :
 
 	mkdir $@
 
+ifeq ($(AMIGALOADINGMETHOD),disk)
+AMIGAINSTDEPS := amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(ORTER)
+AMIGARUNDEPS := amiga/orterforth amiga/orterforth.adf | $(DISC) $(DR0) $(DR1)
+AMIGASTARTFSUAE += --floppy-drive-1=$<.adf
+endif
+ifeq ($(AMIGALOADINGMETHOD),serial)
+AMIGAINSTDEPS := amiga/inst amiga/inst.bas amiga/inst.rexx model.img | amiga/long $(DISC) $(ORTER)
+AMIGARUNDEPS := amiga/orterforth amiga/orterforth.bin amiga/orterforth.bin.bas amiga/orterforth.bin.rexx amiga/orterforth.bas amiga/orterforth.rexx | amiga/long $(DISC) $(DR0) $(DR1)
+endif
+
 .PHONY : amiga-build
-amiga-build : amiga/inst.adf
+amiga-build : $(AMIGARUNDEPS)
 
 .PHONY : amiga-hw
 amiga-hw : amiga/hw amiga/hw.adf amiga/hw.rexx | amiga/long $(ORTER)
@@ -94,16 +104,6 @@ ifeq ($(AMIGAMACHINE),fsuae)
 endif
 	@$(AMIGALOADSERIAL)
 	@$(WARN) "Type: ram:hw"
-endif
-
-ifeq ($(AMIGALOADINGMETHOD),disk)
-AMIGAINSTDEPS := amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(ORTER)
-AMIGARUNDEPS := amiga/orterforth amiga/orterforth.adf | $(DISC) $(DR0) $(DR1)
-AMIGASTARTFSUAE += --floppy-drive-1=$<.adf
-endif
-ifeq ($(AMIGALOADINGMETHOD),serial)
-AMIGAINSTDEPS := amiga/inst amiga/inst.bas amiga/inst.rexx model.img | amiga/long $(DISC) $(ORTER)
-AMIGARUNDEPS := amiga/orterforth amiga/orterforth.bin amiga/orterforth.bin.bas amiga/orterforth.bin.rexx amiga/orterforth.bas amiga/orterforth.rexx | amiga/long $(DISC) $(DR0) $(DR1)
 endif
 
 .PHONY : amiga-run
@@ -129,14 +129,14 @@ endif
 ifeq ($(AMIGAMODEL),A500)
 	@$(PROMPT) "Open Shell and type: type ser: to ram:orterforth.bas"
 	@$(INFO) "Sending amiga/orterforth.bas"
-	@(cat amiga/orterforth.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
+	@(cat amiga/orterforth.bas amiga/long && sleep 15) | $(AMIGASERIAL)
 	@$(AMIGASERIALBREAK)
 	@$(PROMPT) "Insert Extras disk and type: amigabasic ram:orterforth.bas"
 	@$(INFO) "Sending amiga/orterforth"
 	@(cat amiga/orterforth amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
 	@$(PROMPT) "Type: type ser: > ram:bin.bas"
 	@$(INFO) "Sending amiga/orterforth.bin.bas"
-	@(cat amiga/orterforth.bin.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
+	@(cat amiga/orterforth.bin.bas amiga/long && sleep 15) | $(AMIGASERIAL)
 	@$(AMIGASERIALBREAK)
 	@$(PROMPT) "Type: amigabasic ram:bin.bas"
 	@$(INFO) "Sending amiga/orterforth.bin"
@@ -229,6 +229,8 @@ amiga/orterforth.bin : amiga/orterforth.img
 
 	$(ORTER) hex read < $< > $@
 
+STOPMACHINE=$(INFO) "Stopping machine" && sh scripts/stop.sh $(@D)/machine.pid
+
 amiga/orterforth.img : $(AMIGAINSTDEPS)
 
 ifeq ($(AMIGAMACHINE),fsuae)
@@ -250,13 +252,11 @@ endif
 	@$(AMIGALOADSERIAL)
 	@$(WARN) "Type: ram:inst"
 endif
-	@$(EMPTYDR1FILE) amiga/orterforth.img
-	@$(STARTDISC) $(AMIGASERIALOPTS) model.img amiga/orterforth.img
-	@$(WAITUNTILSAVED) amiga/orterforth.img
+	@$(EMPTYDR1FILE) $@
+	@$(STARTDISC) $(AMIGASERIALOPTS) model.img $@
+	@$(WAITUNTILSAVED) $@
 	@$(STOPDISC)
-ifeq ($(AMIGAMACHINE),fsuae)
-	@$(AMIGASTOPFSUAE)
-endif
+	@$(STOPMACHINE)
 
 amiga/rf_m68k.o : amiga/rf_m68k.s
 
