@@ -81,16 +81,20 @@ AMIGAINSTDEPS := amiga/inst amiga/inst.bas amiga/inst.rexx model.img | amiga/lon
 AMIGARUNDEPS := amiga/orterforth amiga/orterforth.bin amiga/orterforth.bin.bas amiga/orterforth.bin.rexx amiga/orterforth.bas amiga/orterforth.rexx | amiga/long $(DISC) $(DR0) $(DR1)
 endif
 
+ifeq ($(AMIGAMACHINE),fsuae)
+AMIGASTARTMACHINE=$(AMIGASTARTFSUAE) && sleep 3 && $(WARN) "NB set serial handshaking to None"
+endif
+ifeq ($(AMIGAMACHINE),real)
+AMIGASTARTMACHINE=:
+endif
+
 .PHONY : amiga-build
 amiga-build : $(AMIGARUNDEPS)
 
 .PHONY : amiga-hw
 amiga-hw : amiga/hw amiga/hw.adf amiga/hw.rexx | amiga/long $(ORTER)
 
-ifeq ($(AMIGAMACHINE),fsuae)
-	@$(AMIGASTARTFSUAE)
-	@sleep 3
-endif
+	@$(AMIGASTARTMACHINE)
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
 	@$(WARN) "Physical disk load not supported"
@@ -109,11 +113,7 @@ endif
 .PHONY : amiga-run
 amiga-run : $(AMIGARUNDEPS)
 
-ifeq ($(AMIGAMACHINE),fsuae)
-	@$(AMIGASTARTFSUAE)
-	@sleep 3
-	@$(WARN) "NB set serial handshaking to None"
-endif
+	@$(AMIGASTARTMACHINE)
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
 	@$(WARN) "Physical disk load not supported"
@@ -233,11 +233,7 @@ STOPMACHINE=$(INFO) "Stopping machine" && sh scripts/stop.sh $(@D)/machine.pid
 
 amiga/orterforth.img : $(AMIGAINSTDEPS)
 
-ifeq ($(AMIGAMACHINE),fsuae)
-	@$(AMIGASTARTFSUAE)
-	@sleep 3
-	@$(WARN) "NB set serial handshaking to None"
-endif
+	@$(AMIGASTARTMACHINE)
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
 	@$(WARN) "Physical disk load not supported"
