@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <proto/dos.h>
 
 #include "../../rf.h"
