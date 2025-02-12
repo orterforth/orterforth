@@ -258,7 +258,6 @@ typedef uint64_t rf_double_t;
 /* PICO */
 #define RF_TARGET_HI 0x00000000
 #define RF_TARGET_LO 0x00122928
-#define RF_ALIGN 4
 #define RF_NOEXIT
 #endif
 
