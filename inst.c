@@ -490,7 +490,7 @@ void rf_inst(void)
   rf_inst_compile(
     "SP! "
     "LIT 0 FIRST OVER OVER ! cl + LIT 128 + ! "
-    "LIT 805 LIT 785 (DO) R BLOCK compile (LOOP) ^-4 "
+    "LIT 813 LIT 793 (DO) R BLOCK compile (LOOP) ^-4 "
     "LIT ^21 LIT 8 ic + @ @ LIT ^-24 + EXECUTE");
 
   /* set boot-up literals */

@@ -205,7 +205,7 @@ DECIMAL    ;S
 0001   ,        ( INITIAL WARNING = 1 )
 0200   ,        ( INITIAL FENCE )
 0000   ,        ( COLD START VALUE FOR DP )
-0000   ,        ( COLD START VALUE FOR VOC-LINK ) 6D LOAD -->
+0000   ,        ( COLD START VALUE FOR VOC-LINK ) 62 LOAD -->
 (  START OF NUCLEUS,  LIT, PUSH, PUT, NEXT        WFR-78DEC26 )
 CODE LIT                   ( PUSH FOLLOWING LITERAL TO STACK *)
 3 cd HERE cl - !
@@ -1566,6 +1566,22 @@ HERE  14 cs  +ORIGIN  !   ( FENCE )
 HERE  15 cs  +ORIGIN  !   ( DP )
 '  EDITOR  2 ln + 2 cs + 16 cs  +ORIGIN  !  ( VOC-LINK )
 HERE  FENCE   !      ;S
+( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
+
+( additional boot-up literals                                 )
+10 ic , 11 ic ,                 ( for CPU, base 36            )
+6 ic , 7 ic ,                   ( for target, base 36         )
+0 , 0 ,                         ( used by COLD                )
+13 ic ,                         ( for extension               )
+
+( additional words                                            )
+CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)
+CODE cs 1 cd HERE cl - !        ( multiply by cell size      *)
+CODE ln 2 cd HERE cl - !        ( align as CPU requires      *)
+;S
+
+
+
 ( START - PROTO INTERPRETER SOURCE                 orterforth )
 ( a simple proto-interpreter bootstraps the outer interpreter )
 :u cs LIT 2 ic + R> DROP ;S :DP LIT  9 u :BLK     LIT 11 u
@@ -1601,7 +1617,7 @@ R> IN ! R> BLK ! ;S
 
 
 :QUIT  LIT 0 STATE ! LIT 9 ic LIT 10 ic OVER - LIT 0 FILL
-       LIT 101 LOAD MON
+       LIT 102 LOAD MON
 
 
 :ABORT SP! LIT 10 BASE ! LIT 0 OFFSET ! LIT 21 cs LIT 8 ic + @
@@ -1698,7 +1714,7 @@ CODE R/W
 : save0 15 ic 0= IF 0 ' cl LFA ! R> DROP ;S ENDIF ; ( no save )
 save0 FORGET save0
 HERE 64 cs 14 ic * ALLOT CONSTANT tbl            ( link table )
-: save1 15 ic 3 < IF 107 LOAD R> DROP ;S ENDIF ; ( save/link? )
+: save1 15 ic 3 < IF 108 LOAD R> DROP ;S ENDIF ; ( save/link? )
 save1 FORGET tbl
 : save3 15 ic 3 = IF 110 LOAD R> DROP ;S ENDIF ; ( save/reloc )
 save3 FORGET save3
@@ -1741,22 +1757,6 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
 
 0 ' cl LFA !                    ( break inst dictionary link  )
 save FORGET tbl ;S              ( now save, if enabled; done! )
-
-( COMPILED AFTER BOOT-UP LITERALS                  orterforth )
-
-( additional boot-up literals                                 )
-10 ic , 11 ic ,                 ( for CPU, base 36            )
-6 ic , 7 ic ,                   ( for target, base 36         )
-0 , 0 ,                         ( used by COLD                )
-13 ic ,                         ( for extension               )
-
-( additional words                                            )
-CODE cl 0 cd HERE SMUDGE cl SMUDGE - ! ( cell size           *)
-CODE cs 1 cd HERE cl - !        ( multiply by cell size      *)
-CODE ln 2 cd HERE cl - !        ( align as CPU requires      *)
-;S
-
-
 
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 HEX : cd cd ; 0 ' cl LFA !    ( break inst dict link, keep cd )
