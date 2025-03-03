@@ -1713,7 +1713,7 @@ CODE R/W
 ( SAVE OPTIONS                                     orterforth )
 : save0 15 ic 0= IF 0 ' cl LFA ! R> DROP ;S ENDIF ; ( no save )
 save0 FORGET save0
-HERE 64 cs 14 ic * ALLOT CONSTANT tbl            ( link table )
+HERE 64 cs 15 ic 2 = * ALLOT CONSTANT tbl        ( link table )
 : save1 15 ic 3 < IF 108 LOAD R> DROP ;S ENDIF ; ( save/link? )
 save1 FORGET tbl
 : save3 15 ic 3 = IF 110 LOAD R> DROP ;S ENDIF ; ( save/reloc )
@@ -1728,7 +1728,7 @@ save3 FORGET save3
 
 ( CREATE LINK TABLE                                orterforth )
 : link                          ( --                          )
-  14 ic IF                      ( only if link enabled:       )
+  15 ic 2 = IF                  ( only if link enabled:       )
     HERE tbl DP !               ( save and set DP             )
     59 0 DO I cd , LOOP         ( table of code addresses     )
     ' : 9 cs + ,                ( end of table has 5 refs in  )
@@ -1744,8 +1744,8 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
 -->
 ( SAVE INSTALLATION TO DR1 AS HEX                  orterforth )
 2000 VARIABLE blk               ( first block of DR1          )
-: start 14 ic IF 8 ic ELSE 13 ic ENDIF ; ( org or origin      )
-: end tbl 14 ic IF 64 cs + ENDIF ;       ( here or after link )
+: start 15 ic 2 = IF 8 ic ELSE 13 ic ENDIF ; ( origin or org  )
+: end tbl 15 ic 2 = IF 64 cs + ENDIF ;       ( link table?    )
 : save                          ( --                          )
   15 ic IF                      ( only if save enabled:       )
     end start DO                ( write blocks of hex         )
