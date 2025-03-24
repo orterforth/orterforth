@@ -37,7 +37,8 @@ AMIGASERIALBREAK := \
 	cat amiga/long | $(AMIGASERIAL)
 
 ifeq ($(AMIGAMODEL),A500)
-AMIGAWORKBENCH=workbench1.3.adf
+AMIGAKICKSTART='roms/amiga/Kickstart - 315093-01 (USA, Europe) (v1.2 Rev 33.180) (A500, A2000).rom'
+AMIGAWORKBENCH='roms/amiga/Workbench v1.3 rev 34.20 (1988)(Commodore)(A500-A2000)(GB)(Disk 1 of 2)(Workbench).adf'
 endif
 ifeq ($(AMIGAMODEL),A500+)
 AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
@@ -48,11 +49,12 @@ AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 	$(PROMPT) "Type: rx ram:$(<F)" && \
 	$(INFO) "Sending $<" && \
 	(cat $< amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
-AMIGAWORKBENCH=workbench2.05.adf
+AMIGAKICKSTART='roms/amiga/Kickstart - 390979-01 (USA, Europe) (v2.04 Rev 37.175) (A500 Plus, A2000).rom'
+AMIGAWORKBENCH='roms/amiga/Workbench v2.04 rev 37.67 (1991)(Commodore)(Disk 1 of 4)(Workbench).adf'
 endif
 
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
-	$(START) amiga/machine.pid fs-uae --amiga-model=$(AMIGAMODEL) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-0=extras1.3.adf --serial-port=tcp://127.0.0.1:5705
+	$(START) amiga/machine.pid fs-uae --amiga-model=$(AMIGAMODEL) --kickstart-file=$(AMIGAKICKSTART) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-0=extras1.3.adf --serial-port=tcp://127.0.0.1:5705
 
 AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh amiga/machine.pid
 
