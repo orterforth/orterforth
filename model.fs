@@ -1768,9 +1768,9 @@ HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
 : c. ( DUP 0 <# # # #> TYPE SPACE )               ( send byte )
   0 10 U/ hd hd idx @ buf - 80 = IF flush ENDIF ;
 : w. SP@ cl 0 DO DUP C@ c. 1+ LOOP DROP DROP ;    ( send word )
-: absw 21 c. ptr @ @ w. cl ptr +! ;                ( abs word )
-: relw 41 c. ptr @ @ 0 +ORIGIN - w. cl ptr +! ;    ( rel word )
-: link 61 c. 3B 0 DO                           ( link to code )
+: absw 20 cl + c. ptr @ @ w. cl ptr +! ;           ( abs word )
+: relw 40 cl + c. ptr @ @ 0 +ORIGIN - w. cl ptr +! ; ( rel wd )
+: link 60 cl + c. 3B 0 DO                      ( link to code )
   ptr @ @ I cd = IF I w. LEAVE ENDIF LOOP cl ptr +! ;
 : absb DUP 80 + c. 0 DO ptr @ C@ c. 1 ptr +! LOOP ; ( abs byt )
 -->

@@ -91,7 +91,7 @@ void rf_inst(void)
     h = b & 0xE0;
     l = b & 0x1F;
 
-    if (h != 0x80) l *= RF_WORD_SIZE; 
+    /* move bytes */
     rr = (uintptr_t *) qq;
     for (; l; --l) {
       *(qq++) = *(pp++);
