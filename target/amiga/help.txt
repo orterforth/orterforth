@@ -4,9 +4,11 @@ Building for the Commodore Amiga
 You will need:
 
 * vbcc      http://www.compilers.de/vbcc.html
-* FS-UAE    https://fs-uae.net/ including Amiga Kickstart ROM
-            and Workbench floppy image
-* Amiga NDK
+* Amiga NDK - see:
+  https://linuxjedi.co.uk/using-vbcc-as-an-amiga-cross-compiler-in-linux/
+* FS-UAE    https://fs-uae.net/ 
+* Kickstart ROM
+* Workbench floppy image .adf file
 * xdftool   https://github.com/cnvogelg/amitools
 
 To build, call:
