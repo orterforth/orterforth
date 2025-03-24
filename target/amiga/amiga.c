@@ -139,7 +139,7 @@ void rf_serial_put(uint8_t c)
 void rf_fin(void)
 {
     CloseDevice((struct IORequest *) SerialIO);
-    DeleteMsgPort(SerialMP);
+    DeletePort(SerialMP);
 
     CloseDevice((struct IORequest *) KeyIO);
     DeleteExtIO((struct IORequest *) KeyIO);
@@ -147,6 +147,6 @@ void rf_fin(void)
 
     CloseDevice((struct IORequest *) ConsIO);
     CloseWindow(win);
-    DeleteMsgPort(ConsoleMP);
+    DeletePort(ConsoleMP);
     FreeMem(rf_origin, RF_MEMORY_SIZE);
 }

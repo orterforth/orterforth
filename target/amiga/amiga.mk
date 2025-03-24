@@ -58,15 +58,13 @@ AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
 
 AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh amiga/machine.pid
 
-AMIGAVBCCHOME=/opt/vbcc/sdk
-AMIGAVBCCOPTS=-L$(AMIGAVBCCHOME)/NDK_3.9/Include/linker_libs \
-	-I$(AMIGAVBCCHOME)/NDK_3.9/Include/include_h \
-	+kick13
+AMIGAVBCCHOME=/opt/amiga/vbcc
+AMIGAVBCCOPTS=+kick13
 ifeq ($(AMIGAOPTION),assembly)
 AMIGAVBCCOPTS += -DRF_ASSEMBLY
 endif
-AMIGAVC=PATH=$(AMIGAVBCCHOME)/vbcc/bin:$$PATH \
-	VBCC=$(AMIGAVBCCHOME)/vbcc \
+AMIGAVC=PATH=/opt/amiga/bin:$$PATH \
+	VBCC=$(AMIGAVBCCHOME) \
 	vc $(AMIGAVBCCOPTS)
 
 amiga :
