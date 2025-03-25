@@ -1,5 +1,3 @@
-#include <proto/dos.h>
-
 #include "../../rf.h"
 
 static rf_code_t codes[] = {
@@ -66,22 +64,11 @@ static rf_code_t codes[] = {
 
 extern char rf_installed;
 
-void rf_console_put(uint8_t c);
-
 void rf_inst(void)
 {
-  BPTR      f;
   uint8_t   *pp, *qq;
   uint8_t   b, h, l;
   uintptr_t *rr;
-
-  /* read file */
-  f = Open("ram:orterforth.bin", MODE_OLDFILE);
-  pp = rf_origin;
-  while (Read(f, pp, 1024) == 1024) {
-      pp += 1024;
-  }
-  Close(f);
 
   /* start relocating/linking */
   pp = qq = rf_origin;

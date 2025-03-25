@@ -8,6 +8,8 @@
 #include <clib/alib_protos.h>
 #include <clib/intuition_protos.h>
 
+#include <proto/dos.h>
+
 #include "../../rf.h"
 
 char *rf_origin = 0;
@@ -47,8 +49,21 @@ static uint8_t          b;
 
 void rf_init(void)
 {
+    BPTR      f;
+    uint8_t   *pp;
+
     /* memory */
     rf_origin = AllocMem(RF_MEMORY_SIZE, MEMF_ANY);
+
+    /* read file if present */
+    f = Open("ram:orterforth.bin", MODE_OLDFILE);
+    if (f) {
+        pp = rf_origin;
+        while (Read(f, pp, 1024) == 1024) {
+            pp += 1024;
+        }
+        Close(f);
+    }
 
     /* console */
     ConsoleMP = CreatePort("RKM.Console",0);
