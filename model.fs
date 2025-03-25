@@ -881,19 +881,19 @@ VOCABULARY  FORTH     IMMEDIATE       ( THE TRUNK VOCABULARY *)
 (  COLD START                                     WFR-79APR29 )
 CODE COLD               ( COLD START, INITIALIZING USER AREA *)
    35 cd cl  +ORIGIN  !  ( POINT COLD ENTRY TO HERE )
-35 cd HERE cl - !
-2 ln cl + BYTE.IN FORTH 15 cs +ORIGIN !
-0 BYTE.IN ABORT 16 cs +ORIGIN !
+2 ln cl + BYTE.IN FORTH 15 cs +ORIGIN !      ( FORTH VOCAB. )
+
+
+  35 cd 3 cs +ORIGIN !   ( POINT RE-ENTRY TO HERE )
 
 
 
 
 
 
+     0 BYTE.IN ABORT 16 cs +ORIGIN !
 
-
-
-                                                    -->    
+35 cd HERE cl - !                                   -->
 (  MATH UTILITY                               DJK-WFR-79APR29 )
 CODE S->D                  ( EXTEND SINGLE INTEGER TO DOUBLE *)
 36 cd HERE cl - !
@@ -1776,7 +1776,7 @@ HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
 -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( boot-up literals                                            )
-absw link absw absw                    ( vectors to COLD WARM )
+absw link absw link                    ( vectors to COLD WARM )
 absw absw relw absw                    ( USRVER ATTR FORTH BS )
 relw relw relw relw                          ( USER S0 R0 TIB )
 absw absw relw relw relw    ( WIDTH WARNING FENCE DP VOC-LINK )
