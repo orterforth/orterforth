@@ -56,8 +56,6 @@ endif
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
 	$(START) amiga/machine.pid fs-uae --amiga-model=$(AMIGAMODEL) --kickstart-file=$(AMIGAKICKSTART) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-0=extras1.3.adf --serial-port=tcp://127.0.0.1:5705
 
-AMIGASTOPFSUAE := $(INFO) "Stopping FS-UAE" && sh scripts/stop.sh amiga/machine.pid
-
 AMIGAVBCCHOME=/opt/amiga/vbcc
 AMIGAVBCCOPTS=+kick13
 ifeq ($(AMIGAOPTION),assembly)
@@ -97,8 +95,7 @@ amiga-hw : amiga/hw amiga/hw.adf amiga/hw.rexx | amiga/long $(ORTER)
 	@$(AMIGASTARTMACHINE)
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "Physical disk load not supported"
-	@exit 1
+	@$(WARN) "Write amiga/hw.adf to disk"
 endif
 	@$(WARN) "Open Shell and execute df1:hw"
 endif
@@ -116,8 +113,7 @@ amiga-run : $(AMIGARUNDEPS)
 	@$(AMIGASTARTMACHINE)
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "Physical disk load not supported"
-	@exit 1
+	@$(WARN) "Write amiga/orterforth.adf to disk"
 endif
 	@$(WARN) "Open Shell and execute: copy df1: to ram: <enter>"
 	@$(WARN) "                        ram:orterforth <enter>"
@@ -236,8 +232,7 @@ amiga/orterforth.img : $(AMIGAINSTDEPS)
 	@$(AMIGASTARTMACHINE)
 ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "Physical disk load not supported"
-	@exit 1
+	@$(WARN) "Write amiga/inst.adf to disk"
 endif
 	@$(WARN) "Open Shell and execute df1:inst"
 endif
