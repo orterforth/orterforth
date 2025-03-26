@@ -122,6 +122,18 @@ bbc :
 
 	mkdir $@
 
+REQUIRETOOL=which $@ >/dev/null 2>/dev/null || (printf '* \033[1;31m%s %s\033[0;0m\n' 'Tool required but not installed:' $@ ; exit 1)
+
+.PHONY : bbcim
+bbcim :
+
+	@$(REQUIRETOOL)
+
+.PHONY : cc65
+cc65 :
+
+	@$(REQUIRETOOL)
+
 .PHONY : bbc-build
 bbc-build : $(BBCMEDIA)
 
@@ -140,6 +152,10 @@ bbc/%.o : bbc/%.s
 
 	ca65 -o $@ $<
 
+bbc/%.s : %.c rf.h target/bbc/bbc.inc | bbc cc65
+
+	cc65 $(BBCCC65OPTS) -o $@ $<
+
 bbc/%.ser : bbc/%
 
 	printf "10FOR I%%=&%X TO &%X:?I%%=GET:NEXT I%%:P.\"done\"\r" 0x$(BBCORG) $$((0x$(BBCORG)+$$($(STAT) $<)-1)) > $@.io
@@ -147,7 +163,7 @@ bbc/%.ser : bbc/%
 	cat -u $< >> $@.io
 	mv $@.io $@
 
-bbc/%.ssd : bbc/% bbc/%.inf bbc/boot bbc/boot.inf
+bbc/%.ssd : bbc/% bbc/%.inf bbc/boot bbc/boot.inf | bbcim
 
 	rm -f $@
 	bbcim -a $@ bbc/boot
@@ -179,7 +195,7 @@ bbc/inst bbc/inst.map : $(BBCDEPS)
 
 	cl65 -O -t none -C target/bbc/bbc.cfg --start-addr 0x$(BBCORG) -o $@ -m bbc/inst.map $^
 
-bbc/inst.s : inst.c rf.h target/bbc/bbc.inc | bbc
+bbc/inst.s : inst.c rf.h target/bbc/bbc.inc | bbc cc65
 
 	cc65 $(BBCCC65OPTS) \
 		--bss-name INST \
@@ -187,14 +203,6 @@ bbc/inst.s : inst.c rf.h target/bbc/bbc.inc | bbc
 		--data-name INST \
 		--rodata-name INST \
 		-o $@ $<
-
-bbc/io.s : io.c rf.h target/bbc/bbc.inc | bbc
-
-	cc65 $(BBCCC65OPTS) -o $@ $<
-
-bbc/main.s : main.c rf.h target/bbc/bbc.inc | bbc
-
-	cc65 $(BBCCC65OPTS) -o $@ $<
 
 bbc/mos.o : target/bbc/mos.s | bbc
 
@@ -217,10 +225,6 @@ bbc/orterforth.hex : $(BBCINSTMEDIA) model.img | $(BBCROMS) $(DISC)
 	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 
-bbc/rf.s : rf.c rf.h target/bbc/bbc.inc | bbc
-
-	cc65 $(BBCCC65OPTS) -o $@ $<
-
 bbc/rf_6502.o : rf_6502.s | bbc
 
 	ca65 -DORIG='0x$(BBCORIGIN)' -DTOS=\$$70 -o $@ $<
@@ -236,3 +240,19 @@ bbc/system_c.s : target/bbc/system.c rf.h target/bbc/bbc.inc | bbc
 tools/github.com/haerfest/uef/uef2wave.py :
 
 	git submodule update --init tools/github.com/haerfest/uef
+
+tools/wouter.bbcmicro.net/bbc/bestanden :
+
+	mkdir -p $@
+
+tools/wouter.bbcmicro.net/bbc/bestanden/bbcim-1.0.1.zip : | tools/wouter.bbcmicro.net/bbc/bestanden
+
+	curl -o $@ http://wouter.bbcmicro.net/bbc/bestanden/bbcim-1.0.1.zip
+
+tools/wouter.bbcmicro.net/bbc/bestanden/bbcim-1.0.1/src/bbcim.c : | tools/wouter.bbcmicro.net/bbc/bestanden/bbcim-1.0.1.zip
+
+	unzip -d tools/wouter.bbcmicro.net/bbc/bestanden $<
+
+tools/wouter.bbcmicro.net/bbc/bestanden/bbcim-1.0.1/bbcim : tools/wouter.bbcmicro.net/bbc/bestanden/bbcim-1.0.1/src/bbcim.c
+
+	cd tools/wouter.bbcmicro.net/bbc/bestanden/bbcim-1.0.1 && make
