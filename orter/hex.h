@@ -7,4 +7,6 @@ int orter_hex_include(char *name);
 
 int orter_hex_read(void);
 
+int orter_hex_write(void);
+
 #endif /* ORTER_HEX_H_ */

@@ -11,6 +11,7 @@ COMPLETEDR1FILE = mv $@.io $@ ; $(INFO) 'Done'
 EMPTYDR1FILE   := $(INFO) 'Clearing DR1'           ; printf '' >
 MAMEOPTS       := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
 PROMPT         := sh scripts/prompt.sh
+REQUIRETOOL     = which $@ >/dev/null 2>/dev/null || (printf '* \033[1;31m%s %s\033[0;0m\n' 'Tool required but not installed:' $@ ; exit 1)
 SERIALBAUD     := 9600
 START          := sh scripts/start.sh /dev/stdin /dev/stdout
 STARTMAME      := $(INFO) 'Starting MAME'          ; $(START) mame.pid mame
@@ -66,6 +67,9 @@ SYSTEM := $(OPER)-$(PROC)
 
 # default build is local system platform
 TARGET := $(SYSTEM)
+
+# adjust path to call local system executables
+export PATH := $(SYSTEM):$(PATH)
 
 # local system target executables
 DISC := $(SYSTEM)/disc
@@ -202,6 +206,11 @@ audio : $(TARGET)/orterforth.wav
 .PHONY : build
 build : $(TARGET)-build
 
+.PHONY : cc65
+cc65 :
+
+	@$(REQUIRETOOL)
+
 # clean
 .PHONY : clean
 clean : $(TARGET)-clean
@@ -281,6 +290,8 @@ include orter/orter.mk
 include target/amiga/amiga.mk
 
 include target/apple2/apple2.mk
+
+include target/atari/atari.mk
 
 include target/bbc/bbc.mk
 

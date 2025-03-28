@@ -1,5 +1,6 @@
 # orter - retrocomputing multitool
 $(ORTER) : \
+	$(SYSTEM)/orter_atari.o \
 	$(SYSTEM)/orter_bbc.o \
 	$(SYSTEM)/orter_dragon.o \
 	$(SYSTEM)/orter_hex.o \
@@ -14,6 +15,11 @@ $(ORTER) : \
 	orter/main.c
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lutil
+
+# Atari 8-bit
+$(SYSTEM)/orter_atari.o : orter/atari.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # BBC Micro
 $(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)

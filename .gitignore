@@ -6,6 +6,7 @@
 *.rom
 /amiga/
 /apple2/
+/atari/
 /bbc/
 /c64/
 /cfg/

@@ -100,3 +100,26 @@ int orter_hex_read(void)
 
   return 0;
 }
+
+/* read hex, write binary */
+int orter_hex_write(void)
+{
+  int b;
+
+  /* loop until EOF */
+  for (;;) {
+    /* read byte */
+    b = getchar();
+    if (b == -1) {
+      break;
+    }
+    /* write hex */
+    if (printf("%02X", b) < 0) {
+      perror("printf failed");
+      return 1;
+    }
+    fflush(stdout);
+  }
+
+  return 0;
+}

@@ -122,15 +122,8 @@ bbc :
 
 	mkdir $@
 
-REQUIRETOOL=which $@ >/dev/null 2>/dev/null || (printf '* \033[1;31m%s %s\033[0;0m\n' 'Tool required but not installed:' $@ ; exit 1)
-
 .PHONY : bbcim
 bbcim :
-
-	@$(REQUIRETOOL)
-
-.PHONY : cc65
-cc65 :
 
 	@$(REQUIRETOOL)
 
