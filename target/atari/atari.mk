@@ -12,11 +12,11 @@ endif
 ifeq ($(ATARIOPTION),assembly)
 ATARICC65OPTS += -DRF_ASSEMBLY
 ATARIDEPS += atari/rf_6502.o
-ATARIORIGIN := 0x3C80
+ATARIORIGIN := 0x3E00
 endif
 ifeq ($(ATARIOPTION),default)
 ATARIDEPS += atari/rf.o
-ATARIORIGIN = 0x4900
+ATARIORIGIN = 0x4A00
 endif
 
 atari :

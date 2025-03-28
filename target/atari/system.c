@@ -1,5 +1,6 @@
 #include <conio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <atari.h>
 #include <serial.h>
@@ -22,7 +23,7 @@ void rf_init(void)
 
 void rf_console_put(uint8_t b)
 {
-  cputc(b);
+  putchar(b);
 }
 
 uint8_t rf_console_get(void)
@@ -39,8 +40,7 @@ uint8_t rf_console_qterm(void)
 
 void rf_console_cr(void)
 {
-  cputc('\r');
-  cputc('\n');
+  putchar('\n');
 }
 
 uint8_t rf_serial_get(void)
