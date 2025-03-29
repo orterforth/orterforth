@@ -23,6 +23,7 @@ void rf_init(void)
 
 void rf_console_put(uint8_t b)
 {
+  if (b == 0x08) b = 0x7E;
   putchar(b);
 }
 
