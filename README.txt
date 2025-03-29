@@ -160,10 +160,10 @@ generally be much better.
 
 PLATFORM INDEPENDENCE
 
-To support different platforms, while making the minimum of 
-changes to the fig-Forth language itself, there are a small 
-number of words added to the Forth dictionary to help make code
-system-independent:
+To support different platforms, and to help write system-
+independent Forth code - while making the minimum of changes to
+the fig-Forth language itself - there are a small number of
+words added to the Forth dictionary:
 
  cl ( -- n )             Returns the cell size in bytes. (CELL
                          is not part of this version of fig-
@@ -176,6 +176,8 @@ system-independent:
  ln ( c-addr -- a-addr ) Aligns the stack value according to
                          CPU requirements. (ALIGNED is not part
                          of this version of fig-Forth.)
+
+These are implemented as primitives for performance reasons.
 
 
 BACKGROUND
