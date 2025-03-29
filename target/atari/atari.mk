@@ -1,7 +1,7 @@
 ATARIATARI800OPTS := -xl -pal -no-autosave-config -xlxe_rom roms/a800xlp/co61598b.rom -basic_rom roms/a800xlp/co60302a.rom 
 ATARIDEPS := atari/inst.o atari/io.o atari/main.o atari/system.o
 ATARIORG = 0x2000
-ATARICC65OPTS = -O -t atari -DRF_ORG=$(ATARIORG) -DRF_ORIGIN=$(ATARIORIGIN) -DRF_TARGET_INC='"target/atari/atari.inc"'
+ATARICC65OPTS = -O -t atari -DRF_ORG=$(ATARIORG) -DRF_TARGET_INC='"target/atari/atari.inc"'
 # ATARIOPTION := assembly
 ATARIOPTION := default
 ifeq ($(TARGET),atari)
@@ -12,12 +12,13 @@ endif
 ifeq ($(ATARIOPTION),assembly)
 ATARICC65OPTS += -DRF_ASSEMBLY
 ATARIDEPS += atari/rf_6502.o
-ATARIORIGIN := 0x3E00
+ATARIORIGIN := 0x3D00
 endif
 ifeq ($(ATARIOPTION),default)
 ATARIDEPS += atari/rf.o
 ATARIORIGIN = 0x4A00
 endif
+ATARICC65OPTS += -DRF_ORIGIN=$(ATARIORIGIN)
 
 atari :
 
