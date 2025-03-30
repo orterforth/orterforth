@@ -382,18 +382,34 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 
 
 ;S
-( system dependent operations: BBC                        sys )
+( system dependent operations: Atari                      sys )
 FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
 : only
   BL WORD BASE @ 36 BASE ! HERE NUMBER ROT BASE !
   19 cs +ORIGIN @ = SWAP 20 cs +ORIGIN @ = AND
   0= IF [COMPILE] --> ENDIF ;
+only ATARI DECIMAL
+40 CONSTANT columns 24 CONSTANT rows
+: cls 125 EMIT ;
+;S
+
+
+
+
+
+
+( system dependent operations: BBC                        sys )
 only BBC HEX
 : mode 0355 C@ ;
 : columns 030A C@ 0308 C@ - 1+ ; : rows 0309 C@ 030B C@ - 1+ ;
 : cls 0C EMIT ;
 DECIMAL
 ;S
+
+
+
+
+
 
 
 
@@ -499,22 +515,6 @@ DECIMAL
 80 CONSTANT columns 24 CONSTANT rows
 : cls 27 EMIT ." [2J" 27 EMIT ." [H" ;
 ;S
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
