@@ -17,12 +17,12 @@ void rf_init(void)
 {
   ser_install(atrrdev_ser);
   ser_open(&params);
-  ser_ioctl(1, 0);
   cursor(1);
 }
 
 void rf_console_put(uint8_t b)
 {
+  /* BS to ATASCII delete */
   if (b == 0x08) b = 0x7E;
   putchar(b);
 }
@@ -30,6 +30,7 @@ void rf_console_put(uint8_t b)
 uint8_t rf_console_get(void)
 {
   uint8_t b = cgetc();
+  /* ATASCII end of line to CR */
   if (b == 0x9B) b = 0x0D;
   return b;
 }
