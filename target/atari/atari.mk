@@ -1,3 +1,5 @@
+# === Atari 8-bit ===
+
 ATARIATARI800OPTS := -xl -pal -no-autosave-config -xlxe_rom roms/a800xlp/co61598b.rom -basic_rom roms/a800xlp/co60302a.rom 
 ATARIDEPS := atari/inst.o atari/io.o atari/main.o atari/system.o
 ATARIORG = 0x2000
@@ -25,7 +27,7 @@ atari :
 	mkdir $@
 
 .PHONY : atari-build
-atari-build : atari/inst.xex
+atari-build : atari/orterforth.xex
 
 .PHONY : atari-hw
 atari-hw : atari/hw.xex | atari800
@@ -66,6 +68,8 @@ atari/orterforth.bin : atari/orterforth.img | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
+STARTMACHINE=$(INFO) 'Starting machine' && $(START) $(@D)/machine.pid
+
 atari/orterforth.img : atari/inst.xex atari/inst.map model.img | atari800 $(DISC)
 
 	@$(CHECKMEMORY) $(ATARIORG) $(ATARIORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' atari/inst.map)" | cut -c '33-36') - $(ATARIORG) ))
@@ -73,8 +77,7 @@ atari/orterforth.img : atari/inst.xex atari/inst.map model.img | atari800 $(DISC
 	@rm -f atari/pty
 	@$(STARTDISC) pty atari/pty model.img $@.io
 	@sleep 2
-	@$(INFO) 'Starting Atari800'
-	@$(START) atari/machine.pid atari800 $(ATARIATARI800OPTS) -turbo -rdevice $$(readlink -n atari/pty && rm atari/pty) -run $<
+	@$(STARTMACHINE) atari800 $(ATARIATARI800OPTS) -turbo -rdevice $$(readlink -n atari/pty && rm atari/pty) -run $<
 	@$(WAITUNTILSAVED) $@.io
 	@$(INFO) 'Stopping Atari800'
 	@sh scripts/stop.sh atari/machine.pid

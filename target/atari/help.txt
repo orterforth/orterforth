@@ -1,0 +1,21 @@
+Building for the Atari 8-bit
+============================
+
+You will need:
+
+ * cc65 compiler             : https://cc65.github.io
+ * Atari800 emulator         : https://atari800.github.io/
+ * Atari 800 XL ROM files at : roms/a800xlp/co61598b.rom
+                               roms/a800xlp/co60302a.rom 
+
+To build using Atari800, call:
+
+ make TARGET=atari [OPTION=assembly]
+
+Target file is:
+
+ atari/orterforth.xex
+
+To run in Atari 800, call:
+
+ make run TARGET=atari [...] [DR0=...] [DR1=...]
