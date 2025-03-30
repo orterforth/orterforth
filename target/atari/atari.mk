@@ -68,8 +68,6 @@ atari/orterforth.bin : atari/orterforth.img | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-STARTMACHINE=$(INFO) 'Starting machine' && $(START) $(@D)/machine.pid
-
 atari/orterforth.img : atari/inst.xex atari/inst.map model.img | atari800 $(DISC)
 
 	@$(CHECKMEMORY) $(ATARIORG) $(ATARIORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' atari/inst.map)" | cut -c '33-36') - $(ATARIORG) ))
@@ -79,8 +77,7 @@ atari/orterforth.img : atari/inst.xex atari/inst.map model.img | atari800 $(DISC
 	@sleep 2
 	@$(STARTMACHINE) atari800 $(ATARIATARI800OPTS) -turbo -rdevice $$(readlink -n atari/pty && rm atari/pty) -run $<
 	@$(WAITUNTILSAVED) $@.io
-	@$(INFO) 'Stopping Atari800'
-	@sh scripts/stop.sh atari/machine.pid
+	@$(STOPMACHINE)
 	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 

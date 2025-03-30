@@ -37,6 +37,11 @@ AMIGASERIALBREAK := \
 	cat amiga/long | $(AMIGASERIAL)
 
 ifeq ($(AMIGAMODEL),A500)
+AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
+	$(PROMPT) "Open Shell and type: type ser: to ram:$(<F)" && \
+	$(INFO) "Sending $<" && \
+	(cat $< amiga/long amiga/long amiga/long amiga/long $< && sleep 20) | $(AMIGASERIAL) && \
+	$(AMIGASERIALBREAK)
 AMIGAKICKSTART='roms/amiga/Kickstart - 315093-01 (USA, Europe) (v1.2 Rev 33.180) (A500, A2000).rom'
 AMIGAWORKBENCH='roms/amiga/Workbench v1.3 rev 34.20 (1988)(Commodore)(A500-A2000)(GB)(Disk 1 of 2)(Workbench).adf'
 endif
@@ -160,7 +165,7 @@ endif
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)
 
-amiga/%.adf : amiga/%
+amiga/%.adf : amiga/% | xdftool
 
 	xdftool $@ format $(<F)
 	xdftool $@ write $< $(<F)
@@ -225,8 +230,6 @@ amiga/orterforth.bin : amiga/orterforth.img
 
 	$(ORTER) hex read < $< > $@
 
-STOPMACHINE=$(INFO) "Stopping machine" && sh scripts/stop.sh $(@D)/machine.pid
-
 amiga/orterforth.img : $(AMIGAINSTDEPS)
 
 	@$(AMIGASTARTMACHINE)
@@ -261,3 +264,8 @@ amiga/rf_m68k.s : rf_m68k.s | amiga
 	sed -i 's/\.align 2/cnop 0,4/' $@.io
 	sed -i 's/\.extern/public/' $@.io
 	mv $@.io $@
+
+.PHONY : xdftool
+xdftool :
+
+	@$(REQUIRETOOL)

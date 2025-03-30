@@ -14,9 +14,11 @@ PROMPT         := sh scripts/prompt.sh
 REQUIRETOOL     = which $@ >/dev/null 2>/dev/null || (printf '* \033[1;31m%s %s\033[0;0m\n' 'Tool required but not installed:' $@ ; exit 1)
 SERIALBAUD     := 9600
 START          := sh scripts/start.sh /dev/stdin /dev/stdout
+STARTMACHINE    = $(INFO) 'Starting machine'       ; $(START) $(@D)/machine.pid
 STARTMAME      := $(INFO) 'Starting MAME'          ; $(START) mame.pid mame
 STARTDISCMSG   := $(INFO) 'Starting disc'
 STOPDISC       := $(INFO) 'Stopping disc'          ; sh scripts/stop.sh disc.pid
+STOPMACHINE     = $(INFO) "Stopping machine"       ; sh scripts/stop.sh $(@D)/machine.pid
 STOPMAME       := $(INFO) 'Stopping MAME'          ; sh scripts/stop.sh mame.pid
 WAITUNTILSAVED := $(INFO) 'Waiting until saved'    ; sh scripts/wait-until-saved.sh
 
