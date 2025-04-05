@@ -71,7 +71,7 @@ void rf_inst(void)
   uintptr_t *rr;
 
   /* start relocating/linking */
-  pp = qq = rf_origin;
+  pp = qq = RF_ORIGIN;
   while ((b = *(pp++))) {
 
     /* head type and length */
@@ -87,7 +87,7 @@ void rf_inst(void)
     /* relocate or link */
     switch (h) {
       case 0x40:
-        (*rr) += (uintptr_t) rf_origin;
+        (*rr) += (uintptr_t) RF_ORIGIN;
         break;
       case 0x60:
         (*rr) = (uintptr_t) codes[*rr];

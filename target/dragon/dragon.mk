@@ -87,6 +87,11 @@ ifeq ($(DRAGONMACHINE),xroar)
 		sh scripts/stop.sh xroar.pid
 endif
 
+.PHONY : cmoc
+cmoc :
+
+	@$(REQUIRETOOL)
+
 dragon :
 
 	mkdir $@
@@ -137,7 +142,7 @@ dragon/%.cas : dragon/%.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/%.o : %.c rf.h target/dragon/dragon.inc | dragon
+dragon/%.o : %.c rf.h target/dragon/dragon.inc | cmoc dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
@@ -145,11 +150,11 @@ dragon/%.wav : dragon/%.bin | tools/bin2cas.pl
 
 	tools/bin2cas.pl --output $@ -D $<
 
-dragon/hw.bin : hw.c
+dragon/hw.bin : hw.c | cmoc
 
 	cmoc --dragon -o $@ $^
 
-dragon/inst.bin : $(DRAGONDEPS) main.c
+dragon/inst.bin : $(DRAGONDEPS) main.c | cmoc
 
 ifeq ($(DRAGONLINK),true)
 	cmoc $(DRAGONCMOCOPTS) --org=0x4c00 --limit=0x7800 --stack-space=64 -nodefaultlibs -o $@ $^
@@ -180,9 +185,13 @@ dragon/link : dragon/link.bin
 	# link bin, minus its own header
 	dd bs=1 skip=9 if=dragon/link.bin > dragon/link
 
-dragon/link.bin : $(DRAGONLINKDEPS) main.c
+dragon/link.bin : $(DRAGONLINKDEPS) main.c | cmoc
 
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
+
+dragon/link.o : target/amiga/link.c | cmoc dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 dragon/orterforth : $(DRAGONPARTS)
 
@@ -193,7 +202,7 @@ dragon/orterforth.bin : dragon/orterforth
 	$(ORTER) dragon bin header 2 $(DRAGONORG) $$($(STAT) $<) $(DRAGONORG) > $@
 	cat $< >> $@
 
-dragon/rf_6809.o : rf_6809.s | dragon
+dragon/rf_6809.o : rf_6809.s | dragon lwasm
 
 	lwasm --6809 --obj -DRF_ORIGIN=$(DRAGONORIGIN) -o $@ $<
 
@@ -206,17 +215,22 @@ dragon/spacer : dragon/link
 	$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $$($(STAT) dragon/link)
 	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $$($(STAT) dragon/link) )) > $@
 
-dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | dragon
+dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | cmoc dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
-dragon/system_asm.o : target/dragon/system.s | dragon
+dragon/system_asm.o : target/dragon/system.s | cmoc dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
 dragon/tx : | dragon
 
 	mkfifo $@
+
+.PHONY : lwasm
+lwasm :
+
+	@$(REQUIRETOOL)
 
 tools/bin2cas.pl : | tools
 
