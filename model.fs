@@ -1716,7 +1716,7 @@ save0 FORGET save0
 HERE CONSTANT end
 : save1 15 ic 3 < IF 108 LOAD R> DROP ;S ENDIF ;       ( save )
 save1 FORGET end
-: save3 15 ic 3 = IF 110 LOAD R> DROP ;S ENDIF ; ( save/reloc )
+: save3 15 ic 3 = IF 109 LOAD R> DROP ;S ENDIF ; ( save/reloc )
 save3 FORGET save3
 ;S
 
@@ -1741,22 +1741,6 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
     buf blk @ 0 R/W ENDIF ;
 0 ' cl LFA !                    ( break inst dictionary link  )
 save FORGET end ;S              ( now save, if enabled; done! )
-
-(                                                  orterforth )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 HEX : cd cd ; 0 ' cl LFA !    ( break inst dict link, keep cd )
