@@ -66,47 +66,34 @@ extern char rf_installed;
 
 void rf_inst(void)
 {
-  /* LATEST */
-  uint8_t *p = *((uint8_t **) ((uintptr_t *) (RF_ORIGIN) + 6));
-  /* HERE */
-  rf_code_t *here = *((rf_code_t **) ((uintptr_t *) (RF_ORIGIN) + 15));
-  int i;
+  uint8_t   *pp, *qq;
+  uint8_t   b, h, l;
+  uintptr_t *rr;
 
-  /* cold start vector */
-  *((uintptr_t *) (RF_ORIGIN) + 1) = (uintptr_t) rf_code_cold;
+  /* start relocating/linking */
+  pp = qq = RF_ORIGIN;
+  while ((b = *(pp++))) {
 
-  /* walk dictionary beginning at LATEST */
-  while (p) {
-    uint8_t *nfa = p;
-    rf_code_t *cfa;
+    /* head type and length */
+    h = b & 0xE0;
+    l = b & 0x1F;
 
-    /* NFA */
-    p++;
-    while ((*(p++) & 0x80) == 0) {
+    /* move bytes */
+    rr = (uintptr_t *) qq;
+    for (; l; --l) {
+      *(qq++) = *(pp++);
     }
 
-    /* CFA */
-    cfa = (((rf_code_t *) p) + 1);
-
-    /* find CFA code address in table */
-    for (i = 0; i < 59; i++) {
-      if (*cfa == here[i]) {
-        /* update with code from this job */
-        *cfa = codes[i];
+    /* relocate or link */
+    switch (h) {
+      case 0x40:
+        (*rr) += (uintptr_t) RF_ORIGIN;
         break;
-      }
+      case 0x60:
+        (*rr) = (uintptr_t) codes[*rr];
+        break;
     }
-
-    /* LFA */
-    p = *((uint8_t **) p);
   }
-
-  /* now do code addresses in defining word bodies */
-  *((rf_code_t *) (here[59])) = rf_code_docol;
-  *((rf_code_t *) (here[60])) = rf_code_docon;
-  *((rf_code_t *) (here[61])) = rf_code_dovar;
-  *((rf_code_t *) (here[62])) = rf_code_douse;
-  *((rf_code_t *) (here[63])) = rf_code_dodoe;
 
   /* now flag as installed */
   rf_installed = 1;

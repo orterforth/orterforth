@@ -8,6 +8,9 @@
 /* links code fields to the loaded job on startup */
 #define RF_INST_LINK
 
+/* creates relocatable install */
+#define RF_INST_RELOC
+
 /* memory limit on unexpanded QL */
 #define RF_LIMIT 262144
 

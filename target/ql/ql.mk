@@ -11,8 +11,8 @@ QLSERIALLOAD := $(ORTER) serial -a $(SERIALPORT) $(QLSERIALBAUD) <
 QLSQLUXOPTS := --ramsize 128 --romdir roms/ql --sysrom $(QLROM) --device mdv1,ql --win_size 2x
 
 # IDE may attempt to read from the symlink so delete it
-SERIALPTY := $$(readlink -n pty && rm pty)
-STARTDISCPTY := rm -f pty && $(STARTDISC) pty pty
+SERIALPTY := $$(readlink -n ql/pty && rm ql/pty)
+STARTDISCPTY := rm -f ql/pty && $(STARTDISC) pty ql/pty
 
 # QLOPTION := assembly
 QLOPTION := default

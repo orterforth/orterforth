@@ -207,10 +207,6 @@ amiga/inst : $(AMIGADEPS) amiga/inst.o
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
-amiga/link.o : target/amiga/link.c rf.h target/amiga/amiga.inc | amiga
-
-	$(AMIGAVC) -c $< -o $@
-
 amiga/long : | amiga
 
 	# repeat HUNK_END and use this to flush serial buffer

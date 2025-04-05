@@ -189,10 +189,6 @@ dragon/link.bin : $(DRAGONLINKDEPS) main.c | cmoc
 
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
 
-dragon/link.o : target/amiga/link.c | cmoc dragon
-
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
-
 dragon/orterforth : $(DRAGONPARTS)
 
 	cat $^ > $@
