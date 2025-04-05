@@ -12,9 +12,6 @@
 /* save to DR1 once installed */
 #define RF_INST_SAVE
 
-/* link and potentially relocate install */
-#define RF_INST_LINK
-
 /* extra room needed for save/reloc buffer/code */
 #define RF_INST_DICTIONARY ((RF_ORIGIN) + 6500)
 
