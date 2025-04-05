@@ -1765,7 +1765,7 @@ HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
 : hd DUP 0A - 0< IF 30 ELSE 37 ENDIF + idx @ C! 1 idx +! ;
 07D0 VARIABLE blk                        ( first block of DR1 )
 : flush buf blk @ 0 R/W buf idx ! 1 blk +! ;
-: c. ( DUP 0 <# # # #> TYPE SPACE )               ( send byte )
+: c.                                              ( send byte )
   0 10 U/ hd hd idx @ buf - 80 = IF flush ENDIF ;
 : w. SP@ cl 0 DO DUP C@ c. 1+ LOOP DROP DROP ;    ( send word )
 : absw 20 cl + c. ptr @ @ w. cl ptr +! ;           ( abs word )
