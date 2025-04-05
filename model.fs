@@ -1713,9 +1713,9 @@ CODE R/W
 ( SAVE OPTIONS                                     orterforth )
 : save0 15 ic 0= IF 0 ' cl LFA ! R> DROP ;S ENDIF ; ( no save )
 save0 FORGET save0
-HERE 64 cs 15 ic 2 = * ALLOT CONSTANT tbl        ( link table )
-: save1 15 ic 3 < IF 108 LOAD R> DROP ;S ENDIF ; ( save/link? )
-save1 FORGET tbl
+HERE CONSTANT end
+: save1 15 ic 3 < IF 108 LOAD R> DROP ;S ENDIF ;       ( save )
+save1 FORGET end
 : save3 15 ic 3 = IF 110 LOAD R> DROP ;S ENDIF ; ( save/reloc )
 save3 FORGET save3
 ;S
@@ -1726,37 +1726,37 @@ save3 FORGET save3
 
 
 
-( CREATE LINK TABLE                                orterforth )
-: link                          ( --                          )
-  15 ic 2 = IF                  ( only if link enabled:       )
-    HERE tbl DP !               ( save and set DP             )
-    59 0 DO I cd , LOOP         ( table of code addresses     )
-    ' : 9 cs + ,                ( end of table has 5 refs in  )
-    ' CONSTANT 4 cs + ,         ( word bodies                 )
-    ' VARIABLE 2 cs + ,
-    ' USER 2 cs + ,
-    ' DOES> 5 cs + ,
-    DP ! ENDIF ;                ( restore DP                  )
-link FORGET link                ( now write link table        )
+( SAVE INSTALLATION TO DR1 AS HEX                  orterforth )
 FIRST cl + CONSTANT buf buf VARIABLE ptr
 : hd DUP 10 - 0< IF 48 ELSE 55 ENDIF + ptr @ C! 1 ptr +! ;
 : hbl buf ptr ! DUP 64 + SWAP DO I C@ 0 16 U/ hd hd LOOP ;
--->
-( SAVE INSTALLATION TO DR1 AS HEX                  orterforth )
 2000 VARIABLE blk               ( first block of DR1          )
-: start 15 ic 2 = IF 8 ic ELSE 13 ic ENDIF ; ( origin or org  )
-: end tbl 15 ic 2 = IF 64 cs + ENDIF ;       ( link table?    )
 : save                          ( --                          )
   15 ic IF                      ( only if save enabled:       )
-    end start DO                ( write blocks of hex         )
+    end 13 ic DO                ( write blocks of hex         )
       I hbl buf blk @ 0 R/W
       1 blk +!
       64 +LOOP
     buf 128 90 FILL             ( write a block of 'Z's       )
     buf blk @ 0 R/W ENDIF ;
-
 0 ' cl LFA !                    ( break inst dictionary link  )
-save FORGET tbl ;S              ( now save, if enabled; done! )
+save FORGET end ;S              ( now save, if enabled; done! )
+
+(                                                  orterforth )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 HEX : cd cd ; 0 ' cl LFA !    ( break inst dict link, keep cd )
