@@ -16,7 +16,7 @@
 #define RF_INST_RELOC
 
 /* extra room needed for save/reloc buffer/code */
-#define RF_INST_DICTIONARY ((RF_ORIGIN) + 6600)
+#define RF_INST_DICTIONARY ((RF_ORIGIN) + 6500)
 
 /* End of disc buffers and usable RAM */
 #define RF_LIMIT 0x7E80
