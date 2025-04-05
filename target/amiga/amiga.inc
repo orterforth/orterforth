@@ -12,4 +12,4 @@ extern char *rf_origin;
 
 #define RF_INST_SAVE
 
-#define RF_INST_RELOC
+#define RF_INST_LINK

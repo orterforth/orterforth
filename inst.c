@@ -373,10 +373,10 @@ static uintptr_t rf_inst_constants[] = {
   0,
   0,
 #else
-  RF_USER,
-  RF_S0,
-  RF_R0,
-  RF_TIB,
+  (uintptr_t) RF_USER,
+  (uintptr_t) RF_S0,
+  (uintptr_t) RF_R0,
+  (uintptr_t) RF_TIB,
 #endif
   RF_TARGET_HI,
   RF_TARGET_LO,
@@ -399,14 +399,10 @@ static uintptr_t rf_inst_constants[] = {
 #endif
   0,
 #ifdef RF_INST_SAVE
-#ifdef RF_INST_RELOC
+#ifdef RF_INST_LINK
   3,
 #else
-#ifdef RF_INST_LINK
-  2,
-#else
   1,
-#endif
 #endif
 #else
   0,
@@ -420,7 +416,6 @@ static uintptr_t rf_inst_constants[] = {
   0
 #endif
 };
-
 
 /* bootstrap the installing Forth vocabulary and install Forth itself */
 void rf_inst(void)
