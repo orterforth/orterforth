@@ -3,7 +3,7 @@ Building for the Dragon 64
 
 You will need:
 
-* CMOC    http://perso.b2b2c.ca/~sarrazip/dev/cmoc.html
+* CMOC    http://sarrazip.com/dev/cmoc.html
 * LWTOOLS http://www.lwtools.ca
 * XRoar emulator with a modification to support serial 
   emulation over two named pipes (currently a private code
