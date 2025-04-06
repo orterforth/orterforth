@@ -22,3 +22,9 @@
 [submodule "tools/github.com/bebbo/amiga-gcc"]
 	path = tools/github.com/bebbo/amiga-gcc
 	url = https://github.com/bebbo/amiga-gcc.git
+[submodule "tools/github.com/EtchedPixels/Fuzix-Compiler-Kit"]
+	path = tools/github.com/EtchedPixels/Fuzix-Compiler-Kit
+	url = https://github.com/EtchedPixels/Fuzix-Compiler-Kit.git
+[submodule "tools/github.com/EtchedPixels/Fuzix-Bintools"]
+	path = tools/github.com/EtchedPixels/Fuzix-Bintools
+	url = https://github.com/EtchedPixels/Fuzix-Bintools.git
