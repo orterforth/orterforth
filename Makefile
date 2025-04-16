@@ -63,6 +63,10 @@ ifeq (${PROC},armv7l)
 	PROC := armv6l
 endif
 endif
+# Apple Silicon
+ifeq (${PROC},arm64)
+	PROC := aarch64
+endif
 
 # local system
 SYSTEM := $(OPER)-$(PROC)

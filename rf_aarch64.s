@@ -13,9 +13,26 @@ rf_trampoline:
 _rf_trampoline:
         STP     X13, X14, [SP, #-16]!
         STP     X15, X30, [SP, #-16]!
+.if __APPLE__==1
+tramp1: ADRP    X0, rf_fp@PAGE
+        LDR     X0, [X0, rf_fp@PAGEOFF]
+.else
 tramp1: LDR     X0, =rf_fp
         LDR     X0, [X0]
+.endif
         CBZ     X0, tramp2
+.if __APPLE__==1
+        ADRP    X15, rf_ip@PAGE // IP to X15
+        LDR     X15, [X15, rf_ip@PAGEOFF]
+        ADRP    X3, rf_w@PAGE   // W to X3
+        LDR     X3, [X3, rf_w@PAGEOFF]
+        ADRP    X14, rf_sp@PAGE // SP to X14
+        LDR     X14, [X14, rf_sp@PAGEOFF]
+        ADRP    X13, rf_rp@PAGE // RP to X13
+        LDR     X13, [X13, rf_rp@PAGEOFF]
+        ADRP    LR, tramp1@PAGE
+        ADD     LR, LR, tramp1@PAGEOFF
+.else
         LDR     X15, =rf_ip     // IP to X15
         LDR     X15, [X15]
         LDR     X3, =rf_w       // W to X3
@@ -25,6 +42,7 @@ tramp1: LDR     X0, =rf_fp
         LDR     X13, =rf_rp     // RP to X13
         LDR     X13, [X13]
         LDR     LR, =tramp1
+.endif
         BR      X0
 tramp2: LDP     X15, X30, [SP], #16
         LDP     X13, X14, [SP], #16
@@ -35,6 +53,20 @@ tramp2: LDP     X15, X30, [SP], #16
         .global _rf_start
 rf_start:
 _rf_start:
+.if __APPLE__==1
+        ADRP    X0, rf_ip@PAGE  // X15 to IP
+        ADD     X0, X0, rf_ip@PAGEOFF
+        STR     X15, [X0]
+        ADRP    X0, rf_w@PAGE   // X3 to W
+        ADD     X0, X0, rf_w@PAGEOFF
+        STR     X3, [X0]
+        ADRP    X0, rf_sp@PAGE  // X14 to SP
+        ADD     X0, X0, rf_sp@PAGEOFF
+        STR     X14, [X0]
+        ADRP    X0, rf_rp@PAGE  // X13 to RP
+        ADD     X0, X0, rf_rp@PAGEOFF
+        STR     X13, [X0]
+.else
         LDR     X0, =rf_ip      // X15 to IP
         STR     X15, [X0]
         LDR     X0, =rf_w       // X3 to W
@@ -43,6 +75,7 @@ _rf_start:
         STR     X14, [X0]
         LDR     X0, =rf_rp      // X13 to RP
         STR     X13, [X0]
+.endif
         RET
 
         .data
@@ -90,13 +123,23 @@ _rf_w:  .quad 0
         .global _rf_code_cold
 rf_code_cold:
 _rf_code_cold:
-        LDR     X3, =rf_origin
+.if __APPLE__==1
+        ADRP    X3, _rf_origin@PAGE
+        LDR     X3, [X3, _rf_origin@PAGEOFF]
+.else
+        LDR     X3, =_rf_origin
         LDR     X3, [X3]
+.endif
         LDR     X0, [X3, #48]   // FORTH vocabulary init
         LDR     X1, [X3, #168]
         STR     X0, [X1]
         LDR     X1, [X3, #64]   // UP init
+.if __APPLE__==1
+        ADRP    X0, UP@PAGE
+        ADD     X0, X0, UP@PAGEOFF
+.else
         LDR     X0, =UP
+.endif
         STR     X1, [X0]
         MOV     X2, #11         // USER variables init
         ADD     X3, X3, #48
@@ -154,7 +197,12 @@ rf_code_mon:
 _rf_code_mon:
         STP     X29, X30, [SP, -16]!
         BL      rf_start
+.if __APPLE__==1
+        ADRP    X1, rf_fp@PAGE
+        ADD     X1, X1, rf_fp@PAGEOFF
+.else
         LDR     X1, =rf_fp
+.endif
         MOV     X0, #0
         STR     X0, [X1]
         LDP     X29, X30, [SP], 16
@@ -770,7 +818,12 @@ _rf_code_spat:
         .global _rf_code_spsto
 rf_code_spsto:
 _rf_code_spsto:
+.if __APPLE__==1
+        ADRP    X1, UP@PAGE     // USER VAR BASE ADDR
+        ADD     X1, X1, UP@PAGEOFF
+.else
         LDR     X1, =UP         // USER VAR BASE ADDR
+.endif
         LDR     X1, [X1]
         LDR     X14, [X1, #24]  // RESET PARAM. STACK PT.
 #       B       NEXT
@@ -788,7 +841,12 @@ _rf_code_spsto:
         .global _rf_code_rpsto
 rf_code_rpsto:
 _rf_code_rpsto:
+.if __APPLE__==1
+        ADRP    X1, UP@PAGE     // (AX) <- USR VAR. BASE
+        ADD     X1, X1, UP@PAGEOFF
+.else
         LDR     X1, =UP         // (AX) <- USR VAR. BASE
+.endif
         LDR     X1, [X1]
         LDR     X13, [X1, #32]  // RESET RETURN STACK PT.
 #       B       NEXT
@@ -1227,7 +1285,12 @@ _rf_code_dovar:
 rf_code_douse:
 _rf_code_douse:
         LDRB    W1, [X3, #8]!   // PFA
+.if __APPLE__==1
+        ADRP    X0, UP@PAGE     // USER VARIABLE ADDR
+        ADD     X0, X0, UP@PAGEOFF
+.else
         LDR     X0, =UP         // USER VARIABLE ADDR
+.endif
         LDR     X0, [X0]
         ADD     X0, X0, X1
 #       B       APUSH
