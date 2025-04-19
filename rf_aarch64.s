@@ -931,11 +931,11 @@ _rf_code_fromr:
         .global _rf_code_zequ
 rf_code_zequ:
 _rf_code_zequ:
-        LDR     X1, [X14], #8
-                                // DO TEST
-        MOV     X0, #1          // TRUE
-        CBZ     X1, ZEQU1       // ITS ZERO
-        SUB     X0, X0, #1      // FALSE
+        LDR     X0, [X14], #8
+        TST     X0, X0          // DO TEST
+        CSET    X0, EQ          // TRUE
+                                // ITS ZERO
+                                // FALSE
 ZEQU1:  # B     APUSH
         STR     X0, [X14, #-8]!
         LDR     X3, [X15], #8
@@ -954,9 +954,9 @@ rf_code_zless:
 _rf_code_zless:
         LDR     X0, [X14], #8
         TST     X0, X0          // SET FLAGS
-        MOV     X0, #1          // TRUE
-        BMI     ZLESS1
-        SUB     X0, X0, #1      // FLASE
+        CSET    X0, MI          // TRUE
+
+                                // FLASE
 ZLESS1: # B     APUSH
         STR     X0, [X14, #-8]!
         LDR     X3, [X15], #8
@@ -1329,10 +1329,10 @@ _rf_code_dodoe:
 rf_code_stod:
 _rf_code_stod:
         LDR     X3, [X14], #8   // S1
-        SUB     X0, X0, X0      // AX = 0
+                                // AX = 0
         TST     X3, X3          // SET FLAGS
-        BPL     STOD1           // POSITIVE NUMBER
-        SUB     X0, X0, #1      // NEGITIVE NUMBER
+        CSETM   X0, MI          // POSITIVE NUMBER
+                                // NEGITIVE NUMBER
 STOD1:  # B     DPUSH
         STP     X0, X3, [X14, #-16]!
         LDR     X3, [X15], #8

@@ -256,6 +256,10 @@ HEX
 -->
 ( Summary                                                test )
 DECIMAL
+0 S->D 0. dt c ."  0 S->D --  0." CR
+1 S->D 1. dt c ."  1 S->D --  1." CR
+-1 S->D -1. dt c ." -1 S->D -- -1." CR
+DECIMAL
 passes @ fails @ + . ." tests "
 passes ? ." passes " fails ? ." fails" CR
 FORGET test
