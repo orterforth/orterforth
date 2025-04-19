@@ -90,11 +90,9 @@ c64/orterforth.hex : c64/inst.$(C64MEDIAEXT) model.img | $(DISC)
 	@$(EMPTYDR1FILE) $@.io
 	@$(INFO) 'Starting disc'
 	@$(START) disc.pid $(DISC) tcp server 25232 model.img $@.io
-	@$(INFO) 'Starting Vice'
-	@$(START) vice.pid x64 $(C64VICEOPTS) -warp -autostartprgmode 1 -autostart $<
+	@$(STARTMACHINE) x64 $(C64VICEOPTS) -warp -autostartprgmode 1 -autostart $<
 	@$(WAITUNTILSAVED) $@.io
-	@$(INFO) 'Stopping Vice'
-	@sh scripts/stop.sh vice.pid
+	@$(STOPMACHINE)
 	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 
