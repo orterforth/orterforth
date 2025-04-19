@@ -1648,8 +1648,8 @@ CREATE : 48 cd HERE cl - ! 192 STATE !
 
 ( FORWARD REFERENCES AND INST TIME EXECUTED WORDS  orterforth )
 ( forward reference words - not executed so definitions empty )
-CODE ABORT CODE DR0 CODE ERROR CODE MESSAGE CODE MIN CODE QUIT
-CODE R/W
+CODE DR0 CODE ERROR CODE MESSAGE CODE MIN CODE R/W
+
 ( these words are executed during inst                        )
 : ?EXEC ; : !CSP SP@ CSP ! ; : ?CSP ; : . DROP ;
 : HEX         16 BASE ! ; : ] 192 STATE ! ;
