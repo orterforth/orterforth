@@ -38,7 +38,7 @@ c64-build : c64/orterforth.prg
 .PHONY : c64-hw
 c64-hw : c64/hw.$(C64MEDIAEXT)
 
-	x64 $(C64VICEOPTS) +warp -autostartprgmode 1 -autostart $<
+	@x64 $(C64VICEOPTS) +warp -autostartprgmode 1 -autostart $<
 
 .PHONY : c64-run
 c64-run : c64/orterforth.$(C64MEDIAEXT) $(DR0) $(DR1)
@@ -49,6 +49,10 @@ c64-run : c64/orterforth.$(C64MEDIAEXT) $(DR0) $(DR1)
 c64/%.o : c64/%.s
 
 	ca65 -t c64 -o $@ $<
+
+c64/%.s : %.c rf.h target/c64/c64.inc | c64 cc65
+
+	cc65 $(C64CC65OPTS) -o $@ $<
 
 c64/%.tap : c64/%.prg | tools/github.com/reidrac/mkc64tap/mkc64tap.py
 
@@ -66,7 +70,7 @@ c64/inst.prg : $(C64DEPS) | c64
 
 	cl65 -O -t c64 -C target/c64/c64.cfg -o $@ -m c64/inst.map $^
 
-c64/inst.s : inst.c rf.h target/c64/c64.inc | c64
+c64/inst.s : inst.c rf.h target/c64/c64.inc | c64 cc65
 
 	cc65 $(C64CC65OPTS) \
 		--bss-name INST \
@@ -74,14 +78,6 @@ c64/inst.s : inst.c rf.h target/c64/c64.inc | c64
 		--data-name INST \
 		--rodata-name INST \
 		-o $@ $<
-
-c64/io.s : io.c rf.h target/c64/c64.inc | c64
-
-	cc65 $(C64CC65OPTS) -o $@ $<
-
-c64/main.s : main.c rf.h target/c64/c64.inc | c64
-
-	cc65 $(C64CC65OPTS) -o $@ $<
 
 c64/orterforth : c64/orterforth.hex | $(ORTER)
 
@@ -108,10 +104,6 @@ c64/orterforth.prg : c64/orterforth
 	cat $< >> $@.io
 	mv $@.io $@
 
-c64/rf.s : rf.c rf.h target/c64/c64.inc | c64
-
-	cc65 $(C64CC65OPTS) -o $@ $<
-
 c64/rf_6502.o : rf_6502.s | c64
 
 	ca65 -DORIG='$(C64ORIGIN)' -DTOS=\$$60 -o $@ $<
@@ -120,7 +112,7 @@ c64/system.o : target/c64/system.s | c64
 
 	ca65 -o $@ $<
 
-c64/system.s : target/c64/system.c rf.h target/c64/c64.inc | c64
+c64/system.s : target/c64/system.c rf.h target/c64/c64.inc | c64 cc65
 
 	cc65 $(C64CC65OPTS) -o $@ $<
 
