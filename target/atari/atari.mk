@@ -3,7 +3,7 @@
 ATARIATARI800OPTS := -xl -pal -no-autosave-config -xlxe_rom roms/a800xlp/co61598b.rom -basic_rom roms/a800xlp/co60302a.rom 
 ATARIDEPS := atari/inst.o atari/io.o atari/main.o atari/system.o
 ATARIORG = 0x2000
-ATARICC65OPTS = -O -t atari -DRF_ORG=$(ATARIORG) -DRF_TARGET_INC='"target/atari/atari.inc"'
+ATARICC65OPTS = -O -t atari -DRF_ORG=$(ATARIORG)
 # ATARIOPTION := assembly
 ATARIOPTION := default
 ifeq ($(TARGET),atari)
@@ -85,7 +85,7 @@ atari/orterforth.xex : atari/orterforth.bin | $(ORTER)
 
 	$(ORTER) atari xex write $(ATARIORG) $$(($(ATARIORG)+1)) < $< > $@
 
-atari/rf_6502.o : rf_6502.s | c64
+atari/rf_6502.o : rf_6502.s | atari
 
 	ca65 -DORIG='$(ATARIORIGIN)' -DTOS=\$$E0 -o $@ $<
 

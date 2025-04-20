@@ -47,6 +47,9 @@ typedef uint32_t rf_double_t;
 #ifdef __APPLE2__
 #define RF_TARGET_INC "target/apple2/apple2.inc"
 #endif
+#ifdef __ATARI__
+#define RF_TARGET_INC "target/atari/atari.inc"
+#endif
 #ifdef __BBC__
 #define RF_TARGET_INC "target/bbc/bbc.inc"
 #endif
@@ -218,7 +221,6 @@ typedef uint64_t rf_double_t;
 
 #ifdef __riscv
 #define RF_LE
-#define RF_ALIGN 4
 /* RISCV */
 #define RF_CPU_HI 0x00000000
 #define RF_CPU_LO 0x02C15B0F
