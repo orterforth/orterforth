@@ -57,6 +57,8 @@ void rf_init(void)
 
     /* read file if present */
     f = Open("ram:orterforth.bin", MODE_OLDFILE);
+    if (!f) f = Open("df1:orterforth.bin", MODE_OLDFILE);
+    if (!f) f = Open("df0:orterforth.bin", MODE_OLDFILE);
     if (f) {
         pp = rf_origin;
         while (Read(f, pp, 1024) == 1024) {
