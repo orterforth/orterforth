@@ -26,7 +26,11 @@ int main(int argc, char *argv[]);
 extern (*_Cstart)() = main;
 
 /* console */
-static chanid_t con;
+#define CON 0x00010001 /* channel #1 */
+
+static QLRECT_t rect = {
+  512, 256, 0, 0
+};
 
 /* serial port */
 static chanid_t ser;
@@ -47,11 +51,13 @@ void rf_init(void)
 /*
   io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);
 */
+
   /* 85 columns, 25 rows, white on black */
-  con = io_open("CON_512X256A0X0", 0);
-  sd_setpa(con, TIMEOUT_FOREVER, 0);
-  sd_setin(con, TIMEOUT_FOREVER, 7);
-  sd_clear(con, TIMEOUT_FOREVER);
+  sd_wdef(CON, TIMEOUT_FOREVER, 0, 0, &rect);
+  sd_setpa(CON, TIMEOUT_FOREVER, 0);
+  sd_setst(CON, TIMEOUT_FOREVER, 0);
+  sd_setin(CON, TIMEOUT_FOREVER, 7);
+  sd_clear(CON, TIMEOUT_FOREVER);
 }
 
 void rf_code_emit(void)
@@ -63,15 +69,15 @@ void rf_code_emit(void)
     /* move cursor for backspace */
     switch (c) {
     case 8:
-      sd_pcol(con, TIMEOUT_FOREVER);
-      io_sbyte(con, TIMEOUT_FOREVER, ' ');
-      sd_pcol(con, TIMEOUT_FOREVER);
+      sd_pcol(CON, TIMEOUT_FOREVER);
+      io_sbyte(CON, TIMEOUT_FOREVER, ' ');
+      sd_pcol(CON, TIMEOUT_FOREVER);
       break;
     case 12:
-      sd_clear(con, TIMEOUT_FOREVER);
+      sd_clear(CON, TIMEOUT_FOREVER);
       break;
     default:
-      io_sbyte(con, TIMEOUT_FOREVER, c);
+      io_sbyte(CON, TIMEOUT_FOREVER, c);
       break;
     }
 
@@ -87,9 +93,9 @@ void rf_code_key(void)
     uint8_t k;
 
     /* get key */
-    sd_cure(con, TIMEOUT_FOREVER);
-    while (io_fbyte(con, TIMEOUT_FOREVER, (char *) &k)) {}
-    sd_curs(con, TIMEOUT_FOREVER);
+    sd_cure(CON, TIMEOUT_FOREVER);
+    while (io_fbyte(CON, TIMEOUT_FOREVER, (char *) &k)) {}
+    sd_curs(CON, TIMEOUT_FOREVER);
 
     /* LF -> CR */
     if (k == 0x0A) k = 0x0D;
@@ -114,7 +120,7 @@ void rf_code_qterm(void)
 void rf_code_cr(void)
 {
   RF_START;
-  io_sbyte(con, TIMEOUT_FOREVER, 10);
+  io_sbyte(CON, TIMEOUT_FOREVER, 10);
   RF_JUMP_NEXT;
 }
 
@@ -157,6 +163,4 @@ void rf_code_bwrit(void)
 void rf_fin(void)
 {
   io_close(ser);
-
-  io_close(con);
 }
