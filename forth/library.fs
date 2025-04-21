@@ -400,12 +400,12 @@ only ATARI DECIMAL
 
 ( system dependent operations: BBC                            )
 only BBC HEX
-: mode 0355 C@ ;
+: mode@ 0355 C@ ;
+: mode! 16 EMIT EMIT ;
 : columns 030A C@ 0308 C@ - 1+ ; : rows 0309 C@ 030B C@ - 1+ ;
 : cls 0C EMIT ;
 DECIMAL
 ;S
-
 
 
 
