@@ -1,9 +1,14 @@
 # === Commodore 64 ===
 
+C64VICEOPTS := \
+	-kernal roms/c64p/901227-02.u4 -basic roms/c64p/901226-01.u3 -chargen roms/c64p/901225-01.u5 \
+	+saveres +confirmonexit -userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400
+C64DEPS := c64/inst.o c64/io.o c64/main.o c64/system.o c64/c64-up2400.o
+C64ORG = 0x0801
 C64CC65OPTS := -O -t c64
-C64DEPS := c64/io.o c64/main.o c64/inst.o c64/system.o c64/c64-up2400.o
 C64MEDIAEXT := prg
 # C64MEDIAEXT := tap
+C64UP2400 := tools/github.com/nanoflite/c64-up2400-cc65
 # C64OPTION := assembly
 C64OPTION := default
 ifeq ($(TARGET),c64)
@@ -11,12 +16,6 @@ ifneq ($(OPTION),)
 C64OPTION := $(OPTION)
 endif
 endif
-C64ORIGIN := 0x2340
-C64UP2400 := tools/github.com/nanoflite/c64-up2400-cc65
-C64VICEOPTS := \
-	-kernal roms/c64p/901227-02.u4 -basic roms/c64p/901226-01.u3 -chargen roms/c64p/901225-01.u5 \
-	+saveres +confirmonexit -userportdevice 2 -rsuserdev 2 -rsuserbaud 2400 -rsdev3baud 2400
-
 ifeq ($(C64OPTION),assembly)
 C64CC65OPTS += -DRF_ASSEMBLY
 C64DEPS += c64/rf_6502.o
@@ -24,8 +23,8 @@ C64ORIGIN := 0x16C0
 endif
 ifeq ($(C64OPTION),default)
 C64DEPS += c64/rf.o
+C64ORIGIN := 0x2340
 endif
-
 C64CC65OPTS += -DRF_ORIGIN='$(C64ORIGIN)'
 
 c64 :
