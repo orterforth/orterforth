@@ -39,25 +39,22 @@ void rf_init(void)
 {
   short mode = 4;
   short type = 1;
-/*
-  uint8_t p = 6;
-*/
+  /*uint8_t p = 6;*/
+
   /* MODE 4, TV */
   mt_dmode(&mode, &type);
-  /* open serial */
-  mt_baud(4800);
-  ser = io_open("SER2", 0);
-  /* send ACK to close serial load */
-/*
-  io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);
-*/
-
-  /* 85 columns, 25 rows, white on black */
+  /* channel #1, 85 columns, 25 rows, white on black */
   sd_wdef(CON, TIMEOUT_FOREVER, 0, 0, &rect);
   sd_setpa(CON, TIMEOUT_FOREVER, 0);
   sd_setst(CON, TIMEOUT_FOREVER, 0);
   sd_setin(CON, TIMEOUT_FOREVER, 7);
   sd_clear(CON, TIMEOUT_FOREVER);
+
+  /* open serial */
+  mt_baud(4800);
+  ser = io_open("SER2", 0);
+  /* send ACK to close serial load */
+  /*io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);*/
 }
 
 void rf_code_emit(void)
@@ -66,14 +63,15 @@ void rf_code_emit(void)
   {
     uint8_t c = (*(rf_sp++)) & 0x7F;
 
-    /* move cursor for backspace */
     switch (c) {
     case 8:
+      /* BS erase character */
       sd_pcol(CON, TIMEOUT_FOREVER);
       io_sbyte(CON, TIMEOUT_FOREVER, ' ');
       sd_pcol(CON, TIMEOUT_FOREVER);
       break;
     case 12:
+      /* FF clear screen */
       sd_clear(CON, TIMEOUT_FOREVER);
       break;
     default:
