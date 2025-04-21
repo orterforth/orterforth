@@ -93,8 +93,8 @@ endif
 ifeq ($(BBCMACHINE),mame)
 BBCSTARTDISC := $(STARTDISCTCP)
 BBCLOAD := sleep 1 ; $(INFO) 'Running MAME' ; mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
-BBCLOADINST := sleep 1 ; $(STARTMAME) $(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
-BBCSTOPMACHINE := $(STOPMAME)
+BBCLOADINST = sleep 1 ; $(STARTMACHINE) mame $(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
+BBCSTOPMACHINE = $(STOPMACHINE)
 endif
 ifeq ($(BBCMACHINE),real)
 BBCROMS :=
