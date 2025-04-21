@@ -105,7 +105,7 @@ c64/rf_6502.o : rf_6502.s | c64
 
 	ca65 -DORIG='$(C64ORIGIN)' -DTOS=\$$60 -o $@ $<
 
-c64/system.o : target/c64/system.s | c64
+c64/system.o : c64/system.s | c64
 
 	ca65 -o $@ $<
 

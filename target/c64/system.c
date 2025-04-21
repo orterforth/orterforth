@@ -64,7 +64,7 @@ uint8_t rf_console_get(void)
 
 uint8_t rf_console_qterm(void)
 {
-  return (*((uint8_t *) 0x00CB) == 0x3F);
+  return ((*((uint8_t *) 0x0091) & 0x80) == 0x00);
 }
 
 void rf_console_cr(void)
