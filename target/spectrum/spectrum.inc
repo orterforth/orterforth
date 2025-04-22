@@ -9,9 +9,12 @@
 /* Save result to disc 1 after inst */
 #define RF_INST_SAVE
 
-/* disc buffers occupy high memory and finish at 0xFFFF */
-/* other addresses work back from these */
-#define RF_LIMIT 0x0000
+/* disc buffers, USER vars and TIB in contended memory */
+#define RF_LIMIT 0x8000
+
+/* keep stacks in non-contended memory */
+#define RF_R0 0x0000
+#define RF_S0 0xFF00
 
 /* BS character */
 #define RF_BS 0x000C

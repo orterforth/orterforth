@@ -36,7 +36,7 @@ SPECTRUMLIBS := \
 SPECTRUMLOADSERIAL := \
 	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' && \
 	$(INFO) 'Loading loader' && \
-	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < target/spectrum/load-serial.bas && \
+	$(ORTER) serial -e 2 $(SERIALPORT) $(SERIALBAUD) < spectrum/load-serial.bas && \
 	$(INFO) 'Loading binary' && \
 	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) < 
 # real tape load
@@ -153,7 +153,12 @@ SPECTRUMLOADINGMETHOD := serial
 ifeq ($(SPECTRUMMACHINE),fuse)
 # assume ROMS are available to Fuse
 SPECTRUMROMS :=
+ifeq ($(SPECTRUMLOADINGMETHOD),serial)
+SPECTRUMRUNDEPS := spectrum/orterforth.ser spectrum/load-serial.bas $(DR0) $(DR1) | $(DISC) $(SPECTRUMFUSEFIFOS)
+endif
+ifeq ($(SPECTRUMLOADINGMETHOD),tape)
 SPECTRUMRUNDEPS := spectrum/orterforth.tap $(DR0) $(DR1) | $(DISC) $(SPECTRUMFUSEFIFOS)
+endif
 SPECTRUMSTARTDISC := \
 	$(STARTDISCMSG) && \
 	sh scripts/start.sh spectrum/tx.fifo spectrum/rx.fifo disc.pid $(DISC)
@@ -163,7 +168,7 @@ SPECTRUMRUNDEPS := spectrum/orterforth.tap $(DR0) $(DR1) | $(DISC) $(SPECTRUMROM
 SPECTRUMSTARTDISC := $(STARTDISCTCP)
 endif
 ifeq ($(SPECTRUMMACHINE),real)
-SPECTRUMRUNDEPS := spectrum/orterforth.ser target/spectrum/load-serial.bas $(DR0) $(DR1) | $(DISC) $(ORTER)
+SPECTRUMRUNDEPS := spectrum/orterforth.ser spectrum/load-serial.bas $(DR0) $(DR1) | $(DISC) $(ORTER)
 SPECTRUMSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
 ifeq ($(SPECTRUMLOADINGMETHOD),tape)
 SPECTRUMRUNDEPS := spectrum/orterforth.wav $(DR0) $(DR1) | $(DISC) $(ORTER)
@@ -174,6 +179,40 @@ endif
 spectrum-hw : spectrum/hw.tap
 
 	$(FUSE) $(FUSEOPTS) --tape $<
+
+ifeq ($(SPECTRUMINSTMACHINE),fuse)
+SPECTRUMINSTDEPS := \
+	spectrum/inst-2.tap | \
+	$(DISC) \
+	$(ORTER) \
+	$(SPECTRUMFUSEFIFOS)
+SPECTRUMSTARTINSTMACHINE := \
+		$(INFO) 'Starting Fuse' ; \
+		$(SPECTRUMFUSERUNSERIAL) \
+		$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
+SPECTRUMSTOPINSTMACHINE := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
+endif
+ifeq ($(SPECTRUMINSTMACHINE),real)
+ifeq ($(SPECTRUMLOADINGMETHOD),serial)
+SPECTRUMINSTDEPS := spectrum/inst-2.ser | $(DISC) $(ORTER)
+SPECTRUMSTARTINSTMACHINE := $(SPECTRUMLOADSERIAL) spectrum/inst-2.ser
+endif
+ifeq ($(SPECTRUMLOADINGMETHOD),tape)
+SPECTRUMINSTDEPS := spectrum/inst-2.wav | $(DISC) $(ORTER)
+SPECTRUMSTARTINSTMACHINE := $(SPECTRUMLOADTAPE) spectrum/inst-2.wav
+endif
+SPECTRUMSTOPINSTMACHINE := :
+endif
+ifeq ($(SPECTRUMINSTMACHINE),superzazu)
+SPECTRUMINSTDEPS := \
+	spectrum/inst-2.tap | \
+	$(SYSTEM)/emulate_spectrum \
+	$(SPECTRUMROMS)
+SPECTRUMSTARTINSTMACHINE := \
+	$(INFO) 'Running headless emulator' ; \
+	./$(SYSTEM)/emulate_spectrum
+SPECTRUMSTOPINSTMACHINE := :
+endif
 
 .PHONY : spectrum-run
 spectrum-run : $(SPECTRUMRUNDEPS) $(DR0) $(DR1)
@@ -190,7 +229,17 @@ endif
 ifeq ($(SPECTRUMMACHINE),fuse)
 	@$(INFO) 'Running Fuse'
 	@$(SPECTRUMFUSERUNSERIAL)
+ifeq ($(SPECTRUMLOADINGMETHOD),serial)
+	@$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=100
+	@$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>'
+	@$(INFO) 'Loading loader'
+	@(cat spectrum/load-serial.bas && sleep 5) > spectrum/rx.fifo
+	@$(INFO) 'Loading binary'
+	@(cat spectrum/orterforth.ser && dd bs=1 count=1 if=spectrum/tx.fifo) > spectrum/rx.fifo
+endif
+ifeq ($(SPECTRUMLOADINGMETHOD),tape)
 	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
+endif
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@$(INFO) 'Running MAME'
@@ -208,6 +257,10 @@ endif
 ifeq ($(SPECTRUMMACHINE),real)
 	@$(PROMPT) "Press <enter> to stop disc"
 endif
+ifeq ($(SPECTRUMMACHINE),fuse)
+	@$(PROMPT) "Press <enter> to stop disc"
+	@$(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
+endif
 	@$(STOPDISC)
 
 spectrum/%.fifo : | spectrum
@@ -224,7 +277,7 @@ spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
 spectrum/%.tap spectrum/%.wav : spectrum/%.bin
 
-	z88dk-appmake +zx --audio -b $< --org $(SPECTRUMORG) -o $@
+	z88dk-appmake +zx --audio -b $< --org $(SPECTRUMORG) --clearaddr 0x7A9F -o $@
 
 spectrum/hw.tap : hw.c
 
@@ -266,40 +319,6 @@ spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-ifeq ($(SPECTRUMINSTMACHINE),fuse)
-SPECTRUMINSTDEPS := \
-	spectrum/inst-2.tap | \
-	$(DISC) \
-	$(ORTER) \
-	$(SPECTRUMFUSEFIFOS)
-SPECTRUMSTARTINSTMACHINE := \
-		$(INFO) 'Starting Fuse' ; \
-		$(SPECTRUMFUSERUNSERIAL) \
-		$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
-SPECTRUMSTOPINSTMACHINE := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
-endif
-ifeq ($(SPECTRUMINSTMACHINE),real)
-ifeq ($(SPECTRUMLOADINGMETHOD),serial)
-SPECTRUMINSTDEPS := spectrum/inst-2.ser | $(DISC) $(ORTER)
-SPECTRUMSTARTINSTMACHINE := $(SPECTRUMLOADSERIAL) spectrum/inst-2.ser
-endif
-ifeq ($(SPECTRUMLOADINGMETHOD),tape)
-SPECTRUMINSTDEPS := spectrum/inst-2.wav | $(DISC) $(ORTER)
-SPECTRUMSTARTINSTMACHINE := $(SPECTRUMLOADTAPE) spectrum/inst-2.wav
-endif
-SPECTRUMSTOPINSTMACHINE := :
-endif
-ifeq ($(SPECTRUMINSTMACHINE),superzazu)
-SPECTRUMINSTDEPS := \
-	spectrum/inst-2.tap | \
-	$(SYSTEM)/emulate_spectrum \
-	$(SPECTRUMROMS)
-SPECTRUMSTARTINSTMACHINE := \
-	$(INFO) 'Running headless emulator' ; \
-	./$(SYSTEM)/emulate_spectrum
-SPECTRUMSTOPINSTMACHINE := :
-endif
-
 spectrum/orterforth.bin.hex : model.img $(SPECTRUMINSTDEPS)
 
 	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $$($(STAT) spectrum/inst.bin)
@@ -324,3 +343,22 @@ spectrum/system.lib : $(SPECTRUMSYSTEM) | spectrum
 tools/github.com/superzazu/z80/z80.c tools/github.com/superzazu/z80/z80.h :
 
 	git submodule update --init tools/github.com/superzazu/z80
+
+spectrum/load-serial.bas : spectrum/load-serial.hex
+
+	$(ORTER) hex read < $< > $@
+
+spectrum/load-serial.hex :
+
+	# type 00 0055 5D05 0055 000A
+	printf '00 55 00 05 5d 55 00 0a 00' > $@
+	# 10 CLEAR 31391
+	printf '00 0a 0d 00 fd 33 31 33 39 31 0e 00 00 9f 7a 00 0d' >> $@
+	## 10 CLEAR 32767
+	#printf '00 0a 0d 00 fd 33 32 37 36 37 0e 00 00 ff 7f 00 0d' >> $@
+	# 20 LOAD *"b"CODE
+	printf '00 14 07 00 ef 2a 22 62 22 af 0d' >> $@
+	# 25 OPEN #4;"b":PRINT #4;CHR$(6);
+	printf '00 19 23 00 d3 34 0e 00 00 04 00 00 3b 22 62 22 3a f5 23 34 0e 00 00 04 00 00 3b c2 28 36 0e 00 00 06 00 00 29 3b 0d' >> $@
+	# 30 RANDOMIZE USR 32768
+	printf '00 1e 0e 00 f9 c0 33 32 37 36 38 0e 00 00 00 80 00 0d' >> $@
