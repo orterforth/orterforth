@@ -5,72 +5,132 @@
 #include <string.h>
 
 #include "io.h"
+#include "pty.h"
 #include "spectrum.h"
 
-/* save CTS status received from Fuse */
-static char cts = 0;
+static orter_io_pipe_t pin;
+static orter_io_pipe_t pout;
+static orter_io_pipe_t cin;
+static orter_io_pipe_t cout;
+static orter_io_pipe_t *pipes[4] = {&pin, &pout, &cin, &cout};
+
+static int esc = 0;
+static int esc2 = 0;
+static int dtr = 1;
+static int cts = 1;
 
 static void fuse_log(char *message)
 {
   fprintf(stderr, "fuse: %s\n", message);
 }
 
-int orter_spectrum_fuse_serial_getc(FILE *ptr)
+static void process(void)
 {
   int c;
 
-  /* read ch */
-	while ((c = fgetc(ptr)) == 0) {
+  /* read from Fuse */
+  while (orter_io_pipe_left(&pout) && (c = orter_io_pipe_get(&cin)) != -1) {
 
-    /* 0x00 is escape code */
-    c = fgetc(ptr);
-    switch (c) {
-      case 0:
+    /* escaped tx */
+    if (esc) {
+      esc = 0;
+      if (c == 0) {
+        dtr = 1;
         fuse_log("DTR low");
-        break;
-      case 1:
+        continue;
+      }
+      if (esc && c == 1) {
+        dtr = 0;
         fuse_log("DTR high");
-        break;
-      case 2:
-        fuse_log("CTS low");
+        continue;
+      }
+      if (esc && c == 2) {
         cts = 1;
-        break;
-      case 3:
-        fuse_log("CTS high");
+        fuse_log("CTS low");
+        continue;
+      }
+      if (esc && c == 3) {
         cts = 0;
-        break;
-      case 42:
-        return 0;
-      case 63:
+        fuse_log("CTS high");
+        continue;
+      }
+      if (esc && c == 42) {
+        c = 0;
+      }
+      if (esc && c == 63) {
         fuse_log("lost");
-        break;
-      default:
-        fuse_log("invalid escape");
-        break;
+        continue;
+      }
+    } else if (c == 0) {
+      esc = 1;
+      continue;
+    }
+
+    /* from tx */
+    if (orter_io_pipe_put(&pout, c) == -1) {
+      fuse_log("put to pty failed");
+      break;
     }
   }
 
-  return c;
+  /* write to Fuse */
+  while (cts && dtr && orter_io_pipe_left(&cout)) {
+
+    /* escaped rx */
+    if (esc2) {
+      if (orter_io_pipe_put(&cout, 42) == -1) {
+        fuse_log("put * to stdout failed");
+        break;
+      }
+      esc2 = 0;
+      continue;
+    }
+
+    /* to rx */
+    if ((c = orter_io_pipe_get(&pin)) == -1) {
+      break;
+    }
+    if (orter_io_pipe_put(&cout, c) == -1) {
+      fuse_log("put to stdout failed");
+      break;
+    }
+    if (c == 0) {
+      esc2 = 1;
+    }
+  }
 }
 
-int orter_spectrum_fuse_serial_putc(int c, FILE *ptr)
+static int orter_spectrum_fuse_serial_pty(char *pty)
 {
-  /* write ch */
-  if (fputc(c, ptr) == EOF) {
-    return EOF;
+  int exit = 0;
+
+  /* open pty */
+  exit = orter_pty_open(pty);
+  if (exit) {
+    return exit;
+  }
+  exit = orter_io_std_open();
+  if (exit) {
+    orter_io_std_close();
+    return exit;
   }
 
-  /* 0x00 is escape code */
-	if (c == 0) {
-    if (fputc(42, ptr) == EOF) {
-      return EOF;
-    }
-  }
+  /* create pipelines */
+  orter_io_pipe_read_init(&pin, orter_pty_master_fd);
+  orter_io_pipe_write_init(&pout,orter_pty_master_fd);
+  orter_io_pipe_read_init(&cin, 0);
+  orter_io_pipe_write_init(&cout, 1);
 
-  return c;
+  /* run server */
+  exit = orter_io_pipe_loop(pipes, 4, process);
+
+  /* close and exit */
+  orter_io_std_close();
+  orter_pty_close();
+  return exit;
 }
 
-int orter_spectrum_header(const char *filename, unsigned char type_, unsigned short p1, unsigned short p2)
+static int orter_spectrum_header(const char *filename, unsigned char type_, unsigned short p1, unsigned short p2)
 {
   int c;
   long size;
@@ -126,29 +186,9 @@ int orter_spectrum(int argc, char *argv[])
   setvbuf(stdout, NULL, _IONBF, 0);
 
   /* Fuse Emulator serial escape handling */
-  if (argc == 5 && !strcmp("fuse", argv[2]) && !strcmp("serial", argv[3])) {
-
-    int c;
-
-    /* read from Fuse serial named pipe and write to stdout */
-    if (!strcmp("read", argv[4])) {
-      while ((c = orter_spectrum_fuse_serial_getc(stdin)) != -1) {
-        fputc(c, stdout);
-      }
-    }
-
-    /* read from stdin and write to Fuse serial named pipe */
-    if (!strcmp("write", argv[4])) {
-      while ((c = fgetc(stdin)) != -1) {
-        orter_spectrum_fuse_serial_putc(c, stdout);
-      }
-    }
-
-    /* in case of any buffering */
-    fflush(stdout);
-    return 0;
+  if (argc == 6 && !strcmp("fuse", argv[2]) && !strcmp("serial", argv[3]) && !strcmp("pty", argv[4])) {
+    return orter_spectrum_fuse_serial_pty(argv[5]);
   }
-
   /* prepend a file with a header suitable for LOAD *"b" or LOAD *"n" */
   if (argc == 7 && !strcmp("header", argv[2])) {
     return orter_spectrum_header(argv[3], atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
@@ -156,7 +196,6 @@ int orter_spectrum(int argc, char *argv[])
 
   /* usage */
   fprintf(stderr, "Usage: orter spectrum header <filename> <type> <p1> <p2>\n");
-  fprintf(stderr, "                      fuse serial read\n");
-  fprintf(stderr, "                                  write\n");
+  fprintf(stderr, "                      fuse serial pty <symlink>\n");
   return 1;
 }

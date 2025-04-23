@@ -1,7 +1,6 @@
 #include "rf.h"
 
 /* if we delay start of inst to allow disc server to start */
-#ifdef RF_INST_WAIT
 #ifdef __M100__
 #include <stdlib.h>
 #define RF_INST_SLEEP sleep(5)
@@ -10,9 +9,13 @@
 #include <z80.h>
 #define RF_INST_SLEEP z80_delay_ms(5000)
 #endif
-#else
+#ifdef SPECTRUM
+#define RF_INST_SLEEP z80_delay_ms(5000)
+#endif
+#ifndef RF_INST_SLEEP
 #define RF_INST_SLEEP
 #endif
+
 
 /* flag to indicate completion of install */
 extern char rf_installed;

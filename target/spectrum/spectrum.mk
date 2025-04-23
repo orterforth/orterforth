@@ -2,8 +2,7 @@
 
 # Fuse Emulator
 SPECTRUMFUSEFIFOS := \
-	spectrum/fuse-rs232-rx.fifo spectrum/fuse-rs232-tx.fifo \
-	spectrum/rx.fifo spectrum/tx.fifo
+	spectrum/fuse-rs232-rx.fifo spectrum/fuse-rs232-tx.fifo
 FUSEOPTS := \
 	--auto-load \
 	--graphics-filter 2x \
@@ -14,9 +13,6 @@ FUSEOPTS := \
 	--phantom-typist-mode keyword \
 	--rs232-rx spectrum/fuse-rs232-rx.fifo \
 	--rs232-tx spectrum/fuse-rs232-tx.fifo
-SPECTRUMFUSERUNSERIAL := \
-	$(ORTER) spectrum fuse serial read  > spectrum/tx.fifo < spectrum/fuse-rs232-tx.fifo & \
-	$(ORTER) spectrum fuse serial write < spectrum/rx.fifo > spectrum/fuse-rs232-rx.fifo &
 
 # default inst time emulator
 SPECTRUMINSTMACHINE := fuse
@@ -159,9 +155,7 @@ endif
 ifeq ($(SPECTRUMLOADINGMETHOD),tape)
 SPECTRUMRUNDEPS := spectrum/orterforth.tap $(DR0) $(DR1) | $(DISC) $(SPECTRUMFUSEFIFOS)
 endif
-SPECTRUMSTARTDISC := \
-	$(STARTDISCMSG) && \
-	sh scripts/start.sh spectrum/tx.fifo spectrum/rx.fifo disc.pid $(DISC)
+SPECTRUMSTARTDISC := $(STARTDISC) serial $$(cat spectrum/ptyname) $(SERIALBAUD)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 SPECTRUMRUNDEPS := spectrum/orterforth.tap $(DR0) $(DR1) | $(DISC) $(SPECTRUMROMS)
@@ -180,18 +174,40 @@ spectrum-hw : spectrum/hw.tap
 
 	$(FUSE) $(FUSEOPTS) --tape $<
 
+STARTFUSE    := $(INFO) 'Starting Fuse' && $(START) spectrum/machine.pid $(FUSE) $(FUSEOPTS)
+STARTFUSEPTY := sh scripts/start.sh spectrum/fuse-rs232-tx.fifo spectrum/fuse-rs232-rx.fifo spectrum/pty.pid $(ORTER) spectrum fuse serial pty spectrum/pty && \
+	sleep 2 && readlink -n spectrum/pty > spectrum/ptyname && rm spectrum/pty
+STOPFUSE     := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh spectrum/machine.pid ; sh scripts/stop.sh spectrum/pty.pid
+
 ifeq ($(SPECTRUMINSTMACHINE),fuse)
+ifeq ($(SPECTRUMLOADINGMETHOD),serial)
+SPECTRUMINSTDEPS := \
+	spectrum/inst-2.ser spectrum/load-serial.bas | \
+	$(DISC) \
+	$(ORTER) \
+	$(SPECTRUMFUSEFIFOS)
+SPECTRUMSTARTINSTMACHINE := \
+	$(STARTFUSE) --speed=100 && \
+	$(STARTFUSEPTY) && \
+	$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>' && \
+	$(INFO) 'Loading loader' && \
+	$(ORTER) serial -e 2 $$(cat spectrum/ptyname) $(SERIALBAUD) < spectrum/load-serial.bas && \
+	$(INFO) 'Loading binary' && \
+	$(ORTER) serial -a $$(cat spectrum/ptyname) $(SERIALBAUD) < spectrum/inst-2.ser
+endif
+ifeq ($(SPECTRUMLOADINGMETHOD),tape)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
 	$(DISC) \
 	$(ORTER) \
 	$(SPECTRUMFUSEFIFOS)
 SPECTRUMSTARTINSTMACHINE := \
-		$(INFO) 'Starting Fuse' ; \
-		$(SPECTRUMFUSERUNSERIAL) \
-		$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=200 --tape spectrum/inst-2.tap
-SPECTRUMSTOPINSTMACHINE := $(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
+	$(STARTFUSE) --speed=200 --tape spectrum/inst-2.tap && \
+	$(STARTFUSEPTY)
 endif
+SPECTRUMSTOPINSTMACHINE := $(STOPFUSE)
+endif
+
 ifeq ($(SPECTRUMINSTMACHINE),real)
 ifeq ($(SPECTRUMLOADINGMETHOD),serial)
 SPECTRUMINSTDEPS := spectrum/inst-2.ser | $(DISC) $(ORTER)
@@ -203,6 +219,7 @@ SPECTRUMSTARTINSTMACHINE := $(SPECTRUMLOADTAPE) spectrum/inst-2.wav
 endif
 SPECTRUMSTOPINSTMACHINE := :
 endif
+
 ifeq ($(SPECTRUMINSTMACHINE),superzazu)
 SPECTRUMINSTDEPS := \
 	spectrum/inst-2.tap | \
@@ -224,22 +241,23 @@ endif
 ifeq ($(SPECTRUMLOADINGMETHOD),tape)
 	@$(SPECTRUMLOADTAPE) spectrum/orterforth.wav
 endif
-endif
 	@$(SPECTRUMSTARTDISC) $(DR0) $(DR1)
+endif
 ifeq ($(SPECTRUMMACHINE),fuse)
-	@$(INFO) 'Running Fuse'
-	@$(SPECTRUMFUSERUNSERIAL)
 ifeq ($(SPECTRUMLOADINGMETHOD),serial)
-	@$(START) fuse.pid $(FUSE) $(FUSEOPTS) --speed=100
+	@$(STARTFUSE) --speed=100
+	@$(STARTFUSEPTY)
 	@$(PROMPT) 'On the Spectrum type:\n  FORMAT "b";$(SERIALBAUD) <enter>\n  LOAD *"b" <enter>'
 	@$(INFO) 'Loading loader'
-	@(cat spectrum/load-serial.bas && sleep 5) > spectrum/rx.fifo
+	@$(ORTER) serial -e 2 $$(cat spectrum/ptyname) $(SERIALBAUD) < spectrum/load-serial.bas
 	@$(INFO) 'Loading binary'
-	@(cat spectrum/orterforth.ser && dd bs=1 count=1 if=spectrum/tx.fifo) > spectrum/rx.fifo
+	@$(ORTER) serial -a $$(cat spectrum/ptyname) $(SERIALBAUD) < spectrum/orterforth.ser
 endif
 ifeq ($(SPECTRUMLOADINGMETHOD),tape)
-	@$(FUSE) $(FUSEOPTS) --speed=100 --tape $<
+	@$(STARTFUSE) --speed=100 --tape $<
+	@$(STARTFUSEPTY)
 endif
+	@$(STARTDISC) serial $$(cat spectrum/ptyname) $(SERIALBAUD) $(DR0) $(DR1)
 endif
 ifeq ($(SPECTRUMMACHINE),mame)
 	@$(INFO) 'Running MAME'
@@ -259,7 +277,7 @@ ifeq ($(SPECTRUMMACHINE),real)
 endif
 ifeq ($(SPECTRUMMACHINE),fuse)
 	@$(PROMPT) "Press <enter> to stop disc"
-	@$(INFO) 'Stopping Fuse' ; sh scripts/stop.sh fuse.pid
+	@$(STOPFUSE)
 endif
 	@$(STOPDISC)
 
