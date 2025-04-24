@@ -142,9 +142,8 @@ ifeq ($(SPECTRUMMACHINE),superzazu)
 SPECTRUMMACHINE := fuse
 endif
 
-# TODO currently only applies to real machine
-SPECTRUMLOADINGMETHOD := serial
-# SPECTRUMLOADINGMETHOD := tape
+# SPECTRUMLOADINGMETHOD := serial
+SPECTRUMLOADINGMETHOD := tape
 
 ifeq ($(SPECTRUMMACHINE),fuse)
 # assume ROMS are available to Fuse
@@ -333,11 +332,11 @@ spectrum/inst-2.bin : spectrum/inst-1.bin spectrum/inst_INST.bin
 
 	z88dk-appmake +inject -b $< -i spectrum/inst_INST.bin -s $(SPECTRUMINSTOFFSET) -o $@
 
-spectrum/orterforth.bin : spectrum/orterforth.bin.hex | $(ORTER)
+spectrum/orterforth.bin : spectrum/orterforth.img | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-spectrum/orterforth.bin.hex : model.img $(SPECTRUMINSTDEPS)
+spectrum/orterforth.img : model.img $(SPECTRUMINSTDEPS)
 
 	@$(CHECKMEMORY) $(SPECTRUMORG) $(SPECTRUMORIGIN) $$($(STAT) spectrum/inst.bin)
 	@$(EMPTYDR1FILE) $@.io

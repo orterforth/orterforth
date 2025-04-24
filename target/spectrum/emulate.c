@@ -370,7 +370,7 @@ static void init(void)
 
   /* disc */
   rf_persci_insert(0, "model.img");
-  rf_persci_insert(1, "spectrum/orterforth.bin.hex.io");
+  rf_persci_insert(1, "spectrum/orterforth.img.io");
 }
 
 static inline uint8_t get_f(z80* const z) {
