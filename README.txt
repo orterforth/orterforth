@@ -202,6 +202,20 @@ words added to the Forth dictionary:
 
 These are implemented as primitives for performance reasons.
 
+There are also additional literals identifying the host system:
+
+ DECIMAL 18 cs +ORIGIN @ 17 cs +ORIGIN @
+ 36 BASE ! D. DECIMAL
+
+will return and print a double number base-36 representation of
+the CPU.
+
+ DECIMAL 20 cs +ORIGIN @ 19 cs +ORIGIN @
+ 36 BASE ! D. DECIMAL
+
+will return and print a double number base-36 representation of
+the operating system.
+
 
 BACKGROUND
 
