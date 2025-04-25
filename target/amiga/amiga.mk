@@ -120,7 +120,7 @@ ifeq ($(AMIGALOADINGMETHOD),disk)
 ifeq ($(AMIGAMACHINE),real)
 	@$(WARN) "Write amiga/orterforth.adf to disk"
 endif
-	@$(WARN) "Open Shell and execute: dfi:orterforth <enter>"
+	@$(WARN) "Open Shell and execute: df1:orterforth <enter>"
 endif
 ifeq ($(AMIGALOADINGMETHOD),serial)
 ifeq ($(AMIGAMACHINE),fsuae)
