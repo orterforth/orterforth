@@ -13,7 +13,6 @@ typedef uint64_t rf_double_t;
 #elif __SIZEOF_POINTER__ == 8
 typedef __uint128_t rf_double_t;
 #endif
-
 #define RF_WORD_SIZE __SIZEOF_POINTER__
 #define RF_DOUBLE_ARITH
 #define RF_ALIGN RF_WORD_SIZE
@@ -32,147 +31,6 @@ typedef __uint128_t rf_double_t;
 #define RF_WORD_SIZE 4
 #endif
 #define RF_ALIGN RF_WORD_SIZE
-#endif
-
-/* TARGET ARCHITECTURE */
-
-/* cc65 */
-
-#ifdef __CC65__
-#include <stdint.h>
-#define RF_WORD_SIZE 2
-#define RF_DOUBLE_ARITH
-typedef uint32_t rf_double_t;
-#define RF_LE
-#ifdef __APPLE2__
-#define RF_TARGET_INC "target/apple2/apple2.inc"
-#endif
-#ifdef __ATARI__
-#define RF_TARGET_INC "target/atari/atari.inc"
-#endif
-#ifdef __BBC__
-#define RF_TARGET_INC "target/bbc/bbc.inc"
-#endif
-#ifdef __C64__
-#define RF_TARGET_INC "target/c64/c64.inc"
-#endif
-/* 6502 */
-#define RF_CPU_HI 0x0004
-#define RF_CPU_LO 0x5ED2
-#endif
-
-/* cmoc */
-
-#ifdef _CMOC_VERSION_
-#define RF_WORD_SIZE 2
-#define RF_DOUBLE_ARITH
-typedef unsigned char uint8_t;
-typedef int intptr_t;
-typedef unsigned int uintptr_t;
-typedef unsigned long rf_double_t;
-#define RF_BE
-#ifdef DRAGON
-#define RF_TARGET_INC "target/dragon/dragon.inc"
-#endif
-/* 6809 */
-#define RF_CPU_HI 0x0004
-#define RF_CPU_LO 0x6E09
-#endif
-
-/* z88dk */
-
-#ifdef __SCCZ80
-#include <stdint.h>
-#define RF_WORD_SIZE 2
-#define RF_DOUBLE_ARITH
-typedef uint32_t rf_double_t;
-#define RF_LE
-#endif
-
-#ifndef __Z80
-#ifdef Z80
-#define __Z80
-#endif
-#endif
-#ifdef __Z80
-#ifdef CPM
-#define RF_TARGET_INC "target/cpm/cpm.inc"
-#endif
-#ifdef __RC2014
-#define RF_TARGET_INC "target/rc2014/rc2014.inc"
-#endif
-#ifdef SPECTRUM
-#define RF_TARGET_INC "target/spectrum/spectrum.inc"
-#endif
-#ifdef Z88
-#define RF_TARGET_INC "target/z88/z88.inc"
-#endif
-#ifdef ZX81
-#define RF_TARGET_INC "target/zx81/zx81.inc"
-#endif
-#ifndef __8085__
-/* Z80 */
-#define RF_CPU_HI 0x0000
-#define RF_CPU_LO 0xB250
-#endif
-#endif
-#ifdef __8085__
-#ifdef __M100__
-#define RF_TARGET_INC "target/m100/m100.inc"
-#endif
-/* 8085 */
-#define RF_CPU_HI 0x0005
-#define RF_CPU_LO 0xB325
-#endif
-#ifndef __SCCZ80
-#define __FASTCALL__
-#endif
-
-/* C68 */
-
-#ifdef C68
-#define RF_WORD_SIZE 4
-#define RF_ALIGN 2
-#define RF_BE
-#undef RF_DOUBLE_ARITH
-typedef unsigned char uint8_t;
-typedef long intptr_t;
-typedef unsigned long uintptr_t;
-#ifdef QDOS
-#define RF_TARGET_INC "target/ql/ql.inc"
-#endif
-/* 68000 */
-#define RF_CPU_HI 0x00000000
-#define RF_CPU_LO 0x009F7800
-#endif
-
-/* CC6303 */
-
-#ifdef CC6303
-#define RF_WORD_SIZE 2
-#define RF_BE
-#define RF_DOUBLE_ARITH
-#include <stdint.h>
-typedef uint32_t rf_double_t;
-#define RF_TARGET_INC "target/hx20/hx20.inc"
-#endif
-
-/* VBCC */
-
-#ifdef __VBCC__
-#define RF_WORD_SIZE 4
-#define RF_ALIGN 2
-#define RF_BE
-#define RF_DOUBLE_ARITH
-#include <stdint.h>
-typedef uint64_t rf_double_t;
-#define RF_TARGET_INC "target/amiga/amiga.inc"
-/* AMIGA */
-#define RF_TARGET_HI 0x00000000
-#define RF_TARGET_LO 0x011050EA
-/* 68000 */
-#define RF_CPU_HI 0x00000000
-#define RF_CPU_LO 0x009F7800
 #endif
 
 /* modern platforms */
@@ -270,6 +128,143 @@ typedef uint64_t rf_double_t;
 #define RF_NOEXIT
 #endif
 
+/* retro platforms */
+
+/* cc65 */
+
+#ifdef __CC65__
+#include <stdint.h>
+#define RF_WORD_SIZE 2
+#define RF_DOUBLE_ARITH
+typedef uint32_t rf_double_t;
+#define RF_LE
+/* 6502 */
+#define RF_CPU_HI 0x0004
+#define RF_CPU_LO 0x5ED2
+#ifdef __APPLE2__
+#define RF_TARGET_INC "target/apple2/apple2.inc"
+#endif
+#ifdef __ATARI__
+#define RF_TARGET_INC "target/atari/atari.inc"
+#endif
+#ifdef __BBC__
+#define RF_TARGET_INC "target/bbc/bbc.inc"
+#endif
+#ifdef __C64__
+#define RF_TARGET_INC "target/c64/c64.inc"
+#endif
+#endif
+
+/* cmoc */
+
+#ifdef _CMOC_VERSION_
+#define RF_WORD_SIZE 2
+#define RF_DOUBLE_ARITH
+typedef unsigned char uint8_t;
+typedef int intptr_t;
+typedef unsigned int uintptr_t;
+typedef unsigned long rf_double_t;
+#define RF_BE
+/* 6809 */
+#define RF_CPU_HI 0x0004
+#define RF_CPU_LO 0x6E09
+#ifdef DRAGON
+#define RF_TARGET_INC "target/dragon/dragon.inc"
+#endif
+#endif
+
+/* z88dk */
+
+#ifdef __SCCZ80
+#include <stdint.h>
+#define RF_WORD_SIZE 2
+#define RF_DOUBLE_ARITH
+typedef uint32_t rf_double_t;
+#define RF_LE
+#endif
+
+#ifndef __Z80
+#ifdef Z80
+#define __Z80
+#endif
+#endif
+#ifdef __Z80
+#ifdef __8085__
+/* 8085 */
+#define RF_CPU_HI 0x0005
+#define RF_CPU_LO 0xB325
+#else
+/* Z80 */
+#define RF_CPU_HI 0x0000
+#define RF_CPU_LO 0xB250
+#ifdef CPM
+#define RF_TARGET_INC "target/cpm/cpm.inc"
+#endif
+#ifdef __M100__
+#define RF_TARGET_INC "target/m100/m100.inc"
+#endif
+#ifdef __RC2014
+#define RF_TARGET_INC "target/rc2014/rc2014.inc"
+#endif
+#ifdef SPECTRUM
+#define RF_TARGET_INC "target/spectrum/spectrum.inc"
+#endif
+#ifdef Z88
+#define RF_TARGET_INC "target/z88/z88.inc"
+#endif
+#ifdef ZX81
+#define RF_TARGET_INC "target/zx81/zx81.inc"
+#endif
+#endif
+#endif
+#ifndef __FASTCALL__
+#define __FASTCALL__
+#endif
+
+/* C68 */
+
+#ifdef C68
+#define RF_WORD_SIZE 4
+#define RF_ALIGN 2
+#define RF_BE
+#undef RF_DOUBLE_ARITH
+typedef unsigned char uint8_t;
+typedef long intptr_t;
+typedef unsigned long uintptr_t;
+/* 68000 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x009F7800
+#ifdef QDOS
+#define RF_TARGET_INC "target/ql/ql.inc"
+#endif
+#endif
+
+/* CC6303 */
+
+#ifdef CC6303
+#define RF_WORD_SIZE 2
+#define RF_BE
+#define RF_DOUBLE_ARITH
+#include <stdint.h>
+typedef uint32_t rf_double_t;
+#define RF_TARGET_INC "target/hx20/hx20.inc"
+#endif
+
+/* VBCC */
+
+#ifdef __VBCC__
+#define RF_WORD_SIZE 4
+#define RF_ALIGN 2
+#define RF_BE
+#define RF_DOUBLE_ARITH
+#include <stdint.h>
+typedef uint64_t rf_double_t;
+/* 68000 */
+#define RF_CPU_HI 0x00000000
+#define RF_CPU_LO 0x009F7800
+#define RF_TARGET_INC "target/amiga/amiga.inc"
+#endif
+
 /* OTHERWISE DEFAULT TARGET = HOST PLATFORM */
 
 #ifndef RF_TARGET_INC
@@ -283,7 +278,6 @@ typedef uint64_t rf_double_t;
 /* DISC BUFFERS */
 
 #define RF_BBLK 128
-#define RF_BSCR 8
 #define RF_DISC_BUFFER_SIZE (RF_BBLK+(2*RF_WORD_SIZE))
 #define RF_DISC_BUFFERS_SIZE (8*RF_DISC_BUFFER_SIZE)
 

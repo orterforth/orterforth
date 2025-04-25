@@ -1,3 +1,7 @@
+/* AMIGA */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x011050EA
+
 extern char *rf_origin;
 
 #define RF_ORIGIN (rf_origin)
