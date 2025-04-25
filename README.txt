@@ -46,6 +46,29 @@ https://github.com/orterforth/orterforth/discussions
 https://github.com/orterforth/orterforth/issues
 
 
+AIMS OF THE PROJECT
+
+To demonstrate installing Forth using a version of the fig-
+Forth Model source, in a manner close to the original
+
+To generalise that source from 6502 to diverse platforms with
+different processor architectures, address sizes, operating
+systems and memory layouts, but modifying as little as possible
+
+To implement Forth primitives in C for generality, but also
+allow optimised assembly primitives to be linked instead
+
+To add as little as possible to the original fig-Forth
+language, instead allowing extension by writing Forth code or
+recompiling with additional C or assembly code
+
+To provide primitives to identify the cell size and alignment,
+processor and operating system at runtime, to allow for writing
+system-independent code
+
+To provide disc "screen" based loading, as per the original
+
+
 THE INSTALLATION PROCESS
 
 orterforth is bootstrapped from Forth source code derived from
