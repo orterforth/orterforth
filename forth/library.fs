@@ -388,24 +388,56 @@ DECIMAL
 : only
   BL WORD BASE @ 36 BASE ! HERE NUMBER ROT BASE !
   19 cs +ORIGIN @ = SWAP 20 cs +ORIGIN @ = AND
-  0= IF [COMPILE] --> ENDIF ;
+  0= IF [COMPILE] --> ENDIF ; -->
+
+
+
+
+
+
+
+
+
+( Amiga                                                       )
+only AMIGA DECIMAL
+79 CONSTANT columns 23 CONSTANT rows
+: cls 12 EMIT ; ;S
+
+
+
+
+
+
+
+
+
+
+
+
+( Atari                                                       )
 only ATARI DECIMAL
 40 CONSTANT columns 24 CONSTANT rows
-: cls 125 EMIT ;
-;S
+: cls 125 EMIT ; ;S
 
 
 
 
 
-( system dependent operations: BBC                            )
+
+
+
+
+
+
+
+( BBC                                                         )
 only BBC HEX
 : mode@ 0355 C@ ;
 : mode! 16 EMIT EMIT ;
 : columns 030A C@ 0308 C@ - 1+ ; : rows 0309 C@ 030B C@ - 1+ ;
 : cls 0C EMIT ;
-DECIMAL
-;S
+DECIMAL ;S
+
 
 
 
@@ -515,38 +547,6 @@ DECIMAL
 80 CONSTANT columns 24 CONSTANT rows
 : cls 27 EMIT ." [2J" 27 EMIT ." [H" ;
 ;S
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
