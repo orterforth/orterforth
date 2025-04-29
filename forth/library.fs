@@ -1294,102 +1294,102 @@ DECIMAL
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(  FORTH-65 ASSEMBLER                             WFR-79JUN03 )
+HEX
+VOCABULARY  ASSEMBLER  IMMEDIATE     ASSEMBLER  DEFINITIONS
+
+( REGISTER ASSIGNMENT SPECIFIC TO IMPLEMENTATION  )
+E0  CONSTANT  XSAVE       DC  CONSTANT  W      DE  CONSTANT  UP
+D9  CONSTANT  IP          D1  CONSTANT  N
+
+(  NUCLEUS LOCATIONS ARE IMPLEMENTATION SPECIFIC )
+'  (DO)  0E  +    CONSTANT  POP
+'  (DO)  0C  +    CONSTANT  POPTWO
+'  LIT  13  +  CONSTANT  PUT
+'  LIT  11  +  CONSTANT  PUSH
+'  LIT  18  +  CONSTANT  NEXT
+'  EXECUTE  NFA  11  -  CONSTANT  SETUP
+
+(     ASSEMBLER, CONT.                            WFR-78OCT03 )
+0   VARIABLE  INDEX       -2  ALLOT
+0909 , 1505 , 0115 , 8011 , 8009 , 1D0D , 8019 , 8080 ,
+0080 , 1404 , 8014 , 8080 , 8080 , 1C0C , 801C , 2C80 ,
+
+2  VARIABLE  MODE
+: .A   0 MODE ! ;    : #    1 MODE ! ;    : MEM  2 MODE ! ;
+: ,X   3 MODE ! ;    : ,Y   4 MODE ! ;    : X)   5 MODE ! ;
+: )Y   6 MODE ! ;    : )    F MODE ! ;
+
+: BOT       ,X    0  ;    ( ADDRESS THE BOTTOM OF THE STACK  *)
+: SEC       ,X    2  ;       ( ADDRESS SECOND ITEM ON STACK  *)
+: RP)       ,X  101  ;     ( ADDRESS BOTTOM OF RETURN STACK  *)
+
+
+
+(  UPMODE,  CPU                                   WFR-78OCT23 )
+
+: UPMODE   IF  MODE @ 8 AND 0=  IF  8 MODE +!  THEN THEN
+     1 MODE @  0F AND  -DUP  IF  0  DO  DUP + LOOP  THEN
+     OVER 1+ @ AND  0=  ;
+
+: CPU   <BUILDS  C,  DOES>  C@   C,  MEM  ;
+     00 CPU BRK,   18 CPU CLC,   D8 CPU CLD,  58 CPU CLI,
+     B8 CPU CLV,   CA CPU DEX,   88 CPU DEY,  E8 CPU INX,
+     C8 CPU INY,   EA CPU NOP,   48 CPU PHA,  08 CPU PHP,
+     68 CPU PLA,   28 CPU PLP,   40 CPU RTI,  60 CPU RTS,
+     38 CPU SEC,   F8 CPU SED,   78 CPU SEI,  AA CPU TAX,
+     A8 CPU TAY,   BA CPU TSX,   8A CPU TXA,  9A CPU TXS,
+     98 CPU TYA,
+
+
+(  M/CPU,   MULTI-MODE OP-CODES                   WFR-79MAR26 )
+: M/CPU   <BUILDS  C,  ,  DOES>
+       DUP 1+ @ 80 AND   IF  10 MODE +! THEN   OVER
+       FF00 AND UPMODE UPMODE    IF MEM CR LATEST ID.
+       3  ERROR  THEN  C@  MODE  C@
+       INDEX + C@ + C,    MODE C@ 7 AND   IF MODE C@
+       0F AND 7 <   IF C, ELSE , THEN   THEN  MEM  ;
+
+   1C6E 60 M/CPU ADC,  1C6E 20 M/CPU AND,  1C6E C0 M/CPU CMP,
+   1C6E 40 M/CPU EOR,  1C6E A0 M/CPU LDA,  1C6E 00 M/CPU ORA,
+   1C6E E0 M/CPU SBC,  1C6C 80 M/CPU STA,  0D0D 01 M/CPU ASL,
+   0C0C C1 M/CPU DEC,  0C0C E1 M/CPU INC,  0D0D 41 M/CPU LSR,
+   0D0D 21 M/CPU ROL,  0D0D 61 M/CPU ROR,  0414 81 M/CPU STX,
+   0486 E0 M/CPU CPX,  0486 C0 M/CPU CPY,  1496 A2 M/CPU LDX,
+   0C8E A0 M/CPU LDY,  048C 80 M/CPU STY,  0480 14 M/CPU JSR,
+   8480 40 M/CPU JMP,  0484 20 M/CPU BIT,
+(  ASSEMBLER CONDITIONALS                         WFR-79MAR26 )
+: BEGIN,   HERE  1  ;                 IMMEDIATE
+: UNTIL,   ?EXEC >R 1 ?PAIRS R> C, HERE 1+ - C, ; IMMEDIATE
+: IF,      C,  HERE  0  C,  2  ;       IMMEDIATE
+: THEN,    ?EXEC  2  ?PAIRS  HERE  OVER  C@
+         IF SWAP ! ELSE  OVER 1+ - SWAP C!  THEN  ; IMMEDIATE
+: ELSE,    2 ?PAIRS HERE 1+   1 JMP,
+           SWAP HERE OVER 1+ - SWAP  C!  2  ;  IMMEDIATE
+: NOT    20  +  ;                    ( REVERSE ASSEMBLY TEST )
+90  CONSTANT  CS               ( ASSEMBLE TEST FOR CARRY SET )
+D0  CONSTANT  0=             ( ASSEMBLER TEST FOR EQUAL ZERO )
+10  CONSTANT  0<          ( ASSEMBLE TEST FOR LESS THAN ZERO )
+90  CONSTANT  >=   ( ASSEMBLE TEST FOR GREATER OR EQUAL ZERO )
+                    ( >= IS ONLY CORRECT AFTER SUB, OR CMP,  )
+
+
+(  USE OF ASSEMBLER                               WFR-79APR28 )
+: END-CODE                          ( END OF CODE DEFINITION *)
+      CURRENT @ CONTEXT !    ?EXEC ?CSP SMUDGE ;  IMMEDIATE
+
+FORTH  DEFINITIONS    DECIMAL
+: CODE                  ( CREATE WORD AT ASSEMBLY CODE LEVEL *)
+      ? EXEC CREATE    (COMPILE)   ASSEMBLER
+      ASSEMBLER  MEM    !CSP  ;       IMMEDIATE
+
+( LOCK ASSEMBLER INTO SYSTEM )
+'  ASSEMBLER  CFA    '  ;CODE  8  +  !  ( OVER-WRITE SMUDGE )
+LATEST  12  +ORIGIN  !  ( TOP NFA )
+HERE    28  +ORIGIN  !  ( FENCE )
+HERE    30  +ORIGIN  !  ( DP )
+'  ASSEMBLER  6  +    32  +ORIGIN  !  ( VOC-LINK )
+HERE  FENCE  !
 (  TEXT,  LINE                                    WFR-79MAY01 )
 FORTH  DEFINITIONS   HEX
 : TEXT                        ( ACCEPT FOLLOWING TEXT TO PAD *)
