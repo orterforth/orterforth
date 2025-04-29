@@ -1,5 +1,5 @@
-
-
+( orterforth library                                          )
+6 LOAD ;S
 
 
 
@@ -31,7 +31,7 @@
 
 
 ( orterforth library                                          )
-
+6 LOAD ;S
 
 
 
@@ -47,7 +47,7 @@
 
 
 ( orterforth library                                          )
-
+6 LOAD ;S
 
 
 
@@ -94,15 +94,31 @@ DECLARE VOCABULARY
 
 
 
+( library importer                                     IMPORT )
+FORTH DEFINITIONS VOCABULARY IMPORT IMMEDIATE
+IMPORT DEFINITIONS DECIMAL
+
+( load a library from a specified screen and mark once done   )
+: LIBRARY <BUILDS , DOES>
+  [COMPILE] FORTH DEFINITIONS
+  DUP @ IF DUP @ LOAD 0 OVER ! ENDIF DROP
+  [COMPILE] FORTH DEFINITIONS ;
+
+( library index                                               )
+21 LIBRARY STR 25 LIBRARY SYS 36 LIBRARY ASSEMBLER
+87 LIBRARY EDITOR
+
+FORTH DEFINITIONS
+-->
 ( examples index                                      example )
 FORTH DEFINITIONS VOCABULARY example IMMEDIATE
 example DEFINITIONS DECIMAL
 
 : loader <BUILDS , DOES> DUP CFA NFA 32 TOGGLE @ LOAD ;
- 7 loader hw          8 loader collatz     9 loader fib
-10 loader fac        11 loader rev        12 loader roman
-14 loader mandelbrot 16 loader pascal     17 loader about
-19 loader primes
+ 8 loader hw          9 loader collatz    10 loader fib
+11 loader fac        12 loader rev        13 loader roman
+15 loader mandelbrot 17 loader pascal     18 loader about
+20 loader primes
 : help
   ." about collatz fac fib hw mandelbrot "
   ." pascal primes rev roman" CR ;
@@ -175,10 +191,10 @@ fac ;S
 
 
 ( Reverse a string                                        rev )
-DECIMAL 20 LOAD                ( load str vocabulary          )
+DECIMAL IMPORT STR             ( load STR vocabulary          )
 example DEFINITIONS DECIMAL
-: s1 str " Hello World, this is a string." ;
-s1 C@ str new CONSTANT s2
+: s1 STR " Hello World, this is a string." ;
+s1 C@ STR new CONSTANT s2
 : reverse                      ( s1 s2 --                     )
   OVER C@ >R                   ( save length                  )
   R OVER C!                    ( write length                 )
@@ -223,10 +239,10 @@ FORGET place                    ( redefining I causes probs   )
 
 ;S
 ( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
-DECIMAL 24 LOAD ( sys vocabulary )
+DECIMAL IMPORT SYS
 example DEFINITIONS HEX
 : mandelbrot
-    sys cls
+    SYS cls
     466 DUP MINUS DO            ( y axis                      )
         I
         400 DUP DUP + MINUS DO  ( x axis                      )
@@ -248,10 +264,10 @@ example DEFINITIONS HEX
             LOOP
             DROP DROP DROP DROP
             EMIT                ( * or space                  )
-        400 3 * sys columns 2 - / ( compute step from cols    )
+        400 3 * SYS columns 2 - / ( compute step from cols    )
         +LOOP
         CR DROP                 ( end of line                 )
-    466 2+ 2 * sys rows / +LOOP ;
+    466 2+ 2 * SYS rows / +LOOP ;
 
 mandelbrot DECIMAL ;S
 ( Pascal's Triangle                                    pascal )
@@ -318,8 +334,8 @@ example DEFINITIONS DECIMAL
 : primes CR 1000 sieve CR ;
 primes
 ;S
-( string handling: ", copy                                str )
-FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
+( string handling: ", copy                                STR )
+FORTH DEFINITIONS VOCABULARY STR IMMEDIATE STR DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
 : "                             ( --                          )
   ?COMP                         ( compilation only            )
@@ -382,8 +398,8 @@ FORTH DEFINITIONS VOCABULARY str IMMEDIATE str DEFINITIONS
 
 
 ;S
-( system dependent operations: Atari                      sys )
-FORTH DEFINITIONS VOCABULARY sys IMMEDIATE sys DEFINITIONS
+( system dependent operations: Atari                      SYS )
+FORTH DEFINITIONS VOCABULARY SYS IMMEDIATE SYS DEFINITIONS
 DECIMAL
 : only
   BL WORD BASE @ 36 BASE ! HERE NUMBER ROT BASE !
@@ -558,27 +574,11 @@ DECIMAL
 
 
 
+( Original fig-Forth 6502 assembler                 ASSEMBLER )
+FORTH DEFINITIONS HEX
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+( Load unlinked screens                                       )
+51 LOAD 52 LOAD 53 LOAD 54 LOAD 55 LOAD 56 LOAD ;S
 
 
 
@@ -1380,8 +1380,8 @@ D0  CONSTANT  0=             ( ASSEMBLER TEST FOR EQUAL ZERO )
 
 FORTH  DEFINITIONS    DECIMAL
 : CODE                  ( CREATE WORD AT ASSEMBLY CODE LEVEL *)
-      ? EXEC CREATE    (COMPILE)   ASSEMBLER
-      ASSEMBLER  MEM    !CSP  ;       IMMEDIATE
+      ?EXEC  CREATE  [COMPILE]  ASSEMBLER
+      ASSEMBLER  MEM  !CSP  ;      IMMEDIATE
 
 ( LOCK ASSEMBLER INTO SYSTEM )
 '  ASSEMBLER  CFA    '  ;CODE  8  +  !  ( OVER-WRITE SMUDGE )
