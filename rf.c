@@ -309,7 +309,7 @@ static uint8_t *rf_find(uint8_t *t, uint8_t length, uint8_t *nfa)
 
   while (nfa) {
     /* match length from name field incl smudge bit */
-    if (length == (*nfa & 0x3F)) {
+    if (!((length ^ *nfa) & 0x3F)) {
       /* match name - NB matches the whole aligned name field */
       n = nfa;
       m = t;
