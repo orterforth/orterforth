@@ -251,9 +251,11 @@ _rf_code_exec
         PULU   X
         BRA    NEXT3
 
+_rf_origin IMPORT
+
 _rf_code_cold EXPORT
 _rf_code_cold
-        LDX    #RF_ORIGIN
+        LDX    _rf_origin,PCR
         LDD    12,X                 FORTH vocabulary init
         LDY    42,X
         STD    ,Y

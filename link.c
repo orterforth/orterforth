@@ -71,8 +71,8 @@ void rf_inst(void)
   uintptr_t *rr;
 
   /* start relocating/linking */
-  pp = qq = RF_ORIGIN;
-  while ((b = *(pp++))) {
+  pp = qq = (uint8_t *) RF_ORIGIN;
+  while ((b = *(pp++)) != 0) {
 
     /* head type and length */
     h = b & 0xE0;

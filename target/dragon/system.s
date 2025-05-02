@@ -2,9 +2,13 @@
 
 _rf_next IMPORT
 _rf_up IMPORT
+program_end IMPORT
 
 NEXT    EQU    _rf_next
 UP      EQU    _rf_up
+
+_rf_origin EXPORT
+_rf_origin RMB    2
 
 _rf_init EXPORT
 _rf_init
@@ -27,7 +31,10 @@ _rf_init
         LDA    $FF03
         ORA    #$01
         STA    $FF03
-init1   RTS
+*  Dynamic origin
+init1   LEAX   program_end,PCR
+        STX    _rf_origin,PCR
+        RTS
 
 _rf_code_emit EXPORT
 _rf_code_emit

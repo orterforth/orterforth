@@ -1,9 +1,5 @@
 # === Dragon 32/64 ===
 
-# relink code compiled without inst at final location
-# DRAGONLINK := false
-DRAGONLINK := true
-
 # real or emulator
 # DRAGONMACHINE := mame
 # DRAGONMACHINE := real
@@ -18,19 +14,12 @@ DRAGONOPTION := $(OPTION)
 endif
 endif
 
-DRAGONCMOCOPTS := --dragon -Werror
+DRAGONCMOCOPTS := --dragon -Werror -i
 DRAGONDEPS := dragon/inst.o
 DRAGONINSTMEDIA := dragon/inst.cas
 DRAGONLINKDEPS := dragon/link.o
 DRAGONMEDIA := dragon/orterforth.cas
 DRAGONORG := 0x0600
-ifeq ($(DRAGONLINK),true)
-DRAGONORIGIN := 0x1D00
-DRAGONPARTS := dragon/link dragon/spacer dragon/installed
-else
-DRAGONORIGIN := 0x3180
-DRAGONPARTS := dragon/installed
-endif
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 
@@ -38,20 +27,12 @@ ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
 DRAGONDEPS += dragon/rf_6809.o dragon/system_asm.o
 DRAGONLINKDEPS += dragon/rf_6809.o dragon/system_asm.o
-ifeq ($(DRAGONLINK),true)
-DRAGONORIGIN := 0x0F00
-else
-DRAGONORIGIN := 0x1A00
-endif
 else
 DRAGONDEPS += dragon/io.o dragon/rf.o dragon/system.o
 DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/system.o
 endif
 
-DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG) -DRF_ORIGIN=$(DRAGONORIGIN)
-ifeq ($(DRAGONLINK),true)
-	DRAGONCMOCOPTS += -DRF_INST_LINK
-endif
+DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG)
 
 ifeq ($(DRAGONMACHINE),mame)
 	DRAGONMAMEWARNINGS := \
@@ -65,7 +46,7 @@ ifeq ($(DRAGONMACHINE),mame)
 			-rs232 null_modem -bitb socket.localhost:5705 \
 			-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r" \
 			-cassette
-	DRAGONSTOPMACHINE := $(STOPMAME)
+	DRAGONSTOPMACHINE = $(STOPMACHINE)
 endif
 ifeq ($(DRAGONMACHINE),real)
 	DRAGONMEDIA := dragon/orterforth.wav
@@ -152,15 +133,11 @@ dragon/%.wav : dragon/%.bin | tools/bin2cas.pl
 
 dragon/hw.bin : hw.c | cmoc
 
-	cmoc --dragon -o $@ $^
+	cmoc --dragon -i -o $@ $^
 
 dragon/inst.bin : $(DRAGONDEPS) main.c | cmoc
 
-ifeq ($(DRAGONLINK),true)
-	cmoc $(DRAGONCMOCOPTS) --org=0x4c00 --limit=0x7800 --stack-space=64 -nodefaultlibs -o $@ $^
-else
-	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
-endif
+	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=0x7800 --stack-space=64 -nodefaultlibs -o $@ $^
 
 dragon/installed : dragon/installed.hex | $(ORTER)
 
@@ -168,10 +145,6 @@ dragon/installed : dragon/installed.hex | $(ORTER)
 
 dragon/installed.hex : $(DRAGONINSTMEDIA) model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
-ifneq ($(DRAGONLINK),true)
-	@# 9 byte header included here although not necessary
-	@$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $$($(STAT) dragon/inst.bin)
-endif
 	@$(EMPTYDR1FILE) $@.io
 	@$(DRAGONSTARTDISC) model.img $@.io
 	@$(DRAGONSTARTMACHINE) $<
@@ -187,11 +160,13 @@ dragon/link : dragon/link.bin
 
 dragon/link.bin : $(DRAGONLINKDEPS) main.c | cmoc
 
-	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=$(DRAGONORIGIN) --stack-space=64 -nodefaultlibs -o $@ $^
+	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=0x7800 --stack-space=64 -nodefaultlibs -o $@ $^
 
-dragon/orterforth : $(DRAGONPARTS)
+dragon/orterforth : dragon/link.bin dragon/link.map dragon/installed
 
-	cat $^ > $@
+	dd bs=1 skip=9 if=dragon/link.bin > $@
+	dd if=/dev/zero bs=1 count=$$(( 0x$$(grep '^Symbol: program_end ' dragon/link.map | cut -c '32-35') - 0x$$(grep '^Symbol: program_start ' dragon/link.map | cut -c '34-37') - $$($(STAT) dragon/link.bin) + 9)) >> $@
+	cat dragon/installed >> $@
 
 dragon/orterforth.bin : dragon/orterforth
 
@@ -200,16 +175,11 @@ dragon/orterforth.bin : dragon/orterforth
 
 dragon/rf_6809.o : rf_6809.s | dragon lwasm
 
-	lwasm --6809 --obj -DRF_ORIGIN=$(DRAGONORIGIN) -o $@ $<
+	lwasm --6809 --obj -o $@ $<
 
 dragon/rx : | dragon
 
 	mkfifo $@
-
-dragon/spacer : dragon/link
-
-	$(CHECKMEMORY) $(DRAGONORG) $(DRAGONORIGIN) $$($(STAT) dragon/link)
-	dd if=/dev/zero bs=1 count=$$(( $(DRAGONORIGIN) - $(DRAGONORG) - $$($(STAT) dragon/link) )) > $@
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | cmoc dragon
 
