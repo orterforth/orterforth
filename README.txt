@@ -69,43 +69,51 @@ system-independent code
 To provide disc "screen" based loading, as per the original
 
 
-THE INSTALLATION PROCESS
+THE FIG-FORTH MODEL
 
-orterforth is bootstrapped from Forth source code derived from
-the Installation Manual, loaded from an emulated disc drive.
-The original code is modified to allow for different platforms' 
+The fig-Forth Installation Manual includes source code, itself
+in Forth, from which a Forth installation can be bootstrapped.
+
+This was known as the "fig-Forth model" and was a reference
+implementation using 6502 assembly. It was part of the project
+to create assembly listings of Forth implementations for many
+systems.
+
+orterforth takes a different approach, and runs a modified
+version of the source with system-specific aspects factored out
+and provided separately. This allows for different platforms' 
 processor architectures, cell sizes, I/O, memory layouts, and
 so on.
 
-The original source code uses an assembler (implemented in
-Forth) to assemble 6502 native code immediately following each
-base word in memory. The word's code field address (CFA) points
-at this code.
 
-Instead of this, orterforth has platform-independent 
-implementations of each base word in C. The CFA is set to point
-to this C code.
+THE INSTALLATION PROCESS
 
-Forth implementations normally use jump instructions to
+orterforth loads the Forth model code from an emulated disc
+drive. This bootstrapping process is itself implemented in C and
+Forth. (To save space, the bootstrap code is loaded into a
+separate memory location and does not form part of the final
+binary.)
+
+The original Forth model code uses an assembler (implemented in
+Forth) to assemble native code immediately following each base
+word in memory. Instead of this, orterforth has platform-
+independent implementations of each base word in C.
+
+(Forth implementations normally use jump instructions to
 transfer control through successive native code, rather than 
 subroutine calls. Because C does not properly allow such jumps,
-orterforth emulates them using a trampoline - a loop that 
-successively calls function pointers.
+orterforth emulates them using a loop that successively calls
+function pointers.)
 
 To create binaries for historical platforms, the completed
 memory map containing the installation and required native code
-is saved to the emulated disc drive. This is in a hex format
-to avoid issues with control characters used by the disc
+is saved to the emulated disc drive. This is in a hex format to
+avoid issues with control characters used by the disc
 controller.
 
 (On modern platforms, this whole installation process takes
 place on startup every time the program is launched - the 
 installation code and disc contents are part of the binary.)
-
-This bootstrapping process is itself implemented in C and
-Forth. To save space, the bootstrap code is loaded into a
-separate memory location and does not form part of the final
-binary.
 
 When installation is complete, or when the final binary is
 loaded, Forth starts with an interactive prompt. The emulated
@@ -221,18 +229,14 @@ BACKGROUND
 
 orterforth is an attempt to reflect on the efforts of the Forth
 Interest Group and create a working executable model for Forth
-that could be ported to multiple machines. The Forth model
-source was intended to be illustrative, for Forth implementers
-to go away and create assembly listings of respective fig-Forth
-implementations, which they did.
-
-orterforth takes it literally and treats the model code as an
-installation process, to generate a final binary (or, in modern
-architectures, to simply run on startup).
+that could be ported to multiple machines. The fig-Forth model
+source was intended to be illustrative, a reference implementa-
+tion, but orterforth takes it literally and treats the model
+code as an installation process.
 
 The installation process for each machine is executable on real
 hardware wherever possible - using the host machine's serial
-port to connect to the emulated disc controller.
+port to connect to a PC running the emulated disc controller.
 
 (It should, in theory, also work with a real PerSci 1070 disc
 controller and 8" disc drives as was described in the
