@@ -67,25 +67,21 @@ extern char rf_installed;
 void rf_inst(void)
 {
   uint8_t   *pp, *qq;
-  uint8_t   b, h, l;
+  uint8_t   b, l;
   uintptr_t *rr;
 
   /* start relocating/linking */
   pp = qq = (uint8_t *) RF_ORIGIN;
   while ((b = *(pp++)) != 0) {
 
-    /* head type and length */
-    h = b & 0xE0;
-    l = b & 0x1F;
-
     /* move bytes */
     rr = (uintptr_t *) qq;
-    for (; l; --l) {
+    for (l = b & 0x1F; l; --l) {
       *(qq++) = *(pp++);
     }
 
     /* now fix up */
-    switch (h) {
+    switch (b & 0xE0) {
       case 0x40:
         /* relocate relative to ORIGIN */
         (*rr) += (uintptr_t) RF_ORIGIN;
