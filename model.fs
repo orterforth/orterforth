@@ -1752,70 +1752,70 @@ HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
 : c.                                              ( send byte )
   0 10 U/ hd hd idx @ buf - 80 = IF flush ENDIF ;
 : w. SP@ cl 0 DO DUP C@ c. 1+ LOOP DROP DROP ;    ( send word )
-: absb DUP 00 + c. 0 DO ptr @ C@ c. 1 ptr +! LOOP ; ( abs byt )
-: absw 00 cl + c. ptr @ @ w. cl ptr +! ;           ( abs word )
-: relw 20 cl + c. ptr @ @ 0 +ORIGIN - w. cl ptr +! ; ( rel wd )
-: frlw 40 cl + c. ptr @ @ LIMIT - w. cl ptr +! ;  ( rel LIMIT )
-: link 60 cl + c. 3B 0 DO                      ( link to code )
+: absb DUP c. 0 DO ptr @ C@ c. 1 ptr +! LOOP ;    ( abs bytes )
+: abs cl c. ptr @ @ w. cl ptr +! ;                 ( abs word )
+: rto 20 cl + c. ptr @ @ 0 +ORIGIN - w. cl ptr +! ;  ( rel wd )
+: rtl 40 cl + c. ptr @ @ LIMIT - w. cl ptr +! ;   ( rel LIMIT )
+: lnk 60 cl + c. 3B 0 DO                       ( link to code )
   ptr @ @ I cd = IF I w. LEAVE ENDIF LOOP cl ptr +! ; -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( boot-up literals                                            )
-absw link absw link                    ( vectors to COLD WARM )
-absw absw relw absw                    ( USRVER ATTR FORTH BS )
-frlw frlw frlw frlw                          ( USER S0 R0 TIB )
-absw absw relw relw relw    ( WIDTH WARNING FENCE DP VOC-LINK )
+abs lnk abs lnk                        ( vectors to COLD WARM )
+abs abs rto abs                        ( USRVER ATTR FORTH BS )
+rtl rtl rtl rtl                              ( USER S0 R0 TIB )
+abs abs rto rto rto         ( WIDTH WARNING FENCE DP VOC-LINK )
+
 ( extra literals                                              )
-absw absw absw absw                              ( target cpu )
-relw relw absw                              ( ABORT FORTH ext )
-( definition header handling                                  )
-: nfa ptr @ DUP 1 TRAVERSE 1+ SWAP - absb ; ( NF as abs bytes )
-: lfa ptr @ @ IF relw ELSE absw ENDIF ;      ( LF as rel word )
-: cfa link ;                                     ( CF as link )
+abs abs abs abs                                  ( target cpu )
+rto rto abs                                 ( ABORT FORTH ext )
+
 : in BEGIN OVER OVER @ = IF ( find item in 0 terminated array )
   DROP ;S ENDIF DUP cl + SWAP @ 0= UNTIL DROP DROP 0 ;
+
+
 -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( table of constants/variables/literals etc to use rel word   )
-HERE ' +ORIGIN cl + , ' R/W cl + , 0 , CONSTANT rels
+HERE ' +ORIGIN cl + , ' R/W cl + , 0 , CONSTANT rtos
 HERE ' FIRST , ' LIMIT , ' ?STACK cl + ,
-' ?STACK 8 cs + , ' USE , ' PREV , 0 , CONSTANT ends
+' ?STACK 8 cs + , ' USE , ' PREV , 0 , CONSTANT rtls
 ( table of literals to use link                               )
 HERE ' : 9 cs + , ' CONSTANT 4 cs + , ' VARIABLE 2 cs + ,
 ' USER 2 cs + , ' DOES> 5 cs + , 0 , CONSTANT lnks
 ( table of code words that take an arg                        )
 HERE ' LIT CFA , ' BRANCH CFA , ' 0BRANCH CFA ,
 ' (LOOP) CFA , 0 , CONSTANT witharg
-( write code followed by arg - use relw or link if needed     )
-: wrd ptr @ rels in IF relw ELSE ptr @ ends in IF frlw ELSE 
-absw ENDIF ENDIF ;
-: arg relw ptr @ lnks in IF link ELSE wrd ENDIF ;
+( write code followed by arg - use rto or link if needed      )
+: wrd ptr @ rtos in IF rto ELSE ptr @ rtls in IF rtl ELSE 
+  abs ENDIF ENDIF ;
+: arg rto ptr @ lnks in IF lnk ELSE wrd ENDIF ;
 -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
-( handlers for colon defns, consts, vars, user vars, DOES>    )
+( definition header handling                                  )
+: nfa ptr @ DUP 1 TRAVERSE 1+ SWAP - absb ; ( NF as abs bytes )
+: lfa ptr @ @ IF rto ELSE abs ENDIF ;        ( LF as rel word )
+
+( handle colon defns                                          )
 : docol BEGIN
     ptr @ @ @ 1B cd =                            ( stop on ;S )
     ptr @ @ DUP ' (.") CFA = IF                  ( string arg )
-      DROP relw ptr @ C@ 1+ ln absb ELSE
-      DUP ' COMPILE CFA = IF DROP relw relw ELSE    ( cfa arg )
-      witharg in IF arg ELSE relw ENDIF ENDIF ENDIF UNTIL ;
-: docon wrd ;
-: douse absw ;
-: dodoe relw nfa relw lfa ;         ( assume FORTH VOCABULARY )
-
+      DROP rto ptr @ C@ 1+ ln absb ELSE
+      DUP ' COMPILE CFA = IF DROP rto rto ELSE      ( cfa arg )
+      witharg in IF arg ELSE rto ENDIF ENDIF ENDIF UNTIL ;
 
 
 
 -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( handle a definition of any type                             )
-: defn nfa lfa                                  ( NFA LFA CFA )
-  ptr @ @ cfa
-  DUP 30 cd = IF DROP docol ;S ENDIF                    ( PFA )
-  DUP 31 cd = IF DROP docon ;S ENDIF
-  DUP 32 cd = IF DROP docon ;S ENDIF
-  DUP 33 cd = IF DROP douse ;S ENDIF
-  34 cd = IF dodoe ;S ENDIF ;
+: defn nfa lfa ptr @ @ lnk                      ( NFA LFA CFA )
+  DUP 30 cd = IF DROP docol ;S ENDIF       ( : - work the PFA )
+  DUP 31 cd = IF DROP wrd ;S ENDIF                 ( CONSTANT )
+  DUP 32 cd = IF DROP wrd ;S ENDIF                 ( VARIABLE )
+  DUP 33 cd = IF DROP abs ;S ENDIF                     ( USER )
+  34 cd = IF rto nfa rto lfa ;S ENDIF ;    ( FORTH VOCABULARY )
 : defns 0 DO defn LOOP ;
+
 ( finish saving, write 0x00 and block of Z                    )
 : end 0 c. flush buf 80 5A FILL buf blk @ 0 R/W CR ;
 
