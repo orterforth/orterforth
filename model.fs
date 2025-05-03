@@ -1752,12 +1752,12 @@ HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
 : c.                                              ( send byte )
   0 10 U/ hd hd idx @ buf - 80 = IF flush ENDIF ;
 : w. SP@ cl 0 DO DUP C@ c. 1+ LOOP DROP DROP ;    ( send word )
-: absw 20 cl + c. ptr @ @ w. cl ptr +! ;           ( abs word )
-: relw 40 cl + c. ptr @ @ 0 +ORIGIN - w. cl ptr +! ; ( rel wd )
+: absb DUP 00 + c. 0 DO ptr @ C@ c. 1 ptr +! LOOP ; ( abs byt )
+: absw 00 cl + c. ptr @ @ w. cl ptr +! ;           ( abs word )
+: relw 20 cl + c. ptr @ @ 0 +ORIGIN - w. cl ptr +! ; ( rel wd )
+: frlw 40 cl + c. ptr @ @ LIMIT - w. cl ptr +! ;  ( rel LIMIT )
 : link 60 cl + c. 3B 0 DO                      ( link to code )
-  ptr @ @ I cd = IF I w. LEAVE ENDIF LOOP cl ptr +! ;
-: absb DUP 80 + c. 0 DO ptr @ C@ c. 1 ptr +! LOOP ; ( abs byt )
-: frlw A0 cl + c. ptr @ @ LIMIT - w. cl ptr +! ; ( rel ) -->
+  ptr @ @ I cd = IF I w. LEAVE ENDIF LOOP cl ptr +! ; -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( boot-up literals                                            )
 absw link absw link                    ( vectors to COLD WARM )

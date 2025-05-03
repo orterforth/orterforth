@@ -82,17 +82,17 @@ void rf_inst(void)
 
     /* now fix up */
     switch (b & 0xE0) {
-      case 0x40:
+      case 0x20:
         /* relocate relative to ORIGIN */
         (*rr) += (uintptr_t) RF_ORIGIN;
+        break;
+      case 0x40:
+        /* relocate relative to LIMIT */
+        (*rr) += (uintptr_t) RF_LIMIT;
         break;
       case 0x60:
         /* link to code */
         (*rr) = (uintptr_t) codes[*rr];
-        break;
-      case 0xA0:
-        /* relocate relative to LIMIT */
-        (*rr) += (uintptr_t) RF_LIMIT;
         break;
     }
   }
