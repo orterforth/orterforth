@@ -1,5 +1,9 @@
 #include "../../rf.h"
 
+extern unsigned char *rf_origin;
+
+void rf_init_origin();
+
 void rf_init(void)
 {
   /* Speedkey http://archive.worldofdragon.org/phpBB3/viewtopic.php?f=8&t=314 */
@@ -15,6 +19,7 @@ void rf_init(void)
     *((uint8_t *) 270) = 250;
     *((uint8_t *) 65283) |= 1;
   }
+  rf_init_origin();
 }
 
 void rf_console_put(uint8_t ch)

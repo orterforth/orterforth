@@ -15,9 +15,9 @@ endif
 endif
 
 DRAGONCMOCOPTS := --dragon -Werror -i
-DRAGONDEPS := dragon/inst.o
+DRAGONDEPS := dragon/inst.o dragon/origin.o
 DRAGONINSTMEDIA := dragon/inst.cas
-DRAGONLINKDEPS := dragon/link.o
+DRAGONLINKDEPS := dragon/link.o dragon/origin.o
 DRAGONMEDIA := dragon/orterforth.cas
 DRAGONORG := 0x0600
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
@@ -139,11 +139,11 @@ dragon/inst.bin : $(DRAGONDEPS) main.c | cmoc
 
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=0x7800 --stack-space=64 -nodefaultlibs -o $@ $^
 
-dragon/installed : dragon/installed.hex | $(ORTER)
+dragon/installed.bin : dragon/installed.img | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-dragon/installed.hex : $(DRAGONINSTMEDIA) model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
+dragon/installed.img : $(DRAGONINSTMEDIA) model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
 
 	@$(EMPTYDR1FILE) $@.io
 	@$(DRAGONSTARTDISC) model.img $@.io
@@ -153,20 +153,19 @@ dragon/installed.hex : $(DRAGONINSTMEDIA) model.img | $(DISC) dragon/rx dragon/t
 	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 
-dragon/link : dragon/link.bin
-
-	# link bin, minus its own header
-	dd bs=1 skip=9 if=dragon/link.bin > dragon/link
-
 dragon/link.bin : $(DRAGONLINKDEPS) main.c | cmoc
 
 	cmoc $(DRAGONCMOCOPTS) --org=$(DRAGONORG) --limit=0x7800 --stack-space=64 -nodefaultlibs -o $@ $^
 
-dragon/orterforth : dragon/link.bin dragon/link.map dragon/installed
+dragon/origin.o : target/dragon/origin.s | cmoc dragon
+
+	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+
+dragon/orterforth : dragon/link.bin dragon/link.map dragon/installed.bin
 
 	dd bs=1 skip=9 if=dragon/link.bin > $@
 	dd if=/dev/zero bs=1 count=$$(( 0x$$(grep '^Symbol: program_end ' dragon/link.map | cut -c '32-35') - 0x$$(grep '^Symbol: program_start ' dragon/link.map | cut -c '34-37') - $$($(STAT) dragon/link.bin) + 9)) >> $@
-	cat dragon/installed >> $@
+	cat dragon/installed.bin >> $@
 
 dragon/orterforth.bin : dragon/orterforth
 
