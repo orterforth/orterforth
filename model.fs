@@ -1757,12 +1757,12 @@ HEX HERE 80 ALLOT CONSTANT buf buf VARIABLE idx      ( buffer )
 : link 60 cl + c. 3B 0 DO                      ( link to code )
   ptr @ @ I cd = IF I w. LEAVE ENDIF LOOP cl ptr +! ;
 : absb DUP 80 + c. 0 DO ptr @ C@ c. 1 ptr +! LOOP ; ( abs byt )
--->
+: frlw A0 cl + c. ptr @ @ LIMIT - w. cl ptr +! ; ( rel ) -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( boot-up literals                                            )
 absw link absw link                    ( vectors to COLD WARM )
 absw absw relw absw                    ( USRVER ATTR FORTH BS )
-relw relw relw relw                          ( USER S0 R0 TIB )
+frlw frlw frlw frlw                          ( USER S0 R0 TIB )
 absw absw relw relw relw    ( WIDTH WARNING FENCE DP VOC-LINK )
 ( extra literals                                              )
 absw absw absw absw                              ( target cpu )
@@ -1776,9 +1776,9 @@ relw relw absw                              ( ABORT FORTH ext )
 -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( table of constants/variables/literals etc to use rel word   )
-HERE ' FIRST , ' LIMIT , ' +ORIGIN cl + , ' ?STACK cl + ,
-' ?STACK 8 cs + , ' USE , ' PREV , ' R/W cl + ,
-0 , CONSTANT rels
+HERE ' +ORIGIN cl + , ' R/W cl + , 0 , CONSTANT rels
+HERE ' FIRST , ' LIMIT , ' ?STACK cl + ,
+' ?STACK 8 cs + , ' USE , ' PREV , 0 , CONSTANT ends
 ( table of literals to use link                               )
 HERE ' : 9 cs + , ' CONSTANT 4 cs + , ' VARIABLE 2 cs + ,
 ' USER 2 cs + , ' DOES> 5 cs + , 0 , CONSTANT lnks
@@ -1786,9 +1786,9 @@ HERE ' : 9 cs + , ' CONSTANT 4 cs + , ' VARIABLE 2 cs + ,
 HERE ' LIT CFA , ' BRANCH CFA , ' 0BRANCH CFA ,
 ' (LOOP) CFA , 0 , CONSTANT witharg
 ( write code followed by arg - use relw or link if needed     )
-: arg relw ptr @ lnks in IF
-  link ELSE
-  ptr @ rels in IF relw ELSE absw ENDIF ENDIF ;
+: wrd ptr @ rels in IF relw ELSE ptr @ ends in IF frlw ELSE 
+absw ENDIF ENDIF ;
+: arg relw ptr @ lnks in IF link ELSE wrd ENDIF ;
 -->
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 ( handlers for colon defns, consts, vars, user vars, DOES>    )
@@ -1798,7 +1798,7 @@ HERE ' LIT CFA , ' BRANCH CFA , ' 0BRANCH CFA ,
       DROP relw ptr @ C@ 1+ ln absb ELSE
       DUP ' COMPILE CFA = IF DROP relw relw ELSE    ( cfa arg )
       witharg in IF arg ELSE relw ENDIF ENDIF ENDIF UNTIL ;
-: docon ptr @ rels in IF relw ELSE absw ENDIF ;
+: docon wrd ;
 : douse absw ;
 : dodoe relw nfa relw lfa ;         ( assume FORTH VOCABULARY )
 

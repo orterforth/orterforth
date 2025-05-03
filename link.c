@@ -84,13 +84,19 @@ void rf_inst(void)
       *(qq++) = *(pp++);
     }
 
-    /* relocate or link */
+    /* now fix up */
     switch (h) {
       case 0x40:
+        /* relocate relative to ORIGIN */
         (*rr) += (uintptr_t) RF_ORIGIN;
         break;
       case 0x60:
+        /* link to code */
         (*rr) = (uintptr_t) codes[*rr];
+        break;
+      case 0xA0:
+        /* relocate relative to LIMIT */
+        (*rr) += (uintptr_t) RF_LIMIT;
         break;
     }
   }
