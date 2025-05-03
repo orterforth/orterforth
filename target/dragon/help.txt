@@ -32,3 +32,8 @@ purpose.
 
 The resulting binary can be loaded on a Dragon 32, obviously
 without serial support.
+
+The binary is fully relocatable, with position-independent code
+and relocatable install, creating a single binary that can be
+loaded beyond graphics pages. ORIGIN moves dynamically but
+LIMIT, FIRST, USER, R0, S0, TIB remain the same in high RAM.
