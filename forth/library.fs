@@ -101,7 +101,7 @@ IMPORT DEFINITIONS DECIMAL
 ( load a library from a specified screen and mark once done   )
 : LIBRARY <BUILDS , DOES>
   [COMPILE] FORTH DEFINITIONS
-  DUP @ IF DUP @ LOAD 0 OVER ! ENDIF DROP
+  DUP @ -DUP IF LOAD 0 OVER ! ENDIF DROP
   [COMPILE] FORTH DEFINITIONS ;
 
 ( library index                                               )
