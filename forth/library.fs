@@ -105,11 +105,11 @@ IMPORT DEFINITIONS DECIMAL
   [COMPILE] FORTH DEFINITIONS ;
 
 ( library index                                               )
-21 LIBRARY STR 25 LIBRARY SYS 36 LIBRARY ASSEMBLER
-87 LIBRARY EDITOR
+7 LIBRARY example 21 LIBRARY STR 25 LIBRARY SYS
+36 LIBRARY ASSEMBLER 87 LIBRARY EDITOR
 
 FORTH DEFINITIONS
--->
+IMPORT example ;S
 ( examples index                                      example )
 FORTH DEFINITIONS VOCABULARY example IMMEDIATE
 example DEFINITIONS DECIMAL
@@ -122,9 +122,9 @@ example DEFINITIONS DECIMAL
 : help
   ." about collatz fac fib hw mandelbrot "
   ." pascal primes rev roman" CR ;
+CR ." To see the list of examples," CR
+." type: example help" CR
 FORTH DEFINITIONS DECIMAL ;S
-
-
 
 ( Hello World                                              hw )
 example DEFINITIONS
