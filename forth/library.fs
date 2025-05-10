@@ -497,15 +497,15 @@ DECIMAL ;S
 ( QL                                                          )
 only QL
 85 CONSTANT columns 25 CONSTANT rows
-HEX
-: cls 0C EMIT ; ( EMIT calls SD.CLEAR )
+IMPORT ASSEMBLER HEX
+ASSEMBLER FFI cls
+  20 IMM    ^ 0 DR .MOVEQ       ( D0 = SD.CLEAR               )
+  10001 IMM ^ 0 AR .L .MOVE     ( A0 = channel ID 00010001    )
+  -1 IMM    ^ 3 DR .W .MOVE     ( D3.W = timeout forever -1   )
+  3 .TRAP                       ( TRAP #3                     )
+  .RTS
+
 DECIMAL ;S
-
-
-
-
-
-
 
 
 
@@ -574,6 +574,22 @@ DECIMAL
 
 
 
+( System-dependent assembler lookup                           )
+FORTH DEFINITIONS DECIMAL
+: FOR-CPU
+  BL WORD BASE @ 36 BASE ! HERE NUMBER ROT BASE !
+  17 cs +ORIGIN @ = SWAP 18 cs +ORIGIN @ = AND
+  IF SWAP ENDIF DROP ;
+37                                          ( default is 6502 )
+38 FOR-CPU 68000
+FORGET FOR-CPU LOAD ;S
+
+
+
+
+
+
+
 ( Original fig-Forth 6502 assembler                 ASSEMBLER )
 FORTH DEFINITIONS HEX
 
@@ -590,54 +606,38 @@ FORTH DEFINITIONS HEX
 
 
 
+( Reimplementation of Kenneth Mantei's 68000 asm    ASSEMBLER )
+FORTH DEFINITIONS VOCABULARY ASSEMBLER IMMEDIATE
+ASSEMBLER DEFINITIONS HEX : W, 0100 /MOD C, C, ;
+0 VARIABLE SZ 0 VARIABLE M1 0 VARIABLE R1
+0 VARIABLE M2 0 VARIABLE R2 : ^ M1 @ M2 ! R1 @ R2 ! ;
+: AR 0008 M1 ! 0007 AND R1 ! ; : DR 0000 M1 ! 0007 AND R1 ! ;
+: IMM 0038 M1 ! 0004 R1 ! ; : [ AR 0010 M1 ! ; : .W 3000 SZ ! ;
+: -[ AR 0020 M1 ! ; : [+ AR 0018 M1 ! ; : .L 2000 SZ ! ;
+: .MOVE 0000 SZ @ OR M2 @ OR R2 @ OR
+  M1 @ 8 * OR R1 @ 0200 * OR W, 
+  38 M2 @ = 04 R2 @ = AND IF SZ @ 3000 = ( .W ) IF W, ENDIF
+    SZ @ 2000 = ( .L ) IF , ENDIF ENDIF ;
+: .TRAP 000F AND 4E40 OR W, ; : .RTS 4E75 W, ; 
+: .JSR 4EB9 W, , ; : .JMP 4EF9 W, , ;
+: .MOVEQ FF AND 7000 OR R1 @ 200 * OR W, ;
+-->
+( 68000 foreign function interface                            )
+CREATE (FFI)
+  3 DR ^ 7 -[ .L .MOVE 1 AR ^ 7 -[ .L .MOVE ( save regs       )
+  2 AR ^ 7 -[ .L .MOVE 3 AR ^ 7 -[ .L .MOVE
+  4 AR ^ 7 -[ .L .MOVE 5 AR ^ 7 -[ .L .MOVE
+  0 IMM ^ 0 AR .L .MOVE 0 .JSR              ( SP->A0, JSR     )
+  7 [+ ^ 5 AR .L .MOVE 7 [+ ^ 4 AR .L .MOVE ( restore regs    )
+  7 [+ ^ 3 AR .L .MOVE 7 [+ ^ 2 AR .L .MOVE
+  7 [+ ^ 1 AR .L .MOVE 7 [+ ^ 3 DR .L .MOVE
+( Use of DROP to work around difficulty in obtaining NEXT     )
+  ' DROP CFA @ .JMP SMUDGE                  ( DROP dummy      )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+( Pass SP in A0, call subroutine                              )
+: FFI <BUILDS [COMPILE] ASSEMBLER
+      DOES>   ' (FFI) 0014 + ! SP@ ' (FFI) 000E + ! 0 (FFI) ;
+FORTH DEFINITIONS ;S
 
 
 

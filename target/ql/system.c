@@ -70,10 +70,6 @@ void rf_code_emit(void)
       io_sbyte(CON, TIMEOUT_FOREVER, ' ');
       sd_pcol(CON, TIMEOUT_FOREVER);
       break;
-    case 12:
-      /* FF clear screen */
-      sd_clear(CON, TIMEOUT_FOREVER);
-      break;
     default:
       io_sbyte(CON, TIMEOUT_FOREVER, c);
       break;
