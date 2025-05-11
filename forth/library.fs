@@ -194,7 +194,7 @@ fac ;S
 DECIMAL IMPORT STR             ( load STR vocabulary          )
 example DEFINITIONS DECIMAL
 : s1 STR " Hello World, this is a string." ;
-s1 C@ STR new CONSTANT s2
+s1 C@ STR NEW CONSTANT s2
 : reverse                      ( s1 s2 --                     )
   OVER C@ >R                   ( save length                  )
   R OVER C!                    ( write length                 )
@@ -334,7 +334,7 @@ example DEFINITIONS DECIMAL
 : primes CR 1000 sieve CR ;
 primes
 ;S
-( string handling: ", copy                                STR )
+( string handling: ", COPY                                STR )
 FORTH DEFINITIONS VOCABULARY STR IMMEDIATE STR DEFINITIONS
 : (") R> DUP COUNT + ln >R ;    ( return string and advance IP)
 : "                             ( --                          )
@@ -344,14 +344,14 @@ FORTH DEFINITIONS VOCABULARY STR IMMEDIATE STR DEFINITIONS
   HERE C@ 1+ ln ALLOT           ( compile the string          )
 ; IMMEDIATE
 
-: copy                          ( a b --                      )
+: COPY                          ( a b --                      )
   OVER C@                       ( get length                  )
   1+ CMOVE ;                    ( copy length+1 bytes         )
 
 
 -->
-( append                                                      )
-: append                        ( a b --                      )
+( APPEND                                                      )
+: APPEND                        ( a b --                      )
   OVER C@ OVER C@               ( get the two lengths         )
   255 SWAP - MIN >R             ( limit append to max length  )
   OVER OVER                     ( dup both string addrs       )
@@ -366,13 +366,13 @@ FORTH DEFINITIONS VOCABULARY STR IMMEDIATE STR DEFINITIONS
 
 
 -->
-( take, drop                                                  )
-: take                          ( a n --                      )
+( TAKE, DROP*                                                 )
+: TAKE                          ( a n --                      )
   OVER C@ MIN                   ( limit to the string length  )
   SWAP C!                       ( write new length )
 ;
 
-: drop                          ( a n --                      )
+: DROP*                         ( a n --                      )
   OVER C@ MIN                   ( limit to the string length  )
   >R DUP                        ( save a and modified n       )
   DUP 1+ R +                    ( from                        )
@@ -382,10 +382,10 @@ FORTH DEFINITIONS VOCABULARY STR IMMEDIATE STR DEFINITIONS
   DUP C@ R> - SWAP C!           ( update the length           )
 ;
 -->
-( alloc, new                                                  )
+( ALLOC, NEW                                                  )
 
-: alloc HERE SWAP ALLOT ;       ( size -- addr                )
-: new 1+ ln alloc ;             ( length -- addr              )
+: ALLOC HERE SWAP ALLOT ;       ( size -- addr                )
+: NEW 1+ ln ALLOC ;             ( length -- addr              )
 
 
 
