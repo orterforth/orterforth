@@ -286,7 +286,7 @@ pascal ;S
 
 
 
-(                                                       about )
+( System properties                                     about )
 0 WARNING ! HEX
 CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
 : d36. BASE @ >R 24 BASE ! D. R> BASE ! ;
@@ -296,7 +296,7 @@ CR : lit@ cs +ORIGIN @ ; : .. 0 0 D.R ;
 : endn 5 lit@ 0200 AND IF ." Little" ELSE ." Big" ENDIF ;
 
 : addr 5 lit@ 0100 AND IF ." Word" ELSE ." Byte" ENDIF ;
-: ad. 0 cl DUP + D.R ;
+: ad. ( 0 cl DUP + D.R ) 0 <# cl DUP + 0 DO # LOOP #> TYPE ;
 : voc. 2 cs + NFA CFA NFA ID. ;
 : about
   ." Version    : " vers. CR

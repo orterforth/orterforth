@@ -28,3 +28,6 @@
 [submodule "tools/github.com/EtchedPixels/Fuzix-Bintools"]
 	path = tools/github.com/EtchedPixels/Fuzix-Bintools
 	url = https://github.com/EtchedPixels/Fuzix-Bintools.git
+[submodule "tools/github.com/stronnag/xtc68"]
+	path = tools/github.com/stronnag/xtc68
+	url = https://github.com/stronnag/xtc68
