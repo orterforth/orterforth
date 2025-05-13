@@ -37,7 +37,7 @@ uint8_t rf_console_get(void)
 
 uint8_t rf_console_qterm(void)
 {
-  return 0;
+  return *((uint8_t *) 53769) == 28;
 }
 
 void rf_console_cr(void)
