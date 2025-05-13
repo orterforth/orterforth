@@ -1711,12 +1711,12 @@ CODE DR0 CODE ERROR CODE MESSAGE CODE MIN CODE R/W
 
 
 ( SAVE OPTIONS                                     orterforth )
-: save0 15 ic 0= IF 0 ' cl LFA ! R> DROP ;S ENDIF ; ( no save )
+: save0 15 ic 0= IF 0 ' cl LFA ! ENDIF ;            ( no save )
 save0 FORGET save0
 HERE CONSTANT end
-: save1 15 ic 3 < IF 108 LOAD R> DROP ;S ENDIF ;       ( save )
+: save1 15 ic 1 = IF 108 LOAD ENDIF ;                  ( save )
 save1 FORGET end
-: save3 15 ic 3 = IF 109 LOAD R> DROP ;S ENDIF ; ( save/reloc )
+: save3 15 ic 3 = IF 109 LOAD ENDIF ;            ( save/reloc )
 save3 FORGET save3
 ;S
 
@@ -1821,4 +1821,4 @@ HERE ' LIT CFA , ' BRANCH CFA , ' 0BRANCH CFA ,
 
 ( defns, disc command buf, more defs up to MON, end           )
 0BD defns 0A absb 21 defns end
-DECIMAL FORGET save3 ;S
+;S
