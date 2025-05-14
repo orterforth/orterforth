@@ -733,7 +733,7 @@ void rf_code_leave(void)
     uintptr_t index;
 
     index = (uintptr_t) RF_RP_POP;
-    (void) RF_RP_POP;
+    RF_RP_POP;
     RF_RP_PUSH(index);
     RF_RP_PUSH(index);
   }
@@ -918,7 +918,7 @@ void rf_code_over(void)
 void rf_code_drop(void)
 {
   RF_START;
-  (void) RF_SP_POP;
+  RF_SP_POP;
   RF_JUMP_NEXT;
 }
 #endif
