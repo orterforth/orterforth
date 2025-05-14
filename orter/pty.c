@@ -29,9 +29,10 @@ int orter_pty_close(void)
     int ret = errno;
 
     /* link */
-    if (orter_pty_link && unlink(orter_pty_link)) {
+    if (orter_pty_link && unlink(orter_pty_link) && errno != ENOENT) {
         perror("unlink failed");
     }
+    orter_pty_link = 0;
     /* fds */
     if (orter_pty_master_fd != -1 && close(orter_pty_master_fd)) {
         perror("close master failed");
@@ -52,11 +53,11 @@ int orter_pty_open(char *link)
 
     /* validate not yet open */
     if (orter_pty_master_fd != -1) {
-        fprintf(stderr, "master already open");
+        fprintf(stderr, "master already open\n");
         return 1;
     }
     if (orter_pty_slave_fd != -1) {
-        fprintf(stderr, "slave already open");
+        fprintf(stderr, "slave already open\n");
         return 1;
     }
 
