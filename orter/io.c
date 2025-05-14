@@ -302,7 +302,7 @@ static int orter_io_select(void)
     switch (errno) {
       case EINTR:
         orter_io_exit = errno;
-        perror("pselect interrupted");
+        /*perror("pselect interrupted");*/
         orter_io_finished = 1;
         break;
       default:
