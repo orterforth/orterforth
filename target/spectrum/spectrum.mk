@@ -284,7 +284,7 @@ spectrum/%.ser : spectrum/%.bin | $(ORTER)
 
 	$(ORTER) spectrum header $< 3 32768 0 > $@
 
-spectrum/%.tap spectrum/%.wav : spectrum/%.bin
+spectrum/%.tap spectrum/%.wav : spectrum/%.bin | z88dk-appmake
 
 	z88dk-appmake +zx --audio -b $< --org $(SPECTRUMORG) --clearaddr 0x7A9F -o $@
 
@@ -310,17 +310,17 @@ spectrum/inst.lib : inst.c rf.h target/spectrum/spectrum.inc | spectrum
 		--codeseg=INST --dataseg=INST --bssseg=INST --constseg=INST
 
 # 1. start with an empty bin file to build the multi segment bin
-spectrum/inst-0.bin : | spectrum
+spectrum/inst-0.bin : | spectrum z88dk-appmake
 
 	z88dk-appmake +rom -s $(SPECTRUMORG) -f 0 -o $@
 
 # 2. add main code at start
-spectrum/inst-1.bin : spectrum/inst-0.bin spectrum/inst.bin
+spectrum/inst-1.bin : spectrum/inst-0.bin spectrum/inst.bin | z88dk-appmake
 
 	z88dk-appmake +inject -b $< -i spectrum/inst.bin -s 0 -o $@
 
 # 3. add inst code at offset, safely beyond dictionary
-spectrum/inst-2.bin : spectrum/inst-1.bin spectrum/inst_INST.bin
+spectrum/inst-2.bin : spectrum/inst-1.bin spectrum/inst_INST.bin | z88dk-appmake
 
 	z88dk-appmake +inject -b $< -i spectrum/inst_INST.bin -s $(SPECTRUMINSTOFFSET) -o $@
 
@@ -369,3 +369,8 @@ spectrum/load-serial.hex :
 	printf '00 19 23 00 d3 34 0e 00 00 04 00 00 3b 22 62 22 3a f5 23 34 0e 00 00 04 00 00 3b c2 28 36 0e 00 00 06 00 00 29 3b 0d' >> $@
 	# 30 RANDOMIZE USR 32768
 	printf '00 1e 0e 00 f9 c0 33 32 37 36 38 0e 00 00 00 80 00 0d' >> $@
+
+.PHONY : z88dk-appmake
+z88dk-appmake :
+
+	@$(REQUIRETOOL)
