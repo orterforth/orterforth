@@ -70,6 +70,10 @@ AMIGAVC=PATH=/opt/amiga/bin:$$PATH \
 	VBCC=$(AMIGAVBCCHOME) \
 	vc $(AMIGAVBCCOPTS)
 
+/opt/amiga/bin/vc :
+
+	@$(REQUIRETOOL)
+
 amiga :
 
 	mkdir $@
@@ -183,7 +187,7 @@ amiga/%.ihx : amiga/%
 		--org 0 \
 		--output $@
 
-amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga
+amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga /opt/amiga/bin/vc
 
 	$(AMIGAVC) -c $< -o $@
 
@@ -259,6 +263,41 @@ amiga/rf_m68k.s : rf_m68k.s | amiga
 	sed -i 's/\.align 2/cnop 0,4/' $@.io
 	sed -i 's/\.extern/public/' $@.io
 	mv $@.io $@
+
+tools/github.com/bebbo/amiga-gcc :
+
+	git submodule update --init $@
+
+tools/phoenix.owl.de/vbcc/2022-02-28/vbcc_target_m68k-kick13.lha :
+
+	mkdir -p $(@D)
+	curl -o $@ http://phoenix.owl.de/vbcc/2022-02-28/vbcc_target_m68k-kick13.lha
+
+/opt/amiga/bin/vc /opt/amiga/bin/vlink : | tools/github.com/bebbo/amiga-gcc
+
+	cd $< && make update vbcc vlink
+
+/opt/amiga/vbcc/include/NDK_1.3 : tools/ndk13.lha
+
+	lha xw=/opt/amiga/vbcc/include/ $<
+
+/opt/amiga/vbcc/targets/m68k-kick13/include/stdint.h : tools/phoenix.owl.de/vbcc/2022-02-28/vbcc_target_m68k-kick13.lha
+
+	lha xw=amiga/ $<
+	mv amiga/vbcc_target_m68k-kick13/targets /opt/amiga/vbcc/targets
+
+/opt/amiga/vbcc/config :
+
+	mkdir -p $@
+
+/opt/amiga/vbcc/config/kick13 : target/amiga/kick13 | /opt/amiga/vbcc/config
+
+	cp $< $@
+
+/opt/amiga/vbcc/include :
+
+	mkdir -p $@
+
 
 .PHONY : xdftool
 xdftool :
