@@ -135,15 +135,16 @@ implements the protocol at the controller end, uses files as
 disc images and reads or writes to them as necessary.
 
 Unlike in the Installation Manual, though, orterforth uses a 
-serial interface to communicate with the disc drive. Because
-many platforms have serial ports, they can connect to such a 
-disc controller in a common way.
+serial interface rather than a parallel one to communicate with
+the disc drive. Because many platforms have serial ports, they
+can connect to the disc controller in a common way.
 
 The build for the local system implements this serial interface
 in-process and accesses the disc files locally, but builds for
 other targets use the target's serial port capability. A server
 executable provides the interface over a serial link, or via
-a virtual mechanism of some kind for an emulator.
+a virtual mechanism of some kind for an emulator (such as TCP,
+named pipes, or pty).
 
 An RS-232 serial port can be added to a modern machine that 
 doesn't have one, using a USB to RS-232 converter.
