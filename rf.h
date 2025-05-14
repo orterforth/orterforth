@@ -244,9 +244,9 @@ typedef unsigned long uintptr_t;
 #ifdef HX20
 #define RF_WORD_SIZE 2
 #define RF_BE
-#define RF_DOUBLE_ARITH
-#include <stdint.h>
-typedef uint32_t rf_double_t;
+typedef unsigned char uint8_t;
+typedef int intptr_t;
+typedef unsigned int uintptr_t;
 #define RF_TARGET_INC "target/hx20/hx20.inc"
 #endif
 
