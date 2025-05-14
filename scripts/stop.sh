@@ -6,17 +6,18 @@ set -eu
 
 # stop a process, remove pidfile
 
-# get args
+# get filename
 PIDFILE="$1"
 
 if [ -f "$PIDFILE" ]; then
+  PID=$(cat "$PIDFILE")
   # SIGTERM
-  kill $(cat "$PIDFILE") 2> /dev/null || true
-  if ps -p $(cat "$PIDFILE") > /dev/null
+  kill $PID 2> /dev/null || true
+  if ps -p $PID > /dev/null
   then
     # SIGKILL
     sleep 1
-    kill -9 $(cat "$PIDFILE") 2> /dev/null || true
+    kill -9 $PID 2> /dev/null || true
   fi
 
   # remove pidfile
