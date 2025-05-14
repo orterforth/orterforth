@@ -16,9 +16,6 @@
 [submodule "tools/github.com/reidrac/mkc64tap"]
 	path = tools/github.com/reidrac/mkc64tap
 	url = https://github.com/reidrac/mkc64tap.git
-[submodule "tools/github.com/EtchedPixels/CC6303"]
-	path = tools/github.com/EtchedPixels/CC6303
-	url = https://github.com/EtchedPixels/CC6303.git
 [submodule "tools/github.com/bebbo/amiga-gcc"]
 	path = tools/github.com/bebbo/amiga-gcc
 	url = https://github.com/bebbo/amiga-gcc.git

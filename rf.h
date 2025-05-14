@@ -239,9 +239,9 @@ typedef unsigned long uintptr_t;
 #endif
 #endif
 
-/* CC6303 */
+/* HX20 */
 
-#ifdef CC6303
+#ifdef HX20
 #define RF_WORD_SIZE 2
 #define RF_BE
 #define RF_DOUBLE_ARITH
