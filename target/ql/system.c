@@ -25,6 +25,9 @@ int main(int argc, char *argv[]);
 /* no C environnment setup */
 extern (*_Cstart)() = main;
 
+/* end of RAM */
+char *rf_limit;
+
 /* console */
 #define CON 0x00010001 /* channel #1 */
 
@@ -55,6 +58,9 @@ void rf_init(void)
   ser = io_open("SER2", 0);
   /* send ACK to close serial load */
   /*io_sstrg(ser, TIMEOUT_FOREVER, &p, 1);*/
+
+  /* top of memory */
+  rf_limit = *((char **) 0x28020);
 }
 
 void rf_code_emit(void)

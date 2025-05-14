@@ -8,8 +8,13 @@
 /* links code fields to the loaded job on startup */
 #define RF_INST_LINK
 
-/* memory limit on unexpanded QL */
-#define RF_LIMIT 262144
+/* memory limit from SV_RAMT */
+extern char *rf_limit;
+
+#define RF_LIMIT (rf_limit)
+
+/* because RF_LIMIT is dynamic */
+#define RF_INST_DYNAMIC
 
 /* small by default (256 bytes) */
 #define RF_STACK_SIZE 64
