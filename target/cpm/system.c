@@ -27,7 +27,10 @@ void rf_console_cr(void)
 
 uint8_t rf_serial_get(void)
 {
-  return bdos(CPM_RRDR, 0);
+  uint8_t b;
+  while ((b = bdos(CPM_RRDR, 0)) == 0x1A) { }
+  bdos(CPM_WCON, b);
+  return b;
 }
 
 void __FASTCALL__ rf_serial_put(uint8_t b)
