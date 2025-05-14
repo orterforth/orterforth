@@ -1,7 +1,7 @@
 # === Sinclair QL ===
 
 # xtc86 may not be on PATH
-export PATH := $(HOME)/xtc68/bin:$(PATH)
+export PATH := $(HOME)/.local/bin:$(PATH)
 
 QLMACHINE := sqlux
 QLQCCOPTS =
@@ -24,6 +24,8 @@ endif
 
 ifeq ($(QLOPTION),assembly)
 QLDEPS := ql/rf_m68k.o ql/system.o ql/main.o
+# NB when ramsize=512, 0x2D000 throws out of memory
+#QLORIGIN := 196608 # 0x30000
 QLORIGIN := 184320 # 0x2D000
 QLQCCOPTS += -D RF_ASSEMBLY
 endif
@@ -43,6 +45,10 @@ ifeq ($(QLMACHINE),sqlux)
 QLRUNDEPS := ql/orterforth.bin ql/orterforth
 QLSTARTDISC := $(STARTDISCPTY)
 endif
+
+qcc :
+
+	@$(REQUIRETOOL)
 
 ql :
 
@@ -85,7 +91,7 @@ ql/%.bas.ser : target/ql/%.bas
 	printf '\032' >> $@.io
 	mv $@.io $@
 
-ql/%.o : %.c rf.h target/ql/ql.inc | ql
+ql/%.o : %.c rf.h target/ql/ql.inc | ql qcc
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
@@ -97,7 +103,7 @@ ql/hw : ql/hw.o
 
 	qld -ms -o $@ $^
 
-ql/hw.o : hw.c | ql
+ql/hw.o : hw.c | ql qcc
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
@@ -147,10 +153,29 @@ ql/orterforth.ser : ql/orterforth | $(ORTER)
 
 	$(ORTER) ql serial-xtcc $< > $@
 
-ql/rf_m68k.o : rf_m68k.s | ql
+ql/rf_m68k.o : rf_m68k.s | ql qcc
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
 
-ql/system.o : target/ql/system.c rf.h target/ql/ql.inc | ql
+ql/system.o : target/ql/system.c rf.h target/ql/ql.inc | ql qcc
 
 	qcc $(QLQCCOPTS) -o $@ -c $<
+
+$(HOME)/.local/bin/qcc : tools/github.com/stronnag/xtc68/sdk-install.sh tools/github.com/stronnag/xtc68/support/INCLUDE_qdos.h
+
+	cd tools/github.com/stronnag/xtc68 && meson setup build --prefix=~/.local --strip
+	cd tools/github.com/stronnag/xtc68 && ninja install -C build
+	cd tools/github.com/stronnag/xtc68 && ./sdk-install.sh ~/.local
+
+tools/dilwyn.theqlforum.com/c/424run1.zip :
+
+	mkdir -p $(@D)
+	curl -o $@ https://dilwyn.theqlforum.com/c/424frun1.zip
+
+tools/github.com/stronnag/xtc68/sdk-install.sh :
+
+	git submodule update --init tools/github.com/stronnag/xtc68
+
+tools/github.com/stronnag/xtc68/support/INCLUDE_qdos.h : tools/dilwyn.theqlforum.com/c/424run1.zip
+
+	unzip $< -d tools/github.com/stronnag/xtc68/support
