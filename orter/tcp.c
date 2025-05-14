@@ -181,13 +181,39 @@ int orter_tcp_client(int port)
   return r;
 }
 
+int orter_tcp_server(int port)
+{
+  int r;
+
+  pipes[0] = &orter_tcp_pipe[0];
+  pipes[1] = &orter_tcp_pipe[1];
+  if ((r = orter_io_std_open())) {
+    return r;
+  }
+  if ((r = orter_tcp_server_open(port))) {
+    orter_io_std_close();
+    return r;
+  }
+  orter_io_pipe_init(&orter_tcp_pipe[0], 0, orter_tcp_fd);
+  orter_io_pipe_init(&orter_tcp_pipe[1], orter_tcp_fd, 1);
+  r = orter_io_pipe_loop(pipes, 2, process);
+  orter_tcp_close();
+  orter_io_std_close();
+  return r;
+}
+
 int orter_tcp(int argc, char *argv[])
 {
   if (argc == 4 && !strcmp("client", argv[2])) {
     return orter_tcp_client(atoi(argv[3]));
   }
 
+  if (argc == 4 && !strcmp("server", argv[2])) {
+    return orter_tcp_server(atoi(argv[3]));
+  }
+
   /* usage */
   fprintf(stderr, "Usage: orter tcp client <port>\n");
+  fprintf(stderr, "                 server <port>\n");
   return 1;
 }
