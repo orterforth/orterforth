@@ -70,7 +70,8 @@ AMIGAVC=PATH=/opt/amiga/bin:$$PATH \
 	VBCC=$(AMIGAVBCCHOME) \
 	vc $(AMIGAVBCCOPTS)
 
-/opt/amiga/bin/vc :
+.PHONY : vc
+vc :
 
 	@$(REQUIRETOOL)
 
@@ -187,7 +188,7 @@ amiga/%.ihx : amiga/%
 		--org 0 \
 		--output $@
 
-amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga /opt/amiga/bin/vc
+amiga/%.o : %.c rf.h target/amiga/amiga.inc | amiga vc
 
 	$(AMIGAVC) -c $< -o $@
 
@@ -198,15 +199,15 @@ amiga/%.rexx : amiga/% target/amiga/receive.rexx
 	printf "size = $$($(STAT) $<)\n" >> $@
 	cat target/amiga/receive.rexx >> $@
 
-amiga/amiga.o : target/amiga/amiga.c rf.h target/amiga/amiga.inc | amiga
+amiga/amiga.o : target/amiga/amiga.c rf.h target/amiga/amiga.inc | amiga vc
 
 	$(AMIGAVC) -c $< -o $@
 
-amiga/hw : amiga/hw.o
+amiga/hw : amiga/hw.o | vc
 
 	$(AMIGAVC) $< -lamiga -lauto -o $@
 
-amiga/inst : $(AMIGADEPS) amiga/inst.o
+amiga/inst : $(AMIGADEPS) amiga/inst.o | vc
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
@@ -215,7 +216,7 @@ amiga/long : | amiga
 	# repeat HUNK_END and use this to flush serial buffer
 	for i in $$(seq 0 127) ; do printf '\0\0\003\362' >> $@ ; done
 
-amiga/orterforth : $(AMIGADEPS) amiga/link.o
+amiga/orterforth : $(AMIGADEPS) amiga/link.o | vc
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
@@ -251,7 +252,7 @@ endif
 	@$(STOPDISC)
 	@$(STOPMACHINE)
 
-amiga/rf_m68k.o : amiga/rf_m68k.s
+amiga/rf_m68k.o : amiga/rf_m68k.s | vc
 
 	$(AMIGAVC) -c $< -o $@
 
