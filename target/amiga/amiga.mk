@@ -70,11 +70,6 @@ AMIGAVC=PATH=/opt/amiga/bin:$$PATH \
 	VBCC=$(AMIGAVBCCHOME) \
 	vc $(AMIGAVBCCOPTS)
 
-.PHONY : vc
-vc :
-
-	@$(REQUIRETOOL)
-
 amiga :
 
 	mkdir $@
@@ -220,7 +215,7 @@ amiga/orterforth : $(AMIGADEPS) amiga/link.o | vc
 
 	$(AMIGAVC) $^ -static -lamiga -lauto -M -v -o $@
 
-amiga/orterforth.adf : amiga/orterforth amiga/orterforth.bin
+amiga/orterforth.adf : amiga/orterforth amiga/orterforth.bin | xdftool
 
 	xdftool $@ format orterforth
 	xdftool $@ write amiga/orterforth orterforth
@@ -299,6 +294,10 @@ tools/phoenix.owl.de/vbcc/2022-02-28/vbcc_target_m68k-kick13.lha :
 
 	mkdir -p $@
 
+.PHONY : vc
+vc :
+
+	@$(REQUIRETOOL)
 
 .PHONY : xdftool
 xdftool :
