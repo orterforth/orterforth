@@ -49,7 +49,7 @@ ifeq ($(AMIGAMODEL),A500+)
 AMIGALOADSERIAL=$(WARN) "NB set serial handshaking to RTS/CTS" && \
 	$(PROMPT) "Open Shell and type: type ser: > ram:$(<F).rexx" && \
 	$(INFO) "Sending $<.rexx" && \
-	(cat $<.rexx amiga/long && sleep 10) | $(AMIGASERIAL) && \
+	(cat $<.rexx amiga/long && sleep 15) | $(AMIGASERIAL) && \
 	$(AMIGASERIALBREAK) && \
 	$(PROMPT) "Type: rx ram:$(<F)" && \
 	$(INFO) "Sending $<" && \
@@ -59,7 +59,7 @@ AMIGAWORKBENCH='roms/amiga/Workbench v2.04 rev 37.67 (1991)(Commodore)(Disk 1 of
 endif
 
 AMIGASTARTFSUAE=$(INFO) "Starting FS-UAE" && \
-	$(START) amiga/machine.pid fs-uae --amiga-model=$(AMIGAMODEL) --kickstart-file=$(AMIGAKICKSTART) --floppy-drive-0=$(AMIGAWORKBENCH) --floppy-drive-0=extras1.3.adf --serial-port=tcp://127.0.0.1:5705
+	$(START) amiga/machine.pid fs-uae --amiga-model=$(AMIGAMODEL) --kickstart-file=$(AMIGAKICKSTART) --floppy-drive-0=$(AMIGAWORKBENCH) --serial-port=tcp://127.0.0.1:5705
 
 AMIGAVBCCHOME=/opt/amiga/vbcc
 AMIGAVBCCOPTS=+kick13
@@ -70,26 +70,36 @@ AMIGAVC=PATH=/opt/amiga/bin:$$PATH \
 	VBCC=$(AMIGAVBCCHOME) \
 	vc $(AMIGAVBCCOPTS)
 
-amiga :
-
-	mkdir $@
-
 ifeq ($(AMIGALOADINGMETHOD),disk)
 AMIGAINSTDEPS := amiga/inst amiga/inst.adf model.img | amiga/long $(DISC) $(ORTER)
+ifeq ($(AMIGAMACHINE),real)
+AMIGALOAD += $(WARN) "Write amiga/$(<F).adf to disk" &&
+endif
+AMIGALOAD += $(WARN) "Open Shell and execute df1:$(<F)"
 AMIGARUNDEPS := amiga/orterforth amiga/orterforth.adf | $(DISC) $(DR0) $(DR1)
 AMIGASTARTFSUAE += --floppy-drive-1=$<.adf
 endif
+
 ifeq ($(AMIGALOADINGMETHOD),serial)
 AMIGAINSTDEPS := amiga/inst amiga/inst.bas amiga/inst.rexx model.img | amiga/long $(DISC) $(ORTER)
+ifeq ($(AMIGAMACHINE),fsuae)
+AMIGALOAD += $(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file" &&
+endif
+AMIGALOAD += $(AMIGALOADSERIAL) && $(WARN) "Type: ram:$(<F)"
 AMIGARUNDEPS := amiga/orterforth amiga/orterforth.bin amiga/orterforth.bin.bas amiga/orterforth.bin.rexx amiga/orterforth.bas amiga/orterforth.rexx | amiga/long $(DISC) $(DR0) $(DR1)
 endif
 
 ifeq ($(AMIGAMACHINE),fsuae)
 AMIGASTARTMACHINE=$(AMIGASTARTFSUAE) && sleep 3 && $(WARN) "NB set serial handshaking to None"
 endif
+
 ifeq ($(AMIGAMACHINE),real)
 AMIGASTARTMACHINE=:
 endif
+
+amiga :
+
+	mkdir $@
 
 .PHONY : amiga-build
 amiga-build : $(AMIGARUNDEPS)
@@ -98,68 +108,37 @@ amiga-build : $(AMIGARUNDEPS)
 amiga-hw : amiga/hw amiga/hw.adf amiga/hw.rexx | amiga/long $(ORTER)
 
 	@$(AMIGASTARTMACHINE)
-ifeq ($(AMIGALOADINGMETHOD),disk)
-ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "Write amiga/hw.adf to disk"
-endif
-	@$(WARN) "Open Shell and execute df1:hw"
-endif
-ifeq ($(AMIGALOADINGMETHOD),serial)
-ifeq ($(AMIGAMACHINE),fsuae)
-	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
-endif
-	@$(AMIGALOADSERIAL)
-	@$(WARN) "Type: ram:hw"
-endif
+	@$(AMIGALOAD)
 
 .PHONY : amiga-run
 amiga-run : $(AMIGARUNDEPS)
 
 	@$(AMIGASTARTMACHINE)
 ifeq ($(AMIGALOADINGMETHOD),disk)
-ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "Write amiga/orterforth.adf to disk"
-endif
-	@$(WARN) "Open Shell and execute: df1:orterforth <enter>"
+	@$(AMIGALOAD)
 endif
 ifeq ($(AMIGALOADINGMETHOD),serial)
 ifeq ($(AMIGAMACHINE),fsuae)
 	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
 endif
+	@$(AMIGALOADSERIAL)
 ifeq ($(AMIGAMODEL),A500)
-	@$(PROMPT) "Open Shell and type: type ser: to ram:orterforth.bas"
-	@$(INFO) "Sending amiga/orterforth.bas"
-	@(cat amiga/orterforth.bas amiga/long && sleep 15) | $(AMIGASERIAL)
-	@$(AMIGASERIALBREAK)
-	@$(PROMPT) "Insert Extras disk and type: amigabasic ram:orterforth.bas"
-	@$(INFO) "Sending amiga/orterforth"
-	@(cat amiga/orterforth amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
-	@$(PROMPT) "Type: type ser: > ram:bin.bas"
+	@$(PROMPT) "Type: type ser: to ram:bin.bas"
 	@$(INFO) "Sending amiga/orterforth.bin.bas"
 	@(cat amiga/orterforth.bin.bas amiga/long && sleep 15) | $(AMIGASERIAL)
 	@$(AMIGASERIALBREAK)
 	@$(PROMPT) "Type: amigabasic ram:bin.bas"
-	@$(INFO) "Sending amiga/orterforth.bin"
-	@(cat amiga/orterforth.bin amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
-	@$(WARN) "Now type: ram:orterforth <enter>"
 endif
 ifeq ($(AMIGAMODEL),A500+)
-	@$(PROMPT) "Open Shell and type: type ser: > ram:orterforth.rexx"
-	@$(INFO) "Sending amiga/orterforth.rexx"
-	@(cat amiga/orterforth.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
-	@$(AMIGASERIALBREAK)
-	@$(PROMPT) "Type: rx ram:orterforth"
-	@$(INFO) "Sending amiga/orterforth"
-	@(cat amiga/orterforth amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
 	@$(PROMPT) "Type: type ser: > ram:bin.rexx"
 	@$(INFO) "Sending amiga/orterforth.bin.rexx"
 	@(cat amiga/orterforth.bin.rexx amiga/long && sleep 15) | $(AMIGASERIAL)
 	@$(AMIGASERIALBREAK)
 	@$(PROMPT) "Type: rx ram:bin"
+endif
 	@$(INFO) "Sending amiga/orterforth.bin"
 	@(cat amiga/orterforth.bin amiga/long amiga/long amiga/long amiga/long && sleep 10) | $(AMIGASERIAL)
 	@$(WARN) "Now type: ram:orterforth <enter>"
-endif
 endif
 	@$(INFO) "Starting disc $(DR0) $(DR1)"
 	@$(DISC) $(AMIGASERIALOPTS) $(DR0) $(DR1)
@@ -228,19 +207,7 @@ amiga/orterforth.bin : amiga/orterforth.img
 amiga/orterforth.img : $(AMIGAINSTDEPS)
 
 	@$(AMIGASTARTMACHINE)
-ifeq ($(AMIGALOADINGMETHOD),disk)
-ifeq ($(AMIGAMACHINE),real)
-	@$(WARN) "Write amiga/inst.adf to disk"
-endif
-	@$(WARN) "Open Shell and execute df1:inst"
-endif
-ifeq ($(AMIGALOADINGMETHOD),serial)
-ifeq ($(AMIGAMACHINE),fsuae)
-	@$(WARN) "NB FS-UAE serial load fails due to a leading 0xF2 in the received file"
-endif
-	@$(AMIGALOADSERIAL)
-	@$(WARN) "Type: ram:inst"
-endif
+	@$(AMIGALOAD)
 	@$(EMPTYDR1FILE) $@
 	@$(STARTDISC) $(AMIGASERIALOPTS) model.img $@
 	@$(WAITUNTILSAVED) $@
@@ -294,10 +261,10 @@ tools/phoenix.owl.de/vbcc/2022-02-28/vbcc_target_m68k-kick13.lha :
 
 	mkdir -p $@
 
-.PHONY : vc
+.PHONY : /opt/amiga/bin/vc
 vc :
 
-	@$(REQUIRETOOL)
+	@PATH=/opt/amiga/bin:$$PATH $(REQUIRETOOL)
 
 .PHONY : xdftool
 xdftool :
