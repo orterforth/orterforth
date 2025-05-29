@@ -103,9 +103,11 @@ ssave   RMB    2
 
 	ENDSECTION
 
-* What follows is adapted from the original document to create compatible 
-* assembly source for the orterforth project in January 2023. Some comments
-* are preserved, although apart from acknowledgements much no longer applies.
+* What follows is adapted from the original document "6809 fig-FORTH ASSEMBLY
+* SOURCE LISTING" https://www.forth.org/fig-forth/fig-forth_6809.pdf to
+* create compatible assembly source for the orterforth project in January
+* 2023. Some comments are preserved, although apart from acknowledgements
+* much no longer applies. Code is now position-independent.
 
 * 6809
 * fig-FORTH
@@ -363,12 +365,12 @@ PA      EQU    N+4
 PCHR    EQU    N+6
         PSHS   Y         save Y
 PFIND0  PULU   X,Y
-        STY    PA0
+        STY    PA0,PCR
 *     *   *   *   *    X is dict ptr     Y is ptr to word that finding
 PFIND1  LDB    ,X+       get count from dict
-        STB    PCHR
+        STB    PCHR,PCR
         ANDB   #$3F      mask sign and precedence
-        LDY    PA0
+        LDY    PA0,PCR
         CMPB   ,Y+
         BNE    PFIND4    not equal
 PFIND2  LDA    ,Y+
@@ -391,7 +393,7 @@ PFIND4  LDB    ,X+       scan forward to end of name
 *
 * found :
 FOUND   LEAX   4,X       point to parameter field
-        LDB    PCHR
+        LDB    PCHR,PCR
         CLRA
         PSHU   X,D       X goes first
         LDB    #1
@@ -404,43 +406,43 @@ _rf_code_encl EXPORT
 _rf_code_encl
         PULU   D         get char off stack to use as delim into B
         LDX    ,U        addr to begin
-        CLR    N
-        STB    N+1       save delim to use
+        CLR    N,PCR
+        STB    N+1,PCR   save delim to use
 *  wait for a non-delimiter or NUL
 ENCL2   LDA    0,X
         BEQ    ENCL6
-        CMPA   N+1       check for delim
+        CMPA   N+1,PCR   check for delim
         BNE    ENCL3
         LEAX   1,X
-        INC    N
+        INC    N,PCR
         BRA    ENCL2
 *    found first character, Push PC
-ENCL3   LDB    N         found first character
+ENCL3   LDB    N,PCR     found first character
         CLRA
         PSHU   D
 *   wait for a delimiter or NUL
 ENCL4   LDA    ,X+
         BEQ    ENCL7
-        CMPA   N+1       check for delim
+        CMPA   N+1,PCR   check for delim
         BEQ    ENCL5
-        INC    N
+        INC    N,PCR
         BRA    ENCL4
 *   found EW,  Push it
-ENCL5   LDB    N
+ENCL5   LDB    N,PCR
         CLRA
         PSHU   D
 *advance and push NC
         INCB
         LBRA   PUSHD
 * found NUL before non delimiter, therefore, no word
-ENCL6   LDB    N         A is zero
+ENCL6   LDB    N,PCR     A is zero
         PSHU   D
         INCB
         BRA    ENCL7P
 * found NUL following word instead of SPACE
-ENCL7   LDB    N
+ENCL7   LDB    N,PCR
 ENCL7P  PSHU   D         save EW
-ENCL8   LDB    N         save NC
+ENCL8   LDB    N,PCR     save NC
         LBRA   PUSHD
 _rf_code_cmove EXPORT
 _rf_code_cmove

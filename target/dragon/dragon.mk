@@ -33,6 +33,8 @@ DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/system.o
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG)
+DRAGONOFFSET := 0000
+#DRAGONOFFSET := 1800
 
 ifeq ($(DRAGONMACHINE),mame)
 	DRAGONMAMEWARNINGS := \
@@ -114,22 +116,22 @@ endif
 ifeq ($(DRAGONMACHINE),xroar)
 	@$(INFO) 'Running XRoar'
 	@$(WARN) 'NB XRoar must be modified to implement serial'
-	@xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM:EXEC\r"
+	@xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM \"\",&H$(DRAGONOFFSET):EXEC\r"
 endif
 
 	@$(STOPDISC)
 
-dragon/%.cas : dragon/%.bin | tools/bin2cas.pl
+dragon/%.cas : dragon/%.bin | tools/www.6809.org.uk/dragon/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D $<
+	tools/www.6809.org.uk/dragon/bin2cas.pl --output $@ -D $<
 
 dragon/%.o : %.c rf.h target/dragon/dragon.inc | cmoc dragon
 
 	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
 
-dragon/%.wav : dragon/%.bin | tools/bin2cas.pl
+dragon/%.wav : dragon/%.bin | tools/www.6809.org.uk/dragon/bin2cas.pl
 
-	tools/bin2cas.pl --output $@ -D $<
+	tools/www.6809.org.uk/dragon/bin2cas.pl --output $@ -D $<
 
 dragon/hw.bin : hw.c | cmoc
 
@@ -197,7 +199,48 @@ lwasm :
 
 	@$(REQUIRETOOL)
 
-tools/bin2cas.pl : | tools
+tools/sarrazip.com/dev/cmoc-0.1.90/configure : tools/sarrazip.com/dev/cmoc-0.1.90.tar.gz
 
+	cd $(<D) && tar -xvf $(<F)
+
+tools/sarrazip.com/dev/cmoc-0.1.90/Makefile : tools/sarrazip.com/dev/cmoc-0.1.90/configure
+
+	cd $(<D) && ./configure
+
+tools/sarrazip.com/dev/cmoc-0.1.90/src/cmoc : tools/sarrazip.com/dev/cmoc-0.1.90/Makefile
+
+	cd $(<D) && make
+
+tools/sarrazip.com/dev/cmoc-0.1.90-1.deb : | tools
+
+	mkdir -p $(@D)
+	curl -L --output $@ http://sarrazip.com/dev/cmoc-0.1.90-1.deb
+
+tools/sarrazip.com/dev/cmoc-0.1.90.tar.gz : | tools
+
+	mkdir -p $(@D)
+	curl -L --output $@ http://sarrazip.com/dev/cmoc-0.1.90.tar.gz
+
+tools/www.6809.org.uk/dragon/bin2cas.pl : | tools
+
+	mkdir -p $(@D)
 	curl --output $@ https://www.6809.org.uk/dragon/bin2cas.pl
 	chmod +x $@
+
+tools/www.lwtools.ca/releases/lwtools/lwtools-4.24.tar.gz : | tools
+
+	mkdir -p $(@D)
+	curl --output $@ http://www.lwtools.ca/releases/lwtools/lwtools-4.24.tar.gz
+
+tools/www.lwtools.ca/releases/lwtools/lwtools-4.24/Makefile : tools/www.lwtools.ca/releases/lwtools/lwtools-4.24.tar.gz
+
+	cd $(<D) && tar -xvf $(<F)
+
+tools/www.lwtools.ca/releases/lwtools/lwtools-4.24/lwasm/lwasm : tools/www.lwtools.ca/releases/lwtools/lwtools-4.24/Makefile
+
+	cd $(<D) && make
+
+/usr/local/bin/lwasm /usr/local/bin/lwlink : tools/www.lwtools.ca/releases/lwtools/lwtools-4.24/lwasm/lwasm
+
+	cd tools/www.lwtools.ca/releases/lwtools/lwtools-4.24 && make install
+

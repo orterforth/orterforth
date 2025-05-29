@@ -37,3 +37,10 @@ The binary is fully relocatable, with position-independent code
 and relocatable install, creating a single binary that can be
 loaded beyond graphics pages. ORIGIN moves dynamically but
 LIMIT, FIRST, USER, R0, S0, TIB remain the same in high RAM.
+
+For example, load with:
+
+ make run TARGET=dragon DRAGONOFFSET=1800
+
+to load at 0x0600 + 0x1800 = 0x1E00, i.e., above graphics page
+4, to make use of graphics modes.
