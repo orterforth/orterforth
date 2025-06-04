@@ -2,7 +2,7 @@
 
 extern unsigned char *rf_origin;
 
-void rf_init_origin();
+void rf_init_origin(void);
 
 void rf_init(void)
 {
