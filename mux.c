@@ -78,17 +78,3 @@ void __FASTCALL__ rf_mux_serial_put(uint8_t b)
     RF_SLEEP(1000);
   }
 }
-
-void rf_mux_disc_read(char *p, unsigned char len)
-{
-  for (; len; len--) {
-    *(p++) = rf_mux_serial_get();
-  }
-}
-
-void rf_mux_disc_write(char *p, unsigned char len)
-{
-  for (; len; len--) {
-    rf_mux_serial_put(*(p++));
-  }
-}
