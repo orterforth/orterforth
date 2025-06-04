@@ -1740,7 +1740,7 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
     buf 128 90 FILL             ( write a block of 'Z's       )
     buf blk @ 0 R/W ENDIF ;
 0 ' cl LFA !                    ( break inst dictionary link  )
-save FORGET end ;S              ( now save, if enabled; done! )
+save FORGET buf ;S              ( now save, if enabled; done! )
 
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 HEX : cd cd ; 0 ' cl LFA !    ( break inst dict link, keep cd )
