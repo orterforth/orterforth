@@ -1784,7 +1784,7 @@ HERE ' : 9 cs + , ' CONSTANT 4 cs + , ' VARIABLE 2 cs + ,
 ' USER 2 cs + , ' DOES> 5 cs + , 0 , CONSTANT lnks
 ( table of code words that take an arg                        )
 HERE ' LIT CFA , ' BRANCH CFA , ' 0BRANCH CFA ,
-' (LOOP) CFA , 0 , CONSTANT witharg
+' (LOOP) CFA , 0 , CONSTANT args
 ( write code followed by arg - use rto or link if needed      )
 : wrd ptr @ rtos in IF rto ELSE ptr @ rtls in IF rtl ELSE 
   abs ENDIF ENDIF ;
@@ -1801,7 +1801,7 @@ HERE ' LIT CFA , ' BRANCH CFA , ' 0BRANCH CFA ,
     ptr @ @ DUP ' (.") CFA = IF                  ( string arg )
       DROP rto ptr @ C@ 1+ ln absb ELSE
       DUP ' COMPILE CFA = IF DROP rto rto ELSE      ( cfa arg )
-      witharg in IF arg ELSE rto ENDIF ENDIF ENDIF UNTIL ;
+        args in IF arg ELSE rto ENDIF ENDIF ENDIF UNTIL ;
 
 
 
