@@ -66,10 +66,10 @@ ifeq ($(DRAGONMACHINE),xroar)
 	DRAGONSTARTMACHINE := \
 		$(INFO) 'Starting XRoar' ; \
 		$(WARN) 'NB XRoar must be modified to implement serial' ; \
-		$(START) xroar.pid xroar $(DRAGONXROAROPTS) -type "CLOADM:EXEC\r" -load-tape
+		$(START) dragon/machine.pid xroar $(DRAGONXROAROPTS) -type "CLOADM:EXEC\r" -load-tape
 	DRAGONSTOPMACHINE := \
 		$(INFO) 'Stopping XRoar' ; \
-		sh scripts/stop.sh xroar.pid
+		sh scripts/stop.sh dragon/machine.pid
 endif
 
 .PHONY : cmoc
