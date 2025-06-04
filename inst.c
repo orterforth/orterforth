@@ -403,7 +403,7 @@ static uintptr_t rf_inst_constants[] = {
   0,
 #ifdef RF_INST_SAVE
 #ifdef RF_INST_LINK
-  3,
+  2,
 #else
   1,
 #endif

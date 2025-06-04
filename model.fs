@@ -1716,8 +1716,8 @@ save0 FORGET save0
 HERE CONSTANT end
 : save1 15 ic 1 = IF 108 LOAD ENDIF ;                  ( save )
 save1 FORGET end
-: save3 15 ic 3 = IF 109 LOAD ENDIF ;            ( save/reloc )
-save3 FORGET save3
+: save2 15 ic 2 = IF 109 LOAD ENDIF ;            ( save/reloc )
+save2 FORGET save2
 ;S
 
 
