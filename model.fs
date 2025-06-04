@@ -1713,14 +1713,14 @@ CODE DR0 CODE ERROR CODE MESSAGE CODE MIN CODE R/W
 ( SAVE OPTIONS                                     orterforth )
 : save0 15 ic 0= IF 0 ' cl LFA ! ENDIF ;            ( no save )
 save0 FORGET save0
-HERE CONSTANT end
-: save1 15 ic 1 = IF 108 LOAD ENDIF ;                  ( save )
+HERE CONSTANT end                                      ( save )
+: save1 15 ic 1 = IF 108 LOAD ENDIF ;
 save1 FORGET end
-: save2 15 ic 2 = IF 109 LOAD ENDIF ;            ( save/reloc )
+: save2 15 ic 2 = IF 109 LOAD ENDIF ;     ( save and relocate )
 save2 FORGET save2
+
+( all done!                                                   )
 ;S
-
-
 
 
 
@@ -1732,15 +1732,15 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
 : hbl buf ptr ! DUP 64 + SWAP DO I C@ 0 16 U/ hd hd LOOP ;
 2000 VARIABLE blk               ( first block of DR1          )
 : save                          ( --                          )
-  15 ic IF                      ( only if save enabled:       )
-    end 13 ic DO                ( write blocks of hex         )
-      I hbl buf blk @ 0 R/W
-      1 blk +!
-      64 +LOOP
-    buf 128 90 FILL             ( write a block of 'Z's       )
-    buf blk @ 0 R/W ENDIF ;
+  end 13 ic DO                  ( write blocks of hex         )
+    I hbl buf blk @ 0 R/W
+    1 blk +!
+  64 +LOOP
+  buf 128 90 FILL               ( write a block of 'Z's       )
+  buf blk @ 0 R/W ;
 0 ' cl LFA !                    ( break inst dictionary link  )
-save FORGET buf ;S              ( now save, if enabled; done! )
+save FORGET buf ;S              ( now save                    )
+
 
 ( SAVE IN RELOCATABLE FORMAT                       orterforth )
 HEX : cd cd ; 0 ' cl LFA !    ( break inst dict link, keep cd )
