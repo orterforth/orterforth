@@ -4,6 +4,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_bbc.o \
 	$(SYSTEM)/orter_dragon.o \
 	$(SYSTEM)/orter_hex.o \
+	$(SYSTEM)/orter_hx20.o \
 	$(SYSTEM)/orter_io.o \
 	$(SYSTEM)/orter_m100.o \
 	$(SYSTEM)/orter_pty.o \
@@ -33,6 +34,11 @@ $(SYSTEM)/orter_dragon.o : orter/dragon.c | $(SYSTEM)
 
 # hex utilities
 $(SYSTEM)/orter_hex.o : orter/hex.c orter/hex.h | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# Epson HX-20
+$(SYSTEM)/orter_hx20.o : orter/hx20.c orter/io.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

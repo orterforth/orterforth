@@ -26,6 +26,7 @@ static int usage(void)
   fprintf(stderr, "             bbc ...\n");
   fprintf(stderr, "             dragon ...\n");
   fprintf(stderr, "             hex ...\n");
+  fprintf(stderr, "             hx20 ...\n");
   fprintf(stderr, "             m100 ...\n");
   fprintf(stderr, "             pty ...\n");
   fprintf(stderr, "             ql ...\n");
@@ -40,6 +41,8 @@ static int usage(void)
 int orter_atari(int argc, char *argv[]);
 
 int orter_dragon(int argc, char *argv[]);
+
+int orter_hx20(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +67,9 @@ int main(int argc, char *argv[])
     }
     if (argc > 2 && !strcmp("hex", arg) && !strcmp("write", argv[2])) {
       return orter_hex_write();
+    }
+    if (!strcmp("hx20", arg)) {
+      return orter_hx20(argc, argv);
     }
     if (!strcmp("m100", arg)) {
       return orter_m100(argc, argv);

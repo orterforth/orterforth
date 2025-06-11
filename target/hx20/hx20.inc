@@ -1,5 +1,5 @@
-#define RF_ORIGIN 0x0100
-#define RF_LIMIT 0x8000
+#define RF_ORIGIN 0x0A40
+#define RF_LIMIT 0x4000
 #define RF_TARGET_HI 0x000C
 #define RF_TARGET_LO 0xC198
 #define RF_CPU_HI 0x0004
