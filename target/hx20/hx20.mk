@@ -6,9 +6,9 @@ hx20 :
 
 	mkdir $@
 
-hx20/hw : hx20/hx20.o hx20/hw.o
+hx20/hw : hx20/hw.out
 
-	$(HX20FCC) -T0x0A40 -o $@ $^
+	dd if=$< bs=1 skip=2624 of=$@
 
 hx20/hw.bin : hx20/hw | $(ORTER)
 
@@ -18,13 +18,13 @@ hx20/hw.o : hw.c | hx20
 
 	$(HX20FCC) -c -o $@ $<
 
+hx20/hw.out : hx20/hw.o
+
+	PATH=/opt/fcc/bin:$$PATH ld6800 -b -C 2624 -Z 0x40 -o $@ $^
+
 hx20/hw.wav : hx20/hw.bin | $(ORTER)
 
 	$(ORTER) hx20 wav write HW < $< > $@
-
-hx20/hx20.o : target/hx20/hx20.s
-
-	$(HX20FCC) -c -o $@ $<
 
 hx20/inst : hx20/hx20.o hx20/inst.o hx20/io.o hx20/main.o hx20/rf.o hx20/system.o
 
