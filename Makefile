@@ -287,9 +287,11 @@ work/script.sh :
 
 	@echo "Create the file $@ for your working script and run it using: make script"
 
-# === OTHER TARGET PLATFORMS ===
+# === RETRO COMMAND LINE UTILITY ===
 
 include orter/orter.mk
+
+# === OTHER TARGET PLATFORMS ===
 
 include target/amiga/amiga.mk
 
