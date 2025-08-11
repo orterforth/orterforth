@@ -91,12 +91,14 @@ endif
 # ideal is that disc starts after load in all cases
 # requires a disc tcp client to connect to MAME tcp server
 ifeq ($(BBCMACHINE),mame)
+BBCSERIALARGS := tcp server 5705
 BBCSTARTDISC := $(STARTDISCTCP)
 BBCLOAD := sleep 1 ; $(INFO) 'Running MAME' ; mame $(BBCMAME) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEMEDIA)
 BBCLOADINST = sleep 1 ; $(STARTMACHINE) mame $(BBCMAMEFAST) -autoboot_delay 2 -autoboot_command $(BBCMAMECMD) $(BBCMAMEINSTMEDIA)
 BBCSTOPMACHINE = $(STOPMACHINE)
 endif
 ifeq ($(BBCMACHINE),real)
+BBCSERIALARGS := serial $(SERIALPORT) $(SERIALBAUD)
 BBCROMS :=
 BBCSTOPMACHINE := :
 ifeq ($(BBCLOADINGMETHOD),disk)
@@ -105,8 +107,8 @@ BBCLOADINST := $(WARN) "disk load not implemented" ; exit 1
 BBCSTARTDISC := $(WARN) "disk load not implemented" ; exit 1
 endif
 ifeq ($(BBCLOADINGMETHOD),serial)
-BBCLOAD := $(BBCLOADSERIAL) $(BBCMEDIA) && $(INFO) 'Running disc' && $(DISC) serial $(SERIALPORT) $(SERIALBAUD) $(DR0) $(DR1)
-BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD) model.img $@.io
+BBCLOAD := $(BBCLOADSERIAL) $(BBCMEDIA) && $(INFO) 'Running disc' && $(DISC) $(BBCSERIALARGS) $(DR0) $(DR1)
+BBCLOADINST = $(BBCLOADSERIAL) $(BBCINSTMEDIA) && $(STARTDISC) $(BBCSERIALARGS) model.img $@.io
 BBCSTARTDISC := :
 endif
 ifeq ($(BBCLOADINGMETHOD),tape)
@@ -114,7 +116,7 @@ BBCINSTMEDIA = bbc/inst.wav
 BBCMEDIA = bbc/orterforth.wav
 BBCLOAD := $(BBCLOADTAPE) $(BBCMEDIA) && $(PROMPT) 'Press <enter> to stop disc'
 BBCLOADINST = $(BBCLOADTAPE) $(BBCINSTMEDIA)
-BBCSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
+BBCSTARTDISC := $(STARTDISC) $(BBCSERIALARGS)
 endif
 endif
 
@@ -201,22 +203,20 @@ bbc/mos.o : target/bbc/mos.s | bbc
 
 	ca65 -o $@ $<
 
-bbc/orterforth : bbc/orterforth.hex | $(ORTER)
+bbc/orterforth : bbc/orterforth.img | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
 # TODO when BBCLOADINGMETHOD is different between build and run time
 # make attempts to rebuild because bbc/inst.* is newer.
-bbc/orterforth.hex : $(BBCINSTMEDIA) model.img | $(BBCROMS) $(DISC)
+bbc/orterforth.img : $(BBCINSTMEDIA) model.img | $(BBCROMS) $(DISC)
 
 	@$(CHECKMEMORY) 0x$(BBCORG) 0x$(BBCORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' bbc/inst.map)" | cut -c '33-36') - 0x$(BBCORG) ))
-	@$(EMPTYDR1FILE) $@.io
-	@$(BBCSTARTDISC) model.img $@.io
+# TODO real serial load must precede disc start, currently part of BBCLOADINST
+	@$(INSTALLDISC) $(BBCSERIALARGS) &
 	@$(BBCLOADINST)
-	@$(WAITUNTILSAVED) $@.io
+	@$(WAITFORFILE)
 	@$(BBCSTOPMACHINE)
-	@$(STOPDISC)
-	@$(COMPLETEDR1FILE)
 
 bbc/rf_6502.o : rf_6502.s | bbc
 
