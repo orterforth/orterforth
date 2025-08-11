@@ -1737,7 +1737,7 @@ FIRST cl + CONSTANT buf buf VARIABLE ptr
     1 blk +!
   64 +LOOP
   buf 128 90 FILL               ( write a block of 'Z's       )
-  buf blk @ 0 R/W ;
+  buf blk @ 0 R/W blk @ FIRST ! ;
 0 ' cl LFA !                    ( break inst dictionary link  )
 save FORGET buf ;S              ( now save                    )
 
