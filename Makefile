@@ -9,6 +9,8 @@ DR0             = forth/library.img
 DR1             = forth/data.img
 COMPLETEDR1FILE = mv $@.io $@ ; $(INFO) 'Done'
 EMPTYDR1FILE   := $(INFO) 'Clearing DR1'           ; printf '' >
+INSTALLDISC     = SYSTEM=$(SYSTEM) HEXFILE=$@ sh scripts/install-disc.sh
+INSTALLMACHINE  = HEXFILE=$@ sh scripts/install-machine.sh
 MAMEOPTS       := -rompath roms -video opengl -resolution 1024x768 -skip_gameinfo -nomax -window
 PROMPT         := sh scripts/prompt.sh
 REQUIRETOOL     = which $@ >/dev/null 2>/dev/null || (printf '* \033[1;31m%s %s\033[0;0m\n' 'Tool required but not installed:' $@ ; exit 1)
@@ -18,6 +20,7 @@ STARTMACHINE    = $(INFO) 'Starting machine'       ; $(START) $(@D)/machine.pid
 STARTDISCMSG   := $(INFO) 'Starting disc'
 STOPDISC       := $(INFO) 'Stopping disc'          ; sh scripts/stop.sh disc.pid
 STOPMACHINE     = $(INFO) "Stopping machine"       ; sh scripts/stop.sh $(@D)/machine.pid
+WAITFORFILE     = while ! [ -f "$@" ]; do sleep 1; done
 WAITUNTILSAVED := $(INFO) 'Waiting until saved'    ; sh scripts/wait-until-saved.sh
 
 # local OS

@@ -71,15 +71,11 @@ atari/orterforth.bin : atari/orterforth.img | $(ORTER)
 atari/orterforth.img : atari/inst.xex atari/inst.map model.img | atari800 $(DISC)
 
 	@$(CHECKMEMORY) $(ATARIORG) $(ATARIORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' atari/inst.map)" | cut -c '33-36') - $(ATARIORG) ))
-	@$(EMPTYDR1FILE) $@.io
 	@rm -f atari/pty
-	@$(STARTDISC) pty atari/pty model.img $@.io
+	@$(INSTALLDISC) pty atari/pty &
 	@sleep 2
-	@$(STARTMACHINE) atari800 $(ATARIATARI800OPTS) -turbo -rdevice $$(readlink -n atari/pty && rm atari/pty) -run $<
-	@$(WAITUNTILSAVED) $@.io
-	@$(STOPMACHINE)
-	@$(STOPDISC)
-	@$(COMPLETEDR1FILE)
+	@$(INSTALLMACHINE) atari800 $(ATARIATARI800OPTS) -turbo -rdevice $$(readlink -n atari/pty && rm atari/pty) -run $< &
+	@$(WAITFORFILE)
 
 atari/orterforth.xex : atari/orterforth.bin | $(ORTER)
 

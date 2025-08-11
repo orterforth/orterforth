@@ -78,18 +78,18 @@ c64/inst.s : inst.c rf.h target/c64/c64.inc | c64 cc65
 		--rodata-name INST \
 		-o $@ $<
 
-c64/orterforth : c64/orterforth.hex | $(ORTER)
+c64/orterforth : c64/orterforth.img | $(ORTER)
 
 	$(ORTER) hex read < $< > $@.io
 	mv $@.io $@
 
-c64/orterforth.hex : c64/inst.$(C64MEDIAEXT) model.img | $(DISC)
+c64/orterforth.img : c64/inst.$(C64MEDIAEXT) model.img | $(DISC)
 
 	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' c64/inst.map)" | cut -c '33-36') - 0x801 ))
-	SYSTEM=$(SYSTEM) HEXFILE=$@ sh scripts/install-disc.sh tcp server 25232 &
-	sleep 1
-	HEXFILE=$@ sh scripts/install-machine.sh x64 $(C64VICEOPTS) -warp -autostartprgmode 1 -autostart $< &
-	while ! [ -f "$@" ]; do sleep 1; done
+	@$(INSTALLDISC) tcp server 25232 &
+	@sleep 1
+	@$(INSTALLMACHINE) x64 $(C64VICEOPTS) -warp -autostartprgmode 1 -autostart $< &
+	@$(WAITFORFILE)
 
 c64/orterforth.prg : c64/orterforth
 
