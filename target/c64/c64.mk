@@ -88,7 +88,7 @@ c64/orterforth.img : c64/inst.$(C64MEDIAEXT) model.img | $(DISC)
 	@$(CHECKMEMORY) 0x801 $(C64ORIGIN) $$(( 0x$$(echo "$$(grep '^BSS' c64/inst.map)" | cut -c '33-36') - 0x801 ))
 	@$(INSTALLDISC) tcp server 25232 &
 	@sleep 1
-	@$(INSTALLMACHINE) x64 $(C64VICEOPTS) -warp -autostartprgmode 1 -autostart $< &
+	@$(INSTALLMACHINE) x64 $(C64VICEOPTS) -warp +sound -autostartprgmode 1 -autostart $< &
 	@$(WAITFORFILE)
 
 c64/orterforth.prg : c64/orterforth
