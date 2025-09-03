@@ -2,6 +2,7 @@
 $(ORTER) : \
 	$(SYSTEM)/orter_atari.o \
 	$(SYSTEM)/orter_bbc.o \
+	$(SYSTEM)/orter_c64.o \
 	$(SYSTEM)/orter_dragon.o \
 	$(SYSTEM)/orter_hex.o \
 	$(SYSTEM)/orter_hx20.o \
@@ -12,10 +13,11 @@ $(ORTER) : \
 	$(SYSTEM)/orter_serial.o \
 	$(SYSTEM)/orter_spectrum.o \
 	$(SYSTEM)/orter_tcp.o \
+	$(SYSTEM)/orter_wav.o \
 	$(SYSTEM)/orter_z88.o \
 	orter/main.c
 
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lutil
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ -lm -lutil
 
 # Atari 8-bit
 $(SYSTEM)/orter_atari.o : orter/atari.c | $(SYSTEM)
@@ -24,6 +26,11 @@ $(SYSTEM)/orter_atari.o : orter/atari.c | $(SYSTEM)
 
 # BBC Micro
 $(SYSTEM)/orter_bbc.o : orter/bbc.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# Commodore 64
+$(SYSTEM)/orter_c64.o : orter/c64.c orter/io.h orter/wav.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -38,7 +45,7 @@ $(SYSTEM)/orter_hex.o : orter/hex.c orter/hex.h | $(SYSTEM)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # Epson HX-20
-$(SYSTEM)/orter_hx20.o : orter/hx20.c orter/io.h | $(SYSTEM)
+$(SYSTEM)/orter_hx20.o : orter/hx20.c orter/io.h orter/wav.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
@@ -74,6 +81,11 @@ $(SYSTEM)/orter_tcp.o : orter/tcp.c | $(SYSTEM)
 
 # Sinclair ZX Spectrum
 $(SYSTEM)/orter_spectrum.o : orter/spectrum.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# WAV
+$(SYSTEM)/orter_wav.o : orter/wav.c | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

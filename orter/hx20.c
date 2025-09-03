@@ -4,6 +4,7 @@
 #include <time.h>
 
 #include "io.h"
+#include "wav.h"
 
 static uint8_t checksum = 0;
 
@@ -72,28 +73,6 @@ static int orter_hx20_bin_write(uint16_t load, uint16_t exec)
   return 0;
 }
 
-static uint8_t *orter_wav_buf = 0;
-static size_t orter_wav_buf_siz = 0;
-static size_t orter_wav_buf_idx = 0;
-
-static void orter_wav_start(void)
-{
-  orter_wav_buf = 0;
-  orter_wav_buf_siz = 0;
-  orter_wav_buf_idx = 0;
-}
-
-static void orter_wav_write_16le(uint16_t u)
-{
-  while (orter_wav_buf_idx >= orter_wav_buf_siz) {
-    orter_wav_buf_siz += 256;
-    orter_wav_buf = realloc(orter_wav_buf, orter_wav_buf_siz);
-  }
-
-  orter_io_set_16le(u, orter_wav_buf + orter_wav_buf_idx);
-  orter_wav_buf_idx += 2;
-}
-
 static void bit(uint8_t b)
 {
   int i, duty = (b ? 22 : 11);
@@ -114,40 +93,6 @@ static void byte(uint8_t b)
     bit(b & m);
   }
 	bit(1);
-}
-
-static void orter_wav_end(void)
-{
-  /* RIFF header */
-  fputs("RIFF", stdout);
-  orter_io_put_32le(orter_wav_buf_idx + 36);
-  fputs("WAVE", stdout);
-
-  /* format chunk */
-  fputs("fmt ", stdout);
-  /* format length */
-  orter_io_put_32le(16);
-  /* PCM */
-  orter_io_put_16le(1);
-  /* 1 channel */
-  orter_io_put_16le(1);
-  /* CD sample rate */
-  orter_io_put_32le(44100);
-  /* (sample rate * 16 bits per sample * 1 channel) / 8 */
-  orter_io_put_32le(88200);
-  /* (16 bits per sample * 1 channel) / 8 */
-  orter_io_put_16le(2);
-  /* 16 bits per sample */
-  orter_io_put_16le(16);
-
-  /* data chunk */
-  fputs("data", stdout);
-  /* length */
-  orter_io_put_32le(orter_wav_buf_idx);
-  /* data */
-  fwrite(orter_wav_buf, 1, orter_wav_buf_idx, stdout);
-
-  fflush(stdout);
 }
 
 static void gap(size_t s)

@@ -53,9 +53,15 @@ c64/%.s : %.c rf.h target/c64/c64.inc | c64 cc65
 
 	cc65 $(C64CC65OPTS) -o $@ $<
 
-c64/%.tap : c64/%.prg | tools/github.com/reidrac/mkc64tap/mkc64tap.py
+c64/%.tap : c64/%.prg | $(ORTER)
 
-	python2 tools/github.com/reidrac/mkc64tap/mkc64tap.py --output $@ $<
+	$(ORTER) c64 prg to tap $(*F) < $< > $@.tmp
+	mv $@.tmp $@
+
+c64/%.wav : c64/%.tap | $(ORTER)
+
+	$(ORTER) c64 tap to wav < $< > $@.tmp
+	mv $@.tmp $@
 
 c64/c64-up2400.s : $(C64UP2400)/driver/c64-up2400.ser | c64
 

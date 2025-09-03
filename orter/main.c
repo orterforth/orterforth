@@ -24,6 +24,7 @@ static int usage(void)
   /* an entry for each subcommand */
   fprintf(stderr, "             atari ...\n");
   fprintf(stderr, "             bbc ...\n");
+  fprintf(stderr, "             c64 ...\n");
   fprintf(stderr, "             dragon ...\n");
   fprintf(stderr, "             hex ...\n");
   fprintf(stderr, "             hx20 ...\n");
@@ -40,6 +41,8 @@ static int usage(void)
 
 int orter_atari(int argc, char *argv[]);
 
+int orter_c64(int argc, char *argv[]);
+
 int orter_dragon(int argc, char *argv[]);
 
 int orter_hx20(int argc, char *argv[]);
@@ -54,6 +57,9 @@ int main(int argc, char *argv[])
 #ifndef _WIN32
     if (!strcmp("bbc", arg)) {
       return orter_bbc(argc, argv);
+    }
+    if (!strcmp("c64", arg)) {
+      return orter_c64(argc, argv);
     }
     if (!strcmp("dragon", arg)) {
       return orter_dragon(argc, argv);

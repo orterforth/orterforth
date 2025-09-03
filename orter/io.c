@@ -363,6 +363,22 @@ int orter_io_pipe_loop(orter_io_pipe_t **pipes, int num, void (*process)(void))
 }
 #endif
 
+uint16_t orter_io_read_16le(void)
+{
+  return (uint16_t) getchar() | (getchar() << 8);
+}
+
+uint32_t orter_io_read_32le(void)
+{
+  uint32_t i = getchar() << 8;
+  i |= getchar();
+  i <<= 8;
+  i |= getchar();
+  i <<= 8;
+  i |= getchar();
+  return i;
+}
+
 void orter_io_put_16be(uint16_t u)
 {
   fputc((uint8_t) (u >> 8), stdout);
