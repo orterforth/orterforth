@@ -141,7 +141,7 @@ static void tap_write_header(void)
     uint16_t end;
     int i, j;
 
-    end = prg_start + prg_data_len + 1;
+    end = prg_start + prg_data_len;
     for (i = 0; i < 2; ++i) {
         /* pilot */
         tap_write_leader(i ? 0x004F : 0x6A00);
