@@ -13,20 +13,25 @@ You will need:
                       roms/bbcb/saa5050 
                       roms/bbcb/dnfs120.rom
 
-To build in MAME, call:
+To build, call:
 
- make TARGET=bbc                 (C code, slower)
- make TARGET=bbc OPTION=assembly (assembly code)
- make TARGET=bbc OPTION=tape     (assembly code, no disk
-                                 buffers, so starts at
-                                 &0E00)
+ make TARGET=bbc [BBCLOADINGMETHOD=...]
+                 [BBCMACHINE=...]
+                 [OPTION=...]
 
-To build on a physical BBC Micro Model B, call:
+Where: (> indicating default)
 
- make TARGET=bbc [OPTION=...] BBCMACHINE=real
-  BBCLOADINGMETHOD=serial (uses serial loader)
- make TARGET=bbc [OPTION=...] BBCMACHINE=real
-  BBCLOADINGMETHOD=tape (uses tape audio)
+ > OPTION=default          (C code, slower)
+   OPTION=assembly         (assembly code, faster)
+   OPTION=tape             (assembly code, no disk buffers, so
+                           starts at &0E00)
+
+   BBCLOADINGMETHOD=disk   (uses disk image)
+   BBCLOADINGMETHOD=serial (uses serial loader)
+ > BBCLOADINGMETHOD=tape   (uses tape audio)
+
+   BBCMACHINE=mame         (via MAME)
+ > BBCMACHINE=real         (on a physical BBC Micro Model B)
 
 and follow the instructions. You may need suitable
 amplification between the host machine's audio output and the
@@ -42,19 +47,21 @@ Target files are:
 
 To run in MAME, call:
 
- make run TARGET=bbc                 (loads .ssd)
- make run TARGET=bbc OPTION=assembly (loads .ssd)
- make run TARGET=bbc OPTION=tape     (loads .uef)
+ make run TARGET=bbc BBCMACHINE=mame [OPTION=...]
 
 Likewise, to run on a physical machine, call:
 
- make run TARGET=bbc [OPTION=...] BBCMACHINE=real
-  BBCLOADINGMETHOD=...
+ make run TARGET=bbc [BBCLOADINGMETHOD=...] [OPTION=...]
 
-It is necessary to supply the OPTION variable, because make
+NB It is necessary to supply the OPTION variable, because make
 will attempt to build any intermediate targets which may be
 different depending on OPTION. Builds may fail because libs
 built with different values of OPTION are incompatible.
+
+The fastest combination of options for build and run are:
+
+ make run TARGET=bbc BBCLOADINGMETHOD=disk BBCMACHINE=mame \
+  OPTION=assembly
 
 To specify disc images, use:
 

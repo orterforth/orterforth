@@ -1,25 +1,12 @@
 # === BBC Micro ===
 
-BBCCC65OPTS := -O -t none -D__BBC__
-BBCDEPS := bbc/inst.o bbc/main.o
-BBCLOADINGMETHOD := disk
+# BBCLOADINGMETHOD := disk
 # BBCLOADINGMETHOD := serial
-# BBCLOADINGMETHOD := tape
-BBCLOADSERIAL := \
-	$(PROMPT) "Connect serial and on BBC Micro type: *FX2,1 <RETURN>" && \
-	$(INFO) 'Loading via serial' && \
-	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
-BBCLOADTAPE := \
-	$(PROMPT) "Connect tape audio and on BBC Micro type: *TAPE <RETURN> *RUN <RETURN>" && \
-	$(INFO) 'Loading via tape' && \
-	$(PLAY)
-BBCMACHINE := mame
-# BBCMACHINE := real
-BBCMAME := bbcb $(MAMEOPTS) -rs423 null_modem -bitb socket.127.0.0.1:5705
-BBCMAMEFAST := bbcb -rompath roms -video none -sound none \
-	-skip_gameinfo -nomax -window \
-	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
-	-rs423 null_modem -bitb socket.127.0.0.1:5705
+BBCLOADINGMETHOD := tape
+
+# BBCMACHINE := mame
+BBCMACHINE := real
+
 # BBCOPTION := assembly
 BBCOPTION := default
 # BBCOPTION := tape
@@ -28,6 +15,22 @@ ifneq ($(OPTION),)
 BBCOPTION := $(OPTION)
 endif
 endif
+
+BBCCC65OPTS := -O -t none -D__BBC__
+BBCDEPS := bbc/inst.o bbc/main.o
+BBCLOADSERIAL := \
+	$(PROMPT) "Connect serial and on BBC Micro type: *FX2,1 <RETURN>" && \
+	$(INFO) 'Loading via serial' && \
+	$(ORTER) serial -a $(SERIALPORT) $(SERIALBAUD) <
+BBCLOADTAPE := \
+	$(PROMPT) "Connect tape audio and on BBC Micro type: *TAPE <RETURN> *RUN <RETURN>" && \
+	$(INFO) 'Loading via tape' && \
+	$(PLAY)
+BBCMAME := bbcb $(MAMEOPTS) -rs423 null_modem -bitb socket.127.0.0.1:5705
+BBCMAMEFAST := bbcb -rompath roms -video none -sound none \
+	-skip_gameinfo -nomax -window \
+	-speed 50 -frameskip 10 -nothrottle -seconds_to_run 2000 \
+	-rs423 null_modem -bitb socket.127.0.0.1:5705
 BBCORG := 1720
 BBCORIGIN := 2E80
 BBCROMS := \
