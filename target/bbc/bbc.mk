@@ -169,7 +169,7 @@ bbc/%.ssd : bbc/% bbc/%.inf bbc/boot bbc/boot.inf | bbcim
 
 bbc/%.uef : bbc/% | $(ORTER)
 
-	$(ORTER) bbc uef write orterforth 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
+	$(ORTER) bbc bin to uef orterforth 0x$(BBCORG) 0x$(BBCORG) < $< > $@.io
 	mv $@.io $@
 
 bbc/%.wav : bbc/%.uef | tools/github.com/haerfest/uef/uef2wave.py

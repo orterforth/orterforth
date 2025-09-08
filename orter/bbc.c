@@ -48,7 +48,7 @@ static uint8_t data[65536];
 
 static uint8_t hdr[32];
 
-static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
+static int orter_bbc_bin_to_uef(char *name, uint16_t load, uint16_t exec)
 {
   uint16_t namelen = MIN(10, strlen(name));
   uint8_t *ptr = hdr + namelen;
@@ -111,11 +111,11 @@ static int orter_bbc_uef_write(char *name, uint16_t load, uint16_t exec)
 int orter_bbc(int argc, char *argv[])
 {
   /* create a UEF file from a binary */
-  if (argc == 7 && !strcmp("uef", argv[2]) && !strcmp("write", argv[3])) {
-    return orter_bbc_uef_write(argv[4], strtol(argv[5], 0, 0), strtol(argv[6], 0, 0));
+  if (argc == 8 && !strcmp("bin", argv[2]) && !strcmp("to", argv[3]) && !strcmp("uef", argv[4])) {
+    return orter_bbc_bin_to_uef(argv[5], strtol(argv[6], 0, 0), strtol(argv[7], 0, 0));
   }
 
   /* usage */
-  fprintf(stderr, "Usage: orter bbc uef write <filename> <load> <exec>\n");
+  fprintf(stderr, "Usage: orter bbc bin to uef <filename> <load> <exec>\n");
   return 1;
 }
