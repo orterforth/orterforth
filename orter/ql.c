@@ -67,10 +67,10 @@ static int writeheader(uint32_t len, uint8_t typ, uint32_t dsp, uint32_t ext)
 static int orter_ql_serial_header(char **argv)
 {
   if (writeheader(
-    strtol(argv[2], 0, 0),
     strtol(argv[3], 0, 0),
     strtol(argv[4], 0, 0),
-    strtol(argv[5], 0, 0))) {
+    strtol(argv[5], 0, 0),
+    strtol(argv[6], 0, 0))) {
     return errno;
   }
 
