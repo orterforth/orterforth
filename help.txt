@@ -49,6 +49,7 @@ targets, run:
 
 where <target> is one of:
 
+  atari
   amiga
   bbc
   c64
