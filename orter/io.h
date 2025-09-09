@@ -54,13 +54,13 @@ uint16_t orter_io_read_16le(void);
 uint32_t orter_io_read_32le(void);
 
 /* write 16 bit BE int */
-void orter_io_put_16be(uint16_t u);
+void orter_io_write_16be(uint16_t u);
 
 /* write 16 bit LE int */
-void orter_io_put_16le(uint16_t u);
+void orter_io_write_16le(uint16_t u);
 
 /* write 32 bit LE int */
-void orter_io_put_32le(uint32_t u);
+void orter_io_write_32le(uint32_t u);
 
 /* get 16 bit LE int */
 uint16_t orter_io_get_16le(uint8_t *p);

@@ -28,20 +28,20 @@ static uint16_t crc(uint8_t *bytes, uint16_t len)
 
 static void chunk(uint16_t id, uint32_t length)
 {
-  orter_io_put_16le(id);
-  orter_io_put_32le(length);
+  orter_io_write_16le(id);
+  orter_io_write_32le(length);
 }
 
 static void carrier(uint16_t cycles)
 {
   chunk(0x0110, 2);
-  orter_io_put_16le(cycles);
+  orter_io_write_16le(cycles);
 }
 
 static void data_crc(uint8_t *data, uint16_t len)
 {
   fwrite(data, 1, len, stdout);
-  orter_io_put_16be(crc(data, len));
+  orter_io_write_16be(crc(data, len));
 }
 
 static uint8_t data[65536];
@@ -101,7 +101,7 @@ static int orter_bbc_bin_to_uef(char *name, uint16_t load, uint16_t exec)
   carrier(12000);
   /* gap 0.25 seconds */
   chunk(0x0112, 2);
-  orter_io_put_16le(600);
+  orter_io_write_16le(600);
 
   /* done */
   fflush(stdout);

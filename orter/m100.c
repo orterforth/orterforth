@@ -14,9 +14,9 @@
 
 static int orter_m100_co_header(uint16_t start, uint16_t length, uint16_t entry)
 {
-  orter_io_put_16le(start);
-  orter_io_put_16le(length);
-  orter_io_put_16le(entry);
+  orter_io_write_16le(start);
+  orter_io_write_16le(length);
+  orter_io_write_16le(entry);
 
   return 0;
 }

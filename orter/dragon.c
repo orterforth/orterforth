@@ -13,11 +13,11 @@ static int orter_dragon_bin_header(uint8_t type, uint16_t start, uint16_t size, 
     /* type 2=binary */
     putchar(type);
     /* start */
-    orter_io_put_16be(start);
+    orter_io_write_16be(start);
     /* size */
-    orter_io_put_16be(size);
+    orter_io_write_16be(size);
     /* exec */
-    orter_io_put_16be(exec);
+    orter_io_write_16be(exec);
     /* AA */
     putchar(0xAA);
     return 0;

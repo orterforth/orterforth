@@ -150,9 +150,9 @@ static int orter_spectrum_header(const char *filename, unsigned char type_, unsi
 
   /* write header */
   putchar(type_);
-  orter_io_put_16le(size);
-  orter_io_put_16le(p1);
-  orter_io_put_16le(p2);
+  orter_io_write_16le(size);
+  orter_io_write_16le(p1);
+  orter_io_write_16le(p2);
   putchar(255);
   putchar(255);
 

@@ -192,7 +192,7 @@ static void tap_end(void)
 {
     /* header */
     fwrite("C64-TAPE-RAW\0\0\0\0", 1, 16, stdout);
-    orter_io_put_32le(tap_data_len);
+    orter_io_write_32le(tap_data_len);
     /* data */
     fwrite(tap_data, 1, tap_data_len, stdout);
     fflush(stdout);

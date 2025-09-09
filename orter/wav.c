@@ -57,30 +57,30 @@ void orter_wav_end(void)
 {
   /* RIFF header */
   fputs("RIFF", stdout);
-  orter_io_put_32le(orter_wav_buf_idx + 36);
+  orter_io_write_32le(orter_wav_buf_idx + 36);
   fputs("WAVE", stdout);
 
   /* format chunk */
   fputs("fmt ", stdout);
   /* format length */
-  orter_io_put_32le(16);
+  orter_io_write_32le(16);
   /* PCM */
-  orter_io_put_16le(1);
+  orter_io_write_16le(1);
   /* 1 channel */
-  orter_io_put_16le(1);
+  orter_io_write_16le(1);
   /* CD sample rate */
-  orter_io_put_32le(44100);
+  orter_io_write_32le(44100);
   /* (sample rate * 16 bits per sample * 1 channel) / 8 */
-  orter_io_put_32le(88200);
+  orter_io_write_32le(88200);
   /* (16 bits per sample * 1 channel) / 8 */
-  orter_io_put_16le(2);
+  orter_io_write_16le(2);
   /* 16 bits per sample */
-  orter_io_put_16le(16);
+  orter_io_write_16le(16);
 
   /* data chunk */
   fputs("data", stdout);
   /* length */
-  orter_io_put_32le(orter_wav_buf_idx);
+  orter_io_write_32le(orter_wav_buf_idx);
   /* data */
   fwrite(orter_wav_buf, 1, orter_wav_buf_idx, stdout);
 

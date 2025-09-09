@@ -16,14 +16,14 @@ static int orter_atari_xex_write(uint16_t load, uint16_t runad)
 
     /* data block */
     fwrite("\xFF\xFF", 1, 2, stdout);
-    orter_io_put_16le(load);
-    orter_io_put_16le(load + s - 1);
+    orter_io_write_16le(load);
+    orter_io_write_16le(load + s - 1);
     fwrite(data, 1, s, stdout);
 
     /* RUNAD block */
-    orter_io_put_16le(0x02E0);
-    orter_io_put_16le(0x02E1);
-    orter_io_put_16le(runad);
+    orter_io_write_16le(0x02E0);
+    orter_io_write_16le(0x02E1);
+    orter_io_write_16le(runad);
 
     /* end */
     fflush(stdout);
