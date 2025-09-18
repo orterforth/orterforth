@@ -370,13 +370,16 @@ uint16_t orter_io_read_16le(void)
 
 uint32_t orter_io_read_32le(void)
 {
-  uint32_t i = getchar() << 8;
-  i |= getchar();
-  i <<= 8;
-  i |= getchar();
-  i <<= 8;
-  i |= getchar();
-  return i;
+  uint32_t i, j;
+
+  j = getchar();
+  i = (uint32_t) getchar() << 8;
+  j |= i;
+  i = (uint32_t) getchar() << 16;
+  j |= i;
+  i = (uint32_t) getchar() << 24;
+  j |= i;
+  return j;
 }
 
 void orter_io_write_16be(uint16_t u)
