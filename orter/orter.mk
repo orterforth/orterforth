@@ -4,6 +4,7 @@ $(ORTER) : \
 	$(SYSTEM)/orter_bbc.o \
 	$(SYSTEM)/orter_c64.o \
 	$(SYSTEM)/orter_dragon.o \
+	$(SYSTEM)/orter_eg2000.o \
 	$(SYSTEM)/orter_hex.o \
 	$(SYSTEM)/orter_hx20.o \
 	$(SYSTEM)/orter_io.o \
@@ -36,6 +37,11 @@ $(SYSTEM)/orter_c64.o : orter/c64.c orter/io.h orter/wav.h | $(SYSTEM)
 
 # Dragon 32/64
 $(SYSTEM)/orter_dragon.o : orter/dragon.c | $(SYSTEM)
+
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+# EACA Colour Genie EG2000
+$(SYSTEM)/orter_eg2000.o : orter/eg2000.c orter/io.h orter/wav.h | $(SYSTEM)
 
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

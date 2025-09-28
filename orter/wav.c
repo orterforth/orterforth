@@ -48,8 +48,20 @@ void orter_wav_write_cycle(float len)
     int steps = SAMPLERATE * len;
     int i;
 
+    /* TODO inverted? */
     for (i = 0; i < steps; ++i) {
         orter_wav_write_16le(0 - (32767.0 * sin((float) i / (float) steps * 2.0 * M_PI)));
+    }
+}
+
+void orter_wav_write_half_cycle(float len, float amp)
+{
+    int steps = SAMPLERATE * len;
+    int i;
+
+    /* TODO inverted? */
+    for (i = 0; i < steps; ++i) {
+        orter_wav_write_16le(0 - (amp * 32767.0 * sin((float) i / (float) steps * M_PI)));
     }
 }
 
