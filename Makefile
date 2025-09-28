@@ -310,6 +310,8 @@ include target/cpm/cpm.mk
 
 include target/dragon/dragon.mk
 
+include target/eg2000/eg2000.mk
+
 #include target/esp32c3/esp32c3.mk
 
 include target/hx20/hx20.mk
