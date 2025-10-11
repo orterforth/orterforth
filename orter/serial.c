@@ -20,6 +20,7 @@
 int                   orter_serial_fd = -1;
 
 /* opts */
+int                   crtscts = 1;
 static int            echo = 0;
 static int            icrnl = 0;
 static int            ixoff = 0;
@@ -66,8 +67,10 @@ static void set_attr(struct termios *attr)
 {
   /* raw mode, read, no echo */
   cfmakeraw(attr);
-  attr->c_lflag &= ~(ECHO|ICANON);
+  attr->c_lflag &= ~(ECHO|ICANON|ISIG);
   attr->c_cflag |= CREAD;
+  /* no BREAK */
+  attr->c_iflag |= IGNBRK;
 
   /* 8N1 */
   attr->c_cflag &= ~CSIZE;
@@ -77,10 +80,12 @@ static void set_attr(struct termios *attr)
   attr->c_cflag &= ~(PARENB|PARODD);
   attr->c_cflag &= ~CSTOPB;
 
-  /* rtscts */
-  attr->c_cflag |= CRTSCTS;
-
   /* options */
+  if (crtscts) {
+    attr->c_cflag |= CRTSCTS;
+  } else {
+    attr->c_cflag &= ~CRTSCTS;
+  }
   if (echo) {
     attr->c_lflag |= ECHO;
   }
@@ -241,17 +246,18 @@ static void restore(void)
 static int usage(void)
 {
   fprintf(stderr, "Usage: orter serial <options> <name> <baud>\n\n"
-                  "                    -a        : terminate after 0x06 (ACK) read\n"
-                  "                    -d <wait> : write wait <wait> s after each byte\n"
-                  "                    -e <wait> : read  wait <wait> s after EOF\n"
-                  "                    -o echo   : enable echoing\n"
-                  "                    -o icrnl  : read  0x0d->0x0a\n"
-                  "                    -o ixoff  : write XON/XOFF\n"
-                  "                    -o ixon   : read  XON/XOFF\n");
-  fprintf(stderr, "                    -o ocrnl  : write 0x0d->0x0a\n"
-                  "                    -o odelbs : write 0x7f->0x08\n"
-                  "                    -o onlcr  : write 0x0a->0x0d 0x0a\n"
-                  "                    -o onlcrx : write 0x0a->0x0d\n");
+                  "                    -a         : terminate after 0x06 (ACK) read\n"
+                  "                    -d <wait>  : write wait <wait> s after each byte\n"
+                  "                    -e <wait>  : read  wait <wait> s after EOF\n"
+                  "                    -n crtscts : disable RTS/CTS\n"
+                  "                    -o echo    : enable echoing\n"
+                  "                    -o icrnl   : read  0x0d->0x0a\n"
+                  "                    -o ixoff   : write XON/XOFF\n"
+                  "                    -o ixon    : read  XON/XOFF\n");
+  fprintf(stderr, "                    -o ocrnl   : write 0x0d->0x0a\n"
+                  "                    -o odelbs  : write 0x7f->0x08\n"
+                  "                    -o onlcr   : write 0x0a->0x0d 0x0a\n"
+                  "                    -o onlcrx  : write 0x0a->0x0d\n");
   return 1;
 }
 
@@ -260,7 +266,7 @@ static void opts(int argc, char **argv)
   int c;
 
   /* getopt */
-  while ((c = getopt(argc, argv, "ad:e:ho:")) != -1) {
+  while ((c = getopt(argc, argv, "ad:e:hn:o:")) != -1) {
     switch (c) {
       case 'a':
         ack = 1;
@@ -272,6 +278,11 @@ static void opts(int argc, char **argv)
         wai_wait = atoi(optarg);
         break;
       case 'h': usage(); break;
+      case 'n':
+        if (!strcmp(optarg, "crtscts")) {
+          crtscts = 0;
+        }
+        break;
       case 'o':
         if (!strcmp(optarg, "echo")) {
           echo = 1;

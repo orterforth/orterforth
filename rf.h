@@ -114,6 +114,13 @@ typedef __uint128_t rf_double_t;
 #define RF_TARGET_LO 0x75327710
 #endif
 
+#ifdef MICROBIT
+/* UBIT */
+#define RF_TARGET_HI 0x00000000
+#define RF_TARGET_LO 0x001595D5
+#define RF_NOEXIT
+#endif
+
 #ifdef PICO
 /* PICO */
 #define RF_TARGET_HI 0x00000000
@@ -199,6 +206,9 @@ typedef uint32_t rf_double_t;
 #define RF_CPU_LO 0xB250
 #ifdef CPM
 #define RF_TARGET_INC "target/cpm/cpm.inc"
+#endif
+#ifdef __EG2000__
+#define RF_TARGET_INC "target/eg2000/eg2000.inc"
 #endif
 #ifdef __M100__
 #define RF_TARGET_INC "target/m100/m100.inc"

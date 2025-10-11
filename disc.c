@@ -1,7 +1,13 @@
+#define _DEFAULT_SOURCE
+
 #include <errno.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "orter/io.h"
 #include "orter/pty.h"
@@ -355,6 +361,33 @@ static int disc_tcp_server(int argc, char **argv)
 }
 #endif
 
+extern int crtscts;
+
+/* delay before responding */
+extern useconds_t rf_persci_delay;
+
+static void opts(int argc, char **argv)
+{
+  int c;
+
+  /* getopt */
+  while ((c = getopt(argc, argv, "n:w:")) != -1) {
+    switch (c) {
+      case 'n':
+        if (!strcmp(optarg, "crtscts")) {
+          crtscts = 0;
+        }
+        break;
+      case 'w':
+        rf_persci_delay = (1000000.0F * strtof(optarg, 0));
+        break;
+      default:
+        fprintf(stderr, "invalid option %s\n", argv[optind - 1]);
+        exit(1);
+    }
+  }
+}
+
 int main(int argc, char *argv[])
 {
   /* Text file to Forth block disc image */
@@ -374,8 +407,10 @@ int main(int argc, char *argv[])
   }
 
   /* Physical serial port */
-  if ((argc == 5 || argc == 6) && !strcmp("serial", argv[1])) {
-    return disc_serial(argc, argv);
+  optind = 2;
+  opts(argc, argv);
+  if (((argc - optind) == 3 || (argc - optind) == 4) && !strcmp("serial", argv[1])) {
+    return disc_serial(argc - optind + 2, argv + optind - 2);
   }
 
   /* Console */
@@ -397,12 +432,12 @@ int main(int argc, char *argv[])
   /* Usage */
   fputs("Usage: disc create   Convert text file (stdin) into Forth block format (stdout)\n", stderr);
 #ifndef _WIN32
-  fputs("       disc mux <name> <baud> <dr0> <dr1>    Run disc controller over physical serial port and multiplex with the console\n", stderr);
-  fputs("       disc pty <link> <dr0> <dr1>           Open pty and create symlink\n", stderr);
-  fputs("       disc serial <name> <baud> <dr0> <dr1> Run over serial port\n"
-        "       disc tcp client <port> <dr0> <dr1>    Open tcp client\n"
-        "       disc tcp server <port> <dr0> <dr1>    Bind to tcp server port\n", stderr);
-  fputs("       disc <dr0> <dr1>                      Run over stdin/stdout\n", stderr);
+  fputs("       disc mux <name> <baud> <dr0> <dr1>                Run disc controller over physical serial port and multiplex with the console\n", stderr);
+  fputs("       disc pty <link> <dr0> <dr1>                       Open pty and create symlink\n", stderr);
+  fputs("       disc serial [-w <wait>] <name> <baud> <dr0> <dr1> Run over serial port\n"
+        "       disc tcp client <port> <dr0> <dr1>                Open tcp client\n"
+        "       disc tcp server <port> <dr0> <dr1>                Bind to tcp server port\n", stderr);
+  fputs("       disc <dr0> <dr1>                                  Run over stdin/stdout\n", stderr);
 #endif
   return 1;
 }

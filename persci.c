@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE
+#include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -233,6 +235,8 @@ static long offset(uint8_t track, uint8_t sector)
   return ((track * 26) + (sector - 1)) * 128;
 }
 
+useconds_t rf_persci_delay = 0;
+
 /* I (Input) */
 static void rf_persci_input(uint8_t track, uint8_t sector, uint8_t drive)
 {
@@ -448,6 +452,10 @@ static void rf_persci_command(void)
 /* handle next operation */
 static void rf_persci_serve(void)
 {
+  /* wait before responding */
+  if (rf_persci_delay) {
+    usleep(rf_persci_delay);
+  }
   switch (rf_persci_state) {
     case RF_PERSCI_STATE_IDLE:
       rf_persci_command();
