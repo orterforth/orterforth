@@ -101,7 +101,7 @@ static int pipe_count = 2;
 
 /* determines whether to log disc I/O to stderr */
 static char log = 1;
-static char log_io = 0;
+static char log_io = 1;
 
 static void disc_log_input(char c)
 {
