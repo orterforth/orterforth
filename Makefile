@@ -32,6 +32,7 @@ ifneq ($(filter CYGWIN%,$(UNAME_S)),)
 	STAT := stat -c %s
 endif
 ifeq ($(UNAME_S),Darwin)
+	MAMEUIMODEKEY := Forward Delete / Fn-Delete
 	OPER := darwin
 	PLAY := afplay
 	SERIALPORT := /dev/cu.usbserial-FT2XIBOF
@@ -39,6 +40,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 ifeq ($(UNAME_S),Linux)
 	LDFLAGS += -t gcc.ld
+	MAMEUIMODEKEY := Scroll Lock / Fn-Delete
 	OPER := linux
 	PLAY := aplay
 	SERIALPORT := /dev/ttyUSB0

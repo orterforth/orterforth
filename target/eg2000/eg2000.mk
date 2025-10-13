@@ -20,11 +20,6 @@ ifeq ($(EG2000OPTION),default)
 endif
 
 EG2000ZCCOPTS=+trs80 -subtype=eg2000disk -lndos -lm	-pragma-define:CRT_ENABLE_STDIO=0 -DRF_ORIGIN=$(EG2000ORIGIN) -Ca-DRF_ORIGIN=$(EG2000ORIGIN)
-ifeq ($(OPER),darwin)
-MAMEUIMODEKEY=Forward Delete / Fn-Delete
-else
-MAMEUIMODEKEY=Scroll Lock / Fn-Delete
-endif
 
 eg2000-hw : eg2000/hw.wav
 
