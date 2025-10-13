@@ -106,7 +106,7 @@ IMPORT DEFINITIONS DECIMAL
 
 ( library index                                               )
 7 LIBRARY example 21 LIBRARY STR 25 LIBRARY SYS
-36 LIBRARY ASSEMBLER 87 LIBRARY EDITOR
+37 LIBRARY ASSEMBLER 87 LIBRARY EDITOR
 
 FORTH DEFINITIONS
 IMPORT example ;S
@@ -494,6 +494,22 @@ DECIMAL ;S
 
 
 ;S
+( Colour Genie                                                )
+ONLY EG2000 DECIMAL
+40 CONSTANT COLUMNS 24 CONSTANT ROWS
+HEX
+CREATE CLS
+  C5 C, DD C, E5 C,  ( push bc ix   )
+  CD C, 01C9 ,       ( call CLS     )
+  DD C, E1 C, C1 C,  ( pop ix bc    )
+  DD C, E9 C,        ( NEXT         )
+  SMUDGE
+DECIMAL ;S
+
+
+
+
+;S
 ( QL                                                          )
 ONLY QL
 85 CONSTANT COLUMNS 25 CONSTANT ROWS
@@ -580,8 +596,8 @@ FORTH DEFINITIONS DECIMAL
   BL WORD BASE @ 36 BASE ! HERE NUMBER ROT BASE !
   17 cs +ORIGIN @ = SWAP 18 cs +ORIGIN @ = AND
   IF SWAP ENDIF DROP ;
-37                                          ( default is 6502 )
-38 FOR-CPU 68000
+38                                          ( default is 6502 )
+39 FOR-CPU 68000
 FORGET FOR-CPU LOAD ;S
 
 
@@ -638,22 +654,6 @@ CREATE (FFI)
 : FFI <BUILDS [COMPILE] ASSEMBLER
       DOES>   ' (FFI) 0014 + ! SP@ ' (FFI) 000E + ! 0 (FFI) ;
 FORTH DEFINITIONS ;S
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
