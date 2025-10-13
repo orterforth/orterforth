@@ -240,9 +240,9 @@ FORGET place                    ( redefining I causes probs   )
 ;S
 ( Mandelbrot - derived from fract.fs in openbios   mandelbrot )
 DECIMAL IMPORT SYS
-example DEFINITIONS HEX
+example DEFINITIONS HEX SYS FORM CONSTANT ROWS CONSTANT COLUMNS
 : mandelbrot
-    SYS CLS
+    SYS PAGE
     466 DUP MINUS DO            ( y axis                      )
         I
         400 DUP DUP + MINUS DO  ( x axis                      )
@@ -264,10 +264,10 @@ example DEFINITIONS HEX
             LOOP
             DROP DROP DROP DROP
             EMIT                ( * or space                  )
-        400 3 * SYS COLUMNS 2 - / ( compute step from cols    )
+        400 3 * COLUMNS 2 - /     ( compute step from cols    )
         +LOOP
         CR DROP                 ( end of line                 )
-    466 2+ 2 * SYS ROWS / +LOOP ;
+    466 2+ 2 * ROWS / +LOOP ;
 
 mandelbrot DECIMAL ;S
 ( Pascal's Triangle                                    pascal )
@@ -416,8 +416,8 @@ DECIMAL
 
 ( Amiga                                                       )
 ONLY AMIGA DECIMAL
-79 CONSTANT COLUMNS 23 CONSTANT ROWS
-: CLS 12 EMIT ; ;S
+: FORM 79 23 ;
+: PAGE 12 EMIT ; ;S
 
 
 
@@ -432,8 +432,8 @@ ONLY AMIGA DECIMAL
 
 ( Atari                                                       )
 ONLY ATARI DECIMAL
-40 CONSTANT COLUMNS 24 CONSTANT ROWS
-: CLS 125 EMIT ; ;S
+: FORM 40 24 ;
+: PAGE 125 EMIT ; ;S
 
 
 
@@ -450,8 +450,8 @@ ONLY ATARI DECIMAL
 ONLY BBC HEX
 : mode@ 0355 C@ ;
 : mode! 16 EMIT EMIT ;
-: COLUMNS 030A C@ 0308 C@ - 1+ ; : ROWS 0309 C@ 030B C@ - 1+ ;
-: CLS 0C EMIT ;
+: FORM 030A C@ 0308 C@ - 1+ 0309 C@ 030B C@ - 1+ ;
+: PAGE 0C EMIT ;
 DECIMAL ;S
 
 
@@ -464,9 +464,9 @@ DECIMAL ;S
 
 ( Commodore 64                                                )
 ONLY C64
-40 CONSTANT COLUMNS 25 CONSTANT ROWS
+: FORM 40 25 ;
 HEX
-: CLS 0400 03E8 BLANKS D800 03E8 0286 C@ FILL 13 EMIT ;
+: PAGE 0400 03E8 BLANKS D800 03E8 0286 C@ FILL 13 EMIT ;
 DECIMAL ;S
 
 
@@ -480,9 +480,9 @@ DECIMAL ;S
 ;S
 ( Dragon                                                      )
 ONLY DRAGON
-32 CONSTANT COLUMNS 16 CONSTANT ROWS
+: FORM 32 16 ;
 HEX
-: CLS 0400 0200 60 FILL 0400 0088 ! ;
+: PAGE 0400 0200 60 FILL 0400 0088 ! ;
 DECIMAL ;S
 
 
@@ -496,9 +496,9 @@ DECIMAL ;S
 ;S
 ( Colour Genie                                                )
 ONLY EG2000 DECIMAL
-40 CONSTANT COLUMNS 24 CONSTANT ROWS
+: FORM 40 24 ;
 HEX
-CREATE CLS
+CREATE PAGE
   C5 C, DD C, E5 C,  ( push bc ix   )
   CD C, 01C9 ,       ( call CLS     )
   DD C, E1 C, C1 C,  ( pop ix bc    )
@@ -512,9 +512,9 @@ DECIMAL ;S
 ;S
 ( QL                                                          )
 ONLY QL
-85 CONSTANT COLUMNS 25 CONSTANT ROWS
+: FORM 85 25 ;
 IMPORT ASSEMBLER HEX
-ASSEMBLER FFI CLS
+ASSEMBLER FFI PAGE
   20 IMM    ^ 0 DR .MOVEQ       ( D0 = SD.CLEAR               )
   10001 IMM ^ 0 AR .L .MOVE     ( A0 = channel ID 00010001    )
   -1 IMM    ^ 3 DR .W .MOVE     ( D3.W = timeout forever -1   )
@@ -528,9 +528,9 @@ DECIMAL ;S
 ;S
 ( Spectrum                                                    )
 ONLY SPECTR
-32 CONSTANT COLUMNS 24 CONSTANT ROWS
+: FORM 32 24 ;
 HEX
-: CLS 4000 1800 ERASE
+: PAGE 4000 1800 ERASE
   5800 0400 5C8D C@ FILL
   16 EMIT 0 EMIT 0 EMIT ;
 DECIMAL
@@ -544,8 +544,8 @@ DECIMAL
 ;S
 ( Z88                                                         )
 ONLY Z88
-94 CONSTANT COLUMNS 8 CONSTANT ROWS
-: CLS 12 EMIT ;
+: FORM 94 8 ;
+: PAGE 12 EMIT ;
 DECIMAL ;S
 
 
@@ -560,9 +560,9 @@ DECIMAL ;S
 ;S
 ( ZX81                                                        )
 ONLY ZX81
-32 CONSTANT COLUMNS 24 CONSTANT ROWS
+: FORM 32 24 ;
 HEX
-CREATE CLS
+CREATE PAGE
   C5 C, FD C, E5 C,  ( push bc iy   )
   FD C, 21 C, 4000 , ( ld iy, $4000 )
   CD C, 0A2A ,       ( call CLS     )
@@ -576,8 +576,8 @@ DECIMAL ;S
 ;S
 ( default                                                     )
 DECIMAL
-80 CONSTANT COLUMNS 24 CONSTANT ROWS
-: CLS 27 EMIT ." [2J" 27 EMIT ." [H" ;
+: FORM 80 24 ;
+: PAGE 27 EMIT ." [2J" 27 EMIT ." [H" ;
 ;S
 
 
