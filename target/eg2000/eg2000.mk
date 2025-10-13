@@ -40,17 +40,36 @@ ifeq ($(EG2000MACHINE),real)
 	@$(PROMPT) "At MEM SIZE? type <RETURN> then SYSTEM <RETURN> hw <RETURN>"
 	@$(INFO) "Loading hw"
 	@$(PLAY) $<
-	@$(WARN) "Now type / <enter>"
+	@$(WARN) "Now type / <RETURN>"
 endif
 
-eg2000-run : eg2000/inst.wav model.img | $(DISC)
+eg2000-run : eg2000/orterforth.wav | $(DISC) $(DR0) $(DR1)
+
+	@$(WARN) "Connect audio to Colour Genie cassette port with amplification if necessary"
+	@$(PROMPT) "At MEM SIZE? type <RETURN> then SYSTEM <RETURN> orterf <RETURN>"
+	@$(INFO) "Loading orterf"
+	@$(PLAY) $<
+	@$(DISC) serial -n crtscts -w 0.10 $(SERIALPORT) 600 $(DR0) $(DR1)
+	@$(WARN) "Now type / <RETURN>"
+
+eg2000/orterforth : eg2000/orterforth.img | $(ORTER)
+
+	$(ORTER) hex read < $< > $@.tmp
+	mv $@.tmp $@
+
+eg2000/orterforth.cmd : eg2000/orterforth | $(ORTER)
+
+	$(ORTER) eg2000 bin to cmd 0x57E4 0x57E4 < $< > $@.tmp
+	mv $@.tmp $@
+
+eg2000/orterforth.img : eg2000/inst.wav model.img | $(DISC)
 
 	@$(CHECKMEMORY) 0x57E4 $(EG2000ORIGIN) $$($(STAT) eg2000/inst)
 	@$(WARN) "Connect audio to Colour Genie cassette port with amplification if necessary"
 	@$(PROMPT) "At MEM SIZE? type <RETURN> then SYSTEM <RETURN> inst <RETURN>"
 	@$(INFO) "Loading inst"
-	@$(PLAY) eg2000/inst.wav
-	@$(WARN) "Now type / <enter>"
+	@$(PLAY) $<
+	@$(WARN) "Now type / <RETURN>"
 	@$(INSTALLDISC) serial -n crtscts -w 0.10 $(SERIALPORT) 600 &
 	@$(WAITFORFILE)
 
