@@ -19,7 +19,8 @@ ifeq ($(EG2000OPTION),default)
 	EG2000ORIGIN := 0x7600
 endif
 
-EG2000ZCCOPTS=+trs80 -subtype=eg2000disk -lndos -lm	-pragma-define:CRT_ENABLE_STDIO=0 -DRF_ORIGIN=$(EG2000ORIGIN) -Ca-DRF_ORIGIN=$(EG2000ORIGIN)
+EG2000ORG := 0x57E4
+EG2000ZCCOPTS=+trs80 -subtype=eg2000disk -lndos -lm	-pragma-define:CRT_ENABLE_STDIO=0 -DRF_ORG=$(EG2000ORG) -DRF_ORIGIN=$(EG2000ORIGIN) -Ca-DRF_ORIGIN=$(EG2000ORIGIN)
 
 eg2000-hw : eg2000/hw.wav
 
@@ -54,12 +55,12 @@ eg2000/orterforth : eg2000/orterforth.img | $(ORTER)
 
 eg2000/orterforth.cmd : eg2000/orterforth | $(ORTER)
 
-	$(ORTER) eg2000 bin to cmd 0x57E4 0x57E4 < $< > $@.tmp
+	$(ORTER) eg2000 bin to cmd $(EG2000ORG) $(EG2000ORG) < $< > $@.tmp
 	mv $@.tmp $@
 
 eg2000/orterforth.img : eg2000/inst.wav model.img | $(DISC)
 
-	@$(CHECKMEMORY) 0x57E4 $(EG2000ORIGIN) $$($(STAT) eg2000/inst)
+	@$(CHECKMEMORY) $(EG2000ORG) $(EG2000ORIGIN) $$($(STAT) eg2000/inst)
 	@$(WARN) "Connect audio to Colour Genie cassette port with amplification if necessary"
 	@$(PROMPT) "At MEM SIZE? type <RETURN> then SYSTEM <RETURN> inst <RETURN>"
 	@$(INFO) "Loading inst"
