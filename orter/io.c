@@ -126,7 +126,7 @@ int orter_io_std_close(void)
   return 0;
 }
 
-static void bufread(int *in, char *buf, char **offset, size_t *pending)
+static void bufread(int *in, uint8_t *buf, uint8_t **offset, size_t *pending)
 {
   ssize_t n;
 
@@ -159,7 +159,7 @@ static void bufread(int *in, char *buf, char **offset, size_t *pending)
   *pending = n;
 }
 
-static void bufwrite(int out, char *buf, char **offset, size_t *pending)
+static void bufwrite(int out, uint8_t *buf, uint8_t **offset, size_t *pending)
 {
   ssize_t n;
 
@@ -206,8 +206,8 @@ int orter_io_pipe_get(orter_io_pipe_t *buf)
     return -1;
   }
 
-  /* read byte */
   b = *(buf->off);
+
   buf->off++;
   buf->len--;
 
@@ -219,7 +219,7 @@ int orter_io_pipe_get(orter_io_pipe_t *buf)
   return b;
 }
 
-int orter_io_pipe_put(orter_io_pipe_t *buf, char b)
+int orter_io_pipe_put(orter_io_pipe_t *buf, uint8_t b)
 {
   /* full */
   if (!orter_io_pipe_left(buf)) {

@@ -8,8 +8,8 @@
 /* source, buffer and sink comprise a pipe */
 typedef struct orter_io_pipe_t {
     int in;
-    char buf[256];
-    char *off;
+    uint8_t buf[256];
+    uint8_t *off;
     size_t len;
     int out;
 } orter_io_pipe_t;
@@ -33,7 +33,7 @@ size_t orter_io_pipe_left(orter_io_pipe_t *buf);
 int orter_io_pipe_get(orter_io_pipe_t *buf);
 
 /* put byte */
-int orter_io_pipe_put(orter_io_pipe_t *buf, char b);
+int orter_io_pipe_put(orter_io_pipe_t *buf, uint8_t b);
 
 /* set up pipe */
 void orter_io_pipe_init(orter_io_pipe_t *pipe, int in, int out);
