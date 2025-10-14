@@ -450,6 +450,7 @@ ONLY ATARI DECIMAL
 ONLY BBC HEX
 : mode@ 0355 C@ ;
 : mode! 16 EMIT EMIT ;
+: AT-XY 1F EMIT SWAP EMIT EMIT ;
 : FORM 030A C@ 0308 C@ - 1+ 0309 C@ 030B C@ - 1+ ;
 : PAGE 0C EMIT ;
 DECIMAL ;S
@@ -461,11 +462,10 @@ DECIMAL ;S
 
 
 
-
 ( Commodore 64                                                )
-ONLY C64
-: FORM 40 25 ;
-HEX
+ONLY C64 HEX
+: AT-XY 1 - 00D6 C! 0D EMIT 00D3 C! ;
+: FORM 28 19 ;
 : PAGE 0400 03E8 BLANKS D800 03E8 0286 C@ FILL 13 EMIT ;
 DECIMAL ;S
 
@@ -479,9 +479,9 @@ DECIMAL ;S
 
 ;S
 ( Dragon                                                      )
-ONLY DRAGON
-: FORM 32 16 ;
-HEX
+ONLY DRAGON HEX
+: AT-XY 20 * + 0400 + 0088 ! ;
+: FORM 20 10 ;
 : PAGE 0400 0200 60 FILL 0400 0088 ! ;
 DECIMAL ;S
 
@@ -495,9 +495,9 @@ DECIMAL ;S
 
 ;S
 ( Colour Genie                                                )
-ONLY EG2000 DECIMAL
-: FORM 40 24 ;
-HEX
+ONLY EG2000 HEX
+: AT-XY 28 * + 4400 + 4020 ! ;
+: FORM 28 18 ;
 CREATE PAGE
   C5 C, DD C, E5 C,  ( push bc ix   )
   CD C, 01C9 ,       ( call CLS     )
@@ -527,14 +527,14 @@ DECIMAL ;S
 
 ;S
 ( Spectrum                                                    )
-ONLY SPECTR
-: FORM 32 24 ;
-HEX
+ONLY SPECTR HEX
+: AT-XY 16 EMIT SWAP EMIT EMIT ;
+: FORM 20 18 ;
 : PAGE 4000 1800 ERASE
   5800 0400 5C8D C@ FILL
   16 EMIT 0 EMIT 0 EMIT ;
-DECIMAL
-;S
+DECIMAL ;S
+
 
 
 
@@ -574,15 +574,15 @@ DECIMAL ;S
 
 
 ;S
-( default                                                     )
-DECIMAL
-: FORM 80 24 ;
-: PAGE 27 EMIT ." [2J" 27 EMIT ." [H" ;
-;S
-
-
-
-
+( default - ANSI console                                      )
+HEX
+: CSI 1B EMIT 5B EMIT ;                   ( write ESC [       )
+: N. BASE @ DECIMAL SWAP 0 0 D.R BASE ! ; ( write num         )
+: CUP CSI SWAP N. 3B EMIT N. 48 EMIT ;
+: ED CSI N. 4A EMIT ;
+: AT-XY 1+ SWAP 1+ CUP ;
+: FORM 50 18 ;
+: PAGE 2 ED 1 1 CUP ; DECIMAL ;S
 
 
 
