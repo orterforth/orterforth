@@ -398,7 +398,7 @@ FORTH DEFINITIONS VOCABULARY STR IMMEDIATE STR DEFINITIONS
 
 
 ;S
-( system dependent operations: Atari                      SYS )
+( system dependent operations                             SYS )
 FORTH DEFINITIONS VOCABULARY SYS IMMEDIATE SYS DEFINITIONS
 DECIMAL
 : ONLY
@@ -499,10 +499,10 @@ ONLY EG2000 HEX
 : AT-XY 28 * + 4400 + 4020 ! ;
 : FORM 28 18 ;
 CREATE PAGE
-  C5 C, DD C, E5 C,  ( push bc ix   )
-  CD C, 01C9 ,       ( call CLS     )
-  DD C, E1 C, C1 C,  ( pop ix bc    )
-  DD C, E9 C,        ( NEXT         )
+  C5 C, DD C, E5 C, FD C, E5 C,  ( push bc ix iy  )
+  CD C, 01C9 ,                   ( call CLS       )
+  FD C, E1 C, DD C, E1 C, C1 C,  ( pop iy ix bc   )
+  DD C, E9 C,                    ( NEXT           )
   SMUDGE
 DECIMAL ;S
 
@@ -543,11 +543,11 @@ DECIMAL ;S
 
 ;S
 ( Z88                                                         )
-ONLY Z88
-: FORM 94 8 ;
-: PAGE 12 EMIT ;
+ONLY Z88 HEX
+: AT-XY 01 EMIT 33 EMIT 40 EMIT SWAP 20 + EMIT 20 + EMIT ;
+: FORM 5E 08 ;
+: PAGE 0C EMIT ;
 DECIMAL ;S
-
 
 
 
