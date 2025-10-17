@@ -20,8 +20,12 @@ ifeq ($(EG2000OPTION),default)
 endif
 
 EG2000ORG := 0x57E4
-EG2000ZCCOPTS=+trs80 -subtype=eg2000disk -lndos -lm	-pragma-define:CRT_ENABLE_STDIO=0 -DRF_ORG=$(EG2000ORG) -DRF_ORIGIN=$(EG2000ORIGIN) -Ca-DRF_ORIGIN=$(EG2000ORIGIN)
+EG2000ZCCOPTS=+trs80 -subtype=eg2000disk -lndos -lm	-pragma-define:CRT_ENABLE_STDIO=0 -DRF_ORG=$(EG2000ORG) -DRF_ORIGIN=$(EG2000ORIGIN) -Ca-DRF_ORIGIN=$(EG2000ORIGIN) -Ca-DUSEIY
 
+.PHONY : eg2000-build
+eg2000-build : eg2000/orterforth.wav
+
+.PHONY : eg2000-hw
 eg2000-hw : eg2000/hw.wav
 
 ifeq ($(EG2000MACHINE),mame)
