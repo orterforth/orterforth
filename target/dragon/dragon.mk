@@ -2,8 +2,8 @@
 
 # real or emulator
 # DRAGONMACHINE := mame
-# DRAGONMACHINE := real
-DRAGONMACHINE := xroar
+DRAGONMACHINE := real
+# DRAGONMACHINE := xroar
 
 # C or 6809 assembly option
 DRAGONOPTION := assembly
@@ -55,7 +55,7 @@ endif
 ifeq ($(DRAGONMACHINE),real)
 	DRAGONMEDIA := dragon/orterforth.wav
 	DRAGONINSTMEDIA := dragon/inst.wav
-	DRAGONSTARTDISC := $(STARTDISC) serial $(SERIALPORT) $(SERIALBAUD)
+	DRAGONSTARTDISC := $(STARTDISC) serial $(SERIALPORT) 1200
 	DRAGONSTARTMACHINE := \
 		$(PROMPT) "On the Dragon type: CLOADM:EXEC" && \
 		$(PLAY)
@@ -101,9 +101,8 @@ dragon-inst : $(DRAGONMEDIA)
 .PHONY : dragon-run
 dragon-run : $(DRAGONMEDIA) | $(DISC) $(DR0) $(DR1) dragon/rx dragon/tx $(DRAGONROMS)
 
-	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
-
 ifeq ($(DRAGONMACHINE),mame)
+	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
 	@$(INFO) 'Running MAME'
 	@$(DRAGONMAMEWARNINGS)
 	@mame dragon64 $(MAMEOPTS) \
@@ -113,9 +112,11 @@ ifeq ($(DRAGONMACHINE),mame)
 endif
 ifeq ($(DRAGONMACHINE),real)
 	@$(DRAGONSTARTMACHINE) $<
+	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
 	@$(PROMPT) "To stop disc press a key"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
+	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
 	@$(INFO) 'Running XRoar'
 	@$(WARN) 'NB XRoar must be modified to implement serial'
 	@xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM \"\",&H$(DRAGONOFFSET):EXEC\r"

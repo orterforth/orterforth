@@ -7,6 +7,11 @@ _rf_up IMPORT
 NEXT    EQU    _rf_next
 UP      EQU    _rf_up
 
+* Dragon 64
+*ACIA   EQU    $FF04
+* Deluxe RS-232 Program Pak
+ACIA    EQU    $FF68
+
 _rf_init EXPORT
 _rf_init
 *  Speedkey http://archive.worldofdragon.org/phpBB3/viewtopic.php?f=8&t=314
@@ -28,7 +33,17 @@ _rf_init
         LDA    $FF03
         ORA    #$01
         STA    $FF03
-init1   LBSR   _rf_init_origin
+* 8N1, no echo
+* 9600 baud
+*init1   LDD    #$0B1E
+* 4800 baud
+*init1   LDD    #$0B1C
+* 2400 baud
+*init1   LDD    #$0B1A
+* 1200 baud
+init1   LDD    #$0B18
+        STD    ACIA+2
+        LBSR   _rf_init_origin
         RTS
 
 _rf_code_emit EXPORT
@@ -70,10 +85,16 @@ _rf_code_cr
 
 _rf_code_dchar EXPORT
 _rf_code_dchar
-dchar1  LDB    $FF05
-        ANDB   #$10
+        LDA    ACIA+2
+        ORA    #$01
+        STA    ACIA+2
+dchar1  LDA    ACIA+1
+        ANDA   #$08
         BEQ    dchar1
-        LDB    $FF04
+        LDB    ACIA
+        LDA    ACIA+2
+        ANDA   #$FE
+        STA    ACIA+2
         LDX    #$0000
         CMPB   1,U
         BNE    dchar2
@@ -86,37 +107,39 @@ dchar2  STX    ,U
 _rf_code_bread EXPORT
 _rf_code_bread
         PULU   X
+        LDA    ACIA+2
+        ORA    #$01
+        STA    ACIA+2
         LDB    #$80
-bread1  LDA    $FF05
-        ANDA   #$10
+bread1  LDA    ACIA+1
+        ANDA   #$08
         BEQ    bread1
-        LDA    $FF04
+        LDA    ACIA
         STA    ,X+
+        CMPA   #$04
+        BEQ    bread2
         DECB
         BNE    bread1
+bread2  LDA    ACIA+2
+        ANDA   #$FE
+        STA    ACIA+2
         LBRA   NEXT
 
 _rf_code_bwrit EXPORT
 _rf_code_bwrit
         PULU   X,D
-        LDA    $FF06
-        ORA    #$01
-        STA    $FF06
-bwrit1  LDA    $FF05
-        ANDA   #$08
+bwrit1  LDA    ACIA+1
+        ANDA   #$10
         BEQ    bwrit1
         LDA    ,X+
-        STA    $FF04
+        STA    ACIA
         DECB
         BNE    bwrit1
-bwrit2  LDA    $FF05
-        ANDA   #$08
+bwrit2  LDA    ACIA+1
+        ANDA   #$10
         BEQ    bwrit2
         LDA    #$04
-        STA    $FF04
-        LDA    $FF06
-        ANDA   #$01
-        STA    $FF06
+        STA    ACIA
         LBRA   NEXT
 
 _rf_fin EXPORT

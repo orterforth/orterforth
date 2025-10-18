@@ -1,5 +1,8 @@
 #include "../../rf.h"
 
+/*#define ACIA 0xFF04*/ /* Dragon 64 RS-232 */
+#define ACIA 0xFF68 /* Deluxe RS-232 Program Pak */
+
 extern unsigned char *rf_origin;
 
 void rf_init_origin(void);
@@ -20,6 +23,9 @@ void rf_init(void)
     *((uint8_t *) 65283) |= 1;
   }
   rf_init_origin();
+
+  /* 8N1, 1200 baud, no echo */
+  *((uint16_t *) (ACIA+2)) = 0x0B18;
 }
 
 void rf_console_put(uint8_t ch)
@@ -64,18 +70,24 @@ void rf_console_cr(void)
 
 uint8_t rf_serial_get(void)
 {
-  while (!(*((uint8_t *) 0xFF05) & 0x10)) {
+  /* Cmd */
+  *((uint8_t *) (ACIA+2)) |= 0x01;
+  /* RDRF */
+  while (!(*((uint8_t *) (ACIA+1)) & 0x08)) {
   }
-  return *((uint8_t *) 0xFF04);
+  /* Cmd */
+  *((uint8_t *) (ACIA+2)) &= 0xFE;
+  /* RDR */
+  return *((uint8_t *) ACIA);
 }
 
 void rf_serial_put(uint8_t b)
 {
-  *((uint8_t *) 0xFF06) |= 0x01;
-  while (!(*((uint8_t *) 0xFF05) & 0x08)) {
+  /* TDRE */
+  while (!(*((uint8_t *) (ACIA+1)) & 0x10)) {
   }
-  *((uint8_t *) 0xFF04) = b;
-  *((uint8_t *) 0xFF06) &= 0xFE;
+  /* TDR */
+  *((uint8_t *) ACIA) = b;
 }
 
 void rf_fin(void)
