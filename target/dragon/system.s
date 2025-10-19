@@ -7,11 +7,6 @@ _rf_up IMPORT
 NEXT    EQU    _rf_next
 UP      EQU    _rf_up
 
-* Dragon 64
-*ACIA   EQU    $FF04
-* Deluxe RS-232 Program Pak
-ACIA    EQU    $FF68
-
 _rf_init EXPORT
 _rf_init
 *  Speedkey http://archive.worldofdragon.org/phpBB3/viewtopic.php?f=8&t=314

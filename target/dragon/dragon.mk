@@ -4,7 +4,9 @@
 # DRAGONMACHINE := mame
 DRAGONMACHINE := real
 # DRAGONMACHINE := xroar
-
+# 32 or 64
+DRAGONMODEL=dragon32
+# DRAGONMODEL=dragon64
 # C or 6809 assembly option
 DRAGONOPTION := assembly
 # DRAGONOPTION := default
@@ -20,8 +22,17 @@ DRAGONINSTMEDIA := dragon/inst.cas
 DRAGONLINKDEPS := dragon/link.o dragon/origin.o
 DRAGONMEDIA := dragon/orterforth.cas
 DRAGONORG := 0x0600
+
+ifeq ($(DRAGONMODEL),dragon32)
+DRAGONACIA=0xFF68 # use CoCo Deluxe RS-232 Program Pak
+DRAGONROMS := roms/dragon32/d32.rom
+DRAGONXROAROPTS := -machine-arch dragon32 -rompath roms/dragon32
+endif
+ifeq ($(DRAGONMODEL),dragon64)
+DRAGONACIA=0xFF04 # use Dragon 64 RS-232
 DRAGONROMS := roms/dragon64/d64_1.rom roms/dragon64/d64_2.rom
 DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
+endif
 
 ifeq ($(DRAGONOPTION),assembly)
 DRAGONCMOCOPTS += -DRF_ASSEMBLY
@@ -46,7 +57,7 @@ ifeq ($(DRAGONMACHINE),mame)
 	DRAGONSTARTMACHINE := \
 		$(INFO) 'Starting MAME' ; \
 		$(DRAGONMAMEWARNINGS) ; \
-		mame dragon64 $(MAMEOPTS) \
+		mame $(DRAGONMODEL) $(MAMEOPTS) \
 			-rs232 null_modem -bitb socket.localhost:5705 \
 			-autoboot_delay 4 -autoboot_command "CLOADM:EXEC\r" \
 			-cassette
@@ -187,11 +198,11 @@ dragon/rx : | dragon
 
 dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | cmoc dragon
 
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+	cmoc $(DRAGONCMOCOPTS) -DACIA=$(DRAGONACIA) -c -o $@ $<
 
-dragon/system_asm.o : target/dragon/system.s | cmoc dragon
+dragon/system_asm.o : target/dragon/system.s | dragon lwasm
 
-	cmoc $(DRAGONCMOCOPTS) -c -o $@ $<
+	lwasm --6809 --obj -DACIA=$(DRAGONACIA) -o $@ $<
 
 dragon/tx : | dragon
 

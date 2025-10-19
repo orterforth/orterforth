@@ -1,8 +1,5 @@
 #include "../../rf.h"
 
-/*#define ACIA 0xFF04*/ /* Dragon 64 RS-232 */
-#define ACIA 0xFF68 /* Deluxe RS-232 Program Pak */
-
 extern unsigned char *rf_origin;
 
 void rf_init_origin(void);
@@ -25,7 +22,8 @@ void rf_init(void)
   rf_init_origin();
 
   /* 8N1, 1200 baud, no echo */
-  *((uint16_t *) (ACIA+2)) = 0x0B18;
+  *((uint8_t *) (ACIA+2)) = 0x0B;
+  *((uint8_t *) (ACIA+3)) = 0x18;
 }
 
 void rf_console_put(uint8_t ch)
