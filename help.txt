@@ -49,11 +49,12 @@ targets, run:
 
 where <target> is one of:
 
-  atari
   amiga
+  atari
   bbc
   c64
   dragon
+  eg2000
   m100
   pico
   ql

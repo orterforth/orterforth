@@ -1,0 +1,21 @@
+Building for the EACA EG2000 Colour Genie
+=========================================
+
+You will need:
+
+* z88dk https://z88dk.org/
+
+To build on a physical machine, call:
+
+ make TARGET=eg2000 OPTION=assembly (Z80 assembly)
+                    OPTION=default  (C)
+
+Target files built at:
+
+ eg2000/orterforth.cmd
+ eg2000/orterforth.cas
+ eg2000/orterforth.wav
+
+To load and run, call:
+
+ make run TARGET=eg2000
