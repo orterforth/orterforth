@@ -1,5 +1,5 @@
-Building for the Dragon 64
-==========================
+Building for the Dragon 32/64
+=============================
 
 You will need:
 
@@ -8,12 +8,18 @@ You will need:
 * XRoar emulator with a modification to support serial 
   emulation over two named pipes (currently a private code
   change) http://www.6809.org.uk/xroar/
-* Dragon 64 ROM files
+* Dragon 32 or 64 ROM files
 
-To build, call:
+To build on a physical machine, call:
 
- make TARGET=dragon OPTION=assembly (6809 assembler)
- make TARGET=dragon OPTION=default (default C build)
+ make TARGET=dragon OPTION=assembly (6809 assembly)
+                    OPTION=default  (C)
+                    DRAGONMODEL=dragon32 (uses TRS-80 Deluxe
+                     RS-232 Program Pak for serial, which is
+                     compatible although the accompanying ROM
+                     is not)
+                    DRAGONMODEL=dragon64 (uses Dragon 64
+                     serial)
 
 Target files built at:
 
@@ -21,12 +27,14 @@ Target files built at:
  dragon/orterforth.cas
  dragon/orterforth.wav
 
-To run in XRoar, call:
+To load and run, call:
 
- make run TARGET=dragon
+ make run TARGET=dragon DRAGONMACHINE=mame
+                        DRAGONMACHINE=real
+                        DRAGONMACHINE=xroar
 
 Currently there doesn't seem to be working support for Dragon
-64 serial port in Mame. XRoar does not provide it and a crude
+64 serial port in MAME. XRoar does not provide it and a crude
 modification was made to the source to implement it for this
 purpose.
 
