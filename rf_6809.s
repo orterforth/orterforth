@@ -59,22 +59,27 @@ start1  LDD    ,U           * get previous U
 
 _rf_trampoline EXPORT
 _rf_trampoline
-        PSHS   U,Y
-        STS    ssave+0,PCR
+        PSHS   U,Y            * save U Y
+        STS    ssave+0,PCR    * save S
+        LDX    _rf_origin,PCR * R0 to RP (in case of IRQ before rpsto)
+        LDD    20,X
+        STD    _rf_rp,PCR
+
         BRA    trampoline2
 trampoline1
         LEAX   trampoline2+0,PCR * push return address before modifying S
         PSHS   X
-        LDS    _rf_rp+0,PCR  * S to RP (after pushing return address)
-        LDU    _rf_sp+0,PCR  * U to SP
-        LDX    _rf_w+0,PCR   * X to W
-        LDY    _rf_ip+0,PCR  * Y to IP
+        LDS    _rf_rp+0,PCR  * RP to S (after pushing return address)
+        LDU    _rf_sp+0,PCR  * SP to U
+        LDX    _rf_w+0,PCR   *  W to X
+        LDY    _rf_ip+0,PCR  * IP to Y
         JMP    [_rf_fp+0,PCR]
 trampoline2
         LDD    _rf_fp+0,PCR
         BNE    trampoline1
-        LDS    ssave+0,PCR
-        PULS   U,Y
+
+        LDS    ssave+0,PCR   * restore S
+        PULS   U,Y           * restore U Y
         RTS
 
 	ENDSECTION
