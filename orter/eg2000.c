@@ -171,8 +171,8 @@ int orter_eg2000(int argc, char *argv[])
     }
 
     /* usage */
-    fprintf(stderr, "Usage: orter eg2000 bin to cmd\n");
-    fprintf(stderr, "Usage:              cmd to cas <filename>\n");
+    fprintf(stderr, "Usage: orter eg2000 bin to cmd <load> <exec>\n");
+    fprintf(stderr, "                    cmd to cas <filename>\n");
     fprintf(stderr, "                    cas to wav\n");
     return 1;
 }
