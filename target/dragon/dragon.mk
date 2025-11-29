@@ -35,7 +35,6 @@ DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 endif
 
 ifeq ($(DRAGONOPTION),assembly)
-DRAGONCMOCOPTS += -DRF_ASSEMBLY
 DRAGONDEPS += dragon/rf_6809.o dragon/system_asm.o
 DRAGONLINKDEPS += dragon/rf_6809.o dragon/system_asm.o
 else
