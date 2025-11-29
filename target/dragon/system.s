@@ -9,6 +9,7 @@ UP      EQU    _rf_up
 
 _rf_init EXPORT
 _rf_init
+
 *  Speedkey http://archive.worldofdragon.org/phpBB3/viewtopic.php?f=8&t=314
         LDD    $010D
         CMPD   #$00FA
@@ -30,13 +31,14 @@ _rf_init
         STA    $FF03
 * 8N1, no echo
 * 9600 baud
-*init1   LDD    #$0B1E
+*init1   LDD    #$0A1E
 * 4800 baud
-*init1   LDD    #$0B1C
+*init1   LDD    #$0A1C
 * 2400 baud
-*init1   LDD    #$0B1A
+*init1   LDD    #$0A1A
 * 1200 baud
-init1   LDD    #$0B18
+init1   LDD    #$0A18
+        STA    ACIA+1 * reset
         STD    ACIA+2
         LBSR   _rf_init_origin
         RTS
