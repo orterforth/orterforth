@@ -21,8 +21,10 @@ void rf_init(void)
   }
   rf_init_origin();
 
+  /* reset */
+  *((uint8_t *) (ACIA+1)) = 0x00;
   /* 8N1, 1200 baud, no echo */
-  *((uint8_t *) (ACIA+2)) = 0x0B;
+  *((uint8_t *) (ACIA+2)) = 0x0A;
   *((uint8_t *) (ACIA+3)) = 0x18;
 }
 
