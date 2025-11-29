@@ -44,9 +44,8 @@ DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/system.o
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG)
-# 0000 causes a crash for some reason, possibly overwriting basic at 0600
-# DRAGONOFFSET := 0000
-DRAGONOFFSET := 00
+DRAGONOFFSET := 0000
+# For graphics pages 1-4
 # DRAGONOFFSET := 1800
 
 ifeq ($(DRAGONMACHINE),mame)
