@@ -470,25 +470,111 @@ CMOV3   PULS   U
 *
 _rf_code_ustar EXPORT
 _rf_code_ustar
-        BSR    USTARS
-        LEAU   2,U
-        LBRA   PUSHD
+;         BSR    USTARS
+;         LEAU   2,U
+;         LBRA   PUSHD
+; *
+; * The following is a  subroutine which multiplies top
+; * 2 words on stack, leaving 32-bit result: high order in D
+; * and low order word in 2ND word on stack.
+; USTARS  LDX    #17
+;         LDD    #0
+; USTAR2  ROR    2,U       shift mult
+;         ROR    3,U
+;         LEAX   -1,X      done ?
+;         BEQ    USTAR4
+;         BCC    USTAR3
+;         ADDD   ,U
+; USTAR3  RORA
+;         RORB
+;         BRA    USTAR2
+; USTAR4  RTS
+;         CLRA
+;         CLRB
+;         PSHU   D,X
+
+; from Leventhal 6809 Assembly Language Subroutines
+
+MUL16:
 *
-* The following is a  subroutine which multiplies top
-* 2 words on stack, leaving 32-bit result: high order in D
-* and low order word in 2ND word on stack.
-USTARS  LDX    #17
-        LDD    #0
-USTAR2  ROR    2,U       shift mult
-        ROR    3,U
-        LEAX   -1,X      done ?
-        BEQ    USTAR4
-        BCC    USTAR3
-        ADDD   ,U
-USTAR3  RORA
-        RORB
-        BRA    USTAR2
-USTAR4  RTS
+*         CLEAR PARTIAL PRODUCT IN FOUR STACK BYTES
+*
+;         LDU       ,S        SAVE RETURN ADDRESS
+          CLRA                CLEAR 4-BYTE PARTIAL PRODUCT ON STACK
+          CLRB
+;         STD       ,S        USE BYTES OCCUPIED BY RETURN ADDRESS
+;         PSHS      D         PLUS 2 EXTRA BYTES ON TOP OF STACK
+          PSHU      D,X
+*
+*         MULTIPLY LOW BYTE OF MULTIPLIER TIMES LOW BYTE
+*           OF MULTIPLICAND
+*
+          LDA       5,U       GET LOW BYTE OF MULTIPLIER
+          LDB       7,U       GET LOW BYTE OF MULTIPLICAND
+          MUL                 MULTIPLY BYTES
+;         STB       3,U       STORE LOW BYTE OF PRODUCT
+;         STA       2,U       STORE HIGH BYTE OF PRODUCT
+          STD       2,U
+*
+*         MULTIPLY LOW BYTE OF MULTIPLIER TIMES HIGH BYTE
+*           OF MULTIPLICAND
+*
+;         LDA       5,U       GET LOW BYTE OF MULTIPLIER
+;         LDB       6,U       GET HIGH BYTE OF MULTIPLICAND
+          LDD       5,U
+          MUL                 MULTIPLY BYTES
+;         ADDB      2,U       ADD LOW BYTE OF PRODUCT TO
+                              * PARTIAL PRODUCT
+;         STB       2,U
+;         ADCA      #0        ADD HIGH BYTE OF PRODUCT PLUS CARRY
+                              * TO PARTIAL PRODUCT
+
+;         STA       1,U       STORE HIGH BYTE OF PRODUCT
+          ADDD      1,U
+          STD       1,U
+*
+*         MULTIPLY HIGH BYTE OF MULTIPLIER TIMES LOW BYTE
+*           OF MULTIPLICAND
+*
+          LDA       4,U       GET HIGH BYTE OF MULTIPLIER
+          LDB       7,U       GET LOW BYTE OF MULTIPLICAND
+          MUL                 MULTIPLY BYTES
+;         ADDB      2,U       ADD LOW BYTE OF PRODUCT TO
+                              * PARTIAL PRODUCT
+;         STB       2,U
+;         ADCA      1,U       ADD HIGH BYTE OF PRODUCT PLUS CARRY
+                              * TO PARTIAL PRODUCT
+
+;         STA       1,U
+          ADDD      1,U
+          STD       1,U
+          BCC       MULHH     BRANCH IF NO CARRY
+          INC       ,U        ELSE INCREMENT MOST SIGNIFICANT
+                              * BYTE OF PARTIAL PRODUCT
+
+*
+*         MULTIPLY HIGH BYTE OF MULTIPLIER TIMES HIGH BYTE
+*           OF MULTIPLICAND
+*
+MULHH:
+          LDA       4,U       GET HIGH BYTE OF MULTIPLIER
+          LDB       6,U       GET HIGH BYTE OF MULTIPLICAND
+          MUL                 MULTIPLY BYTES
+;         ADDB      1,U       ADD LOW BYTE OF PRODUCT TO PARTIAL
+                              * PRODUCT
+;         ADCA      ,U        ADD HIGH BYTE OF PRODUCT PLUS CARRY
+                              * TO PARTIAL PRODUCT
+                              * HIGH BYTES OF PRODUCT END UP IN D
+          ADDD      ,U
+*
+*         RETURN WITH 32-BIT PRODUCT AT TOP OF STACK
+*
+          LDX       2,U       GET LOWER 16 BITS OF PRODUCT FROM STACK
+          LEAU      8,U       REMOVE PARAMETERS FROM STACK
+          PSHU      D,X       PUT 32-BIT PRODUCT AT TOP OF STACK
+;         JMP       ,U        EXIT TO RETURN ADDRESS
+          LBRA      NEXT
+
 _rf_code_uslas EXPORT
 _rf_code_uslas
         LDD    2,U
