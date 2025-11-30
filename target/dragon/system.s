@@ -29,16 +29,14 @@ _rf_init
         LDA    $FF03
         ORA    #$01
         STA    $FF03
-* 8N1, no echo
-* 9600 baud
-*init1   LDD    #$0A1E
-* 4800 baud
-*init1   LDD    #$0A1C
-* 2400 baud
-*init1   LDD    #$0A1A
-* 1200 baud
-init1   LDD    #$0A18
-        STA    ACIA+1 * reset
+* reset
+init1   STA    ACIA+1
+* 8N1, baud rate generator
+* no echo, no interrupts
+*       LDD    #$0A1E * 9600 baud
+*       LDD    #$0A1C * 4800 baud
+*       LDD    #$0A1A * 2400 baud
+        LDD    #$0A18 * 1200 baud
         STD    ACIA+2
         LBSR   _rf_init_origin
         RTS
