@@ -35,8 +35,8 @@ DRAGONXROAROPTS := -machine-arch dragon64 -rompath roms/dragon64
 endif
 
 ifeq ($(DRAGONOPTION),assembly)
-DRAGONDEPS += dragon/rf_6809.o dragon/system_asm.o
-DRAGONLINKDEPS += dragon/rf_6809.o dragon/system_asm.o
+DRAGONDEPS += dragon/rf_6809.o dragon/system.o
+DRAGONLINKDEPS += dragon/rf_6809.o dragon/system.o
 else
 DRAGONDEPS += dragon/io.o dragon/rf.o dragon/dragon.o
 DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/dragon.o
@@ -195,7 +195,7 @@ dragon/dragon.o : target/dragon/dragon.c rf.h target/dragon/dragon.inc | cmoc dr
 
 	cmoc $(DRAGONCMOCOPTS) -DACIA=$(DRAGONACIA) -c -o $@ $<
 
-dragon/system_asm.o : target/dragon/system.s | dragon lwasm
+dragon/system.o : target/dragon/system.s | dragon lwasm
 
 	lwasm --6809 --obj -DACIA=$(DRAGONACIA) -o $@ $<
 
