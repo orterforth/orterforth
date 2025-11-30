@@ -48,7 +48,13 @@ LIMIT, FIRST, USER, R0, S0, TIB remain the same in high RAM.
 
 For example, load with:
 
- make run TARGET=dragon DRAGONOFFSET=1800
+ make run TARGET=dragon DRAGONMACHINE=real
+
+ CLOADM "",&H1800:EXEC
+
+using XRoar:
+
+ make run TARGET=dragon DRAGONMACHINE=xroar DRAGONOFFSET=1800
 
 to load at 0x0600 + 0x1800 = 0x1E00, i.e., above graphics page
 4, to make use of graphics modes.
