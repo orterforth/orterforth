@@ -18,9 +18,9 @@ endif
 
 DRAGONCMOCOPTS := --dragon -Werror -i
 DRAGONDEPS := dragon/inst.o dragon/origin.o
-DRAGONINSTMEDIA := dragon/inst.cas
+DRAGONINSTMEDIA := dragon/inst.wav
 DRAGONLINKDEPS := dragon/link.o dragon/origin.o
-DRAGONMEDIA := dragon/orterforth.cas
+DRAGONMEDIA := dragon/orterforth.wav
 DRAGONORG := 0x0600
 
 ifeq ($(DRAGONMODEL),dragon32)
@@ -52,6 +52,7 @@ ifeq ($(DRAGONMACHINE),mame)
 		$(WARN) 'NB ORG must be 0x0C00 to allow for DragonDOS' ; \
 		$(WARN) 'NB MAME Dragon serial not working'
 	DRAGONSTARTDISC := $(STARTDISCTCP)
+	DRAGONDISCOPTS := tcp server 5705
 	DRAGONSTARTMACHINE := \
 		$(INFO) 'Starting MAME' ; \
 		$(DRAGONMAMEWARNINGS) ; \
@@ -65,13 +66,15 @@ ifeq ($(DRAGONMACHINE),real)
 	DRAGONMEDIA := dragon/orterforth.wav
 	DRAGONINSTMEDIA := dragon/inst.wav
 	DRAGONSTARTDISC := $(STARTDISC) serial $(SERIALPORT) 1200
+	DRAGONDISCOPTS := serial $(SERIALPORT) 1200
 	DRAGONSTARTMACHINE := \
 		$(PROMPT) "On the Dragon type: CLOADM:EXEC" && \
 		$(PLAY)
 	DRAGONSTOPMACHINE := :
 endif
 ifeq ($(DRAGONMACHINE),xroar)
-	DRAGONSTARTDISC := $(INFO) 'Starting disc' ; sh scripts/start.sh dragon/tx dragon/rx disc.pid $(DISC)
+	DRAGONSTARTDISC := $(STARTDISC) tcp client 5705
+	DRAGONDISCOPTS := tcp client 5705
 	DRAGONSTARTMACHINE := \
 		$(INFO) 'Starting XRoar' ; \
 		$(WARN) 'NB XRoar must be modified to implement serial' ; \
@@ -108,10 +111,10 @@ endif
 dragon-inst : $(DRAGONMEDIA)
 
 .PHONY : dragon-run
-dragon-run : $(DRAGONMEDIA) | $(DISC) $(DR0) $(DR1) dragon/rx dragon/tx $(DRAGONROMS)
+dragon-run : $(DRAGONMEDIA) | $(DISC) $(DR0) $(DR1) $(DRAGONROMS)
 
 ifeq ($(DRAGONMACHINE),mame)
-	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
+	@$(STARTDISC) $(DRAGONDISCOPTS) $(DR0) $(DR1)
 	@$(INFO) 'Running MAME'
 	@$(DRAGONMAMEWARNINGS)
 	@mame dragon64 $(MAMEOPTS) \
@@ -121,11 +124,11 @@ ifeq ($(DRAGONMACHINE),mame)
 endif
 ifeq ($(DRAGONMACHINE),real)
 	@$(DRAGONSTARTMACHINE) $<
-	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
+	@$(STARTDISC) $(DRAGONDISCOPTS) $(DR0) $(DR1)
 	@$(PROMPT) "To stop disc press a key"
 endif
 ifeq ($(DRAGONMACHINE),xroar)
-	@$(DRAGONSTARTDISC) $(DR0) $(DR1)
+	@$(STARTDISC) $(DRAGONDISCOPTS) $(DR0) $(DR1)
 	@$(INFO) 'Running XRoar'
 	@$(WARN) 'NB XRoar must be modified to implement serial'
 	@xroar $(DRAGONXROAROPTS) -load-tape $< -type "CLOADM \"\",&H$(DRAGONOFFSET):EXEC\r"
@@ -157,14 +160,12 @@ dragon/installed.bin : dragon/installed.img | $(ORTER)
 
 	$(ORTER) hex read < $< > $@
 
-dragon/installed.img : $(DRAGONINSTMEDIA) model.img | $(DISC) dragon/rx dragon/tx $(DRAGONROMS)
+dragon/installed.img : $(DRAGONINSTMEDIA) model.img | $(DISC) $(DRAGONROMS)
 
-	@$(EMPTYDR1FILE) $@.io
-	@$(DRAGONSTARTDISC) model.img $@.io
 	@$(DRAGONSTARTMACHINE) $<
-	@$(WAITUNTILSAVED) $@.io
+	@$(INSTALLDISC) $(DRAGONDISCOPTS) &
+	@$(WAITFORFILE)
 	@$(DRAGONSTOPMACHINE)
-	@$(STOPDISC)
 	@$(COMPLETEDR1FILE)
 
 dragon/link.bin : $(DRAGONLINKDEPS) main.c | cmoc
@@ -190,10 +191,6 @@ dragon/rf_6809.o : rf_6809.s | dragon lwasm
 
 	lwasm --6809 --obj -o $@ $<
 
-dragon/rx : | dragon
-
-	mkfifo $@
-
 dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | cmoc dragon
 
 	cmoc $(DRAGONCMOCOPTS) -DACIA=$(DRAGONACIA) -c -o $@ $<
@@ -201,10 +198,6 @@ dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | cmoc dr
 dragon/system_asm.o : target/dragon/system.s | dragon lwasm
 
 	lwasm --6809 --obj -DACIA=$(DRAGONACIA) -o $@ $<
-
-dragon/tx : | dragon
-
-	mkfifo $@
 
 .PHONY : lwasm
 lwasm :
