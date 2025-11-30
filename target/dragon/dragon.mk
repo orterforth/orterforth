@@ -38,8 +38,8 @@ ifeq ($(DRAGONOPTION),assembly)
 DRAGONDEPS += dragon/rf_6809.o dragon/system_asm.o
 DRAGONLINKDEPS += dragon/rf_6809.o dragon/system_asm.o
 else
-DRAGONDEPS += dragon/io.o dragon/rf.o dragon/system.o
-DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/system.o
+DRAGONDEPS += dragon/io.o dragon/rf.o dragon/dragon.o
+DRAGONLINKDEPS += dragon/io.o dragon/rf.o dragon/dragon.o
 endif
 
 DRAGONCMOCOPTS += -DRF_ORG=$(DRAGONORG)
@@ -191,7 +191,7 @@ dragon/rf_6809.o : rf_6809.s | dragon lwasm
 
 	lwasm --6809 --obj -o $@ $<
 
-dragon/system.o : target/dragon/system.c rf.h target/dragon/dragon.inc | cmoc dragon
+dragon/dragon.o : target/dragon/dragon.c rf.h target/dragon/dragon.inc | cmoc dragon
 
 	cmoc $(DRAGONCMOCOPTS) -DACIA=$(DRAGONACIA) -c -o $@ $<
 
